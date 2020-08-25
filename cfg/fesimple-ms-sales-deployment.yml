@@ -1,0 +1,73 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ms-fesimple-sales
+  namespace: berserkers
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: ms-fesimple-sales
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: ms-fesimple-sales
+    spec:
+      containers:
+        - name: ms-fesimple-sales
+          image: acrgenesis.azurecr.io/ms-fesimple-sales:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+          env:
+            - name: ENV
+              value: ambiente
+            - name: SPRING_APPLICATION_JSON
+              value: '{"spring":{"cloud":{"config":{"uri":"http://ms-fesimple-configserver-svc.berserkers.svc.cluster.local:4041","profile":"dev"}}}}'
+      imagePullSecrets:
+        - name: acr-registry
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ms-fesimple-sales-svc
+  namespace: berserkers
+  labels:
+    app: "ms-fesimple-sales"
+spec:
+  ports:
+    - port: 4041
+      targetPort: 8080
+      protocol: TCP
+      name: http
+  selector:
+    app: ms-fesimple-sales
+
+---
+apiVersion: networking.k8s.io/v1beta1
+kind: Ingress
+metadata:
+  name: ms-fesimple-sales-ingress-nginx
+  namespace: berserkers
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/enable-cors: "false"
+    nginx.ingress.kubernetes.io/cors-allow-methods: "PUT, GET, POST, DELETE, PATCH, OPTIONS"
+    cert-manager.io/cluster-issuer: letsencrypt-staging
+    nginx.ingress.kubernetes.io/configuration-snippet: |
+      more_set_headers "Ingress: $ingress_name";
+spec:
+  tls:
+    - hosts:
+        - aks-berserkers-ingress-dev.eastus2.cloudapp.azure.com
+      secretName: ms-fesimple-sales-ingress-secret
+  rules:
+    - host: aks-berserkers-ingress-dev.eastus2.cloudapp.azure.com
+      http:
+        paths:
+          - backend:
+              serviceName: ms-fesimple-sales-svc
+              servicePort: 4041
+            path: /fesimple/v1/sales
