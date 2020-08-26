@@ -1,3 +1,8 @@
 spring:
   application:
     name: sales
+  cloud:
+    config:
+      name: sales
+  profiles:
+    active: dev
