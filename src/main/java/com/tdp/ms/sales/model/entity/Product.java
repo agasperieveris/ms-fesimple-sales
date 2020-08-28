@@ -1,10 +1,16 @@
-package com.tdp.ms.sales.business.impl;
+package com.tdp.ms.sales.model.entity;
 
-import org.springframework.stereotype.Service;
-import com.tdp.ms.sales.business.SalesService;
+import java.util.List;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 
 /**
- * Class: SalesServiceImpl. <br/>
+ * Class: SalesController. <br/>
  * <b>Copyright</b>: &copy; 2019 Telef&oacute;nica del Per&uacute;<br/>
  * <b>Company</b>: Telef&oacute;nica del Per&uacute;<br/>
  *
@@ -20,6 +26,16 @@ import com.tdp.ms.sales.business.SalesService;
  *         </ul>
  * @version 1.0
  */
-@Service
-public class SalesServiceImpl implements SalesService {
+@Getter
+@Setter
+@ToString
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder
+public class Product {
+    private String id;
+    private String publicId;
+    private String publicType;
+    private List<AdditionalData> additionalData;
+    private List<Place> place;
 }

@@ -1,13 +1,14 @@
-package com.tdp.ms.sales.model;
+package com.tdp.ms.sales.model.entity;
 
-import javax.validation.constraints.NotEmpty;
 import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
+import lombok.Builder;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 
 /**
- * Class: SalesResponse. <br/>
+ * Class: SalesController. <br/>
  * <b>Copyright</b>: &copy; 2019 Telef&oacute;nica del Per&uacute;<br/>
  * <b>Company</b>: Telef&oacute;nica del Per&uacute;<br/>
  *
@@ -23,13 +24,13 @@ import lombok.NoArgsConstructor;
  *         </ul>
  * @version 1.0
  */
-@Data
-@NoArgsConstructor
+@Setter
+@Getter
+@Builder
+@ToString
 @AllArgsConstructor
-@EqualsAndHashCode(callSuper = false)
-public class SalesRequest {
-    public static final String MSG_NOT_EMPTY = "no puede quedar sin valor";
-
-    @NotEmpty(message = MSG_NOT_EMPTY)
-    private String name;
+@NoArgsConstructor
+public class AdditionalData {
+    private String key;
+    private String value;
 }

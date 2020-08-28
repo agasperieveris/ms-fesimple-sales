@@ -1,7 +1,5 @@
 package com.tdp.ms.sales.business;
 
-import com.tdp.ms.sales.model.SalesResponse;
-
 /**
  * Class: SalesService. <br/>
  * <b>Copyright</b>: &copy; 2019 Telef&oacute;nica del Per&uacute;<br/>
@@ -20,7 +18,5 @@ import com.tdp.ms.sales.model.SalesResponse;
  * @version 1.0
  */
 public interface SalesService {
-    SalesResponse get();
-
-    SalesResponse put(String name);
+  
 }

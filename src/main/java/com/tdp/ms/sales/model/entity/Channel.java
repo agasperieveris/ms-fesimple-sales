@@ -1,9 +1,11 @@
-package com.tdp.ms.sales.model;
+package com.tdp.ms.sales.model.entity;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
+import java.util.List;
+
+import lombok.Builder;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
 
 /**
  * Class: SalesResponse. <br/>
@@ -14,7 +16,7 @@ import lombok.NoArgsConstructor;
  *         <u>Service Provider</u>: Everis Per&uacute; SAC (EVE) <br/>
  *         <u>Developed by</u>: <br/>
  *         <ul>
- *         <li>Developer name</li>
+ *         <li>Developer Ronald Baron</li>
  *         </ul>
  *         <u>Changes</u>:<br/>
  *         <ul>
@@ -22,10 +24,13 @@ import lombok.NoArgsConstructor;
  *         </ul>
  * @version 1.0
  */
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
-@EqualsAndHashCode(callSuper = false)
-public class SalesResponse {
-    private String greeting;
+@Setter
+@Getter
+@ToString
+@Builder
+public class Channel {
+    private String name;
+    private String storeId;
+    private String storeName;
+    private List<Agent> agent;
 }
