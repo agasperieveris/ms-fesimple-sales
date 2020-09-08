@@ -1,11 +1,10 @@
-package com.tdp.ms.sales.model.entity;
+package com.tdp.ms.sales.model.dto;
 
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Getter;
+import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
-import lombok.ToString;
 
 /**
  * Class: SalesController. <br/>
@@ -24,13 +23,16 @@ import lombok.ToString;
  *         </ul>
  * @version 1.0
  */
-@Setter
-@Getter
-@ToString
+
+@Data
 @NoArgsConstructor
-@Builder
 @AllArgsConstructor
-public class Place {
+@Builder
+public class ProductOfering {
     private String id;
+    private String href;
     private String name;
+    private String type;
+    private String productType;
+    private List<AdditionalData> additionalData;
 }

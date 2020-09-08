@@ -1,12 +1,10 @@
-package com.tdp.ms.sales.model.entity;
+package com.tdp.ms.sales.model.dto;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Getter;
+import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 /**
  * Class: SalesController. <br/>
@@ -25,13 +23,27 @@ import lombok.Setter;
  *         </ul>
  * @version 1.0
  */
-@Setter
-@Getter
-@Builder
+
 @NoArgsConstructor
 @AllArgsConstructor
-@JsonInclude(JsonInclude.Include.NON_NULL)
+@Data
+@Builder
 public class Characteristic {
     @JsonProperty("@baseType")
     private String baseType;
+    @JsonProperty("@schemaLocation")
+    private String schemaLocation;
+    @JsonProperty("@type")
+    private String type;
+    private String city;
+    private String contactType;
+    private String country;
+    private String emailAddress;
+    private String faxNumber;
+    private String phoneNumber;
+    private String postCode;
+    private String socialNetworkId;
+    private String stateOrProvince;
+    private String street1;
+    private String street2;
 }

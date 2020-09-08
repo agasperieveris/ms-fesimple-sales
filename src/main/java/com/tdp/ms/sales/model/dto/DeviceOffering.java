@@ -1,12 +1,9 @@
-package com.tdp.ms.sales.model.entity;
+package com.tdp.ms.sales.model.dto;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Getter;
+import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
-import lombok.ToString;
 
 /**
  * Class: SalesController. <br/>
@@ -25,24 +22,13 @@ import lombok.ToString;
  *         </ul>
  * @version 1.0
  */
-@Getter
-@Setter
-@ToString
+
+@Data
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@JsonInclude(JsonInclude.Include.NON_NULL)
-public class ProspectContact {
-    private boolean preferred;
-    private String mediumType;
-    private String startDateTime;
-    private Characteristic characteristic;
-    private String emailAddress;
-    private String phoneNumber;
-    private String street1;
-    private String postCode;
-    private String city;
-    private String country;
-    private String stateOrProvince;
-    private String region;
+public class DeviceOffering {
+    private String href;
+    private String id;
+    private String name;
 }

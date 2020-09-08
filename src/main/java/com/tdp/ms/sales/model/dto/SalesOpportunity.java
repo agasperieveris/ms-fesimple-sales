@@ -1,16 +1,13 @@
-package com.tdp.ms.sales.model.entity;
+package com.tdp.ms.sales.model.dto;
 
-import java.util.List;
-
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Getter;
+import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
-import lombok.ToString;
 
 /**
- * Class: SalesController. <br/>
+ * Class: SalesOpportunity. <br/>
  * <b>Copyright</b>: &copy; 2019 Telef&oacute;nica del Per&uacute;<br/>
  * <b>Company</b>: Telef&oacute;nica del Per&uacute;<br/>
  *
@@ -18,7 +15,7 @@ import lombok.ToString;
  *         <u>Service Provider</u>: Everis Per&uacute; SAC (EVE) <br/>
  *         <u>Developed by</u>: <br/>
  *         <ul>
- *         <li>Developer name</li>
+ *         <li>Sergio Rivas</li>
  *         </ul>
  *         <u>Changes</u>:<br/>
  *         <ul>
@@ -26,16 +23,21 @@ import lombok.ToString;
  *         </ul>
  * @version 1.0
  */
-@Getter
-@Setter
-@ToString
+
 @AllArgsConstructor
 @NoArgsConstructor
+@Data
 @Builder
-public class Product {
+public class SalesOpportunity {
+    @JsonProperty("@baseType")
+    private String baseType;
+    @JsonProperty("@referredType")
+    private String referredType;
+    @JsonProperty("@schemaLocation")
+    private String schemaLocation;
+    @JsonProperty("@type")
+    private String type;
+    private String href;
     private String id;
-    private String publicId;
-    private String publicType;
-    private List<AdditionalData> additionalData;
-    private List<Place> place;
+    private String name;
 }

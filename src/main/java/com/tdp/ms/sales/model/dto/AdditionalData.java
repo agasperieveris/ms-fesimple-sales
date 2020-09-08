@@ -1,11 +1,9 @@
-package com.tdp.ms.sales.model.entity;
+package com.tdp.ms.sales.model.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Getter;
+import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
-import lombok.ToString;
 
 /**
  * Class: SalesController. <br/>
@@ -24,14 +22,12 @@ import lombok.ToString;
  *         </ul>
  * @version 1.0
  */
-@Setter
-@Getter
-@ToString
-@NoArgsConstructor
+
 @AllArgsConstructor
+@NoArgsConstructor
+@Data
 @Builder
-public class ProductOfering {
-    private String id;
-    private String name;
-    private String productType;
+public class AdditionalData {
+    private String key;
+    private String value;
 }

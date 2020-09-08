@@ -1,9 +1,11 @@
-package com.tdp.ms.sales.model.entity;
+package com.tdp.ms.sales.model.dto;
 
+import java.util.List;
+
+import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.ToString;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 /**
  * Class: SalesController. <br/>
@@ -22,12 +24,21 @@ import lombok.ToString;
  *         </ul>
  * @version 1.0
  */
-@Setter
-@Getter
-@ToString
+
+@AllArgsConstructor
+@NoArgsConstructor
+@Data
 @Builder
-public class Agent {
+public class ComercialOperationType {
     private String id;
-    private String nationalID;
-    private String nationalIDType;
+    private String name;
+    private String action;
+    private String reason;
+    private String orderId;
+    private Product product;
+    private List<ProductOfering> productOfferings;
+    private List<DeviceOffering> deviceOffering;
+    private List<Place> place;
+    private List<AdditionalData> additionalData;
+
 }

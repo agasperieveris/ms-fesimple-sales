@@ -1,11 +1,9 @@
-package com.tdp.ms.sales.model.entity;
+package com.tdp.ms.sales.model.dto;
 
-import java.util.List;
-
+import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.ToString;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 /**
  * Class: SalesResponse. <br/>
@@ -24,13 +22,15 @@ import lombok.ToString;
  *         </ul>
  * @version 1.0
  */
-@Setter
-@Getter
-@ToString
+
+@AllArgsConstructor
+@NoArgsConstructor
+@Data
 @Builder
 public class Channel {
+    private String id;
+    private String href;
     private String name;
     private String storeId;
     private String storeName;
-    private List<Agent> agent;
 }

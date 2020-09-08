@@ -1,14 +1,12 @@
-package com.tdp.ms.sales.model.request;
+package com.tdp.ms.sales.model.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 /**
- * Class: SalesResponse. <br/>
+ * Class: SalesController. <br/>
  * <b>Copyright</b>: &copy; 2019 Telef&oacute;nica del Per&uacute;<br/>
  * <b>Company</b>: Telef&oacute;nica del Per&uacute;<br/>
  *
@@ -16,7 +14,7 @@ import lombok.Setter;
  *         <u>Service Provider</u>: Everis Per&uacute; SAC (EVE) <br/>
  *         <u>Developed by</u>: <br/>
  *         <ul>
- *         <li>Developer Ronald Baron</li>
+ *         <li>Developer name</li>
  *         </ul>
  *         <u>Changes</u>:<br/>
  *         <ul>
@@ -24,19 +22,13 @@ import lombok.Setter;
  *         </ul>
  * @version 1.0
  */
-@Data
-@NoArgsConstructor
+
 @AllArgsConstructor
-@Getter
-@Setter
+@NoArgsConstructor
+@Data
 @Builder
-public class SalesRequest {
-    private String idSales;
-    private String status;
-    private String statusAudio;
+public class Agent {
+    private String id;
+    private String nationalID;
     private String nationalIDType;
-    private String nationalID;     
-    private String startDateTime;    
-    private String endDateTime;      
-    private String name;          
 }

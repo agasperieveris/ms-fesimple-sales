@@ -1,11 +1,9 @@
-package com.tdp.ms.sales.model.entity;
+package com.tdp.ms.sales.model.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Getter;
+import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
-import lombok.ToString;
 
 /**
  * Class: SalesController. <br/>
@@ -24,13 +22,19 @@ import lombok.ToString;
  *         </ul>
  * @version 1.0
  */
-@Setter
-@Getter
+
+@Data
 @Builder
-@ToString
 @AllArgsConstructor
 @NoArgsConstructor
-public class AdditionalData {
-    private String key;
-    private String value;
+public class RelatedParty {
+    private String id;
+    private String href;
+    private String fullName;
+    private String firstName;
+    private String lastName;
+    private String nationalID;
+    private String nationalIDType;
+    private String customerId;
+    private String role;
 }
