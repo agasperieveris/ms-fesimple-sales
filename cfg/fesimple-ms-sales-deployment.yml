@@ -4,7 +4,7 @@ metadata:
   name: ms-fesimple-sales
   namespace: berserkers
 spec:
-  replicas: 3
+  replicas: 1
   selector:
     matchLabels:
       app: ms-fesimple-sales
