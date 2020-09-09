@@ -25,7 +25,7 @@ spec:
             - name: ENV
               value: ambiente
             - name: SPRING_APPLICATION_JSON
-              value: '{"spring":{"cloud":{"config":{"uri":"http://ms-fesimple-configserver-svc.berserkers.svc.cluster.local:4041","profile":"dev"}}}}'
+              value: '{"spring":{"cloud":{"config":{"uri":"http://ms-fesimple-configserver-svc.berserkers.svc.cluster.local:4041","profile":"cert"}}}}'
       imagePullSecrets:
         - name: acr-registry
 ---
@@ -61,10 +61,10 @@ metadata:
 spec:
   tls:
     - hosts:
-        - aks-berserkers-ingress-dev.eastus2.cloudapp.azure.com
+        - aks-berserkers-ingress-cert.eastus2.cloudapp.azure.com
       secretName: ms-fesimple-sales-ingress-secret
   rules:
-    - host: aks-berserkers-ingress-dev.eastus2.cloudapp.azure.com
+    - host: aks-berserkers-ingress-cert.eastus2.cloudapp.azure.com
       http:
         paths:
           - backend:
