@@ -1,21 +1,21 @@
 package com.tdp.ms.sales.expose;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import com.tdp.genesis.core.constants.HttpHeadersKey;
-import com.tdp.ms.sales.model.SalesRequest;
-import com.tdp.ms.sales.model.SalesResponse;
-
+import com.tdp.ms.sales.business.SalesService;
+import com.tdp.ms.sales.model.entity.Sale;
+import com.tdp.ms.sales.model.response.SalesResponse;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.http.HttpStatus;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.reactive.server.WebTestClient;
-import org.springframework.web.reactive.function.BodyInserters;
+import reactor.core.publisher.Mono;
+
+import static org.mockito.ArgumentMatchers.any;
 
 @SpringBootTest
 @AutoConfigureWebTestClient(timeout = "20000")
@@ -24,66 +24,89 @@ public class SalesControllerTest {
     @Autowired
     private WebTestClient webClient;
 
-    private static Map<String, SalesResponse> salesResponseMap = new HashMap<>();
-    private static Map<String, SalesRequest> salesRequestMap = new HashMap<>();
+    @MockBean
+    private SalesService salesService;
+
+    private static Sale sale;
+    private static SalesResponse salesResponse;
 
     @BeforeAll
-    public static void setup() {
-        salesResponseMap.put("get", new SalesResponse("Hello world!"));
-        salesResponseMap.put("post", new SalesResponse("User created!"));
-        salesRequestMap.put("post", new SalesRequest("User"));
-        salesRequestMap.put("empty", new SalesRequest(""));
+    static void setup() {
+        sale = Sale
+                .builder()
+                .id("1")
+                .name("Sergio")
+                .description("descripcion")
+                .build();
+
+        salesResponse = SalesResponse
+                .builder()
+                .id("1")
+                .name("Sergio")
+                .description("descripcion")
+                .build();
     }
 
     @Test
-    public void indexGetTest() {
-        webClient.get()
-            .uri("/sales/v1/greeting")
-            .accept(MediaType.APPLICATION_JSON)
-            .header(HttpHeadersKey.UNICA_SERVICE_ID,"550e8400-e29b-41d4-a716-446655440000")
-            .header(HttpHeadersKey.UNICA_APPLICATION,"genesis")
-            .header(HttpHeadersKey.UNICA_PID,"550e8400-e29b-41d4-a716-446655440000")
-            .header(HttpHeadersKey.UNICA_USER,"genesis")
-            .header("ClientId","12122322")
-            .exchange()
-            .expectStatus().isOk()
-            .expectBody(SalesResponse.class)
-            .isEqualTo(salesResponseMap.get("get"));
+    void createdSales() {
+        Mockito.when(salesService.post(any()))
+                .thenReturn(Mono.just(salesResponse));
+
+        WebTestClient.ResponseSpec responseSpec = webClient.post()
+                .uri("/fesimple/v1/sales")
+                .accept(MediaType.APPLICATION_JSON)
+                .header(HttpHeadersKey.UNICA_SERVICE_ID, "550e8400-e29b-41d4-a716-446655440000")
+                .header(HttpHeadersKey.UNICA_APPLICATION, "genesis")
+                .header(HttpHeadersKey.UNICA_PID, "550e8400-e29b-41d4-a716-446655440000")
+                .header(HttpHeadersKey.UNICA_USER, "genesis")
+                .bodyValue(sale)
+                .exchange();
+
+        responseSpec.expectStatus().isCreated();
+
+        responseSpec.expectBody()
+                .jsonPath("$.id").isEqualTo(sale.getId())
+                .jsonPath("$.name").isEqualTo(sale.getName())
+                .jsonPath("$.description").isEqualTo(sale.getDescription());
+
     }
 
     @Test
-    public void indexPostTest() {
-        webClient.post()
-            .uri("/sales/v1/greeting")
-            .accept(MediaType.APPLICATION_JSON)
-            .header(HttpHeadersKey.UNICA_SERVICE_ID,"550e8400-e29b-41d4-a716-446655440000")
-            .header(HttpHeadersKey.UNICA_APPLICATION,"genesis")
-            .header(HttpHeadersKey.UNICA_PID,"550e8400-e29b-41d4-a716-446655440000")
-            .header(HttpHeadersKey.UNICA_USER,"genesis")
-            .body(BodyInserters.fromValue(salesRequestMap.get("post")))
-            .exchange()
-            .expectStatus().isEqualTo(HttpStatus.CREATED)
-            .expectBody(SalesResponse.class)
-            .isEqualTo(salesResponseMap.get("post"));
+    void updateSales() {
+        Mockito.when(salesService.put(any()))
+                .thenReturn(Mono.just(salesResponse));
+
+        WebTestClient.ResponseSpec responseSpec = webClient.put()
+                .uri("/fesimple/v1/sales")
+                .accept(MediaType.APPLICATION_JSON)
+                .header(HttpHeadersKey.UNICA_SERVICE_ID, "550e8400-e29b-41d4-a716-446655440000")
+                .header(HttpHeadersKey.UNICA_APPLICATION, "genesis")
+                .header(HttpHeadersKey.UNICA_PID, "550e8400-e29b-41d4-a716-446655440000")
+                .header(HttpHeadersKey.UNICA_USER, "genesis")
+                .bodyValue(sale)
+                .exchange();
+
+        responseSpec.expectStatus().isOk();
+
+        responseSpec.expectBody()
+                .jsonPath("$.id").isEqualTo(sale.getId())
+                .jsonPath("$.name").isEqualTo(sale.getName())
+                .jsonPath("$.description").isEqualTo(sale.getDescription());
+
     }
 
     @Test
-    public void validationRequestTest() {
-        webClient.post()
-            .uri("/sales/v1/greeting")
-            .accept(MediaType.APPLICATION_JSON)
-            .header(HttpHeadersKey.UNICA_SERVICE_ID,"550e8400-e29b-41d4-a716-446655440000")
-            .header(HttpHeadersKey.UNICA_APPLICATION,"genesis")
-            .header(HttpHeadersKey.UNICA_PID,"550e8400-e29b-41d4-a716-446655440000")
-            .header(HttpHeadersKey.UNICA_USER,"genesis")
-            .body(BodyInserters.fromValue(salesRequestMap.get("empty")))
-            .exchange()
-            .expectStatus().isBadRequest()
-            .expectBody()
-                .jsonPath("$.exceptionId").isEqualTo("SVC0001")
-                .jsonPath("$.userMessage").isEqualTo("Generic Client Error")
-                .jsonPath("$.exceptionDetails[0].component").isEqualTo("sales")
-                .jsonPath("$.exceptionDetails[0].description")
-                    .isEqualTo("name " + SalesRequest.MSG_NOT_EMPTY);
+    void getSales() {
+        WebTestClient.ResponseSpec responseSpec = webClient.get()
+                .uri("/fesimple/v1/sales")
+                .accept(MediaType.APPLICATION_JSON)
+                .header(HttpHeadersKey.UNICA_SERVICE_ID, "550e8400-e29b-41d4-a716-446655440000")
+                .header(HttpHeadersKey.UNICA_APPLICATION, "genesis")
+                .header(HttpHeadersKey.UNICA_PID, "550e8400-e29b-41d4-a716-446655440000")
+                .header(HttpHeadersKey.UNICA_USER, "genesis")
+                .exchange();
+
+        responseSpec.expectStatus().isOk();
     }
+
 }
