@@ -93,16 +93,16 @@
 			<artifactId>genesis-starter-web</artifactId>
 		</dependency>
 
-		<dependency>
-			<groupId>com.google.guava</groupId>
-			<artifactId>guava</artifactId>
-			<version>24.0-jre</version>
-		</dependency>
-		<dependency>
-			<groupId>com.azure</groupId>
-			<artifactId>azure-cosmos</artifactId>
-			<version>4.2.0</version>
-		</dependency>
+<!--		<dependency>-->
+<!--			<groupId>com.google.guava</groupId>-->
+<!--			<artifactId>guava</artifactId>-->
+<!--			<version>24.0-jre</version>-->
+<!--		</dependency>-->
+<!--		<dependency>-->
+<!--			<groupId>com.azure</groupId>-->
+<!--			<artifactId>azure-cosmos</artifactId>-->
+<!--			<version>4.2.0</version>-->
+<!--		</dependency>-->
 		<dependency>
 			<groupId>com.microsoft.azure</groupId>
 			<artifactId>azure-cosmosdb-spring-boot-starter</artifactId>
