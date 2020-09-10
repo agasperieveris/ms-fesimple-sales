@@ -1,12 +1,12 @@
-package com.tdp.ms.sales.model;
+package com.tdp.ms.sales.model.dto;
 
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 /**
- * Class: SalesResponse. <br/>
+ * Class: SalesController. <br/>
  * <b>Copyright</b>: &copy; 2019 Telef&oacute;nica del Per&uacute;<br/>
  * <b>Company</b>: Telef&oacute;nica del Per&uacute;<br/>
  *
@@ -22,10 +22,13 @@ import lombok.NoArgsConstructor;
  *         </ul>
  * @version 1.0
  */
+
 @Data
-@NoArgsConstructor
+@Builder
 @AllArgsConstructor
-@EqualsAndHashCode(callSuper = false)
-public class SalesResponse {
-    private String greeting;
+@NoArgsConstructor
+public class DeviceOffering {
+    private String href;
+    private String id;
+    private String name;
 }

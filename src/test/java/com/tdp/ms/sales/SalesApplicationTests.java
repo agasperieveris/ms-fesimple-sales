@@ -10,7 +10,9 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 public class SalesApplicationTests {
 
 	@Test
-	public void contextLoads() {
+	void main() {
+		SalesApplication.main(new String[] {});
 	}
+
 
 }

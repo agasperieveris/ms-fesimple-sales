@@ -1,6 +1,8 @@
 package com.tdp.ms.sales.business;
 
-import com.tdp.ms.sales.model.SalesResponse;
+import com.tdp.ms.sales.model.entity.Sale;
+import com.tdp.ms.sales.model.response.SalesResponse;
+import reactor.core.publisher.Mono;
 
 /**
  * Class: SalesService. <br/>
@@ -11,7 +13,7 @@ import com.tdp.ms.sales.model.SalesResponse;
  *         <u>Service Provider</u>: Everis Per&uacute; SAC (EVE) <br/>
  *         <u>Developed by</u>: <br/>
  *         <ul>
- *         <li>Developer name</li>
+ *         <li>Sergio Rivas</li>
  *         </ul>
  *         <u>Changes</u>:<br/>
  *         <ul>
@@ -19,8 +21,25 @@ import com.tdp.ms.sales.model.SalesResponse;
  *         </ul>
  * @version 1.0
  */
-public interface SalesService {
-    SalesResponse get();
 
-    SalesResponse put(String name);
+public interface SalesService {
+    /**
+     * Registra los datos de un nueva venta en la BBDD de la Web Convergente.
+     *
+     * @author @srivasme
+     * @param request Datos de la nueva venta
+     * @return SalesResponse, datos de la nueva venta registrada en la BBDD de la Web Convergente
+     */
+    Mono<SalesResponse> post(Sale request);
+
+    /**
+     * Actualiza los datos de la venta en la BBDD.
+     *
+     * @author @srivasme
+     * @param request Datos de la venta actualizados
+     * @return SalesResponse, datos actualizados de la venta
+     */
+    Mono<SalesResponse> put(Sale request);
+
+
 }
