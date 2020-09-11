@@ -4,6 +4,8 @@ import com.tdp.ms.sales.business.SalesService;
 import com.tdp.ms.sales.model.entity.Sale;
 import com.tdp.ms.sales.model.response.SalesResponse;
 import com.tdp.ms.sales.repository.SalesRepository;
+
+import java.util.Map;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -169,5 +171,14 @@ public class SalesServiceImpl implements SalesService {
             });
         });
 
+    }
+
+    @Override
+    public Mono<SalesResponse> confirmationSalesLead(SalesResponse request, Map<String, String> headersMap) {
+        // Buscar el sale por su id
+        Mono<Sale> inputSale = salesRepository.findById(request.getId());
+
+        // TODO: crear objecto para llamar a create product order
+        return null;
     }
 }
