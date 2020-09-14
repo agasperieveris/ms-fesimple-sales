@@ -1,5 +1,6 @@
 package com.tdp.ms.sales.business.impl;
 
+import com.azure.cosmos.implementation.NotFoundException;
 import com.tdp.ms.sales.business.SalesService;
 import com.tdp.ms.sales.model.entity.Sale;
 import com.tdp.ms.sales.model.response.SalesResponse;
@@ -113,7 +114,9 @@ public class SalesServiceImpl implements SalesService {
         // buscar en la colección
         Mono<Sale> existingSale = salesRepository.findById(request.getId());
 
-        return existingSale.flatMap(item -> {
+        return existingSale
+                .switchIfEmpty(Mono.error(new NotFoundException("El id solicitado no se encuentra registrado.")))
+                .flatMap(item -> {
             Sale salesUpdate = Sale
                     .builder()
                     .id(item.getId())
