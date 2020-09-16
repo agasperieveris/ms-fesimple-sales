@@ -98,7 +98,7 @@ public class SalesControllerTest {
     @Test
     void getSales() {
         WebTestClient.ResponseSpec responseSpec = webClient.get()
-                .uri("/fesimple/v1/sales")
+                .uri("/fesimple/v1/sales/1")
                 .accept(MediaType.APPLICATION_JSON)
                 .header(HttpHeadersKey.UNICA_SERVICE_ID, "550e8400-e29b-41d4-a716-446655440000")
                 .header(HttpHeadersKey.UNICA_APPLICATION, "genesis")
