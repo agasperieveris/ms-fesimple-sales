@@ -2,6 +2,7 @@ package com.tdp.ms.sales.business;
 
 import com.tdp.ms.sales.model.entity.Sale;
 import com.tdp.ms.sales.model.response.SalesResponse;
+import java.util.Map;
 import reactor.core.publisher.Mono;
 
 /**
@@ -41,5 +42,13 @@ public interface SalesService {
      */
     Mono<SalesResponse> put(Sale request);
 
-
+    /**
+     * Se crea un order y se actualiza los datos del sale, el orderId tambien se actualiza dentro de sale.
+     *
+     * @author @srivasme
+     * @param request Datos de la venta actualizados
+     * @param headersMap headers de la consulta
+     * @return SalesResponse, datos actualizados de la venta
+     */
+    Mono<SalesResponse> confirmationSalesLead(SalesResponse request, Map<String, String> headersMap);
 }
