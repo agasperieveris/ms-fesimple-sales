@@ -2,9 +2,8 @@ package com.tdp.ms.sales.business;
 
 import com.tdp.ms.sales.model.entity.Sale;
 import com.tdp.ms.sales.model.response.SalesResponse;
-import reactor.core.publisher.Mono;
-
 import java.util.Map;
+import reactor.core.publisher.Mono;
 
 /**
  * Class: SalesService. <br/>
@@ -51,5 +50,5 @@ public interface SalesService {
      * @param headersMap headers de la consulta
      * @return SalesResponse, datos actualizados de la venta
      */
-    Mono<SalesResponse> confirmationSalesLead(SalesResponse request, Map<String, String>headersMap);
+    Mono<SalesResponse> confirmationSalesLead(SalesResponse request, Map<String, String> headersMap);
 }
