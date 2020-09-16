@@ -25,5 +25,8 @@ application:
     license:
       type: copyright
       url: https://www.telefonica.com.pe
-  catalog-error:
-    url: http://aks-berserkers-ingress-dev.eastus2.cloudapp.azure.com
+  endpoints:
+    url:
+      create_order: https://localhost
+  security:
+    ibmclientid: 12122322

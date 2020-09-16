@@ -19,6 +19,9 @@ import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * Class: SalesController. <br/>
  * <b>Copyright</b>: &copy; 2019 Telef&oacute;nica del Per&uacute;<br/>
@@ -104,6 +107,34 @@ public class SalesController {
             @RequestHeader(HttpHeadersKey.UNICA_USER) String user) {
 
         return salesService.put(request);
+    }
+
+    /**
+     * Registra los datos de un Sale en la BBDD de la Web Convergente.
+     *
+     * @author @srivasme
+     * @param request Datos de la venta
+     * @return SalesResponse, datos de la venta registrada en la BBDD de la Web
+     *         Convergente
+     */
+
+    @PostMapping("/confirmation")
+    @ResponseStatus(HttpStatus.CREATED)
+    public Mono<SalesResponse> confirmationSalesLead(@Valid @RequestBody SalesResponse request,
+                                            @RequestHeader(HttpHeadersKey.UNICA_SERVICE_ID) String serviceId,
+                                            @RequestHeader(HttpHeadersKey.UNICA_APPLICATION) String application,
+                                            @RequestHeader(HttpHeadersKey.UNICA_PID) String pid,
+                                            @RequestHeader(HttpHeadersKey.UNICA_USER) String user,
+                                            @RequestHeader("ufxauthorization") String ufxauthorization) {
+
+        Map<String, String> headersMap = new HashMap<String, String>();
+        headersMap.put(HttpHeadersKey.UNICA_SERVICE_ID, serviceId);
+        headersMap.put(HttpHeadersKey.UNICA_APPLICATION, application);
+        headersMap.put(HttpHeadersKey.UNICA_PID, pid);
+        headersMap.put(HttpHeadersKey.UNICA_USER, user);
+        headersMap.put("ufxauthorization", ufxauthorization);
+
+        return salesService.confirmationSalesLead(request, headersMap);
     }
 
 }

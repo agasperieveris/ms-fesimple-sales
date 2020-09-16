@@ -109,4 +109,29 @@ public class SalesControllerTest {
         responseSpec.expectStatus().isOk();
     }
 
+    @Test
+    void confirmation() {
+        Mockito.when(salesService.confirmationSalesLead(any(), any()))
+                .thenReturn(Mono.just(salesResponse));
+
+        WebTestClient.ResponseSpec responseSpec = webClient.post()
+                .uri("/fesimple/v1/sales/confirmation")
+                .accept(MediaType.APPLICATION_JSON)
+                .header(HttpHeadersKey.UNICA_SERVICE_ID, "550e8400-e29b-41d4-a716-446655440000")
+                .header(HttpHeadersKey.UNICA_APPLICATION, "genesis")
+                .header(HttpHeadersKey.UNICA_PID, "550e8400-e29b-41d4-a716-446655440000")
+                .header(HttpHeadersKey.UNICA_USER, "genesis")
+                .header("ufxauthorization", "")
+                .bodyValue(salesResponse)
+                .exchange();
+
+        responseSpec.expectStatus().isCreated();
+
+        responseSpec.expectBody()
+                .jsonPath("$.id").isEqualTo(salesResponse.getId())
+                .jsonPath("$.name").isEqualTo(salesResponse.getName())
+                .jsonPath("$.description").isEqualTo(salesResponse.getDescription());
+
+    }
+
 }
