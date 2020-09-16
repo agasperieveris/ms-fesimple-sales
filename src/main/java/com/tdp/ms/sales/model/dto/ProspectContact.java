@@ -35,8 +35,8 @@ public class ProspectContact {
     private String schemaLocation;
     @JsonProperty("@type")
     private String type;
-    private String mediumType;
     private Characteristic characteristic;
+    private String mediumType;
     private boolean preferred;
     private ValidFor validFor;
 }
