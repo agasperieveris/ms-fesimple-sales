@@ -9,7 +9,6 @@ import com.tdp.ms.sales.model.request.GetSalesRequest;
 import com.tdp.ms.sales.model.response.SalesResponse;
 import com.tdp.ms.sales.repository.SalesRepository;
 
-import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
