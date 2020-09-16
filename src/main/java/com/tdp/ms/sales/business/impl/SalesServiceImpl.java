@@ -1,10 +1,15 @@
 package com.tdp.ms.sales.business.impl;
 
 import com.azure.cosmos.implementation.NotFoundException;
+import com.tdp.genesis.core.exception.GenesisException;
 import com.tdp.ms.sales.business.SalesService;
+import com.tdp.ms.sales.model.dto.ValidFor;
 import com.tdp.ms.sales.model.entity.Sale;
+import com.tdp.ms.sales.model.request.GetSalesRequest;
 import com.tdp.ms.sales.model.response.SalesResponse;
 import com.tdp.ms.sales.repository.SalesRepository;
+
+import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,6 +40,53 @@ import reactor.core.publisher.Mono;
 public class SalesServiceImpl implements SalesService {
     @Autowired
     private SalesRepository salesRepository;
+
+    @Override
+    public Mono<SalesResponse> getSale(GetSalesRequest request) {
+
+        Mono<Sale> existingSale = salesRepository.findById(request.getId());
+
+        return existingSale
+                .switchIfEmpty(Mono.error( GenesisException.builder()
+                        .exceptionId("SVC0004")
+                        .addDetail(true)
+                        .withDescription("el id "+ request.getId()+" no se encuentra registrado en BD.")
+                        .push()
+                        .build()))
+                .flatMap(item -> {
+                    String salesId;
+                    salesId = String.valueOf(item.getSalesId());
+
+                    if (salesId.length() < 9) {
+                        for (int i = 0; i < 9 - salesId.length(); i++) {
+                            salesId = "0" + salesId;
+                        }
+                    }
+                    SalesResponse response = SalesResponse
+                            .builder()
+                            .salesId("FE-" +item.getSalesId())
+                            .id(item.getId())
+                            .name(item.getName())
+                            .description(item.getDescription())
+                            .priority(item.getPriority())
+                            .channel(item.getChannel())
+                            .agent(item.getAgent())
+                            .productType(item.getProductType())
+                            .commercialOperation(item.getComercialOperationType())
+                            .estimatedRevenue(item.getEstimatedRevenue())
+                            .prospectContact(item.getProspectContact())
+                            .relatedParty(item.getRelatedParty())
+                            .status(item.getStatus())
+                            .statusChangeDate(item.getStatusChangeDate())
+                            .statusChangeReason(item.getStatusChangeReason())
+                            .audioStatus(item.getAudioStatus())
+                            .validFor(item.getValidFor())
+                            .additionalData(item.getAdditionalData())
+                            .build();
+
+                    return Mono.just(response);
+                });
+    }
 
     @Override
     public Mono<SalesResponse> post(Sale request) {
@@ -80,22 +132,24 @@ public class SalesServiceImpl implements SalesService {
                             }
                         }
 
+                        ValidFor validFor = new ValidFor();
+                        validFor.setStartDateTime(saleItem.getStartDateTime());
+                        validFor.setEndDateTime(saleItem.getEndDateTime());
 
                         SalesResponse salesResponse = SalesResponse
                                 .builder()
                                 .id(saleItem.getId())
-                                .idSales("FE-" + salesId)
+                                .salesId("FE-" + salesId)
                                 .description(saleItem.getDescription())
                                 .additionalData(saleItem.getAdditionalData())
                                 .channel(saleItem.getChannel())
                                 .commercialOperation(saleItem.getComercialOperationType())
-                                .endDateTime(saleItem.getEndDateTime())
+                                .validFor(validFor)
                                 .name(saleItem.getName())
                                 .priority(saleItem.getPriority())
                                 .productType(saleItem.getProductType())
                                 .prospectContact(saleItem.getProspectContact())
                                 .relatedParty(saleItem.getRelatedParty())
-                                .startDateTime(saleItem.getStartDateTime())
                                 .status(saleItem.getStatus())
                                 .statusChangeDate(saleItem.getStatusChangeDate())
                                 .statusChangeReason(saleItem.getStatusChangeReason())
@@ -111,6 +165,7 @@ public class SalesServiceImpl implements SalesService {
     public Mono<SalesResponse> put(Sale request) {
         // buscar en la colección
         Mono<Sale> existingSale = salesRepository.findById(request.getId());
+
 
         return existingSale
                 .switchIfEmpty(Mono.error(new NotFoundException("El id solicitado no se encuentra registrado.")))
@@ -147,22 +202,24 @@ public class SalesServiceImpl implements SalesService {
                     }
                 }
 
+                ValidFor validFor = new ValidFor();
+                validFor.setStartDateTime(updateSaleItem.getStartDateTime());
+                validFor.setEndDateTime(updateSaleItem.getEndDateTime());
 
                 SalesResponse response = SalesResponse
                         .builder()
                         .id(updateSaleItem.getId())
-                        .idSales("FE-" + salesId)
+                        .salesId("FE-" + salesId)
                         .description(updateSaleItem.getDescription())
                         .additionalData(updateSaleItem.getAdditionalData())
                         .channel(updateSaleItem.getChannel())
                         .commercialOperation(updateSaleItem.getComercialOperationType())
-                        .endDateTime(updateSaleItem.getEndDateTime())
+                        .validFor(validFor)
                         .name(updateSaleItem.getName())
                         .priority(updateSaleItem.getPriority())
                         .productType(updateSaleItem.getProductType())
                         .prospectContact(updateSaleItem.getProspectContact())
                         .relatedParty(updateSaleItem.getRelatedParty())
-                        .startDateTime(updateSaleItem.getStartDateTime())
                         .status(updateSaleItem.getStatus())
                         .statusChangeDate(updateSaleItem.getStatusChangeDate())
                         .statusChangeReason(updateSaleItem.getStatusChangeReason())
