@@ -5,6 +5,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 /**
  * Class: SalesController. <br/>
  * <b>Copyright</b>: &copy; 2019 Telef&oacute;nica del Per&uacute;<br/>
@@ -31,4 +33,5 @@ public class DeviceOffering {
     private String href;
     private String id;
     private String name;
+    private List<AdditionalData> additionalData;
 }
