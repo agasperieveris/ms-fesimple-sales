@@ -16,7 +16,7 @@
 
 	<groupId>com.tdp.ms</groupId>
 	<artifactId>sales</artifactId>
-	<version>1.0.2</version>
+	<version>1.0.4</version>
 	<name>${project.groupId}:${project.artifactId}</name>
 	<description>Template from Genesis Framework to build microservices</description>
 
@@ -91,6 +91,18 @@
 		<dependency>
 			<groupId>com.tdp.genesis.starter.web</groupId>
 			<artifactId>genesis-starter-web</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>io.netty</groupId>
+			<artifactId>netty-handler</artifactId>
+			<version>4.1.43.Final</version>
+		</dependency>
+
+		<dependency>
+			<groupId>io.projectreactor.netty</groupId>
+			<artifactId>reactor-netty</artifactId>
+			<version>0.9.1.RELEASE</version>
 		</dependency>
 
 		<dependency>
