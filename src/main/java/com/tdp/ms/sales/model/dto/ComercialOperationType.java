@@ -36,7 +36,7 @@ public class ComercialOperationType {
     private String reason;
     private String orderId;
     private Product product;
-    private List<ProductOfering> productOfferings;
+    private List<ProductOfering> productOffering;
     private List<DeviceOffering> deviceOffering;
     private List<Place> place;
     private List<AdditionalData> additionalData;

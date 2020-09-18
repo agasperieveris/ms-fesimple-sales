@@ -1,10 +1,7 @@
 package com.tdp.ms.sales.model.response;
 
-import com.tdp.ms.sales.model.dto.AdditionalData;
-import com.tdp.ms.sales.model.dto.Channel;
-import com.tdp.ms.sales.model.dto.ComercialOperationType;
-import com.tdp.ms.sales.model.dto.ProspectContact;
-import com.tdp.ms.sales.model.dto.RelatedParty;
+import com.tdp.ms.sales.model.dto.*;
+
 import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -37,20 +34,22 @@ import lombok.Setter;
 @Builder
 @Setter
 public class SalesResponse {
+    private String salesId;
     private String id;
-    private String idSales;
     private String name;
-    private String priority;
     private String description;
+    private String priority;
     private Channel channel;
+    private Agent agent;
     private String productType;
     private List<ComercialOperationType> commercialOperation;
+    private EstimatedRevenue estimatedRevenue;
     private List<ProspectContact> prospectContact;
     private List<RelatedParty> relatedParty;
     private String status;
     private String statusChangeDate;
     private String statusChangeReason;
-    private String startDateTime;
-    private String endDateTime;
+    private String audioStatus;
+    private ValidFor validFor;
     private List<AdditionalData> additionalData;
 }
