@@ -1,22 +1,18 @@
 package com.tdp.ms.sales.expose;
 
 import com.tdp.genesis.core.constants.HttpHeadersKey;
+import com.tdp.genesis.core.exception.GenesisException;
 import com.tdp.ms.sales.business.SalesService;
 import com.tdp.ms.sales.model.entity.Sale;
+import com.tdp.ms.sales.model.request.GetSalesRequest;
 import com.tdp.ms.sales.model.response.SalesResponse;
 import javax.validation.Valid;
+
+import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseStatus;
-import org.springframework.web.bind.annotation.RestController;
-import reactor.core.publisher.Flux;
+import org.springframework.http.MediaType;
+import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
 
 import java.util.HashMap;
@@ -50,15 +46,31 @@ public class SalesController {
     /**
      * se listan las ventas de la BBDD.
      *
+     * @return
      */
 
-    @GetMapping
-    public Flux<SalesResponse> getSales(@RequestHeader(HttpHeadersKey.UNICA_SERVICE_ID) String serviceId,
-            @RequestHeader(HttpHeadersKey.UNICA_APPLICATION) String application,
-            @RequestHeader(HttpHeadersKey.UNICA_PID) String pid,
-            @RequestHeader(HttpHeadersKey.UNICA_USER) String user) {
+    @GetMapping(value ="/{id}")
+    @ApiOperation(produces = MediaType.APPLICATION_JSON_VALUE,
+            value = "Obtiene por id la venta",
+            notes = "Se debe enviar id como parámetro",
+            response = SalesResponse.class)
+    public Mono<SalesResponse> getSales(@PathVariable("id") String id, @RequestHeader(HttpHeadersKey.UNICA_SERVICE_ID) String serviceId,
+                                        @RequestHeader(HttpHeadersKey.UNICA_APPLICATION) String application,
+                                        @RequestHeader(HttpHeadersKey.UNICA_PID) String pid,
+                                        @RequestHeader(HttpHeadersKey.UNICA_USER) String user) throws GenesisException {
 
-        // TODO: Esto es un mock - método por definir
+        Map<String,String> headersMap = new HashMap<>();
+        headersMap.put(HttpHeadersKey.UNICA_SERVICE_ID, serviceId);
+        headersMap.put(HttpHeadersKey.UNICA_APPLICATION, application);
+        headersMap.put(HttpHeadersKey.UNICA_PID, pid);
+        headersMap.put(HttpHeadersKey.UNICA_USER, user);
+
+        return salesService.getSale(GetSalesRequest
+                .builder()
+                .id(id)
+                .headersMap(headersMap)
+                .build());
+  /*      // TODO: Esto es un mock - método por definir
 
         SalesResponse salesResponse = SalesResponse
                 .builder()
@@ -67,9 +79,8 @@ public class SalesController {
                 .description("descripcion")
                 .build();
 
-        return Flux.just(salesResponse);
+        return Mono.just(salesResponse);*/
     }
-
     /**
      * Registra los datos de un Sale en la BBDD de la Web Convergente.
      *
