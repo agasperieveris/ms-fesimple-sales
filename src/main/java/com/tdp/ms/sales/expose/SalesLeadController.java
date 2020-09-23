@@ -46,7 +46,7 @@ import reactor.core.publisher.Mono;
  */
 
 @RestController
-@RequestMapping("/fesimple/v1/salesLead")
+@RequestMapping("/fesimple/v1/saleslead")
 @CrossOrigin
 public class SalesLeadController {
     @Autowired

@@ -52,7 +52,7 @@ public class SalesLeadControllerTest {
                 .thenReturn(Mono.just(salesResponse));
 
         WebTestClient.ResponseSpec responseSpec = webClient.post()
-                .uri("/fesimple/v1/salesLead")
+                .uri("/fesimple/v1/saleslead")
                 .accept(MediaType.APPLICATION_JSON)
                 .header(HttpHeadersKey.UNICA_SERVICE_ID, "550e8400-e29b-41d4-a716-446655440000")
                 .header(HttpHeadersKey.UNICA_APPLICATION, "genesis")
@@ -76,7 +76,7 @@ public class SalesLeadControllerTest {
                 .thenReturn(Mono.just(salesResponse));
 
         WebTestClient.ResponseSpec responseSpec = webClient.put()
-                .uri("/fesimple/v1/salesLead")
+                .uri("/fesimple/v1/saleslead")
                 .accept(MediaType.APPLICATION_JSON)
                 .header(HttpHeadersKey.UNICA_SERVICE_ID, "550e8400-e29b-41d4-a716-446655440000")
                 .header(HttpHeadersKey.UNICA_APPLICATION, "genesis")
@@ -97,7 +97,7 @@ public class SalesLeadControllerTest {
     @Test
     void getSales() {
         WebTestClient.ResponseSpec responseSpec = webClient.get()
-                .uri("/fesimple/v1/salesLead/1")
+                .uri("/fesimple/v1/saleslead/1")
                 .accept(MediaType.APPLICATION_JSON)
                 .header(HttpHeadersKey.UNICA_SERVICE_ID, "550e8400-e29b-41d4-a716-446655440000")
                 .header(HttpHeadersKey.UNICA_APPLICATION, "genesis")
@@ -114,7 +114,7 @@ public class SalesLeadControllerTest {
                 .thenReturn(Mono.just(salesResponse));
 
         WebTestClient.ResponseSpec responseSpec = webClient.post()
-                .uri("/fesimple/v1/salesLead/confirmation")
+                .uri("/fesimple/v1/saleslead/confirmation")
                 .accept(MediaType.APPLICATION_JSON)
                 .header(HttpHeadersKey.UNICA_SERVICE_ID, "550e8400-e29b-41d4-a716-446655440000")
                 .header(HttpHeadersKey.UNICA_APPLICATION, "genesis")
@@ -139,7 +139,7 @@ public class SalesLeadControllerTest {
                 .thenReturn(Mono.just(salesResponse));
 
         WebTestClient.ResponseSpec responseSpec = webClient.get()
-                .uri("/fesimple/v1/salesLead")
+                .uri("/fesimple/v1/saleslead")
                 .accept(MediaType.APPLICATION_JSON)
                 .header(HttpHeadersKey.UNICA_SERVICE_ID, "550e8400-e29b-41d4-a716-446655440000")
                 .header(HttpHeadersKey.UNICA_APPLICATION, "genesis")
