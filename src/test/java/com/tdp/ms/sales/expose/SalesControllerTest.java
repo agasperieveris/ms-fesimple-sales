@@ -20,7 +20,6 @@ import static org.mockito.ArgumentMatchers.any;
 @SpringBootTest
 @AutoConfigureWebTestClient(timeout = "20000")
 public class SalesControllerTest {
-
     @Autowired
     private WebTestClient webClient;
 
@@ -70,68 +69,4 @@ public class SalesControllerTest {
                 .jsonPath("$.description").isEqualTo(sale.getDescription());
 
     }
-
-    @Test
-    void updateSales() {
-        Mockito.when(salesService.put(any()))
-                .thenReturn(Mono.just(salesResponse));
-
-        WebTestClient.ResponseSpec responseSpec = webClient.put()
-                .uri("/fesimple/v1/sales")
-                .accept(MediaType.APPLICATION_JSON)
-                .header(HttpHeadersKey.UNICA_SERVICE_ID, "550e8400-e29b-41d4-a716-446655440000")
-                .header(HttpHeadersKey.UNICA_APPLICATION, "genesis")
-                .header(HttpHeadersKey.UNICA_PID, "550e8400-e29b-41d4-a716-446655440000")
-                .header(HttpHeadersKey.UNICA_USER, "genesis")
-                .bodyValue(sale)
-                .exchange();
-
-        responseSpec.expectStatus().isOk();
-
-        responseSpec.expectBody()
-                .jsonPath("$.id").isEqualTo(sale.getId())
-                .jsonPath("$.name").isEqualTo(sale.getName())
-                .jsonPath("$.description").isEqualTo(sale.getDescription());
-
-    }
-
-    @Test
-    void getSales() {
-        WebTestClient.ResponseSpec responseSpec = webClient.get()
-                .uri("/fesimple/v1/sales/1")
-                .accept(MediaType.APPLICATION_JSON)
-                .header(HttpHeadersKey.UNICA_SERVICE_ID, "550e8400-e29b-41d4-a716-446655440000")
-                .header(HttpHeadersKey.UNICA_APPLICATION, "genesis")
-                .header(HttpHeadersKey.UNICA_PID, "550e8400-e29b-41d4-a716-446655440000")
-                .header(HttpHeadersKey.UNICA_USER, "genesis")
-                .exchange();
-
-        responseSpec.expectStatus().isOk();
-    }
-
-    @Test
-    void confirmation() {
-        Mockito.when(salesService.confirmationSalesLead(any(), any()))
-                .thenReturn(Mono.just(salesResponse));
-
-        WebTestClient.ResponseSpec responseSpec = webClient.post()
-                .uri("/fesimple/v1/sales/confirmation")
-                .accept(MediaType.APPLICATION_JSON)
-                .header(HttpHeadersKey.UNICA_SERVICE_ID, "550e8400-e29b-41d4-a716-446655440000")
-                .header(HttpHeadersKey.UNICA_APPLICATION, "genesis")
-                .header(HttpHeadersKey.UNICA_PID, "550e8400-e29b-41d4-a716-446655440000")
-                .header(HttpHeadersKey.UNICA_USER, "genesis")
-                .header("ufxauthorization", "")
-                .bodyValue(salesResponse)
-                .exchange();
-
-        responseSpec.expectStatus().isCreated();
-
-        responseSpec.expectBody()
-                .jsonPath("$.id").isEqualTo(salesResponse.getId())
-                .jsonPath("$.name").isEqualTo(salesResponse.getName())
-                .jsonPath("$.description").isEqualTo(salesResponse.getDescription());
-
-    }
-
 }

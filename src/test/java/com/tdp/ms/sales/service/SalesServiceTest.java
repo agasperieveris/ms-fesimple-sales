@@ -12,7 +12,6 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mockito;
-import org.opensaml.xmlsec.signature.P;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -65,8 +64,8 @@ public class SalesServiceTest {
 
         Agent agent= new Agent();
         agent.setId("1");
-        agent.setNationalID("Peru");
-        agent.setNationalID("DNI");
+        agent.setNationalId("Peru");
+        agent.setNationalId("DNI");
         List<AdditionalData> additionalDatas = new ArrayList<>();
 
         AdditionalData additionalData = new AdditionalData();
@@ -74,17 +73,15 @@ public class SalesServiceTest {
         additionalData.setValue("d");
         additionalDatas.add(additionalData);
 
-        ProductOfering productOfering = new ProductOfering();
-        productOfering.setAdditionalData(additionalDatas);
-        productOfering.setHref("s");
-        productOfering.setId("s");
-        productOfering.setName("f");
-        productOfering.setProductType("a");
-        productOfering.setType("s");
+        EntityRefType entityRefType = new EntityRefType();
+        entityRefType.setHref("s");
+        entityRefType.setId("s");
+        entityRefType.setName("f");
+        entityRefType.setType("s");
 
-         List<ProductOfering> productOfferings = new ArrayList<>();
+         List<EntityRefType> productOfferings = new ArrayList<>();
 
-        productOfferings.add(productOfering);
+        productOfferings.add(entityRefType);
         List<DeviceOffering> deviceOfferings = new ArrayList<>();
         List<Place> places = new ArrayList<>();
 
@@ -99,9 +96,7 @@ public class SalesServiceTest {
         DeviceOffering deviceOffering = new DeviceOffering();
 
         deviceOffering.setAdditionalData(additionalDatas);
-        deviceOffering.setHref("s");
         deviceOffering.setId("s");
-        deviceOffering.setName("s");
 
         deviceOfferings.add(deviceOffering);
         Product product= new Product();
@@ -113,13 +108,10 @@ public class SalesServiceTest {
          comercialOperationType.setId("1");
          comercialOperationType.setName("h");
          comercialOperationType.setReason("d");
-         comercialOperationType.setOrderId("f");
          comercialOperationType.setProduct(product);
-         comercialOperationType.setProductOffering(productOfferings);
          comercialOperationType.setDeviceOffering(deviceOfferings);
          comercialOperationType.setAction("s");
          comercialOperationType.setAdditionalData(additionalDatas);
-         comercialOperationType.setPlace(places);
          comercialOperationTypes.add(comercialOperationType);
 
         EstimatedRevenue estimatedRevenue = new EstimatedRevenue();
@@ -158,8 +150,8 @@ public class SalesServiceTest {
         relatedParty.setHref("s");
         relatedParty.setId("s");
         relatedParty.setLastName("s");
-        relatedParty.setNationalID("s");
-        relatedParty.setNationalIDType("s");
+        relatedParty.setNationalId("s");
+        relatedParty.setNationalIdType("s");
         relatedParty.setRole("s");
 
         List<RelatedParty> relatedParties = new ArrayList<>();
@@ -210,7 +202,7 @@ public class SalesServiceTest {
                 .channel(channel)
                 .agent(agent)
                 .productType("s")
-                .commercialOperation(comercialOperationTypes)
+                .comercialOperationType(comercialOperationTypes)
                 .estimatedRevenue(estimatedRevenue)
                 .prospectContact(prospectContacts)
                 .relatedParty(relatedParties)

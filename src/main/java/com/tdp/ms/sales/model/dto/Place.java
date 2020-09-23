@@ -1,12 +1,11 @@
 package com.tdp.ms.sales.model.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.util.List;
 
 /**
  * Class: SalesController. <br/>
@@ -36,5 +35,6 @@ public class Place {
     private String name;
     @JsonProperty("@referredType")
     private String referredType;
+    private AddressType address;
     private List<AdditionalData> additionalData;
 }

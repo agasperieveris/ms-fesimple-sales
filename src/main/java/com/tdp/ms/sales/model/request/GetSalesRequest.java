@@ -1,9 +1,8 @@
 package com.tdp.ms.sales.model.request;
 
+import java.util.Map;
 import lombok.Builder;
 import lombok.Getter;
-
-import java.util.Map;
 
 /**
  * Class: getSalesRequest. <br/>

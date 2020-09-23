@@ -1,13 +1,13 @@
 package com.tdp.ms.sales.model.dto;
 
-import java.util.List;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * Class: SalesController. <br/>
+ * Class: ProductCharacteristicType. <br/>
  * <b>Copyright</b>: &copy; 2019 Telef&oacute;nica del Per&uacute;<br/>
  * <b>Company</b>: Telef&oacute;nica del Per&uacute;<br/>
  *
@@ -25,14 +25,11 @@ import lombok.NoArgsConstructor;
  */
 
 @Data
-@NoArgsConstructor
 @AllArgsConstructor
+@NoArgsConstructor
 @Builder
-public class ProductOfering {
-    private String id;
-    private String href;
-    private String name;
+public class ProductCharacteristicType {
+    private String valueType;
+    @JsonProperty("@type")
     private String type;
-    private String productType;
-    private List<AdditionalData> additionalData;
 }

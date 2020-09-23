@@ -33,6 +33,18 @@ public class Product {
     private String href;
     private String id;
     private String publicId;
-    private String publicType;
+    private String description;
+    private String name;
+    private String productType;
+    private List<String> tags;
+    private Boolean isBundle;
+    private String productSerialNumber;
+    private List<AccountRefType> billingAccount;
+    private EntityRefType productOffering;
+    private EntityRefType productSpec;
+    private List<ProductCharacteristicType> characteristic;
+    private List<RelatedProductType> productRelationShip;
+    private List<ComponentProdPriceType> productPrice;
+    private List<ProductRefInfoTypePlace> place;
     private List<AdditionalData> additionalData;
 }
