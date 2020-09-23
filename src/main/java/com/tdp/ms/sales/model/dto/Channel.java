@@ -32,5 +32,6 @@ public class Channel {
     private String href;
     private String name;
     private String storeId;
+    private String dealerId;
     private String storeName;
 }

@@ -29,7 +29,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Builder
 public class Offers {
-    private String idOfferPriority; // aqui me quede!
+    private String idOfferPriority;
     private String idOfferRow;
     private List<ProductOffer> productOffer;
 

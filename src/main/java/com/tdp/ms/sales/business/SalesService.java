@@ -26,7 +26,6 @@ import reactor.core.publisher.Mono;
 
 public interface SalesService {
 
-
     /**
      * Registra los datos de un nueva venta en la BBDD de la Web Convergente.
      *
@@ -35,6 +34,7 @@ public interface SalesService {
      * @return SalesResponse, datos de la nueva venta registrada en la BBDD de la Web Convergente
      */
     Mono<SalesResponse> getSale(GetSalesRequest request);
+
     /**
      * Registra los datos de un nueva venta en la BBDD de la Web Convergente.
      *
