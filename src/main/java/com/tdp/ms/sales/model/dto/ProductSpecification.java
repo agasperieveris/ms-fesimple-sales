@@ -27,31 +27,8 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Data
 public class ProductSpecification {
-    private String temporaryId;
-    private String productID;
-    private String businessType;
-    private String productCatalogId;
-    private String name; // response
-    private String serviceId;
-    private boolean selected;
-    private String action;
-    private String status;
+    private String name;
     private String code;
     private String id;
     private String level;
-
-    /**
-     * Constructor.
-     * 
-     * @param name name.
-     * @param code code.
-     * @param id id.
-     * @param level level.
-     */
-    public ProductSpecification(String name, String code, String id, String level) {
-        this.name = name;
-        this.code = code;
-        this.id = id;
-        this.level = level;
-    }
 }
