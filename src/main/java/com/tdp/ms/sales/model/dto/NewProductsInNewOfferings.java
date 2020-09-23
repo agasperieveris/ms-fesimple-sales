@@ -45,7 +45,7 @@ public class NewProductsInNewOfferings {
     private List<Messages> messages;
     private ProductOffering productOffering;
     private TotalRecurringCalculatedPrice totalRecurringCalculatedPrice;
-    private TotalOneTimeCalculatedPrice totalOneTimeCalculatedPrice;
+    private TotalRecurringCalculatedPrice totalOneTimeCalculatedPrice;
     private List<DisplayableItems> displayableItems;
     private ProductSpecification productSpecification;
 }

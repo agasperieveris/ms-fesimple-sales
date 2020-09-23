@@ -1,7 +1,6 @@
 package com.tdp.ms.sales.expose;
 
 import com.tdp.genesis.core.constants.HttpHeadersKey;
-import com.tdp.genesis.core.exception.GenesisException;
 import com.tdp.ms.sales.business.SalesService;
 import com.tdp.ms.sales.model.entity.Sale;
 import com.tdp.ms.sales.model.request.GetSalesRequest;
@@ -67,7 +66,7 @@ public class SalesLeadController {
                                         @RequestHeader(HttpHeadersKey.UNICA_SERVICE_ID) String serviceId,
                                         @RequestHeader(HttpHeadersKey.UNICA_APPLICATION) String application,
                                         @RequestHeader(HttpHeadersKey.UNICA_PID) String pid,
-                                        @RequestHeader(HttpHeadersKey.UNICA_USER) String user) throws GenesisException {
+                                        @RequestHeader(HttpHeadersKey.UNICA_USER) String user) {
 
         Map<String,String> headersMap = new HashMap<>();
         headersMap.put(HttpHeadersKey.UNICA_SERVICE_ID, serviceId);
@@ -138,7 +137,7 @@ public class SalesLeadController {
                                             @RequestHeader(HttpHeadersKey.UNICA_USER) String user,
                                             @RequestHeader("ufxauthorization") String ufxauthorization) {
 
-        Map<String, String> headersMap = new HashMap<String, String>();
+        Map<String, String> headersMap = new HashMap<>();
         headersMap.put(HttpHeadersKey.UNICA_SERVICE_ID, serviceId);
         headersMap.put(HttpHeadersKey.UNICA_APPLICATION, application);
         headersMap.put(HttpHeadersKey.UNICA_PID, pid);
@@ -186,10 +185,9 @@ public class SalesLeadController {
                                 defaultValue = "") String pageCount,
                         @RequestParam(value = "paginationInfo.page", required = false, defaultValue = "") String page,
                         @RequestParam(value = "paginationInfo.maxResultCount", required = false,
-                                defaultValue = "") String maxResultCount
-    ) throws GenesisException {
+                                defaultValue = "") String maxResultCount) {
 
-        // TODO: Por ahora es un mock, se debe de implementar este método
+        //TODO: Por ahora es un mock, se debe de implementar este método
 
         Map<String,String> headersMap = new HashMap<>();
         headersMap.put(HttpHeadersKey.UNICA_SERVICE_ID, serviceId);
