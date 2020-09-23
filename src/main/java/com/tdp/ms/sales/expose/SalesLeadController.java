@@ -4,6 +4,7 @@ import com.tdp.genesis.core.constants.HttpHeadersKey;
 import com.tdp.ms.sales.business.SalesService;
 import com.tdp.ms.sales.model.entity.Sale;
 import com.tdp.ms.sales.model.request.GetSalesRequest;
+import com.tdp.ms.sales.model.request.SalesRequest;
 import com.tdp.ms.sales.model.response.SalesResponse;
 import io.swagger.annotations.ApiOperation;
 import java.util.HashMap;
@@ -110,7 +111,7 @@ public class SalesLeadController {
      */
 
     @PutMapping
-    public Mono<SalesResponse> updateSales(@Valid @RequestBody Sale request,
+    public Mono<SalesResponse> updateSales(@Valid @RequestBody SalesRequest request,
             @RequestHeader(HttpHeadersKey.UNICA_SERVICE_ID) String serviceId,
             @RequestHeader(HttpHeadersKey.UNICA_APPLICATION) String application,
             @RequestHeader(HttpHeadersKey.UNICA_PID) String pid,

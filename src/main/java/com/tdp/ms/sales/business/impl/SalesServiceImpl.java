@@ -5,6 +5,7 @@ import com.tdp.genesis.core.exception.GenesisException;
 import com.tdp.ms.sales.business.SalesService;
 import com.tdp.ms.sales.model.entity.Sale;
 import com.tdp.ms.sales.model.request.GetSalesRequest;
+import com.tdp.ms.sales.model.request.SalesRequest;
 import com.tdp.ms.sales.model.response.SalesResponse;
 import com.tdp.ms.sales.repository.SalesRepository;
 
@@ -53,8 +54,15 @@ public class SalesServiceImpl implements SalesService {
 
     @Override
     public Mono<SalesResponse> getSale(GetSalesRequest request) {
+        // se recorre el id para obtener el número (Long)
+        int index = 3;
+        while (request.getId().charAt(index) != '0') {
+            index++;
+        }
 
-        Mono<Sale> existingSale = salesRepository.findById(request.getId());
+        Long idSales = Long.parseLong(request.getId().substring(index));
+
+        Mono<Sale> existingSale = salesRepository.findBySalesId(idSales);
 
         return existingSale
                 .switchIfEmpty(Mono.error(GenesisException.builder()
@@ -67,14 +75,15 @@ public class SalesServiceImpl implements SalesService {
                     String salesId;
                     salesId = String.valueOf(item.getSalesId());
 
-                    if (salesId.length() < 9) {
-                        for (int i = 0; i < 9 - salesId.length(); i++) {
+                    int salesLen = salesId.length();
+                    if (salesLen < 9) {
+                        for (int i = 0; i < 9 - salesLen; i++) {
                             salesId = "0" + salesId;
                         }
                     }
                     SalesResponse response = SalesResponse
                             .builder()
-                            .salesId("FE-" + item.getSalesId())
+                            .salesId("FE-" + salesId)
                             .id(item.getId())
                             .name(item.getName())
                             .description(item.getDescription())
@@ -176,7 +185,7 @@ public class SalesServiceImpl implements SalesService {
     }
 
     @Override
-    public Mono<SalesResponse> put(Sale request) {
+    public Mono<SalesResponse> put(SalesRequest request) {
         // buscar en la colección
         Mono<Sale> existingSale = salesRepository.findById(request.getId());
 
@@ -260,6 +269,30 @@ public class SalesServiceImpl implements SalesService {
         //TODO: Esto es un mock, se ha replanteado la estructura para el siguiente sprint
         // Buscar el sale por su id
         Mono<Sale> inputSale = salesRepository.findById(request.getId());
-        return inputSale.flatMap(item -> put(item));
+        return inputSale.flatMap(item -> put(SalesRequest
+                .builder()
+                .additionalData(item.getAdditionalData())
+                .agent(item.getAgent())
+                .audioStatus(item.getAudioStatus())
+                .audioUrl(item.getAudioUrl())
+                .channel(item.getChannel())
+                .comercialOperationType(item.getComercialOperationType())
+                .description(item.getDescription())
+                .estimatedRevenue(item.getEstimatedRevenue())
+                .id(item.getId())
+                .identityValidations(item.getIdentityValidations())
+                .name(item.getName())
+                .paymentType(item.getPaymentType())
+                .priority(item.getPriority())
+                .productType(item.getProductType())
+                .prospectContact(item.getProspectContact())
+                .relatedParty(item.getRelatedParty())
+                .saleCreationDate(item.getSaleCreationDate())
+                .salesId(item.getSalesId().toString())
+                .status(item.getStatus())
+                .statusChangeDate(item.getStatusChangeDate())
+                .statusChangeReason(item.getStatusChangeReason())
+                .validFor(item.getValidFor())
+                .build()));
     }
 }
