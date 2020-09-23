@@ -64,8 +64,8 @@ public class SalesServiceTest {
 
         Agent agent= new Agent();
         agent.setId("1");
-        agent.setNationalID("Peru");
-        agent.setNationalID("DNI");
+        agent.setNationalId("Peru");
+        agent.setNationalId("DNI");
         List<AdditionalData> additionalDatas = new ArrayList<>();
 
         AdditionalData additionalData = new AdditionalData();
@@ -150,8 +150,8 @@ public class SalesServiceTest {
         relatedParty.setHref("s");
         relatedParty.setId("s");
         relatedParty.setLastName("s");
-        relatedParty.setNationalID("s");
-        relatedParty.setNationalIDType("s");
+        relatedParty.setNationalId("s");
+        relatedParty.setNationalIdType("s");
         relatedParty.setRole("s");
 
         List<RelatedParty> relatedParties = new ArrayList<>();
