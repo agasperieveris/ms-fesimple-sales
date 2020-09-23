@@ -3,6 +3,7 @@ package com.tdp.ms.sales.repository;
 import com.microsoft.azure.spring.data.cosmosdb.repository.ReactiveCosmosRepository;
 import com.tdp.ms.sales.model.entity.Sale;
 import org.springframework.stereotype.Repository;
+import reactor.core.publisher.Mono;
 
 /**
  * Class: SalesRepository. <br/>
@@ -25,5 +26,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface SalesRepository extends ReactiveCosmosRepository<Sale, String> {
-
+    Mono<Sale> findBySalesId(Long salesId);
 }
