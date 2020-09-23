@@ -27,7 +27,7 @@ public class SalesControllerTest {
     private SalesService salesService;
 
     private static Sale sale;
-    private static SalesResponse salesResponse;
+    private static Sale salesResponse;
 
     @BeforeAll
     static void setup() {
@@ -38,7 +38,7 @@ public class SalesControllerTest {
                 .description("descripcion")
                 .build();
 
-        salesResponse = SalesResponse
+        salesResponse = Sale
                 .builder()
                 .id("1")
                 .name("Sergio")
@@ -48,7 +48,7 @@ public class SalesControllerTest {
 
     @Test
     void createdSales() {
-        Mockito.when(salesService.post(any()))
+        Mockito.when(salesService.post(any(), any()))
                 .thenReturn(Mono.just(salesResponse));
 
         WebTestClient.ResponseSpec responseSpec = webClient.post()

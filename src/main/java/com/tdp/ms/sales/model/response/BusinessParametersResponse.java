@@ -1,14 +1,15 @@
-package com.tdp.ms.sales.model.dto;
+package com.tdp.ms.sales.model.response;
 
-import java.util.List;
-
+import com.tdp.ms.sales.model.dto.BusinessParametersData;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 /**
- * Class: SalesController. <br/>
+ * Class: AudioPermissionResponse. <br/>
  * <b>Copyright</b>: &copy; 2019 Telef&oacute;nica del Per&uacute;<br/>
  * <b>Company</b>: Telef&oacute;nica del Per&uacute;<br/>
  *
@@ -16,7 +17,7 @@ import lombok.NoArgsConstructor;
  *         <u>Service Provider</u>: Everis Per&uacute; SAC (EVE) <br/>
  *         <u>Developed by</u>: <br/>
  *         <ul>
- *         <li>Developer name</li>
+ *         <li>Sergio Rivas</li>
  *         </ul>
  *         <u>Changes</u>:<br/>
  *         <ul>
@@ -29,17 +30,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Data
 @Builder
-public class ComercialOperationType {
-    private String id;
-    private String name;
-    private String action;
-    private String reason;
-    private ServiceAvailabilityReportType serviceAvailability;
-    private CreateProductOrderResponseType order;
-    private PortabilityType portability;
-    private WorkOrDeliveryType workOrDeliveryType;
-    private Product product;
-    private List<OfferingType> productOffering;
-    private List<DeviceOffering> deviceOffering;
-    private List<AdditionalData> additionalData;
+public class BusinessParametersResponse {
+    private List<BusinessParametersData> data;
 }
