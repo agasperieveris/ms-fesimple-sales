@@ -5,6 +5,7 @@ import com.tdp.ms.sales.business.SalesService;
 import com.tdp.ms.sales.model.dto.*;
 import com.tdp.ms.sales.model.entity.Sale;
 import com.tdp.ms.sales.model.request.GetSalesRequest;
+import com.tdp.ms.sales.model.request.SalesRequest;
 import com.tdp.ms.sales.model.response.SalesResponse;
 import com.tdp.ms.sales.repository.SalesRepository;
 import org.junit.Assert;
@@ -38,6 +39,7 @@ public class SalesServiceTest {
     private SalesService salesService;
 
     private static Sale sale;
+    private static SalesRequest salesRequest;
     private static Sale sale2;
     private static SalesResponse salesResponse;
     private static  GetSalesRequest request;
@@ -52,7 +54,7 @@ public class SalesServiceTest {
 
         request = GetSalesRequest
                    .builder()
-                   .id("1")
+                   .id("FE-000000001")
                    .headersMap(headersMap)
                    .build();
         Channel channel= new Channel();
@@ -184,6 +186,28 @@ public class SalesServiceTest {
                 .additionalData(additionalDatas)
                 .build();
 
+        salesRequest = SalesRequest
+                .builder()
+                .id("1")
+                .salesId("FE-000000001")
+                .name("Sergio")
+                .description("venta de lote")
+                .priority("x")
+                .channel(channel)
+                .agent(agent)
+                .productType("s")
+                .comercialOperationType(comercialOperationTypes)
+                .estimatedRevenue(estimatedRevenue)
+                .prospectContact(prospectContacts)
+                .relatedParty(relatedParties)
+                .status("s")
+                .statusChangeDate("s")
+                .statusChangeReason("s")
+                .audioStatus("s")
+                .validFor(validFor)
+                .additionalData(additionalDatas)
+                .build();
+
         sale2 = Sale
                 .builder()
                 .id("1")
@@ -217,7 +241,7 @@ public class SalesServiceTest {
 
     @Test
     void getSaleTest(){
-        Mockito.when(salesRepository.findById(sale.getId())).thenReturn(Mono.just(sale));
+        Mockito.when(salesRepository.findBySalesId(any())).thenReturn(Mono.just(sale));
 
         Mono<SalesResponse> result = salesService.getSale(request);
 
@@ -256,7 +280,7 @@ public class SalesServiceTest {
         Mockito.when(salesRepository.save(any()))
                 .thenReturn(Mono.just(sale2));
 
-        Mono<SalesResponse> result = salesService.put(sale);
+        Mono<SalesResponse> result = salesService.put(salesRequest);
 
         StepVerifier.create(result)
                 .assertNext(c -> {
