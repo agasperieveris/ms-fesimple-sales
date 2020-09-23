@@ -29,6 +29,15 @@ import lombok.NoArgsConstructor;
 @Builder
 public class Agent {
     private String id;
-    private String nationalID;
-    private String nationalIDType;
+    private String href;
+    private String fullname;
+    private String firstname;
+    private String lastname;
+    private String nationalId;
+    private String nationalIdType;
+    private String customerId;
+    private String role;
+    private String accountId;
+    private String billingArragementId;
+    private Score score;
 }

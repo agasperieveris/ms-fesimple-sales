@@ -3,7 +3,6 @@ package com.tdp.ms.sales.business.impl;
 import com.azure.cosmos.implementation.NotFoundException;
 import com.tdp.genesis.core.exception.GenesisException;
 import com.tdp.ms.sales.business.SalesService;
-import com.tdp.ms.sales.model.dto.ValidFor;
 import com.tdp.ms.sales.model.entity.Sale;
 import com.tdp.ms.sales.model.request.GetSalesRequest;
 import com.tdp.ms.sales.model.response.SalesResponse;
@@ -58,10 +57,10 @@ public class SalesServiceImpl implements SalesService {
         Mono<Sale> existingSale = salesRepository.findById(request.getId());
 
         return existingSale
-                .switchIfEmpty(Mono.error( GenesisException.builder()
+                .switchIfEmpty(Mono.error(GenesisException.builder()
                         .exceptionId("SVC0004")
                         .addDetail(true)
-                        .withDescription("el id "+ request.getId()+" no se encuentra registrado en BD.")
+                        .withDescription("el id " + request.getId() + " no se encuentra registrado en BD.")
                         .push()
                         .build()))
                 .flatMap(item -> {
@@ -75,7 +74,7 @@ public class SalesServiceImpl implements SalesService {
                     }
                     SalesResponse response = SalesResponse
                             .builder()
-                            .salesId("FE-" +item.getSalesId())
+                            .salesId("FE-" + item.getSalesId())
                             .id(item.getId())
                             .name(item.getName())
                             .description(item.getDescription())
@@ -83,14 +82,17 @@ public class SalesServiceImpl implements SalesService {
                             .channel(item.getChannel())
                             .agent(item.getAgent())
                             .productType(item.getProductType())
-                            .commercialOperation(item.getComercialOperationType())
+                            .comercialOperationType(item.getComercialOperationType())
                             .estimatedRevenue(item.getEstimatedRevenue())
+                            .paymentType(item.getPaymentType())
                             .prospectContact(item.getProspectContact())
                             .relatedParty(item.getRelatedParty())
                             .status(item.getStatus())
                             .statusChangeDate(item.getStatusChangeDate())
                             .statusChangeReason(item.getStatusChangeReason())
                             .audioStatus(item.getAudioStatus())
+                            .identityValidations(item.getIdentityValidations())
+                            .audioUrl(item.getAudioUrl())
                             .validFor(item.getValidFor())
                             .additionalData(item.getAdditionalData())
                             .build();
@@ -111,8 +113,6 @@ public class SalesServiceImpl implements SalesService {
         // TODO: salesId debe tener el formato "FE-000000001", se debe mejorar para autogenerarse aceptando concurrencia
         // Obtener el valor más alto de salesId y aumentar en 1
         Flux<Sale> saleFlux = salesRepository.findAll(Sort.by(Sort.Direction.DESC, "salesId"));
-
-        System.out.println("antes de return saleFlux");
 
         return saleFlux
                 .collectList()
@@ -143,10 +143,6 @@ public class SalesServiceImpl implements SalesService {
                             }
                         }
 
-                        ValidFor validFor = new ValidFor();
-                        validFor.setStartDateTime(saleItem.getStartDateTime());
-                        validFor.setEndDateTime(saleItem.getEndDateTime());
-
                         SalesResponse salesResponse = SalesResponse
                                 .builder()
                                 .id(saleItem.getId())
@@ -154,16 +150,23 @@ public class SalesServiceImpl implements SalesService {
                                 .description(saleItem.getDescription())
                                 .additionalData(saleItem.getAdditionalData())
                                 .channel(saleItem.getChannel())
-                                .commercialOperation(saleItem.getComercialOperationType())
-                                .validFor(validFor)
+                                .agent(saleItem.getAgent())
+                                .comercialOperationType(saleItem.getComercialOperationType())
+                                .estimatedRevenue(saleItem.getEstimatedRevenue())
+                                .paymentType(saleItem.getPaymentType())
+                                .validFor(saleItem.getValidFor())
                                 .name(saleItem.getName())
                                 .priority(saleItem.getPriority())
                                 .productType(saleItem.getProductType())
                                 .prospectContact(saleItem.getProspectContact())
                                 .relatedParty(saleItem.getRelatedParty())
+                                .saleCreationDate(saleItem.getSaleCreationDate())
                                 .status(saleItem.getStatus())
                                 .statusChangeDate(saleItem.getStatusChangeDate())
                                 .statusChangeReason(saleItem.getStatusChangeReason())
+                                .audioStatus(saleItem.getAudioStatus())
+                                .identityValidations(saleItem.getIdentityValidations())
+                                .audioUrl(saleItem.getAudioUrl())
                                 .build();
 
                         return Mono.just(salesResponse);
@@ -181,63 +184,72 @@ public class SalesServiceImpl implements SalesService {
         return existingSale
                 .switchIfEmpty(Mono.error(new NotFoundException("El id solicitado no se encuentra registrado.")))
                 .flatMap(item -> {
-            Sale salesUpdate = Sale
-                    .builder()
-                    .id(item.getId())
-                    .salesId(item.getSalesId())
-                    .description(request.getDescription())
-                    .additionalData(request.getAdditionalData())
-                    .channel(request.getChannel())
-                    .comercialOperationType(request.getComercialOperationType())
-                    .endDateTime(request.getEndDateTime())
-                    .name(request.getName())
-                    .priority(request.getPriority())
-                    .productType(request.getProductType())
-                    .prospectContact(request.getProspectContact())
-                    .relatedParty(request.getRelatedParty())
-                    .startDateTime(request.getStartDateTime())
-                    .status(request.getStatus())
-                    .statusChangeDate(request.getStatusChangeDate())
-                    .statusChangeReason(request.getStatusChangeReason())
-                    .build();
-
-            // actualizar
-            return salesRepository.save(salesUpdate).flatMap(updateSaleItem -> {
-                String salesId;
-
-                salesId = String.valueOf(updateSaleItem.getSalesId());
-                int len = salesId.length();
-                if (len < 9) {
-                    for (int i = 0; i < 9 - len; i++) {
-                        salesId = "0" + salesId;
-                    }
-                }
-
-                ValidFor validFor = new ValidFor();
-                validFor.setStartDateTime(updateSaleItem.getStartDateTime());
-                validFor.setEndDateTime(updateSaleItem.getEndDateTime());
-
-                SalesResponse response = SalesResponse
+                    Sale salesUpdate = Sale
                         .builder()
-                        .id(updateSaleItem.getId())
-                        .salesId("FE-" + salesId)
-                        .description(updateSaleItem.getDescription())
-                        .additionalData(updateSaleItem.getAdditionalData())
-                        .channel(updateSaleItem.getChannel())
-                        .commercialOperation(updateSaleItem.getComercialOperationType())
-                        .validFor(validFor)
-                        .name(updateSaleItem.getName())
-                        .priority(updateSaleItem.getPriority())
-                        .productType(updateSaleItem.getProductType())
-                        .prospectContact(updateSaleItem.getProspectContact())
-                        .relatedParty(updateSaleItem.getRelatedParty())
-                        .status(updateSaleItem.getStatus())
-                        .statusChangeDate(updateSaleItem.getStatusChangeDate())
-                        .statusChangeReason(updateSaleItem.getStatusChangeReason())
+                        .id(item.getId())
+                        .salesId(item.getSalesId())
+                        .description(request.getDescription())
+                        .additionalData(request.getAdditionalData())
+                        .channel(request.getChannel())
+                        .agent(request.getAgent())
+                        .comercialOperationType(request.getComercialOperationType())
+                        .estimatedRevenue(request.getEstimatedRevenue())
+                        .paymentType(request.getPaymentType())
+                        .name(request.getName())
+                        .priority(request.getPriority())
+                        .productType(request.getProductType())
+                        .prospectContact(request.getProspectContact())
+                        .relatedParty(request.getRelatedParty())
+                        .saleCreationDate(request.getSaleCreationDate())
+                        .status(request.getStatus())
+                        .statusChangeDate(request.getStatusChangeDate())
+                        .statusChangeReason(request.getStatusChangeReason())
+                        .audioStatus(request.getAudioStatus())
+                        .identityValidations(request.getIdentityValidations())
+                        .audioUrl(request.getAudioUrl())
+                        .validFor(request.getValidFor())
                         .build();
 
-                return Mono.just(response);
-            });
+                    // actualizar
+                    return salesRepository.save(salesUpdate).flatMap(updateSaleItem -> {
+                        String salesId;
+
+                        salesId = String.valueOf(updateSaleItem.getSalesId());
+                        int len = salesId.length();
+                        if (len < 9) {
+                            for (int i = 0; i < 9 - len; i++) {
+                                salesId = "0" + salesId;
+                            }
+                        }
+
+                        SalesResponse response = SalesResponse
+                                .builder()
+                                .id(updateSaleItem.getId())
+                                .salesId("FE-" + salesId)
+                                .description(updateSaleItem.getDescription())
+                                .priority(updateSaleItem.getPriority())
+                                .channel(updateSaleItem.getChannel())
+                                .agent(updateSaleItem.getAgent())
+                                .comercialOperationType(updateSaleItem.getComercialOperationType())
+                                .estimatedRevenue(updateSaleItem.getEstimatedRevenue())
+                                .paymentType(updateSaleItem.getPaymentType())
+                                .validFor(updateSaleItem.getValidFor())
+                                .name(updateSaleItem.getName())
+                                .productType(updateSaleItem.getProductType())
+                                .prospectContact(updateSaleItem.getProspectContact())
+                                .relatedParty(updateSaleItem.getRelatedParty())
+                                .saleCreationDate(updateSaleItem.getSaleCreationDate())
+                                .audioStatus(updateSaleItem.getAudioStatus())
+                                .status(updateSaleItem.getStatus())
+                                .statusChangeDate(updateSaleItem.getStatusChangeDate())
+                                .statusChangeReason(updateSaleItem.getStatusChangeReason())
+                                .identityValidations(updateSaleItem.getIdentityValidations())
+                                .audioUrl(updateSaleItem.getAudioUrl())
+                                .additionalData(updateSaleItem.getAdditionalData())
+                                .build();
+
+                        return Mono.just(response);
+                    });
         });
 
     }
@@ -248,149 +260,6 @@ public class SalesServiceImpl implements SalesService {
         //TODO: Esto es un mock, se ha replanteado la estructura para el siguiente sprint
         // Buscar el sale por su id
         Mono<Sale> inputSale = salesRepository.findById(request.getId());
-        return inputSale.flatMap(item -> {
-            return put(item);
-        });
-
-        /*
-        // TODO: crear objecto para llamar a create product order
-        return inputSale
-                .switchIfEmpty(Mono.error(new NotFoundException("El id solicitado no se encuentra registrado.")))
-                .flatMap(existingSale -> {
-
-                    return createOrder(existingSale.getComercialOperationType().get(0), existingSale, headersMap)
-                            .flatMap(res -> {
-                                System.out.println("====actualizar existingSale===");
-                                //actualizar existingSale
-                                existingSale.setDescription(res.getNewProductsInNewOfferings().get(0).getProductCatalogId());
-                                System.out.println(existingSale);
-
-                                // Guardar los cambios de existingSale
-                                salesRepository.save(existingSale);
-                                return Mono.empty();
-                            });
-
-                    /*for (ComercialOperationType comercialOperationType:existingSale.getComercialOperationType()) {
-                        createOrder(comercialOperationType, existingSale, headersMap).map(item -> {
-                            //actualizar existingSale
-                            existingSale.setDescription(item.getNewProductsInNewOfferings().get(0).getProductCatalogId());
-                            return item;
-                        });
-
-                        // Recorrer additionalData de comercialOperation
-                    }
-
-                    // Guardar los cambios de existingSale
-                    salesRepository.save(existingSale);
-
-                    // TODO: quitar Mono.empty()
-                    //return Mono.empty();
-                });
-        */
+        return inputSale.flatMap(item -> put(item));
     }
-
-    /*private Mono<ProductorderResponse> createOrder(ComercialOperationType comercialOperationType, Sale existingSale,
-                             Map<String, String> headersMap) {
-
-        System.out.println("====Entro a CreateOrder===");
-
-        // Analizar el campo reason y llamar al post para crear orden
-        Customer customer = Customer
-                .builder()
-                .customerId(existingSale.getRelatedParty().get(0).getCustomerId()) //TODO: verificar el arreglo
-                .build();
-
-        ProductOrderRequest productOrderRequest = ProductOrderRequest
-                .builder()
-                .salesChannel(existingSale.getChannel().getName())
-                .customer(customer)
-                .productOfferingID("4417988") //TODO: verificar el arreglo para saber qué pasar aquí
-                .onlyValidationIndicator(true) //TODO: en el Excel decía que debía ser false pero el api pide true
-                .build();
-
-        if (comercialOperationType.getReason().compareTo(alta) == 0) {
-            // ALTA
-            productOrderRequest.setActionType("PR");
-
-            OrderAttributes orderAttributes_deliveryMethod = OrderAttributes
-                    .builder()
-                    .attrName("DELIVERY_METHOD")
-                    .flexAttrValue(null)
-                    .build();
-
-            OrderAttributes orderAttributes_paymentMethod = OrderAttributes
-                    .builder()
-                    .attrName("PAYMENT_METHOD")
-                    .flexAttrValue(null)
-                    .build();
-
-            List<OrderAttributes> orderAttributesList = new ArrayList<OrderAttributes>();
-            orderAttributesList.add(orderAttributes_deliveryMethod);
-            orderAttributesList.add(orderAttributes_paymentMethod);
-
-            NewAssignedBillingOffers newAssignedBillingOffers = NewAssignedBillingOffers
-                    .builder()
-                    .productSpecPricingID(null)
-                    .parentProductCatalogID("7491")
-                    .build();
-
-            List<NewAssignedBillingOffers> newAssignedBillingOffersList = new ArrayList<NewAssignedBillingOffers>();
-            newAssignedBillingOffersList.add(newAssignedBillingOffers);
-
-            ChangedContainedProducts changedContainedProducts = ChangedContainedProducts
-                    .builder()
-                    .temporaryId("TEMP2")
-                    .productCatalogID("7411")
-                    .changedCharacteristics(null) //TODO: Falta recibir respuesta de validación
-                    .build();
-            List<ChangedContainedProducts> changedContainedProductsList = new ArrayList<ChangedContainedProducts>();
-            changedContainedProductsList.add(changedContainedProducts);
-
-            //TODO: lanza error cuando se pasa productChanges
-            ProductChanges productChanges = ProductChanges
-                    .builder()
-                    .newAssignedBillingOffers(newAssignedBillingOffersList)
-                    .changedContainedProducts(changedContainedProductsList)
-                    .build();
-
-            NewProducts newProducts = NewProducts
-                    .builder()
-                    .productID("8091614409") //TODO: saber de donde sale
-                    .productCatalogId("4418018") //TODO: saber de donde sale
-                    .temporaryId("TEMP1")
-                    .baId(null) //TODO: dice como necesario en el Excel pero no te lo pide el api
-                    .accountId(null) //TODO: dice como necesario en el Excel pero no te lo pide el api
-                    .invoiceCompany("TEF")
-                    .productChanges(null) //TODO: lanza error cuando se pasa esto
-                    .build();
-
-            List<NewProducts> newProductsList = new ArrayList<NewProducts>();
-            newProductsList.add(newProducts);
-
-            Request request = Request
-                    .builder()
-                    .sourceApp("FE")
-                    .orderAttributes(null) //TODO: lanza error cuando se pasa orderAttributes (Excel)
-                    .newProducts(newProductsList)
-                    .build();
-
-            productOrderRequest.setRequest(request);
-
-        } else if (comercialOperationType.getReason().compareTo(porta) == 0) {
-            // PORTA
-            productOrderRequest.setActionType("PR");
-        } else if (comercialOperationType.getReason().compareTo(caeq) == 0) {
-            // CAEQ
-            productOrderRequest.setActionType("CH");
-        } else if (comercialOperationType.getReason().compareTo(capl) == 0) {
-            // CAPL
-            productOrderRequest.setActionType("CH");
-        } else if (comercialOperationType.getReason().compareTo(casi) == 0) {
-            // CASI
-            productOrderRequest.setActionType("CH");
-        }
-
-        // Llamar al servicio para crear un Product Order
-        return productOrder.createOrder(productOrderRequest, headersMap);
-    }*/
 }

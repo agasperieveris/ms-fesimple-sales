@@ -1,11 +1,10 @@
 package com.tdp.ms.sales.model.dto;
 
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.util.List;
 
 /**
  * Class: SalesController. <br/>
@@ -30,8 +29,17 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 public class DeviceOffering {
-    private String href;
+    private String deviceType;
     private String id;
-    private String name;
+    private String sapid;
+    private String brand;
+    private String model;
+    private String gama;
+    private String displayName;
+    private String clasificacionComercial;
+    private String costoPromedioSinIGVSoles;
+    private List<SimSpecification> simSpecifications;
+    private List<Offer> offers;
+    private StockType stock;
     private List<AdditionalData> additionalData;
 }

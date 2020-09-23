@@ -34,11 +34,13 @@ public class ComercialOperationType {
     private String name;
     private String action;
     private String reason;
-    private String orderId;
+    private ServiceAvailabilityReportType serviceAvailability;
+    private CreateProductOrderResponseType order;
+    private PortabilityType portability;
+    private WorkOrDeliveryType workOrDeliveryType;
     private Product product;
-    private List<ProductOfering> productOffering;
+    private List<OfferingType> productOffering;
     private List<DeviceOffering> deviceOffering;
-    private List<Place> place;
     private List<AdditionalData> additionalData;
 
 }

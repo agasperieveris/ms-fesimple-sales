@@ -1,6 +1,5 @@
 package com.tdp.ms.sales.model.dto;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -33,8 +32,4 @@ public class ProductOffering {
     private String description;
     private String code;
     private String name;
-    // para Response de RetrieveResponse
-    private String href;
-    @JsonProperty("@referredType")
-    private String referredType;
 }
