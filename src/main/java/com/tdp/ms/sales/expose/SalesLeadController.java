@@ -198,7 +198,7 @@ public class SalesLeadController {
 
         return salesService.getSale(GetSalesRequest
                 .builder()
-                .id("c69e6dee-17eb-4888-8f86-a99c671d31a9")
+                .id("FE-000000001")
                 .headersMap(headersMap)
                 .build()).flux();
     }
