@@ -1,0 +1,374 @@
+package com.tdp.ms.sales.service;
+
+import com.tdp.genesis.core.constants.HttpHeadersKey;
+import com.tdp.ms.sales.business.SalesManagmentService;
+import com.tdp.ms.sales.business.impl.SalesManagmentServiceImpl;
+import com.tdp.ms.sales.client.BusinessParameterWebClient;
+import com.tdp.ms.sales.client.ProductOrderWebClient;
+import com.tdp.ms.sales.model.dto.BusinessParameterData;
+import com.tdp.ms.sales.model.dto.BusinessParameterExt;
+import com.tdp.ms.sales.model.dto.ChannelRef;
+import com.tdp.ms.sales.model.dto.CommercialOperationType;
+import com.tdp.ms.sales.model.dto.ContactMedium;
+import com.tdp.ms.sales.model.dto.CreateProductOrderResponseType;
+import com.tdp.ms.sales.model.dto.DeviceOffering;
+import com.tdp.ms.sales.model.dto.EntityRefType;
+import com.tdp.ms.sales.model.dto.KeyValueType;
+import com.tdp.ms.sales.model.dto.MediumCharacteristic;
+import com.tdp.ms.sales.model.dto.Money;
+import com.tdp.ms.sales.model.dto.OfferingType;
+import com.tdp.ms.sales.model.dto.PaymentType;
+import com.tdp.ms.sales.model.dto.Place;
+import com.tdp.ms.sales.model.dto.ProductInstanceType;
+import com.tdp.ms.sales.model.dto.RelatedParty;
+import com.tdp.ms.sales.model.dto.TimePeriod;
+import com.tdp.ms.sales.model.dto.productorder.CreateProductOrderGeneralRequest;
+import com.tdp.ms.sales.model.dto.productorder.FlexAttrType;
+import com.tdp.ms.sales.model.dto.productorder.caeq.ChangedContainedProduct;
+import com.tdp.ms.sales.model.entity.Sale;
+import com.tdp.ms.sales.model.request.GetSalesRequest;
+import com.tdp.ms.sales.model.request.PostSalesRequest;
+import com.tdp.ms.sales.model.request.SalesRequest;
+import com.tdp.ms.sales.model.response.GetSalesCharacteristicsResponse;
+import com.tdp.ms.sales.model.response.ProductorderResponse;
+import com.tdp.ms.sales.repository.SalesRepository;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import org.junit.Assert;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mockito;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
+import reactor.core.publisher.Mono;
+import reactor.test.StepVerifier;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+
+@ExtendWith(SpringExtension.class)
+@SpringBootTest
+public class SalesManagmentServiceTest {
+
+    @MockBean
+    private SalesRepository salesRepository;
+
+    @MockBean
+    private BusinessParameterWebClient businessParameterWebClient;
+
+    @MockBean
+    private ProductOrderWebClient productOrderWebClient;
+
+    @Autowired
+    private SalesManagmentService salesManagmentService;
+
+    @Autowired
+    private SalesManagmentServiceImpl salesManagmentServiceImpl;
+
+    private static Sale sale;
+    private static PostSalesRequest salesRequest;
+    private static Sale sale2;
+    private static Sale salesResponse;
+    private static final HashMap<String, String> headersMap = new HashMap();
+    private static final String RH_UNICA_SERVICE_ID = "d4ce144c-6b26-4b5c-ad29-090a3a559d80";
+    private static final String RH_UNICA_APPLICATION = "fesimple-sales";
+    private static final String RH_UNICA_PID = "d4ce144c-6b26-4b5c-ad29-090a3a559d83";
+    private static final String RH_UNICA_USER = "BackendUser";
+    private static final String RH_UNICA_TIMESTAMP = "2020-08-26T17:15:20.509-0400";
+
+
+    @BeforeAll
+    static void setup() {
+
+        ChannelRef channel= new ChannelRef();
+        channel.setId("1");
+        channel.setHref("s");
+        channel.setName("s");
+        channel.setStoreId("s");
+        channel.setStoreName("s");
+        channel.setDealerId("bc12");
+
+        RelatedParty agent= new RelatedParty();
+        agent.setId("1");
+        agent.setNationalId("Peru");
+        agent.setNationalIdType("DNI");
+        List<KeyValueType> additionalDatas = new ArrayList<>();
+
+        KeyValueType additionalData1 = new KeyValueType();
+        additionalData1.setKey("s");
+        additionalData1.setValue("d");
+        KeyValueType additionalData2 = new KeyValueType();
+        additionalData2.setKey("deliveryMethod");
+        additionalData2.setValue("IS");
+        KeyValueType additionalData3 = new KeyValueType();
+        additionalData3.setKey("ufxauthorization");
+        additionalData3.setValue("14fwTedaos4sdgZvyay8H");
+        additionalDatas.add(additionalData1);
+        additionalDatas.add(additionalData2);
+        additionalDatas.add(additionalData3);
+
+        EntityRefType entityRefType = new EntityRefType();
+        entityRefType.setHref("s");
+        entityRefType.setId("s");
+        entityRefType.setName("f");
+
+        List<EntityRefType> entityRefTypes = new ArrayList<>();
+
+        entityRefTypes.add(entityRefType);
+        List<DeviceOffering> deviceOfferings = new ArrayList<>();
+        List<Place> places = new ArrayList<>();
+
+        Place place = new Place();
+
+        place.setAdditionalData(additionalDatas);
+        place.setHref("s");
+        place.setId("s");
+        place.setName("s");
+        place.setReferredType("s");
+        places.add(place);
+        DeviceOffering deviceOffering = new DeviceOffering();
+
+        deviceOffering.setAdditionalData(additionalDatas);
+        deviceOffering.setId("s");
+
+        deviceOfferings.add(deviceOffering);
+        ProductInstanceType product= new ProductInstanceType();
+        product.setId("s");
+        product.setProductSpec(entityRefType);
+
+        CreateProductOrderResponseType order = CreateProductOrderResponseType
+                .builder()
+                .productOrderId("930686A")
+                .build();
+
+        OfferingType offeringType1= new OfferingType();
+        offeringType1.setId("s");
+        offeringType1.setProductOfferingProductSpecId("s");
+        List<OfferingType> productOfferings = new ArrayList<>();
+        productOfferings.add(offeringType1);
+
+
+        List<KeyValueType> additionalDataCommercialOperation = new ArrayList<>();
+        KeyValueType additionalDataCapl = new KeyValueType();
+        additionalDataCapl.setKey("CAPL");
+        additionalDataCapl.setValue("true");
+
+        product.setAdditionalData(additionalDatas);
+        List<CommercialOperationType> comercialOperationTypes = new ArrayList<>();
+        CommercialOperationType comercialOperationType = new CommercialOperationType();
+        comercialOperationType.setId("1");
+        comercialOperationType.setName("h");
+        comercialOperationType.setReason("d");
+        comercialOperationType.setProduct(product);
+        comercialOperationType.setDeviceOffering(deviceOfferings);
+        comercialOperationType.setAction("s");
+        comercialOperationType.setAdditionalData(additionalDataCommercialOperation);
+        comercialOperationType.setOrder(order);
+        comercialOperationType.setProductOfferings(productOfferings);
+        comercialOperationTypes.add(comercialOperationType);
+
+        Money estimatedRevenue = new Money();
+
+        estimatedRevenue.setUnit("s");
+        estimatedRevenue.setValue(12f);
+
+        ContactMedium prospectContact = new ContactMedium();
+        MediumCharacteristic characteristic = new MediumCharacteristic();
+        characteristic.setBaseType("s");
+        characteristic.setCity("lima");
+        characteristic.setContactType("s");
+        characteristic.setContactType("s");
+        characteristic.setEmailAddress("carlos@gmail.com");
+        characteristic.setFaxNumber("s");
+        characteristic.setPostCode("s");
+        characteristic.setPhoneNumber("323234");
+        characteristic.setCountry("Peru");
+        characteristic.setSchemaLocation("s");
+        characteristic.setSocialNetworkId("s");
+        characteristic.setStateOrProvince("s");
+        characteristic.setStreet1("s");
+        characteristic.setStreet2("s");
+        prospectContact.setBaseType("ss");
+        prospectContact.setCharacteristic(characteristic);
+
+        List<ContactMedium> prospectContacts = new ArrayList<>();
+
+        prospectContacts.add(prospectContact);
+
+        RelatedParty relatedParty = new RelatedParty();
+
+        relatedParty.setCustomerId("1");
+        relatedParty.setFirstName("d");
+        relatedParty.setFullName("s");
+        relatedParty.setHref("s");
+        relatedParty.setId("s");
+        relatedParty.setLastName("s");
+        relatedParty.setNationalId("s");
+        relatedParty.setNationalIdType("s");
+        relatedParty.setRole("s");
+
+        List<RelatedParty> relatedParties = new ArrayList<>();
+
+        TimePeriod validFor = new TimePeriod();
+
+        validFor.setStartDateTime("");
+        validFor.setEndDateTime("");
+
+        relatedParties.add(relatedParty);
+
+        PaymentType paymentType = PaymentType
+                .builder()
+                .paymentType("EX")
+                .build();
+
+        sale = Sale
+                .builder()
+                .id("1")
+                .salesId("FE-000000001")
+                .name("Sergio")
+                .description("venta de lote")
+                .priority("x")
+                .channel(channel)
+                .agent(agent)
+                .productType("landline")
+                .commercialOperation(comercialOperationTypes)
+                .estimatedRevenue(estimatedRevenue)
+                .prospectContact(prospectContacts)
+                .relatedParty(relatedParties)
+                .status("s")
+                .statusChangeDate("s")
+                .statusChangeReason("s")
+                .audioStatus("s")
+                .validFor(validFor)
+                .additionalData(additionalDatas)
+                .paymenType(paymentType)
+                .build();
+
+        // Setting request headers
+        headersMap.put(HttpHeadersKey.UNICA_SERVICE_ID, RH_UNICA_SERVICE_ID);
+        headersMap.put(HttpHeadersKey.UNICA_APPLICATION, RH_UNICA_APPLICATION);
+        headersMap.put(HttpHeadersKey.UNICA_PID, RH_UNICA_PID);
+        headersMap.put(HttpHeadersKey.UNICA_USER, RH_UNICA_USER);
+
+        salesRequest = PostSalesRequest
+                .builder()
+                .sale(sale)
+                .headersMap(headersMap)
+                .build();
+    }
+
+    @Test
+    void postSalesTest() {
+        BusinessParameterExt ext1 = BusinessParameterExt
+                .builder()
+                .comercialOperationType("CAEQ")
+                .actionType("CW")
+                .characteristicId("9941")
+                .characteristicCode("AcquisitionType")
+                .characteristicValue("private")
+                .build();
+        List<BusinessParameterExt> extList = new ArrayList<>();
+        extList.add(ext1);
+        BusinessParameterData businessParameterData1 = BusinessParameterData
+                .builder()
+                .ext(extList)
+                .build();
+        List<BusinessParameterData> data = new ArrayList<>();
+        data.add(businessParameterData1);
+
+        GetSalesCharacteristicsResponse businessParametersResponse = GetSalesCharacteristicsResponse
+                .builder()
+                .data(data)
+                .build();
+        Mockito.when(businessParameterWebClient.getSalesCharacteristicsByCommercialOperationType(any()))
+                .thenReturn(Mono.just(businessParametersResponse));
+
+        ProductorderResponse productorderResponse = new ProductorderResponse();
+        CreateProductOrderResponseType createProductOrderResponseType =  new CreateProductOrderResponseType();
+        productorderResponse.setCreateProductOrderResponse(createProductOrderResponseType);
+        Mockito.when(productOrderWebClient.createProductOrder(any(), eq(salesRequest.getHeadersMap())))
+                .thenReturn(Mono.just(productorderResponse));
+
+        Mockito.when(salesRepository.findBySalesId(any())).thenReturn(Mono.just(sale));
+        Mockito.when(salesRepository.save(any())).thenReturn(Mono.just(sale));
+
+
+        Mono<Sale> result = salesManagmentService.post(salesRequest);
+
+    }
+
+
+    void postSalesTokenMcssNotFoundErrorTest() {
+        List<KeyValueType> additionalDatas = new ArrayList<>();
+        KeyValueType additionalData1 = new KeyValueType();
+        additionalData1.setKey("s");
+        additionalData1.setValue("d");
+        additionalDatas.add(additionalData1);
+
+        Sale saleTest = new Sale();
+        saleTest.setId("S001");
+        saleTest.setAdditionalData(additionalDatas);
+
+        PostSalesRequest salesRequest = PostSalesRequest
+                .builder()
+                .sale(saleTest)
+                .headersMap(headersMap)
+                .build();
+
+        Mono<Sale> result = salesManagmentService.post(salesRequest);
+
+        StepVerifier.create(result).verifyError();
+    }
+
+    @Test
+    void caplCommercialOperationTest() {
+        CreateProductOrderGeneralRequest mainCaplRequestProductOrder = new CreateProductOrderGeneralRequest();
+
+        CreateProductOrderGeneralRequest result = salesManagmentServiceImpl
+                .caplCommercialOperation(sale, mainCaplRequestProductOrder,
+                        "CC", "CS465", "OF824");
+
+    }
+
+    @Test
+    void caeqCommercialOperationTest() {
+        CreateProductOrderGeneralRequest mainCaeqRequestProductOrder = new CreateProductOrderGeneralRequest();
+
+        CreateProductOrderGeneralRequest result = salesManagmentServiceImpl
+                .caeqCommercialOperation(sale, mainCaeqRequestProductOrder,
+                        "CEC", "CS920", "OF201");
+
+    }
+
+    @Test
+    void caeqCaplCommercialOperationTest() {
+        CreateProductOrderGeneralRequest mainCaeqCaplRequestProductOrder = new CreateProductOrderGeneralRequest();
+
+        CreateProductOrderGeneralRequest result = salesManagmentServiceImpl
+                .caeqCaplCommercialOperation(sale, mainCaeqCaplRequestProductOrder,
+                        "CC", "CS158", "OF486");
+
+    }
+
+    @Test
+    void getCommonOrderAttributesTest() {
+        List<FlexAttrType> operationOrderAttributes = new ArrayList<>();
+
+        List<FlexAttrType> result = salesManagmentServiceImpl.commonOrderAttributes(sale);
+
+    }
+
+    @Test
+    void getChangedContainedCaeqListTest() {
+        List<ChangedContainedProduct> changedContainedProducts = new ArrayList<>();
+
+        List<ChangedContainedProduct> result = salesManagmentServiceImpl
+                .changedContainedCaeqList(sale);
+
+    }
+
+}

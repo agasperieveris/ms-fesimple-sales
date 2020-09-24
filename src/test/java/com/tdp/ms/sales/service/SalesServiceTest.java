@@ -14,8 +14,6 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mockito;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -63,7 +61,7 @@ public class SalesServiceTest {
                    .id("FE-000000001")
                    .headersMap(headersMap)
                    .build();
-        Channel channel= new Channel();
+        ChannelRef channel= new ChannelRef();
         channel.setId("1");
         channel.setHref("s");
         channel.setName("s");
@@ -71,13 +69,13 @@ public class SalesServiceTest {
         channel.setStoreName("s");
         channel.setDealerId("bc12");
 
-        Agent agent= new Agent();
+        RelatedParty agent= new RelatedParty();
         agent.setId("1");
         agent.setNationalId("Peru");
         agent.setNationalIdType("DNI");
-        List<AdditionalData> additionalDatas = new ArrayList<>();
+        List<KeyValueType> additionalDatas = new ArrayList<>();
 
-        AdditionalData additionalData = new AdditionalData();
+        KeyValueType additionalData = new KeyValueType();
         additionalData.setKey("s");
         additionalData.setValue("d");
         additionalDatas.add(additionalData);
@@ -86,7 +84,7 @@ public class SalesServiceTest {
         entityRefType.setHref("s");
         entityRefType.setId("s");
         entityRefType.setName("f");
-        entityRefType.setType("s");
+        //entityRefType.setType("s");
 
          List<EntityRefType> productOfferings = new ArrayList<>();
 
@@ -108,7 +106,7 @@ public class SalesServiceTest {
         deviceOffering.setId("s");
 
         deviceOfferings.add(deviceOffering);
-        Product product= new Product();
+        ProductInstanceType product= new ProductInstanceType();
         product.setId("s");
 
         CreateProductOrderResponseType order = CreateProductOrderResponseType
@@ -117,8 +115,8 @@ public class SalesServiceTest {
                 .build();
 
         product.setAdditionalData(additionalDatas);
-        List<ComercialOperationType> comercialOperationTypes = new ArrayList<>();
-         ComercialOperationType comercialOperationType = new ComercialOperationType();
+        List<CommercialOperationType> comercialOperationTypes = new ArrayList<>();
+         CommercialOperationType comercialOperationType = new CommercialOperationType();
          comercialOperationType.setId("1");
          comercialOperationType.setName("h");
          comercialOperationType.setReason("d");
@@ -129,13 +127,13 @@ public class SalesServiceTest {
          comercialOperationType.setOrder(order);
          comercialOperationTypes.add(comercialOperationType);
 
-        EstimatedRevenue estimatedRevenue = new EstimatedRevenue();
+        Money estimatedRevenue = new Money();
 
         estimatedRevenue.setUnit("s");
         estimatedRevenue.setValue(12f);
 
-        ProspectContact prospectContact = new ProspectContact();
-        Characteristic characteristic = new Characteristic();
+        ContactMedium prospectContact = new ContactMedium();
+        MediumCharacteristic characteristic = new MediumCharacteristic();
         characteristic.setBaseType("s");
         characteristic.setCity("lima");
         characteristic.setContactType("s");
@@ -153,7 +151,7 @@ public class SalesServiceTest {
         prospectContact.setBaseType("ss");
         prospectContact.setCharacteristic(characteristic);
 
-        List<ProspectContact> prospectContacts = new ArrayList<>();
+        List<ContactMedium> prospectContacts = new ArrayList<>();
 
         prospectContacts.add(prospectContact);
 
@@ -171,7 +169,7 @@ public class SalesServiceTest {
 
         List<RelatedParty> relatedParties = new ArrayList<>();
 
-        ValidFor validFor = new ValidFor();
+        TimePeriod validFor = new TimePeriod();
 
         validFor.setStartDateTime("");
         validFor.setEndDateTime("");
@@ -187,7 +185,7 @@ public class SalesServiceTest {
                 .channel(channel)
                 .agent(agent)
                 .productType("s")
-                .comercialOperationType(comercialOperationTypes)
+                .commercialOperation(comercialOperationTypes)
                 .estimatedRevenue(estimatedRevenue)
                 .prospectContact(prospectContacts)
                 .relatedParty(relatedParties)
@@ -209,7 +207,7 @@ public class SalesServiceTest {
                 .channel(channel)
                 .agent(agent)
                 .productType("s")
-                .comercialOperationType(comercialOperationTypes)
+                .commercialOperationType(comercialOperationTypes)
                 .estimatedRevenue(estimatedRevenue)
                 .prospectContact(prospectContacts)
                 .relatedParty(relatedParties)
@@ -239,7 +237,7 @@ public class SalesServiceTest {
                 .channel(channel)
                 .agent(agent)
                 .productType("s")
-                .comercialOperationType(comercialOperationTypes)
+                .commercialOperation(comercialOperationTypes)
                 .estimatedRevenue(estimatedRevenue)
                 .prospectContact(prospectContacts)
                 .relatedParty(relatedParties)

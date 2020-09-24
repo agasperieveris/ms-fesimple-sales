@@ -1,7 +1,6 @@
 package com.tdp.ms.sales.model.response;
 
-import com.tdp.ms.sales.model.dto.NewProductsInNewOfferings;
-import java.util.List;
+import com.tdp.ms.sales.model.dto.CreateProductOrderResponseType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -24,13 +23,10 @@ import lombok.NoArgsConstructor;
  *         </ul>
  * @version 1.0
  */
-
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @Data
 public class ProductorderResponse {
-    private String productOrderReferenceNumber;
-    private String productOrderId;
-    private List<NewProductsInNewOfferings> newProductsInNewOfferings;
+    private CreateProductOrderResponseType createProductOrderResponse;
 }

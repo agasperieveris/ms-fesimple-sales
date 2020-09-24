@@ -1,17 +1,15 @@
 package com.tdp.ms.sales.model.entity;
 
 import com.microsoft.azure.spring.data.cosmosdb.core.mapping.Document;
-
-import com.tdp.ms.sales.model.dto.AdditionalData;
-import com.tdp.ms.sales.model.dto.Agent;
-import com.tdp.ms.sales.model.dto.Channel;
-import com.tdp.ms.sales.model.dto.ComercialOperationType;
-import com.tdp.ms.sales.model.dto.EstimatedRevenue;
+import com.tdp.ms.sales.model.dto.ChannelRef;
+import com.tdp.ms.sales.model.dto.CommercialOperationType;
+import com.tdp.ms.sales.model.dto.ContactMedium;
 import com.tdp.ms.sales.model.dto.IdentityValidationType;
+import com.tdp.ms.sales.model.dto.KeyValueType;
+import com.tdp.ms.sales.model.dto.Money;
 import com.tdp.ms.sales.model.dto.PaymentType;
-import com.tdp.ms.sales.model.dto.ProspectContact;
 import com.tdp.ms.sales.model.dto.RelatedParty;
-import com.tdp.ms.sales.model.dto.ValidFor;
+import com.tdp.ms.sales.model.dto.TimePeriod;
 import java.util.List;
 import javax.validation.constraints.NotEmpty;
 import lombok.AllArgsConstructor;
@@ -58,19 +56,19 @@ public class Sale {
 
     private String priority;
 
-    private Channel channel;
+    private ChannelRef channel;
 
-    private Agent agent;
+    private RelatedParty agent;
 
     private String productType;
 
-    private List<ComercialOperationType> comercialOperationType;
+    private List<CommercialOperationType> commercialOperation;
 
-    private EstimatedRevenue estimatedRevenue;
+    private Money estimatedRevenue;
 
-    private PaymentType paymentType;
+    private PaymentType paymenType;
 
-    private List<ProspectContact> prospectContact;
+    private List<ContactMedium> prospectContact;
 
     private List<RelatedParty> relatedParty;
 
@@ -88,7 +86,7 @@ public class Sale {
 
     private String audioUrl;
 
-    private ValidFor validFor;
+    private TimePeriod validFor;
 
-    private List<AdditionalData> additionalData;
+    private List<KeyValueType> additionalData;
 }

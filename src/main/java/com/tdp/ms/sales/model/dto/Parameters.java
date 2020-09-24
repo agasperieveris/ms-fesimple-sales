@@ -27,5 +27,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Data
 public class Parameters {
-    private String text;
+    private String attrName;
+    private FlexAttrValue flexAttrValue;
 }

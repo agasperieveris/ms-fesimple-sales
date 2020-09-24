@@ -39,10 +39,11 @@ public class ProductRefInfoType {
     private List<CategoryTreeType> category;
     private String startDate;
     private String terminationDate;
-    private List<ProductRefInfoTypePlace> place;
+    private List<EntityRefType> place;
     private EntityRefType productSpec;
     private List<ProductCharacteristicType> characteristic;
     private List<ComponentProdPriceType> productPrice;
-    private List<RelatedParty> relatedParty;
-    private List<AdditionalData> additionalData;
+    private List<RelatedPartyRefType> relatedParty;
+    private List<Object> productRelationship;
+    private List<KeyValueType> additionalData;
 }

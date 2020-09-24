@@ -1,5 +1,6 @@
 package com.tdp.ms.sales.model.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -23,7 +24,6 @@ import lombok.NoArgsConstructor;
  *         </ul>
  * @version 1.0
  */
-
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
@@ -32,11 +32,14 @@ public class ServiceAvailabilityReportType {
     private String id;
     private Boolean isAdslAvailable;
     private Boolean isAdslSatured;
+    @JsonProperty("TerminalBox")
     private String terminalBox;
+    @JsonProperty("AdslBloquedSale")
     private String adslBloquedSale;
+    @JsonProperty("TerminalBoxBloqued")
     private String terminalBoxBloqued;
     private String commercialAreaId;
     private String commercialAreaDescription;
     private List<AvailableOffersType> offers;
-    private List<AdditionalData> additionalData;
+    private List<KeyValueType> additionalData;
 }

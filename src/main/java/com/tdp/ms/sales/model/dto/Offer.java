@@ -1,5 +1,6 @@
 package com.tdp.ms.sales.model.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -23,7 +24,6 @@ import lombok.NoArgsConstructor;
  *         </ul>
  * @version 1.0
  */
-
 @Data
 @Builder
 @AllArgsConstructor
@@ -32,9 +32,12 @@ public class Offer {
     private String id;
     private String name;
     private String description;
+    @JsonProperty("sales_channel_ids")
     private List<String> salesChannelIds;
+    @JsonProperty("purchase_link")
     private String purchaseLink;
     private List<BillingOffering> billingOfferings;
+    @JsonProperty("valid_until")
     private String validUntil;
     private Instalments instalments;
     private List<PriceRequires> requires;

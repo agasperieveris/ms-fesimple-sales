@@ -1,15 +1,14 @@
 package com.tdp.ms.sales.model.response;
 
-import com.tdp.ms.sales.model.dto.AdditionalData;
-import com.tdp.ms.sales.model.dto.Agent;
-import com.tdp.ms.sales.model.dto.Channel;
-import com.tdp.ms.sales.model.dto.ComercialOperationType;
-import com.tdp.ms.sales.model.dto.EstimatedRevenue;
+import com.tdp.ms.sales.model.dto.ChannelRef;
+import com.tdp.ms.sales.model.dto.CommercialOperationType;
+import com.tdp.ms.sales.model.dto.ContactMedium;
 import com.tdp.ms.sales.model.dto.IdentityValidationType;
+import com.tdp.ms.sales.model.dto.KeyValueType;
+import com.tdp.ms.sales.model.dto.Money;
 import com.tdp.ms.sales.model.dto.PaymentType;
-import com.tdp.ms.sales.model.dto.ProspectContact;
 import com.tdp.ms.sales.model.dto.RelatedParty;
-import com.tdp.ms.sales.model.dto.ValidFor;
+import com.tdp.ms.sales.model.dto.TimePeriod;
 import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -45,14 +44,14 @@ public class SalesResponse {
     private String salesId;
     private String id;
     private String name;
-    private List<AdditionalData> additionalData;
+    private List<KeyValueType> additionalData;
     private String description;
     private List<IdentityValidationType> identityValidations;
     private String priority;
-    private ValidFor validFor;
-    private Channel channel;
+    private TimePeriod validFor;
+    private ChannelRef channel;
     private String audioUrl;
-    private Agent agent;
+    private RelatedParty agent;
     private String statusChangeDate;
     private String statusChangeReason;
     private String audioStatus;
@@ -60,8 +59,8 @@ public class SalesResponse {
     private List<RelatedParty> relatedParty;
     private String saleCreationDate;
     private String status;
-    private List<ComercialOperationType> comercialOperationType;
-    private List<ProspectContact> prospectContact;
-    private EstimatedRevenue estimatedRevenue;
+    private List<CommercialOperationType> commercialOperationType;
+    private List<ContactMedium> prospectContact;
+    private Money estimatedRevenue;
     private PaymentType paymentType;
 }

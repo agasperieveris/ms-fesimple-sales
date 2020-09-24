@@ -1,5 +1,6 @@
 package com.tdp.ms.sales.model.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -30,5 +31,6 @@ import lombok.NoArgsConstructor;
 public class MoneyAmount {
     private float value;
     private String currency;
-    private Boolean tax_included;
+    @JsonProperty("tax_included")
+    private Boolean taxIncluded;
 }
