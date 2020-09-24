@@ -42,7 +42,7 @@ public class AddressType {
     private String region;
     private String regionCode;
     private String country;
-    private CoordinatesType coodinates;
+    private CoordinatesType coodinates;//Swagger diferente nombre
     private String floor;
     private String apartment;
     private Boolean isDangerous;

@@ -45,6 +45,6 @@ public class Product {
     private List<ProductCharacteristicType> characteristic;
     private List<RelatedProductType> productRelationShip;
     private List<ComponentProdPriceType> productPrice;
-    private List<ProductRefInfoTypePlace> place;
+    private List<EntityRefType> place;//Swagger otro objeto
     private List<AdditionalData> additionalData;
 }

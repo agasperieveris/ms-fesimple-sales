@@ -32,9 +32,9 @@ public class ServiceAvailabilityReportType {
     private String id;
     private Boolean isAdslAvailable;
     private Boolean isAdslSatured;
-    private String terminalBox;
-    private String adslBloquedSale;
-    private String terminalBoxBloqued;
+    private String terminalBox;//Swagger diferente nombre
+    private String adslBloquedSale;//Swagger diferente nombre
+    private String terminalBoxBloqued;//Swagger diferente nombre
     private String commercialAreaId;
     private String commercialAreaDescription;
     private List<AvailableOffersType> offers;

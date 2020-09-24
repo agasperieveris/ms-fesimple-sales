@@ -44,5 +44,6 @@ public class ProductRefInfoType {
     private List<ProductCharacteristicType> characteristic;
     private List<ComponentProdPriceType> productPrice;
     private List<RelatedParty> relatedParty;
+    private List<Object> productRelationship;//Swagger nuevo
     private List<AdditionalData> additionalData;
 }

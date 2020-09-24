@@ -1,36 +1,35 @@
-package com.tdp.ms.sales.model.dto;
+package com.tdp.ms.sales.model.request;
 
+import java.util.HashMap;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * Class: ItemType. <br/>
- * <b>Copyright</b>: &copy; 2019 Telef&oacute;nica del Per&uacute;<br/>
+ * Class: BusinessParameterRequest. <br/>
+ * <b>Copyright</b>: &copy; 2020 Telef&oacute;nica del Per&uacute;<br/>
  * <b>Company</b>: Telef&oacute;nica del Per&uacute;<br/>
  *
  * @author Telef&oacute;nica del Per&uacute; (TDP) <br/>
  *         <u>Service Provider</u>: Everis Per&uacute; SAC (EVE) <br/>
  *         <u>Developed by</u>: <br/>
  *         <ul>
- *         <li>Developer name</li>
+ *         <li>Cesar Gomez</li>
  *         </ul>
  *         <u>Changes</u>:<br/>
  *         <ul>
- *         <li>YYYY-MM-DD Creaci&oacute;n del proyecto.</li>
+ *         <li>2020-09-23 Creaci&oacute;n del proyecto.</li>
  *         </ul>
  * @version 1.0
  */
-
 @Data
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class ItemType {
-    private String id;
-    private String sku;//Swagger otro nombre
-    private String type;
-    private String name;
-    private String condition;
+public class GetSalesCharacteristicsRequest {
+
+    private String commercialOperationType;
+    private HashMap<String,String> headersMap;
+
 }

@@ -30,7 +30,7 @@ import lombok.NoArgsConstructor;
 public class Score {
     private String scoreId;
     private String score;
-    private String messageScore;
+    private String messageScore;//Swagger diferente nombre
     private String numberLinesScore;
     private String restrictionScore;
     private String actionScore;

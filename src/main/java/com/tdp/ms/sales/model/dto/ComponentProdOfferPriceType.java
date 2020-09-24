@@ -32,8 +32,8 @@ public class ComponentProdOfferPriceType {
     private String id;
     private String name;
     private String description;
-    private String productSpecContainmentId;
-    private String pricePlanSpecContainmentId;
+    private String productSpecContainmentId;//Swagger nombre diferente
+    private String pricePlanSpecContainmentId;//Swagger nombre diferente
     private Boolean isMandatory;
     private ValidFor validFor;
     private String priceType;

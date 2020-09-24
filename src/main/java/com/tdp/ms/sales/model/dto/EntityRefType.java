@@ -32,8 +32,9 @@ public class EntityRefType {
     private String id;
     private String href;
     private String name;
-    private String type;
+    private String type;//Swagger no muestra
     private String role;
+    private ValidFor validFor;//Swagger nuevo
     private String entityType;
     private String description;
     @JsonProperty("@referredType")

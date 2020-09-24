@@ -43,6 +43,8 @@ public class PortabilityType {
     private String customerContactPhone;
     private String customerFax;
     private String idProcessGroup;
+    private String idProcess;//Nuevo Swagger
+    private String idProcessCP;//Nuevo Swagger
     private String donorActivateDate;
     private String donorEquipmentContractEndDate;
     private String rejectCode;

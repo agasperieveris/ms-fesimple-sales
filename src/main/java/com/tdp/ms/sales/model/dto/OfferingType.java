@@ -45,8 +45,8 @@ public class OfferingType {
     private Boolean isBundle;
     private String offeringUrl;
     private ValidFor validFor;
-    private List<Integer> bundledProductOffering;
-    private List<ComposingProductType> productSpecification;
+    private List<Integer> bundledProductOffering;//Swagger otro objecto
+    private List<ComposingProductType> productSpecification;//Swagger otro objeto
     private Boolean isDowngrade;
     private List<ComponentProdOfferPriceType> productOfferingPrice;
     private List<PenaltyType> offeringPenalties;

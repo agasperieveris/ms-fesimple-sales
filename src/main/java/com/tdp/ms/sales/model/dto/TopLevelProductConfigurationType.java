@@ -31,7 +31,7 @@ import lombok.NoArgsConstructor;
 public class TopLevelProductConfigurationType {
     private String temporaryId;
     private String compatibilityStatus;
-    private String productId;
+    private String productId;//Swagger diferente nombre
     private String serviceId;
     private String lineOfBusinessType;
     private ProductOffering productOffering;

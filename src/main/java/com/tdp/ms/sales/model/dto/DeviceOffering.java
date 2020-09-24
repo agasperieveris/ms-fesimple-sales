@@ -35,7 +35,7 @@ public class DeviceOffering {
     private String brand;
     private String model;
     private String gama;
-    private String displayName;
+    private String displayName;//Swagger diferente nombre
     private String clasificacionComercial;
     private String costoPromedioSinIGVSoles;
     private List<SimSpecification> simSpecifications;

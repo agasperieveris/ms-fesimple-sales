@@ -30,7 +30,7 @@ import lombok.NoArgsConstructor;
 @Builder
 public class ProdPriceAlterationType {
     private String name;
-    private String descrition;
+    private String descrition;//Swagger diferente nombre
     private ValidFor validFor;
     private String priceCondition;
     private String priority;

@@ -32,14 +32,14 @@ public class NewProductInNewOfferingInstanceConfigurationType {
     private String temporaryId;
     private String productId;
     private String bundleCatalogId;
-    private String productOfferingInstanceId;
-    private String subscriptionGroupId;
+    private String productOfferingInstanceId;//Swagger diferente nombre
+    private String subscriptionGroupId;//Swagger diferente nombre
     private String baId;
     private String accountId;
     private String invoicingCompany;
     private String installationAddressId;
     private String productOrderItemReferenceNumber;
-    private String productOrderItemId;
+    private String productOrderItemId;//Swagger diferente nombre
     private String productOrderItemType;
     private TopLevelProductConfigurationType productConfiguration;
 }
