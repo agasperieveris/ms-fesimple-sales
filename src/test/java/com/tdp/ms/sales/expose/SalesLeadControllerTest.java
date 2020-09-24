@@ -33,7 +33,7 @@ public class SalesLeadControllerTest {
     static void setup() {
         sale = Sale
                 .builder()
-                .id("1")
+                .id("FE-000000001")
                 .name("Sergio")
                 .description("descripcion")
                 .build();
