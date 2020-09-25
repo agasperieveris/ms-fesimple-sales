@@ -17,8 +17,6 @@ import java.util.Map;
 import java.util.UUID;
 
 import lombok.RequiredArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
@@ -96,8 +94,8 @@ public class SalesServiceImpl implements SalesService {
         return existingSale
                 .switchIfEmpty(Mono.error(new NotFoundException("El id solicitado no se encuentra registrado.")))
                 .flatMap(item -> {
-                    item.setSalesId(item.getSalesId());
-                    return salesRepository.save(item);
+                    request.setSalesId(item.getSalesId());
+                    return salesRepository.save(request);
         });
 
     }
