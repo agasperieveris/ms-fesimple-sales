@@ -30,7 +30,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Request {
+public class ProductConfigurationRequestType {
     private String installationAddressId;
     private String productOrderId;
     private String orderReferenceNumber;

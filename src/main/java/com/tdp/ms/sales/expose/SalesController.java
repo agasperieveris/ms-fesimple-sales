@@ -47,23 +47,21 @@ public class SalesController {
      * Registra los datos de un Sale en la BBDD de la Web Convergente.
      *
      * @author @srivasme
-     * @param request Datos de la venta
+     * @param sale Datos de la venta
      * @return SalesResponse, datos de la venta registrada en la BBDD de la Web
      *         Convergente
      */
-
     @PostMapping()
     @ResponseStatus(HttpStatus.CREATED)
-    public Mono<Sale> createdSales(@Valid @RequestBody Sale request,
+    public Mono<SalesResponse> createdSales(@Valid @RequestBody Sale sale,
                                             @RequestHeader(HttpHeadersKey.UNICA_SERVICE_ID) String serviceId,
                                             @RequestHeader(HttpHeadersKey.UNICA_APPLICATION) String application,
                                             @RequestHeader(HttpHeadersKey.UNICA_PID) String pid,
                                             @RequestHeader(HttpHeadersKey.UNICA_USER) String user) {
 
-        //TODO: Por ahora solo se hace lo mismo que el post de salesLead
         return salesManagmentService.post(PostSalesRequest
                 .builder()
-                .sale(request)
+                .sale(sale)
                 .headersMap(mappingHeaders(serviceId,
                         application,
                         pid,
