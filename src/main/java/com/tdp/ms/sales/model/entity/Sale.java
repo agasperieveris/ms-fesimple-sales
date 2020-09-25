@@ -49,7 +49,7 @@ public class Sale {
     @Id
     private String id;
 
-    private Long salesId;
+    private String salesId;
 
     @NotEmpty(message = "Sales property 'name' can not be empty")
     private String name;
