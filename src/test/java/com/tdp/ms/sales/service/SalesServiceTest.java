@@ -2,17 +2,20 @@ package com.tdp.ms.sales.service;
 
 import com.tdp.genesis.core.constants.HttpHeadersKey;
 import com.tdp.ms.sales.business.SalesService;
+import com.tdp.ms.sales.client.WebClientBusinessParameters;
 import com.tdp.ms.sales.model.dto.*;
 import com.tdp.ms.sales.model.entity.Sale;
 import com.tdp.ms.sales.model.request.GetSalesRequest;
 import com.tdp.ms.sales.model.request.SalesRequest;
-import com.tdp.ms.sales.model.response.SalesResponse;
+import com.tdp.ms.sales.model.response.BusinessParametersResponse;
 import com.tdp.ms.sales.repository.SalesRepository;
 import org.junit.Assert;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mockito;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -33,6 +36,9 @@ import static org.mockito.ArgumentMatchers.any;
 public class SalesServiceTest {
 
     @MockBean
+    private WebClientBusinessParameters webClientToken;
+
+    @MockBean
     private SalesRepository salesRepository;
 
     @Autowired
@@ -41,7 +47,7 @@ public class SalesServiceTest {
     private static Sale sale;
     private static SalesRequest salesRequest;
     private static Sale sale2;
-    private static SalesResponse salesResponse;
+    private static Sale salesResponse;
     private static  GetSalesRequest request;
     @BeforeAll
     static void setup() {
@@ -63,11 +69,12 @@ public class SalesServiceTest {
         channel.setName("s");
         channel.setStoreId("s");
         channel.setStoreName("s");
+        channel.setDealerId("bc12");
 
         Agent agent= new Agent();
         agent.setId("1");
         agent.setNationalId("Peru");
-        agent.setNationalId("DNI");
+        agent.setNationalIdType("DNI");
         List<AdditionalData> additionalDatas = new ArrayList<>();
 
         AdditionalData additionalData = new AdditionalData();
@@ -104,6 +111,11 @@ public class SalesServiceTest {
         Product product= new Product();
         product.setId("s");
 
+        CreateProductOrderResponseType order = CreateProductOrderResponseType
+                .builder()
+                .productOrderId("930686A")
+                .build();
+
         product.setAdditionalData(additionalDatas);
         List<ComercialOperationType> comercialOperationTypes = new ArrayList<>();
          ComercialOperationType comercialOperationType = new ComercialOperationType();
@@ -114,6 +126,7 @@ public class SalesServiceTest {
          comercialOperationType.setDeviceOffering(deviceOfferings);
          comercialOperationType.setAction("s");
          comercialOperationType.setAdditionalData(additionalDatas);
+         comercialOperationType.setOrder(order);
          comercialOperationTypes.add(comercialOperationType);
 
         EstimatedRevenue estimatedRevenue = new EstimatedRevenue();
@@ -167,7 +180,7 @@ public class SalesServiceTest {
         sale = Sale
                 .builder()
                 .id("1")
-                .salesId(1l)
+                .salesId("FE-000000001")
                 .name("Sergio")
                 .description("venta de lote")
                 .priority("x")
@@ -211,12 +224,12 @@ public class SalesServiceTest {
         sale2 = Sale
                 .builder()
                 .id("1")
-                .salesId(Long.valueOf(1))
+                .salesId("FE-000000001")
                 .name("Sergio")
                 .description("venta de lote")
                 .build();
 
-        salesResponse = SalesResponse
+        salesResponse = Sale
                 .builder()
                 .id("1")
                 .salesId("FE-"+sale.getSalesId())
@@ -243,7 +256,7 @@ public class SalesServiceTest {
     void getSaleTest(){
         Mockito.when(salesRepository.findBySalesId(any())).thenReturn(Mono.just(sale));
 
-        Mono<SalesResponse> result = salesService.getSale(request);
+        Mono<Sale> result = salesService.getSale(request);
 
         StepVerifier.create(result)
                 .assertNext(c ->{
@@ -253,15 +266,34 @@ public class SalesServiceTest {
                 })
                 .verifyComplete();
     }
+
     @Test
     void postSaveSale() {
+        Map<String, String> headersMap = new HashMap<String, String>();
+        headersMap.put(HttpHeadersKey.UNICA_SERVICE_ID, "serviceId");
+        headersMap.put(HttpHeadersKey.UNICA_PID, "pid");
+        headersMap.put(HttpHeadersKey.UNICA_APPLICATION, "application");
+        headersMap.put(HttpHeadersKey.UNICA_USER, "user");
         Mockito.when(salesRepository.findAll(any()))
                 .thenReturn(Flux.just(sale2));
 
         Mockito.when(salesRepository.save(any()))
                 .thenReturn(Mono.just(sale));
 
-        Mono<SalesResponse> result = salesService.post(sale);
+        BusinessParametersData businessParametersData = BusinessParametersData
+                .builder()
+                .value("FE-000000001")
+                .build();
+        List<BusinessParametersData> businessParametersDataList = new ArrayList<>();
+        businessParametersDataList.add(businessParametersData);
+
+        Mockito.when(webClientToken.getNewSaleSequential(any(), any()))
+                .thenReturn(Mono.just(BusinessParametersResponse
+                        .builder()
+                        .data(businessParametersDataList)
+                        .build()));
+
+        Mono<Sale> result = salesService.post(sale, headersMap);
 
         StepVerifier.create(result)
                 .assertNext(c -> {
@@ -280,7 +312,7 @@ public class SalesServiceTest {
         Mockito.when(salesRepository.save(any()))
                 .thenReturn(Mono.just(sale2));
 
-        Mono<SalesResponse> result = salesService.put(salesRequest);
+        Mono<Sale> result = salesService.put(sale);
 
         StepVerifier.create(result)
                 .assertNext(c -> {
@@ -290,26 +322,16 @@ public class SalesServiceTest {
     }
 
     @Test
-    void confirmationSale() {
-        Map<String, String> headersMap = new HashMap<String, String>();
-        headersMap.put(HttpHeadersKey.UNICA_SERVICE_ID, "serviceId");
-        headersMap.put(HttpHeadersKey.UNICA_APPLICATION, "application");
-        headersMap.put(HttpHeadersKey.UNICA_PID, "pid");
-        headersMap.put(HttpHeadersKey.UNICA_USER, "user");
-        headersMap.put("ufxauthorization", "ufxauthorization");
+    void getSaleListTest(){
+        Mockito.when(salesRepository.findByChannel_DealerIdContainingAndAgent_IdContainingAndAgent_CustomerIdContainingAndAgent_NationalIdContainingAndAgent_NationalIdTypeContainingAndChannel_StoreIdContainingAndStatusContaining(
+                any(), any(), any(), any(), any(), any(), any())).thenReturn(Flux.just(sale));
 
-        Mockito.when(salesRepository.findById(sale2.getId()))
-                .thenReturn(Mono.just(sale2));
-
-        Mockito.when(salesRepository.save(any()))
-                .thenReturn(Mono.just(sale2));
-
-        Mono<SalesResponse> result = salesService.confirmationSalesLead(salesResponse, headersMap);
+        Flux<Sale> result = salesService.getSaleList("1","bc12",
+                "1", "1", "Peru", "DNI",
+                "s", "1", "s", "orderId", null,
+                null, "size", "pageCount", "page", "maxResultCount");
 
         StepVerifier.create(result)
-                .assertNext(c -> {
-                    Assert.assertEquals(c.getId(), sale2.getId());
-                })
-                .verifyComplete();
+                .expectNextCount(1);
     }
 }

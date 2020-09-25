@@ -27,6 +27,7 @@ application:
       url: https://www.telefonica.com.pe
   endpoints:
     url:
-      create_order: https://localhost
-  security:
-    ibmclientid: 12122322
+      business_parameters:
+        sequential: https://aks-berserkers-ingress-dev.eastus2.cloudapp.azure.com/bussinesparameters/v2/parameters/{code}/dataparams?nomSeq={seq}
+  catalog-error:
+    url: http://aks-berserkers-ingress-dev.eastus2.cloudapp.azure.com

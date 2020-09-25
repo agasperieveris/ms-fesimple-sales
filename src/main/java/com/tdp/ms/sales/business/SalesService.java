@@ -2,9 +2,9 @@ package com.tdp.ms.sales.business;
 
 import com.tdp.ms.sales.model.entity.Sale;
 import com.tdp.ms.sales.model.request.GetSalesRequest;
-import com.tdp.ms.sales.model.request.SalesRequest;
-import com.tdp.ms.sales.model.response.SalesResponse;
 import java.util.Map;
+
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 /**
@@ -34,7 +34,7 @@ public interface SalesService {
      * @param request Datos de la nueva venta
      * @return SalesResponse, datos de la nueva venta registrada en la BBDD de la Web Convergente
      */
-    Mono<SalesResponse> getSale(GetSalesRequest request);
+    Mono<Sale> getSale(GetSalesRequest request);
 
     /**
      * Registra los datos de un nueva venta en la BBDD de la Web Convergente.
@@ -43,7 +43,7 @@ public interface SalesService {
      * @param request Datos de la nueva venta
      * @return SalesResponse, datos de la nueva venta registrada en la BBDD de la Web Convergente
      */
-    Mono<SalesResponse> post(Sale request);
+    Mono<Sale> post(Sale request, Map<String, String> headersMap);
 
     /**
      * Actualiza los datos de la venta en la BBDD.
@@ -52,15 +52,17 @@ public interface SalesService {
      * @param request Datos de la venta actualizados
      * @return SalesResponse, datos actualizados de la venta
      */
-    Mono<SalesResponse> put(SalesRequest request);
+    Mono<Sale> put(Sale request);
 
     /**
-     * Se crea un order y se actualiza los datos del sale, el orderId tambien se actualiza dentro de sale.
+     * Se listan las ventas dependiendo de los parámetros que se le pasen.
      *
      * @author @srivasme
-     * @param request Datos de la venta actualizados
-     * @param headersMap headers de la consulta
-     * @return SalesResponse, datos actualizados de la venta
+     * @return Sale
      */
-    Mono<SalesResponse> confirmationSalesLead(SalesResponse request, Map<String, String> headersMap);
+    Flux<Sale> getSaleList(String saleId, String dealerId,
+                           String idAgent, String customerId, String nationalID, String nationalIdType,
+                           String status, String channelId, String storeId, String orderId,
+                           String startDateTime, String endDateTime, String size, String pageCount,
+                           String page, String maxResultCount);
 }

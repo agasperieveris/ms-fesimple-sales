@@ -3,6 +3,7 @@ package com.tdp.ms.sales.repository;
 import com.microsoft.azure.spring.data.cosmosdb.repository.ReactiveCosmosRepository;
 import com.tdp.ms.sales.model.entity.Sale;
 import org.springframework.stereotype.Repository;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 /**
@@ -26,5 +27,7 @@ import reactor.core.publisher.Mono;
 
 @Repository
 public interface SalesRepository extends ReactiveCosmosRepository<Sale, String> {
-    Mono<Sale> findBySalesId(Long salesId);
+    Mono<Sale> findBySalesId(String salesId);
+
+    Flux<Sale> findByChannel_DealerIdContainingAndAgent_IdContainingAndAgent_CustomerIdContainingAndAgent_NationalIdContainingAndAgent_NationalIdTypeContainingAndChannel_StoreIdContainingAndStatusContaining(String dealerId, String idAgent, String customerId, String nationalID, String nationalIdType, String storeId, String status);
 }
