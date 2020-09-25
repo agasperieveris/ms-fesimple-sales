@@ -4,7 +4,6 @@ import com.tdp.genesis.core.constants.HttpHeadersKey;
 import com.tdp.ms.sales.business.SalesService;
 import com.tdp.ms.sales.model.entity.Sale;
 import com.tdp.ms.sales.model.request.GetSalesRequest;
-import com.tdp.ms.sales.model.request.SalesRequest;
 import com.tdp.ms.sales.model.response.SalesResponse;
 import io.swagger.annotations.ApiOperation;
 import java.util.HashMap;
@@ -63,7 +62,7 @@ public class SalesLeadController {
             value = "Obtiene por id la venta",
             notes = "Se debe enviar id como parámetro",
             response = SalesResponse.class)
-    public Mono<SalesResponse> getSales(@PathVariable("id") String id,
+    public Mono<Sale> getSales(@PathVariable("id") String id,
                                         @RequestHeader(HttpHeadersKey.UNICA_SERVICE_ID) String serviceId,
                                         @RequestHeader(HttpHeadersKey.UNICA_APPLICATION) String application,
                                         @RequestHeader(HttpHeadersKey.UNICA_PID) String pid,
@@ -92,13 +91,13 @@ public class SalesLeadController {
 
     @PostMapping()
     @ResponseStatus(HttpStatus.CREATED)
-    public Mono<SalesResponse> createdSales(@Valid @RequestBody Sale request,
+    public Mono<Sale> createdSales(@Valid @RequestBody Sale request,
             @RequestHeader(HttpHeadersKey.UNICA_SERVICE_ID) String serviceId,
             @RequestHeader(HttpHeadersKey.UNICA_APPLICATION) String application,
             @RequestHeader(HttpHeadersKey.UNICA_PID) String pid,
             @RequestHeader(HttpHeadersKey.UNICA_USER) String user) {
 
-        return salesService.post(request);
+        return salesService.post(request, fillHeaders(serviceId, application, pid, user));
     }
 
     /**
@@ -111,41 +110,13 @@ public class SalesLeadController {
      */
 
     @PutMapping
-    public Mono<SalesResponse> updateSales(@Valid @RequestBody SalesRequest request,
+    public Mono<Sale> updateSales(@Valid @RequestBody Sale request,
             @RequestHeader(HttpHeadersKey.UNICA_SERVICE_ID) String serviceId,
             @RequestHeader(HttpHeadersKey.UNICA_APPLICATION) String application,
             @RequestHeader(HttpHeadersKey.UNICA_PID) String pid,
             @RequestHeader(HttpHeadersKey.UNICA_USER) String user) {
 
         return salesService.put(request);
-    }
-
-    /**
-     * Registra los datos de un Sale en la BBDD de la Web Convergente.
-     *
-     * @author @srivasme
-     * @param request Datos de la venta
-     * @return SalesResponse, datos de la venta registrada en la BBDD de la Web
-     *         Convergente
-     */
-
-    @PostMapping("/confirmation")
-    @ResponseStatus(HttpStatus.CREATED)
-    public Mono<SalesResponse> confirmationSalesLead(@Valid @RequestBody SalesResponse request,
-                                            @RequestHeader(HttpHeadersKey.UNICA_SERVICE_ID) String serviceId,
-                                            @RequestHeader(HttpHeadersKey.UNICA_APPLICATION) String application,
-                                            @RequestHeader(HttpHeadersKey.UNICA_PID) String pid,
-                                            @RequestHeader(HttpHeadersKey.UNICA_USER) String user,
-                                            @RequestHeader("ufxauthorization") String ufxauthorization) {
-
-        Map<String, String> headersMap = new HashMap<>();
-        headersMap.put(HttpHeadersKey.UNICA_SERVICE_ID, serviceId);
-        headersMap.put(HttpHeadersKey.UNICA_APPLICATION, application);
-        headersMap.put(HttpHeadersKey.UNICA_PID, pid);
-        headersMap.put(HttpHeadersKey.UNICA_USER, user);
-        headersMap.put("ufxauthorization", ufxauthorization);
-
-        return salesService.confirmationSalesLead(request, headersMap);
     }
 
     /**
@@ -159,15 +130,12 @@ public class SalesLeadController {
             value = "Obtiene por id la venta",
             notes = "Se debe enviar id como parámetro",
             response = SalesResponse.class)
-    public Flux<SalesResponse> getSalesList(@RequestHeader(HttpHeadersKey.UNICA_SERVICE_ID) String serviceId,
+    public Flux<Sale> getSalesList(@RequestHeader(HttpHeadersKey.UNICA_SERVICE_ID) String serviceId,
                         @RequestHeader(HttpHeadersKey.UNICA_APPLICATION) String application,
                         @RequestHeader(HttpHeadersKey.UNICA_PID) String pid,
                         @RequestHeader(HttpHeadersKey.UNICA_USER) String user,
                         @RequestHeader("ufxauthorization") String ufxauthorization,
-                        @RequestParam(value = "fields", required = false, defaultValue = "") String fields,
-                        @RequestParam(value = "offset", required = false, defaultValue = "") String offset,
-                        @RequestParam(value = "limit", required = false, defaultValue = "") String limit,
-                        @RequestParam(value = "id", required = false, defaultValue = "") String id,
+                        @RequestParam(value = "id", required = false, defaultValue = "") String saleId,
                         @RequestParam(value = "dealerId", required = false, defaultValue = "") String dealerId,
                         @RequestParam(value = "idAgent", required = false, defaultValue = "") String idAgent,
                         @RequestParam(value = "customerId", required = false, defaultValue = "") String customerId,
@@ -181,6 +149,7 @@ public class SalesLeadController {
                         @RequestParam(value = "startDateTime", required = false,
                                 defaultValue = "") String startDateTime,
                         @RequestParam(value = "endDateTime", required = false, defaultValue = "") String endDateTime,
+                        // Los parámetros de paginación aun no será utilizados
                         @RequestParam(value = "paginationInfo.size", required = false, defaultValue = "") String size,
                         @RequestParam(value = "paginationInfo.pageCount", required = false,
                                 defaultValue = "") String pageCount,
@@ -188,19 +157,20 @@ public class SalesLeadController {
                         @RequestParam(value = "paginationInfo.maxResultCount", required = false,
                                 defaultValue = "") String maxResultCount) {
 
-        //TODO: Por ahora es un mock, se debe de implementar este método
 
-        Map<String,String> headersMap = new HashMap<>();
+        return salesService.getSaleList(saleId, dealerId, idAgent, customerId, nationalID,
+                nationalIdType, status, channelId, storeId, orderId, startDateTime, endDateTime, size, pageCount, page,
+                maxResultCount);
+    }
+
+    private Map<String, String> fillHeaders(String serviceId, String application, String pid, String user) {
+        Map<String, String> headersMap = new HashMap();
         headersMap.put(HttpHeadersKey.UNICA_SERVICE_ID, serviceId);
         headersMap.put(HttpHeadersKey.UNICA_APPLICATION, application);
         headersMap.put(HttpHeadersKey.UNICA_PID, pid);
         headersMap.put(HttpHeadersKey.UNICA_USER, user);
 
-        return salesService.getSale(GetSalesRequest
-                .builder()
-                .id("FE-000000001")
-                .headersMap(headersMap)
-                .build()).flux();
+        return headersMap;
     }
 
 }
