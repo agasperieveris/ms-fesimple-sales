@@ -30,3 +30,6 @@ application:
   endpoints:
     business_parameters:
       get_sales_characteristics_url: http://aks-berserkers-ingress-dev.eastus2.cloudapp.azure.com/bussinesparameters/v2/parameters/033/dataparams?comercialOperationType={commercialOperationType}
+    url:
+      business_parameters:
+        sequential: https://aks-berserkers-ingress-dev.eastus2.cloudapp.azure.com/bussinesparameters/v2/parameters/{code}/dataparams?nomSeq={seq}

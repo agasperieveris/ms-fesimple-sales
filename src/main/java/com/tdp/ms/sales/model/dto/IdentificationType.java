@@ -1,5 +1,6 @@
 package com.tdp.ms.sales.model.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -29,6 +30,8 @@ import lombok.NoArgsConstructor;
 public class IdentificationType {
     private String country;
     private Boolean isPrimary;
-    private String nationalIDType;
-    private String nationalID;
+    @JsonProperty("nationalIDType")
+    private String nationalIdType;
+    @JsonProperty("nationalID")
+    private String nationalId;
 }

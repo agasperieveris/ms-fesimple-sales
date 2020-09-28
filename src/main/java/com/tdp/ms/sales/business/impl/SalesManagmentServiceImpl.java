@@ -2,6 +2,7 @@ package com.tdp.ms.sales.business.impl;
 
 import com.tdp.ms.sales.business.SalesManagmentService;
 import com.tdp.ms.sales.client.BusinessParameterWebClient;
+import com.tdp.ms.sales.client.WebClientBusinessParameters;
 import com.tdp.ms.sales.model.dto.BusinessParameterExt;
 import com.tdp.ms.sales.model.dto.productorder.caeq.ChangedCharacteristic;
 import com.tdp.ms.sales.model.dto.productorder.caeq.ChangedContainedProduct;
@@ -16,22 +17,22 @@ import com.tdp.ms.sales.model.dto.productorder.capl.NewProductCapl;
 import com.tdp.ms.sales.model.dto.productorder.capl.ProductChangeCapl;
 import com.tdp.ms.sales.model.dto.productorder.capl.ProductOrderCaplRequest;
 import com.tdp.ms.sales.model.dto.productorder.capl.RemovedAssignedBillingOffers;
-import com.tdp.ms.sales.model.entity.Sale;
 import com.tdp.ms.sales.model.request.GetSalesCharacteristicsRequest;
 import com.tdp.ms.sales.model.request.PostSalesRequest;
 import com.tdp.ms.sales.model.request.ProductOrderRequest;
+import com.tdp.ms.sales.model.response.BusinessParametersResponse;
 import com.tdp.ms.sales.model.response.GetSalesCharacteristicsResponse;
 import com.tdp.ms.sales.model.response.SalesResponse;
 import com.tdp.ms.sales.repository.SalesRepository;
-
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 /**
@@ -61,6 +62,8 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
     @Autowired
     private BusinessParameterWebClient businessParameterWebClient;
 
+    private final WebClientBusinessParameters webClient;
+
     private List<BusinessParameterExt> retrieveCharacteristics(GetSalesCharacteristicsResponse response) {
         return response.getData().get(0).getExt();
     }
@@ -78,7 +81,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                 .flatMap(salesCharacteristicsList -> {
 
                     // Getting CommercialTypeOperation value
-                    String commercialOperationType = request.getSale().getComercialOperationType().get(0).getReason();
+                    String commercialOperationType = request.getSale().getCommercialOperation().get(0).getReason();
 
                     if (commercialOperationType.equals("CAPL")) {
                         // Building request for CAPL CommercialTypeOperation
@@ -217,36 +220,28 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
 
 
 
-
+                    // START - POST SALES LEAD CODE
                     String uuid = UUID.randomUUID().toString();
                     while (salesRepository.existsById(uuid) == Mono.just(true)) {
                         uuid = UUID.randomUUID().toString();
                     }
                     request.getSale().setId(uuid);
 
-                    // TODO: salesId debe tener el formato "FE-000000001", se debe mejorar para autogenerarse aceptando concurrencia
-                    // Obtener el valor más alto de salesId y aumentar en 1
-                    Flux<Sale> saleFlux = salesRepository.findAll(Sort.by(Sort.Direction.DESC, "salesId"));
 
-                    return saleFlux
-                            .collectList()
-                            .flatMap(item -> {
-                                // Completar con 0 (el número es de 9 dígitos)
-                                // Situación 1: Si no hay datos en la coleccion, se le asigna 1
-                                // Situación 2: Si es 999999999, no se completa con 0
+                    // Se obtiene el secuencial de businessParameters
+                    Mono<BusinessParametersResponse> saleSequential = webClient.getNewSaleSequential("SEQ001", request.getHeadersMap());
 
-                                Long salesNum;
-                                if (item.isEmpty()) {
-                                    salesNum = Long.valueOf(1);
-                                } else {
-                                    salesNum = item.get(0).getSalesId();
-                                    salesNum++;
-                                }
+                    return saleSequential.flatMap(saleSequentialItem -> {
+                        request.getSale().setSalesId(saleSequentialItem.getData().get(0).getValue());
 
+                        // asignar fecha de creación
+                        Date todayDate = Calendar.getInstance().getTime();
+                        SimpleDateFormat dateFormatter = new SimpleDateFormat("dd/MM/yyyy'T'HH:mm:ss");
+                        String todayDateString = dateFormatter.format(todayDate);
+                        request.getSale().setSaleCreationDate(todayDateString);
 
-                                request.getSale().setSalesId(salesNum);
-                                Mono<Sale> sale = salesRepository.save(request.getSale());
-                                return sale.flatMap(saleItem -> {
+                        return salesRepository.save(request.getSale())
+                                .flatMap(saleItem -> {
                                     String salesId;
 
                                     salesId = String.valueOf(saleItem.getSalesId());
@@ -265,9 +260,9 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                                             .additionalData(saleItem.getAdditionalData())
                                             .channel(saleItem.getChannel())
                                             .agent(saleItem.getAgent())
-                                            .comercialOperationType(saleItem.getComercialOperationType())
+                                            .commercialOperationType(saleItem.getCommercialOperation())
                                             .estimatedRevenue(saleItem.getEstimatedRevenue())
-                                            .paymentType(saleItem.getPaymentType())
+                                            .paymentType(saleItem.getPaymenType())
                                             .validFor(saleItem.getValidFor())
                                             .name(saleItem.getName())
                                             .priority(saleItem.getPriority())
@@ -285,12 +280,9 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
 
                                     return Mono.just(salesResponse);
                                 });
-                            });
-
-
+                    });
+                    // END - POST SALES LEAD CODE
                 });
-
-
     }
 
 }

@@ -2,8 +2,8 @@ package com.tdp.ms.sales.expose;
 
 import com.tdp.genesis.core.constants.HttpHeadersKey;
 import com.tdp.ms.sales.business.SalesService;
-import com.tdp.ms.sales.model.dto.Agent;
-import com.tdp.ms.sales.model.dto.Channel;
+import com.tdp.ms.sales.model.dto.ChannelRef;
+import com.tdp.ms.sales.model.dto.RelatedParty;
 import com.tdp.ms.sales.model.entity.Sale;
 import com.tdp.ms.sales.model.response.SalesResponse;
 import org.junit.jupiter.api.BeforeAll;
@@ -16,8 +16,6 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import reactor.core.publisher.Mono;
-
-import java.util.Map;
 
 import static org.mockito.ArgumentMatchers.any;
 
@@ -43,13 +41,13 @@ public class SalesLeadControllerTest {
                 .description("descripcion")
                 .build();
 
-        Channel channel = Channel
+        ChannelRef channel = ChannelRef
                 .builder()
                 .dealerId("bc12")
                 .storeId("Punto de venta")
                 .build();
 
-        Agent agent = Agent
+        RelatedParty agent = RelatedParty
                 .builder()
                 .id("bc12")
                 .customerId("string")

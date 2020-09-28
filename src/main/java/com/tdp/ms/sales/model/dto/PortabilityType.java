@@ -1,6 +1,8 @@
 package com.tdp.ms.sales.model.dto;
 
 import java.util.List;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -8,7 +10,7 @@ import lombok.NoArgsConstructor;
 
 /**
  * Class: PortabilityType. <br/>
- * <b>Copyright</b>: &copy; 2019 Telef&oacute;nica del Per&uacute;<br/>
+ * <b>Copyright</b>: &copy; 2020 Telef&oacute;nica del Per&uacute;<br/>
  * <b>Company</b>: Telef&oacute;nica del Per&uacute;<br/>
  *
  * @author Telef&oacute;nica del Per&uacute; (TDP) <br/>
@@ -23,7 +25,6 @@ import lombok.NoArgsConstructor;
  *         </ul>
  * @version 1.0
  */
-
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
@@ -43,9 +44,10 @@ public class PortabilityType {
     private String customerContactPhone;
     private String customerFax;
     private String idProcessGroup;
-    private String idProcess;//Nuevo Swagger
-    private String idProcessCP;//Nuevo Swagger
-    private String donorActivateDate;
+    private String idProcess;
+    @JsonProperty("idProcessCP")
+    private String idProcessCp;
+    private String donorActivationDate;
     private String donorEquipmentContractEndDate;
     private String rejectCode;
     private String rejectDescription;
@@ -53,5 +55,5 @@ public class PortabilityType {
     private String expirationDateDebt;
     private String amountDebt;
     private String currency;
-    private List<AdditionalData> additionalData;
+    private List<KeyValueType> additionalData;
 }

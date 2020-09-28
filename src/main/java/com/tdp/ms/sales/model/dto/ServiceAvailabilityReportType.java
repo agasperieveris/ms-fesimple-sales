@@ -1,6 +1,8 @@
 package com.tdp.ms.sales.model.dto;
 
 import java.util.List;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -32,11 +34,14 @@ public class ServiceAvailabilityReportType {
     private String id;
     private Boolean isAdslAvailable;
     private Boolean isAdslSatured;
-    private String terminalBox;//Swagger diferente nombre
-    private String adslBloquedSale;//Swagger diferente nombre
-    private String terminalBoxBloqued;//Swagger diferente nombre
+    @JsonProperty("TerminalBox")
+    private String terminalBox;
+    @JsonProperty("AdslBloquedSale")
+    private String adslBloquedSale;
+    @JsonProperty("TerminalBoxBloqued")
+    private String terminalBoxBloqued;
     private String commercialAreaId;
     private String commercialAreaDescription;
     private List<AvailableOffersType> offers;
-    private List<AdditionalData> additionalData;
+    private List<KeyValueType> additionalData;
 }

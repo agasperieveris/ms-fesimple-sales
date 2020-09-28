@@ -1,15 +1,14 @@
 package com.tdp.ms.sales.model.request;
 
-import com.tdp.ms.sales.model.dto.AdditionalData;
-import com.tdp.ms.sales.model.dto.Agent;
-import com.tdp.ms.sales.model.dto.Channel;
-import com.tdp.ms.sales.model.dto.ComercialOperationType;
-import com.tdp.ms.sales.model.dto.EstimatedRevenue;
+import com.tdp.ms.sales.model.dto.ChannelRef;
+import com.tdp.ms.sales.model.dto.CommercialOperationType;
+import com.tdp.ms.sales.model.dto.Money;
 import com.tdp.ms.sales.model.dto.IdentityValidationType;
+import com.tdp.ms.sales.model.dto.KeyValueType;
 import com.tdp.ms.sales.model.dto.PaymentType;
-import com.tdp.ms.sales.model.dto.ProspectContact;
+import com.tdp.ms.sales.model.dto.ContactMedium;
 import com.tdp.ms.sales.model.dto.RelatedParty;
-import com.tdp.ms.sales.model.dto.ValidFor;
+import com.tdp.ms.sales.model.dto.TimePeriod;
 import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -39,18 +38,18 @@ import lombok.NoArgsConstructor;
 @Data
 @Builder
 public class SalesRequest {
-    private List<ComercialOperationType> comercialOperationType;//Tiene otro nombre en el swagger commercialOperation
+    private List<CommercialOperationType> commercialOperationType;//Tiene otro nombre en el swagger commercialOperation
     private String id;//
-    private List<ProspectContact> prospectContact;//
+    private List<ContactMedium> prospectContact;//
     private String salesId;//
-    private List<AdditionalData> additionalData;//
+    private List<KeyValueType> additionalData;//
     private String name;//
     private String productType;//
-    private EstimatedRevenue estimatedRevenue;//
+    private Money estimatedRevenue;//
     private PaymentType paymentType;//
-    private Agent agent;//Observado
+    private RelatedParty agent;//Observado
     private String description;//
-    private Channel channel;//
+    private ChannelRef channel;//
     private String priority;//
 
 
@@ -83,7 +82,7 @@ public class SalesRequest {
 
     private String audioUrl;//
 
-    private ValidFor validFor;//
+    private TimePeriod validFor;//
 
 
 }

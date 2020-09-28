@@ -6,7 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * Class: Score. <br/>
+ * Class: SalesResponse. <br/>
  * <b>Copyright</b>: &copy; 2019 Telef&oacute;nica del Per&uacute;<br/>
  * <b>Company</b>: Telef&oacute;nica del Per&uacute;<br/>
  *
@@ -14,7 +14,7 @@ import lombok.NoArgsConstructor;
  *         <u>Service Provider</u>: Everis Per&uacute; SAC (EVE) <br/>
  *         <u>Developed by</u>: <br/>
  *         <ul>
- *         <li>Sergio Rivas</li>
+ *         <li>Developer Ronald Baron</li>
  *         </ul>
  *         <u>Changes</u>:<br/>
  *         <ul>
@@ -27,13 +27,11 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Data
 @Builder
-public class Score {
-    private String scoreId;
-    private String score;
-    private String messageScore;//Swagger diferente nombre
-    private String numberLinesScore;
-    private String restrictionScore;
-    private String actionScore;
-    private String financingCapacity;
-    private String purchaseLimit;
+public class ChannelRef {
+    private String id;
+    private String href;
+    private String name;
+    private String storeId;
+    private String dealerId;
+    private String storeName;
 }

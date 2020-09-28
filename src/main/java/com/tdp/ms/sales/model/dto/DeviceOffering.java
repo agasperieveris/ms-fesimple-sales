@@ -1,6 +1,8 @@
 package com.tdp.ms.sales.model.dto;
 
 import java.util.List;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -29,17 +31,21 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class DeviceOffering {
+    @JsonProperty("device_type")
     private String deviceType;
     private String id;
     private String sapid;
     private String brand;
     private String model;
     private String gama;
-    private String displayName;//Swagger diferente nombre
+    @JsonProperty("display_name")
+    private String displayName;
     private String clasificacionComercial;
-    private String costoPromedioSinIGVSoles;
+    @JsonProperty("costoPromedioSinIGVSoles")
+    private String costoPromedioSinIgvSoles;
+    @JsonProperty("sim_specifications")
     private List<SimSpecification> simSpecifications;
     private List<Offer> offers;
     private StockType stock;
-    private List<AdditionalData> additionalData;
+    private List<KeyValueType> additionalData;
 }

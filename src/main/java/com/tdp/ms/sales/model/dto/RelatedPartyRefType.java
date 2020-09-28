@@ -32,7 +32,7 @@ public class RelatedPartyRefType {
     private String href;
     private String name;
     private String role;
-    private ValidFor validFor;
+    private TimePeriodType validFor;
     @JsonProperty("@referredType")
     private String referredType;
     private String description;

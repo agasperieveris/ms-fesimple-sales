@@ -22,7 +22,6 @@ import lombok.NoArgsConstructor;
  *         </ul>
  * @version 1.0
  */
-
 @Data
 @NoArgsConstructor
 @Builder
@@ -42,7 +41,7 @@ public class AddressType {
     private String region;
     private String regionCode;
     private String country;
-    private CoordinatesType coodinates;//Swagger diferente nombre
+    private CoordinatesType coordinates;
     private String floor;
     private String apartment;
     private Boolean isDangerous;

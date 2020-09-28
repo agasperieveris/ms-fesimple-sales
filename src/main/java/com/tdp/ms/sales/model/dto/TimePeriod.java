@@ -6,7 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * Class: EstimatedRevenue. <br/>
+ * Class: TimePeriod. <br/>
  * <b>Copyright</b>: &copy; 2019 Telef&oacute;nica del Per&uacute;<br/>
  * <b>Company</b>: Telef&oacute;nica del Per&uacute;<br/>
  *
@@ -27,7 +27,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Data
 @Builder
-public class EstimatedRevenue {
-    private String unit;
-    private Float value;
+public class TimePeriod {
+    private String endDateTime;
+    private String startDateTime;
 }
