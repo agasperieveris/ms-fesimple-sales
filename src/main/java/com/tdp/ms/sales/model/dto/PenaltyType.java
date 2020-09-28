@@ -23,7 +23,6 @@ import lombok.NoArgsConstructor;
  *         </ul>
  * @version 1.0
  */
-
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
@@ -32,7 +31,7 @@ public class PenaltyType {
     private String id;
     private String name;
     private String description;
-    private ValidFor validFor;
+    private TimePeriod validFor;
     private String condition;
     private MoneyType penaltyValue;
     private List<MoneyType> additionalData;

@@ -22,7 +22,6 @@ import lombok.NoArgsConstructor;
  *         </ul>
  * @version 1.0
  */
-
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
@@ -32,5 +31,5 @@ public class ProductSpecCharacteristicType {
     private String name;
     private String description;
     private String valueType;
-    private ValidFor validFor;
+    private TimePeriodType validFor;
 }

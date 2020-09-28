@@ -1,12 +1,13 @@
 package com.tdp.ms.sales.model.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * Class: ProductRefInfoTypePlace. <br/>
+ * Class: SalesController. <br/>
  * <b>Copyright</b>: &copy; 2019 Telef&oacute;nica del Per&uacute;<br/>
  * <b>Company</b>: Telef&oacute;nica del Per&uacute;<br/>
  *
@@ -23,10 +24,19 @@ import lombok.NoArgsConstructor;
  * @version 1.0
  */
 
-@Data
 @AllArgsConstructor
 @NoArgsConstructor
+@Data
 @Builder
-public class ProductRefInfoTypePlace {
-    private EntityRefType entityRefType;
+public class ContactMedium {
+    @JsonProperty("@baseType")
+    private String baseType;
+    @JsonProperty("@schemaLocation")
+    private String schemaLocation;
+    @JsonProperty("@type")
+    private String type;
+    private MediumCharacteristic characteristic;
+    private String mediumType;
+    private boolean preferred;
+    private TimePeriod validFor;
 }

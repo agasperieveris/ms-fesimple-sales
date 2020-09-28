@@ -30,10 +30,10 @@ import lombok.NoArgsConstructor;
 @Builder
 public class WorkOrDeliveryType {
     private String type;
-    private WorkTeamTimeSlotType workOrder;
+    private WorkforceTeamTimeSlotType workOrder;
     private MediumCharacteristic contact;
     private String mediumDelivery;
     private String scheduleDelivery;
     private List<Place> place;
-    private List<AdditionalData> additionalData;
+    private List<KeyValueType> additionalData;
 }

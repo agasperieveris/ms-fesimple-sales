@@ -39,5 +39,5 @@ public class Agent {
     private String role;
     private String accountId;
     private String billingArragementId;
-    private Score score;
+    private ScoreType score;
 }

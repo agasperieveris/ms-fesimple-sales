@@ -43,7 +43,7 @@ public class NewProductsInNewOfferings {
     private String productOrderItemID;
     private ProductConfiguration productConfiguration;
     private List<Messages> messages;
-    private ProductOffering productOffering;
+    private ProductOfferingType productOffering;
     private TotalRecurringCalculatedPrice totalRecurringCalculatedPrice;
     private TotalRecurringCalculatedPrice totalOneTimeCalculatedPrice;
     private List<DisplayableItems> displayableItems;
