@@ -94,11 +94,11 @@ public class SalesLeadControllerTest {
 
     @Test
     void updateSales() {
-        Mockito.when(salesService.put(any()))
+        Mockito.when(salesService.put(any(), any()))
                 .thenReturn(Mono.just(salesResponse));
 
         WebTestClient.ResponseSpec responseSpec = webClient.put()
-                .uri("/fesimple/v1/saleslead")
+                .uri("/fesimple/v1/saleslead/FE-000000001")
                 .accept(MediaType.APPLICATION_JSON)
                 .header(HttpHeadersKey.UNICA_SERVICE_ID, "550e8400-e29b-41d4-a716-446655440000")
                 .header(HttpHeadersKey.UNICA_APPLICATION, "genesis")
