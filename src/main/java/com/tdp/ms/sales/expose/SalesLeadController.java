@@ -109,14 +109,15 @@ public class SalesLeadController {
      *         Convergente
      */
 
-    @PutMapping
-    public Mono<Sale> updateSales(@Valid @RequestBody Sale request,
-            @RequestHeader(HttpHeadersKey.UNICA_SERVICE_ID) String serviceId,
-            @RequestHeader(HttpHeadersKey.UNICA_APPLICATION) String application,
-            @RequestHeader(HttpHeadersKey.UNICA_PID) String pid,
-            @RequestHeader(HttpHeadersKey.UNICA_USER) String user) {
+    @PutMapping("/{id}")
+    public Mono<Sale> updateSales(@PathVariable("id") String salesId,
+                                  @RequestBody Sale request,
+                                  @RequestHeader(HttpHeadersKey.UNICA_SERVICE_ID) String serviceId,
+                                  @RequestHeader(HttpHeadersKey.UNICA_APPLICATION) String application,
+                                  @RequestHeader(HttpHeadersKey.UNICA_PID) String pid,
+                                  @RequestHeader(HttpHeadersKey.UNICA_USER) String user) {
 
-        return salesService.put(request);
+        return salesService.put(salesId, request);
     }
 
     /**

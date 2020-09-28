@@ -86,13 +86,13 @@ public class SalesServiceImpl implements SalesService {
     }
 
     @Override
-    public Mono<Sale> put(Sale request) {
+    public Mono<Sale> put(String salesId, Sale request) {
         // buscar en la colección
-        Mono<Sale> existingSale = salesRepository.findById(request.getId());
+        Mono<Sale> existingSale = salesRepository.findBySalesId(salesId);
 
 
         return existingSale
-                .switchIfEmpty(Mono.error(new NotFoundException("El id solicitado no se encuentra registrado.")))
+                .switchIfEmpty(Mono.error(new NotFoundException("El salesId solicitado no se encuentra registrado.")))
                 .flatMap(item -> {
                     request.setSalesId(item.getSalesId());
                     return salesRepository.save(request);
