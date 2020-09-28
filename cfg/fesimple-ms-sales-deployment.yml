@@ -70,4 +70,8 @@ spec:
           - backend:
               serviceName: ms-fesimple-sales-svc
               servicePort: 4041
+            path: /fesimple/v1/saleslead
+          - backend:
+              serviceName: ms-fesimple-sales-svc
+              servicePort: 4041
             path: /fesimple/v1/sales
