@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 
 /**
  * Class: CreateProductOrderResponseType. <br/>
- * <b>Copyright</b>: &copy; 2019 Telef&oacute;nica del Per&uacute;<br/>
+ * <b>Copyright</b>: &copy; 2020 Telef&oacute;nica del Per&uacute;<br/>
  * <b>Company</b>: Telef&oacute;nica del Per&uacute;<br/>
  *
  * @author Telef&oacute;nica del Per&uacute; (TDP) <br/>
@@ -32,5 +32,5 @@ public class CreateProductOrderResponseType {
     private String productOrderReferenceNumber;
     private String productOrderId;
     private List<NewProductInNewOfferingInstanceConfigurationType> newProductsInNewOfferings;
-    private List<AdditionalData> additionalData;
+    private List<KeyValueType> additionalData;
 }

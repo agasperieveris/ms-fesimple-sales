@@ -9,7 +9,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * Class: Installments. <br/>
+ * Class: Instalments. <br/>
  * <b>Copyright</b>: &copy; 2019 Telef&oacute;nica del Per&uacute;<br/>
  * <b>Company</b>: Telef&oacute;nica del Per&uacute;<br/>
  *
@@ -25,7 +25,6 @@ import lombok.NoArgsConstructor;
  *         </ul>
  * @version 1.0
  */
-
 @Data
 @Builder
 @AllArgsConstructor

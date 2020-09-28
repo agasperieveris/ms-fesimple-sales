@@ -32,5 +32,5 @@ public class IdentityValidationType {
     private String validationType;
     private Boolean isValidation;
     private String date;
-    private List<AdditionalData> additionalData;
+    private List<KeyValueType> additionalData;
 }
