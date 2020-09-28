@@ -306,13 +306,13 @@ public class SalesServiceTest {
 
     @Test
     void putSaveSale() {
-        Mockito.when(salesRepository.findById(sale2.getId()))
+        Mockito.when(salesRepository.findBySalesId(any()))
                 .thenReturn(Mono.just(sale2));
 
         Mockito.when(salesRepository.save(any()))
                 .thenReturn(Mono.just(sale2));
 
-        Mono<Sale> result = salesService.put(sale);
+        Mono<Sale> result = salesService.put("FE-000000001", sale);
 
         StepVerifier.create(result)
                 .assertNext(c -> {
