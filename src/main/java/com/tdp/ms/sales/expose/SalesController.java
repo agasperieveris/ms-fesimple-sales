@@ -1,13 +1,17 @@
 package com.tdp.ms.sales.expose;
 
+import com.tdp.genesis.core.constants.HttpHeadersKey;
 import com.tdp.ms.sales.business.SalesService;
-import com.tdp.ms.sales.model.SalesRequest;
-import com.tdp.ms.sales.model.SalesResponse;
+import com.tdp.ms.sales.model.entity.Sale;
+import java.util.HashMap;
+import java.util.Map;
+import javax.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
@@ -22,7 +26,7 @@ import reactor.core.publisher.Mono;
  *         <u>Service Provider</u>: Everis Per&uacute; SAC (EVE) <br/>
  *         <u>Developed by</u>: <br/>
  *         <ul>
- *         <li>Developer name</li>
+ *         <li>Sergio Rivas</li>
  *         </ul>
  *         <u>Changes</u>:<br/>
  *         <ul>
@@ -30,24 +34,42 @@ import reactor.core.publisher.Mono;
  *         </ul>
  * @version 1.0
  */
-@RestController
-@RequestMapping("/sales/v1/greeting")
-public class SalesController {
 
+@RestController
+@RequestMapping("/fesimple/v1/sales")
+@CrossOrigin
+public class SalesController {
     @Autowired
     private SalesService salesService;
 
-    @GetMapping
-    public Mono<SalesResponse> indexGet() {
-        return Mono.justOrEmpty(salesService.get());
-    }
+    /**
+     * Registra los datos de un Sale en la BBDD de la Web Convergente.
+     *
+     * @author @srivasme
+     * @param request Datos de la venta
+     * @return SalesResponse, datos de la venta registrada en la BBDD de la Web
+     *         Convergente
+     */
 
-    @PostMapping
+    @PostMapping()
     @ResponseStatus(HttpStatus.CREATED)
-    public Mono<SalesResponse> indexPost(@RequestBody SalesRequest request) {
-        return Mono.justOrEmpty(salesService.put(request.getName()));
+    public Mono<Sale> createdSales(@Valid @RequestBody Sale request,
+                                            @RequestHeader(HttpHeadersKey.UNICA_SERVICE_ID) String serviceId,
+                                            @RequestHeader(HttpHeadersKey.UNICA_APPLICATION) String application,
+                                            @RequestHeader(HttpHeadersKey.UNICA_PID) String pid,
+                                            @RequestHeader(HttpHeadersKey.UNICA_USER) String user) {
+
+        //TODO: Por ahora solo se hace lo mismo que el post de salesLead
+        return salesService.post(request, fillHeaders(serviceId, application, pid, user));
     }
 
+    private Map<String, String> fillHeaders(String serviceId, String application, String pid, String user) {
+        Map<String, String> headersMap = new HashMap();
+        headersMap.put(HttpHeadersKey.UNICA_SERVICE_ID, serviceId);
+        headersMap.put(HttpHeadersKey.UNICA_APPLICATION, application);
+        headersMap.put(HttpHeadersKey.UNICA_PID, pid);
+        headersMap.put(HttpHeadersKey.UNICA_USER, user);
 
-
+        return headersMap;
+    }
 }
