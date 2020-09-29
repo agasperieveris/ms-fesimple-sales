@@ -1,4 +1,4 @@
-package com.tdp.ms.sales.model.dto.productorder.caeq;
+package com.tdp.ms.sales.model.dto.productorder;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -6,7 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * Class: ProductOrderCaeqRequest. <br/>
+ * Class: CreateProductOrderGeneralRequest. <br/>
  * <b>Copyright</b>: &copy; 2020 Telef&oacute;nica del Per&uacute;<br/>
  * <b>Company</b>: Telef&oacute;nica del Per&uacute;<br/>
  *
@@ -18,7 +18,7 @@ import lombok.NoArgsConstructor;
  *         </ul>
  *         <u>Changes</u>:<br/>
  *         <ul>
- *         <li>2020-09-24 Creaci&oacute;n del proyecto.</li>
+ *         <li>2020-09-29 Creaci&oacute;n del proyecto.</li>
  *         </ul>
  * @version 1.0
  */
@@ -26,7 +26,6 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class ProductOrderCaeqRequest {
-    private String productOfferingID;
-    private NewProductCaeq newProducts;
+public class CreateProductOrderGeneralRequest {
+    private Object createProductOrderRequest;
 }

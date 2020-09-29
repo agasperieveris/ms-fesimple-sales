@@ -1,5 +1,7 @@
 package com.tdp.ms.sales.model.dto.productorder.capl;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -26,7 +28,8 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class ProductChangeCapl {
-    private NewAssignedBillingOffers newAssignedBillingOffers;
-    private RemovedAssignedBillingOffers removedAssignedBillingOffers;
+    private List<NewAssignedBillingOffers> newAssignedBillingOffers;
+    private List<RemovedAssignedBillingOffers> removedAssignedBillingOffers;
 }

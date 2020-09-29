@@ -1,5 +1,7 @@
 package com.tdp.ms.sales.model.dto.productorder.capl;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -26,7 +28,10 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class NewProductCapl {
-    private String productID;
+    private String productCatalogId;
+    @JsonProperty("productID")
+    private String productId;
     private ProductChangeCapl productChanges;
 }

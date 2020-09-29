@@ -1,13 +1,15 @@
 package com.tdp.ms.sales.model.dto.productorder.capl;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.tdp.ms.sales.model.dto.productorder.FlexAttrType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 /**
- * Class: NewAssignedBillingOffers. <br/>
+ * Class: ProductOrderCaplRequest. <br/>
  * <b>Copyright</b>: &copy; 2020 Telef&oacute;nica del Per&uacute;<br/>
  * <b>Company</b>: Telef&oacute;nica del Per&uacute;<br/>
  *
@@ -27,9 +29,8 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class NewAssignedBillingOffers {
-    @JsonProperty("productSpecPricingID")
-    private String productSpecPricingId;
-    @JsonProperty("parentProductCatalogID")
-    private String parentProductCatalogId;
+public class CaplRequest {
+    private List<NewProductCapl> newProducts;
+    private String sourceApp;
+    private List<FlexAttrType> orderAttributes;
 }

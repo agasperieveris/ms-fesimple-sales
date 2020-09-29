@@ -1,13 +1,12 @@
-package com.tdp.ms.sales.model.dto.productorder.capl;
+package com.tdp.ms.sales.model.dto.productorder.caeqcapl;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * Class: NewAssignedBillingOffers. <br/>
+ * Class: ProductOrderCaeqCaplRequest. <br/>
  * <b>Copyright</b>: &copy; 2020 Telef&oacute;nica del Per&uacute;<br/>
  * <b>Company</b>: Telef&oacute;nica del Per&uacute;<br/>
  *
@@ -27,9 +26,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class NewAssignedBillingOffers {
-    @JsonProperty("productSpecPricingID")
-    private String productSpecPricingId;
-    @JsonProperty("parentProductCatalogID")
-    private String parentProductCatalogId;
+public class CaeqCaplRequest {
+    private String productOfferingID;
+    private NewProductCaeqCapl newProducts;
 }

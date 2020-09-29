@@ -1,4 +1,4 @@
-package com.tdp.ms.sales.model.dto.productorder.caeqcapl;
+package com.tdp.ms.sales.model.dto.productorder.caeq;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -6,7 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * Class: ProductOrderCaeqCaplRequest. <br/>
+ * Class: ProductOrderCaeqRequest. <br/>
  * <b>Copyright</b>: &copy; 2020 Telef&oacute;nica del Per&uacute;<br/>
  * <b>Company</b>: Telef&oacute;nica del Per&uacute;<br/>
  *
@@ -26,7 +26,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class ProductOrderCaeqCaplRequest {
+public class CaeqRequest {
     private String productOfferingID;
-    private NewProductCaeqCapl newProducts;
+    private NewProductCaeq newProducts;
 }

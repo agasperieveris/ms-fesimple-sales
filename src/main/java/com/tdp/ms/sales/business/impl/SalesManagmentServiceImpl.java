@@ -4,19 +4,25 @@ import com.tdp.ms.sales.business.SalesManagmentService;
 import com.tdp.ms.sales.client.BusinessParameterWebClient;
 import com.tdp.ms.sales.client.WebClientBusinessParameters;
 import com.tdp.ms.sales.model.dto.BusinessParameterExt;
+import com.tdp.ms.sales.model.dto.KeyValueType;
+import com.tdp.ms.sales.model.dto.productorder.CreateProductOrderGeneralRequest;
+import com.tdp.ms.sales.model.dto.productorder.FlexAttrType;
+import com.tdp.ms.sales.model.dto.productorder.FlexAttrValueType;
+import com.tdp.ms.sales.model.dto.productorder.capl.ProductOrderCaplRequest;
 import com.tdp.ms.sales.model.dto.productorder.caeq.ChangedCharacteristic;
 import com.tdp.ms.sales.model.dto.productorder.caeq.ChangedContainedProduct;
 import com.tdp.ms.sales.model.dto.productorder.caeq.NewProductCaeq;
 import com.tdp.ms.sales.model.dto.productorder.caeq.ProductChangeCaeq;
-import com.tdp.ms.sales.model.dto.productorder.caeq.ProductOrderCaeqRequest;
+import com.tdp.ms.sales.model.dto.productorder.caeq.CaeqRequest;
 import com.tdp.ms.sales.model.dto.productorder.caeqcapl.NewProductCaeqCapl;
 import com.tdp.ms.sales.model.dto.productorder.caeqcapl.ProductChangeCaeqCapl;
-import com.tdp.ms.sales.model.dto.productorder.caeqcapl.ProductOrderCaeqCaplRequest;
+import com.tdp.ms.sales.model.dto.productorder.caeqcapl.CaeqCaplRequest;
 import com.tdp.ms.sales.model.dto.productorder.capl.NewAssignedBillingOffers;
 import com.tdp.ms.sales.model.dto.productorder.capl.NewProductCapl;
 import com.tdp.ms.sales.model.dto.productorder.capl.ProductChangeCapl;
-import com.tdp.ms.sales.model.dto.productorder.capl.ProductOrderCaplRequest;
+import com.tdp.ms.sales.model.dto.productorder.capl.CaplRequest;
 import com.tdp.ms.sales.model.dto.productorder.capl.RemovedAssignedBillingOffers;
+import com.tdp.ms.sales.model.entity.Sale;
 import com.tdp.ms.sales.model.request.GetSalesCharacteristicsRequest;
 import com.tdp.ms.sales.model.request.PostSalesRequest;
 import com.tdp.ms.sales.model.request.ProductOrderRequest;
@@ -70,56 +76,149 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
 
     @Override
     public Mono<SalesResponse> post(PostSalesRequest request) {
+        // Getting Sale object
+        Sale saleRequest = request.getSale();
+
+        // Getting commons request properties
+        String channelIdRequest = saleRequest.getChannel().getId();
+        String customerIdRequest = saleRequest.getRelatedParty().get(0).getCustomerId();
+        String productOfferingIdRequest = saleRequest.getCommercialOperation().get(0).getProductOfferings().get(0).getId();
+
+        // Getting Main CommercialTypeOperation value
+        String commercialOperationType = saleRequest.getCommercialOperation().get(0).getReason();
 
         return businessParameterWebClient.getSalesCharacteristicsByCommercialOperationType(
                 GetSalesCharacteristicsRequest
                         .builder()
-                        .commercialOperationType("CAEQ")
+                        .commercialOperationType(commercialOperationType)
                         .headersMap(request.getHeadersMap())
                         .build())
                 .map(this::retrieveCharacteristics)
                 .flatMap(salesCharacteristicsList -> {
 
-                    // Getting CommercialTypeOperation value
-                    String commercialOperationType = request.getSale().getCommercialOperation().get(0).getReason();
+                    // Getting Commercial Operation Types from Additional Data
+                    Boolean flgCapl = false;
+                    Boolean flgCaeq = false;
+                    Boolean flgCasi = false;
+                    for (KeyValueType kv : saleRequest.getCommercialOperation().get(0).getAdditionalData()) {
+                        String stringKey = kv.getKey();
+                        Boolean booleanValue = kv.getValue().equalsIgnoreCase("true");
 
-                    if (commercialOperationType.equals("CAPL")) {
+                        if (stringKey.equalsIgnoreCase("CAPL")) {
+                            flgCapl = booleanValue;
+                        } else if (stringKey.equalsIgnoreCase("CAEQ")) {
+                            flgCaeq = booleanValue;
+                        } else if (stringKey.equalsIgnoreCase("CASI")) {
+                            flgCasi = booleanValue;
+                        }
+                    }
+
+                    // Recognizing CAPL Commercial Operation Type
+                    if (flgCapl && !flgCaeq && !flgCasi) {
                         // Building request for CAPL CommercialTypeOperation
 
-                        RemovedAssignedBillingOffers caplBoRemoved = RemovedAssignedBillingOffers
+                        ProductOrderCaplRequest caplRequestProductOrder = new ProductOrderCaplRequest();
+                        caplRequestProductOrder.setSalesChannel(channelIdRequest);
+                        caplRequestProductOrder.setCustomerId(customerIdRequest);
+                        caplRequestProductOrder.setProductOfferingId(productOfferingIdRequest);
+                        caplRequestProductOrder.setOnlyValidationIndicator(false);
+
+                        // Recognizing Capl into same plan or Capl with new plan
+                        Boolean flgOnlyCapl = true;
+                        RemovedAssignedBillingOffers caplBoRemoved1 = new RemovedAssignedBillingOffers();
+                        List<RemovedAssignedBillingOffers> caplBoRemovedList = new ArrayList<>();
+                        if (saleRequest.getCommercialOperation().get(0).getProduct().getProductSpec().getId() == null
+                                || saleRequest.getCommercialOperation().get(0).getProduct().getProductSpec().getId().equals("")
+                        ) {
+                            flgOnlyCapl = false;
+                            caplRequestProductOrder.setActionType("CH");
+                        } else {
+                            // Recognizing Capl Fija
+                            String productType = saleRequest.getProductType();
+                            if (productType.equals("landline") || productType.equals("cableTv") || productType.equals("broadband") || productType.equals("bundle") || productType.equals("mobile")) {
+                                caplRequestProductOrder.setActionType("CH");
+                            } else {
+                                caplRequestProductOrder.setActionType("CW");
+                            }
+
+                            caplBoRemoved1.setProductSpecPricingId(saleRequest.getCommercialOperation().get(0).getProduct().getProductSpec().getId());
+                            caplBoRemovedList.add(caplBoRemoved1);
+                        }
+
+                        NewAssignedBillingOffers caplNewBo1 = NewAssignedBillingOffers
                                 .builder()
-                                .productSpecPricingID("2253558")
+                                .productSpecPricingId(saleRequest.getCommercialOperation().get(0).getProductOfferings().get(0).getProductOfferingProductSpecId())
+                                .parentProductCatalogId("7491")
+                                .build();
+                        List<NewAssignedBillingOffers> caplNewBoList = new ArrayList<>();
+                        caplNewBoList.add(caplNewBo1);
+
+                        // Setting RemoveAssignedBillingOffers if commercial operation type is Capl into same plan
+                        ProductChangeCapl caplProductChanges = new ProductChangeCapl();
+                        caplProductChanges.setNewAssignedBillingOffers(caplNewBoList);
+
+                        NewProductCapl newProductCapl1 = new NewProductCapl();
+                        newProductCapl1.setProductId(saleRequest.getCommercialOperation().get(0).getProduct().getId());
+                        newProductCapl1.setProductChanges(caplProductChanges);
+                        if (flgOnlyCapl) {
+                            caplProductChanges.setRemovedAssignedBillingOffers(caplBoRemovedList);
+                        } else {
+                            newProductCapl1.setProductCatalogId(saleRequest.getCommercialOperation().get(0).getProductOfferings().get(0).getProductOfferingProductSpecId());
+                        }
+
+                        // Building Attributes
+                        String deliveryCode = "";
+                        for (KeyValueType kv : saleRequest.getAdditionalData()) {
+                            if (kv.getKey().equals("deliveryMethod")) {
+                                deliveryCode = kv.getValue();
+                            }
+                        }
+                        FlexAttrValueType deliveryAttrValue =  FlexAttrValueType
+                                .builder()
+                                .stringValue(deliveryCode)
+                                .valueType("STRING")
+                                .build();
+                        FlexAttrType deliveryAttr = FlexAttrType
+                                .builder()
+                                .attrName("DELIVERY_METHOD")
+                                .flexAttrValue(deliveryAttrValue)
                                 .build();
 
-                        NewAssignedBillingOffers caplNewBo = NewAssignedBillingOffers
+                        FlexAttrValueType paymentAttrValue =  FlexAttrValueType
                                 .builder()
-                                .productSpecPricingID("8091631427")
-                                .parentProductCatalogID("7491")
+                                .stringValue(saleRequest.getPaymenType().getPaymentType())
+                                .valueType("STRING")
+                                .build();
+                        FlexAttrType paymentAttr = FlexAttrType
+                                .builder()
+                                .attrName("PAYMENT_METHOD")
+                                .flexAttrValue(paymentAttrValue)
                                 .build();
 
-                        ProductChangeCapl caplProductChanges = ProductChangeCapl
+                        List<FlexAttrType> caplOrderAttributes = new ArrayList<>();
+                        caplOrderAttributes.add(deliveryAttr);
+                        caplOrderAttributes.add(paymentAttr);
+
+                        List<NewProductCapl> caplNewProductsList = new ArrayList<>();
+                        caplNewProductsList.add(newProductCapl1);
+
+                        CaplRequest caplRequest = CaplRequest
                                 .builder()
-                                .newAssignedBillingOffers(caplNewBo)
-                                .removedAssignedBillingOffers(caplBoRemoved)
+                                .newProducts(caplNewProductsList)
+                                .sourceApp("FE")
+                                .orderAttributes(caplOrderAttributes)
                                 .build();
 
-                        NewProductCapl newProductCapl = NewProductCapl
+                        // Building Main Capl Request
+                        caplRequestProductOrder.setRequest(caplRequest);
+                        CreateProductOrderGeneralRequest mainCaplRequestProductOrder = CreateProductOrderGeneralRequest
                                 .builder()
-                                .productID("8091631427 ")
-                                .productChanges(caplProductChanges)
-                                .build();
-
-                        ProductOrderCaplRequest caplRequest = ProductOrderCaplRequest
-                                .builder()
-                                .productOfferingID("2196188")
-                                .newProducts(newProductCapl)
+                                .createProductOrderRequest(caplRequestProductOrder)
                                 .build();
 
                         // CALL TO CREATE PRODUCT ORDER SERVICE
-                        ProductOrderRequest createProductOrderRequest = new ProductOrderRequest();
-                        createProductOrderRequest.setActionType("CW");
 
-                    } else if (commercialOperationType.equals("CAEQ")) {
+                    } else if (!flgCapl && flgCaeq && !flgCasi) { // Recognizing CAEQ Commercial Operation Type
                         // Building request for CAEQ CommercialTypeOperation
 
                         ChangedCharacteristic changedCharacteristic1 = ChangedCharacteristic
@@ -150,7 +249,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                                 .productChanges(productChangeCaeq)
                                 .build();
 
-                        ProductOrderCaeqRequest caeqRequest = ProductOrderCaeqRequest
+                        CaeqRequest caeqRequest = CaeqRequest
                                 .builder()
                                 .productOfferingID("3232618")
                                 .newProducts(newProductCaeq)
@@ -160,18 +259,18 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                         ProductOrderRequest createProductOrderRequest = new ProductOrderRequest();
                         createProductOrderRequest.setActionType("CW");
 
-                    } else if (commercialOperationType.equals("CAEQ+CAPL")) {
+                    } else if (flgCapl && flgCaeq && !flgCasi) { // Recognizing CAEQ+CAPL Commercial Operation Type
                         // Building request for CAEQ+CAPL CommercialTypeOperation
 
                         RemovedAssignedBillingOffers caplBoRemoved = RemovedAssignedBillingOffers
                                 .builder()
-                                .productSpecPricingID("2253558")
+                                .productSpecPricingId("2253558")
                                 .build();
 
                         NewAssignedBillingOffers caplNewBo = NewAssignedBillingOffers
                                 .builder()
-                                .productSpecPricingID("8091631427")
-                                .parentProductCatalogID("7491")
+                                .productSpecPricingId("8091631427")
+                                .parentProductCatalogId("7491")
                                 .build();
 
                         ChangedCharacteristic changedCharacteristic1 = ChangedCharacteristic
@@ -204,7 +303,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                                 .productChanges(productChangeCaeqCapl)
                                 .build();
 
-                        ProductOrderCaeqCaplRequest caeqCaplRequest = ProductOrderCaeqCaplRequest
+                        CaeqCaplRequest caeqCaplRequest = CaeqCaplRequest
                                 .builder()
                                 .productOfferingID("3232618")
                                 .newProducts(newProductCaeqCapl)
@@ -218,29 +317,27 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
 
 
 
-
-
                     // START - POST SALES LEAD CODE
                     String uuid = UUID.randomUUID().toString();
                     while (salesRepository.existsById(uuid) == Mono.just(true)) {
                         uuid = UUID.randomUUID().toString();
                     }
-                    request.getSale().setId(uuid);
+                    saleRequest.setId(uuid);
 
 
                     // Se obtiene el secuencial de businessParameters
                     Mono<BusinessParametersResponse> saleSequential = webClient.getNewSaleSequential("SEQ001", request.getHeadersMap());
 
                     return saleSequential.flatMap(saleSequentialItem -> {
-                        request.getSale().setSalesId(saleSequentialItem.getData().get(0).getValue());
+                        saleRequest.setSalesId(saleSequentialItem.getData().get(0).getValue());
 
                         // asignar fecha de creación
                         Date todayDate = Calendar.getInstance().getTime();
                         SimpleDateFormat dateFormatter = new SimpleDateFormat("dd/MM/yyyy'T'HH:mm:ss");
                         String todayDateString = dateFormatter.format(todayDate);
-                        request.getSale().setSaleCreationDate(todayDateString);
+                        saleRequest.setSaleCreationDate(todayDateString);
 
-                        return salesRepository.save(request.getSale())
+                        return salesRepository.save(saleRequest)
                                 .flatMap(saleItem -> {
                                     String salesId;
 
