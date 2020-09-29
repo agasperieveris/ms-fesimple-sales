@@ -30,9 +30,9 @@ import lombok.NoArgsConstructor;
 public class Agent {
     private String id;
     private String href;
-    private String fullname;
-    private String firstname;
-    private String lastname;
+    private String fullName;
+    private String firstName;
+    private String lastName;
     private String nationalId;
     private String nationalIdType;
     private String customerId;
