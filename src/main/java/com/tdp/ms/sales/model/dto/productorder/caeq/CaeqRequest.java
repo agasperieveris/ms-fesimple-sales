@@ -1,9 +1,13 @@
 package com.tdp.ms.sales.model.dto.productorder.caeq;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.tdp.ms.sales.model.dto.productorder.FlexAttrType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import java.util.List;
 
 /**
  * Class: ProductOrderCaeqRequest. <br/>
@@ -26,7 +30,9 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class CaeqRequest {
-    private String productOfferingID;
-    private NewProductCaeq newProducts;
+    private List<NewProductCaeq> newProducts;
+    private String sourceApp;
+    private List<FlexAttrType> orderAttributes; // Consultar si se envia
 }

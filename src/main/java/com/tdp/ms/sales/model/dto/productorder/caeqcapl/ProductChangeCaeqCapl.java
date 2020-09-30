@@ -3,6 +3,7 @@ package com.tdp.ms.sales.model.dto.productorder.caeqcapl;
 import com.tdp.ms.sales.model.dto.productorder.caeq.ChangedContainedProduct;
 import com.tdp.ms.sales.model.dto.productorder.capl.NewAssignedBillingOffers;
 import com.tdp.ms.sales.model.dto.productorder.capl.RemovedAssignedBillingOffers;
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -30,7 +31,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class ProductChangeCaeqCapl {
-    private ChangedContainedProduct changedContainedProducts;
-    private NewAssignedBillingOffers newAssignedBillingOffers;
-    private RemovedAssignedBillingOffers removedAssignedBillingOffers;
+    private List<ChangedContainedProduct> changedContainedProducts;
+    private List<NewAssignedBillingOffers> newAssignedBillingOffers;
+    private List<RemovedAssignedBillingOffers> removedAssignedBillingOffers;
 }

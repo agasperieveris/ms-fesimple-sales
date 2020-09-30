@@ -1,5 +1,6 @@
 package com.tdp.ms.sales.model.dto.productorder.caeq;
 
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -27,5 +28,5 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class ProductChangeCaeq {
-    private ChangedContainedProduct changedContainedProducts;
+    private List<ChangedContainedProduct> changedContainedProducts;
 }

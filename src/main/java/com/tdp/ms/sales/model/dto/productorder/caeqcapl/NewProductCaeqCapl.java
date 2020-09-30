@@ -1,5 +1,6 @@
 package com.tdp.ms.sales.model.dto.productorder.caeqcapl;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -27,6 +28,8 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class NewProductCaeqCapl {
-    private String productID;
+    private String productCatalogId;
+    @JsonProperty("productID")
+    private String productId;
     private ProductChangeCaeqCapl productChanges;
 }

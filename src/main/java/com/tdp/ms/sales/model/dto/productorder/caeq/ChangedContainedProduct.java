@@ -1,6 +1,8 @@
 package com.tdp.ms.sales.model.dto.productorder.caeq;
 
 import java.util.List;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -28,7 +30,8 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class ChangedContainedProduct {
-    private String productID;
+    @JsonProperty("productID")
+    private String productId;
     private String temporaryId;
     private String productCatalogId;
     private List<ChangedCharacteristic> changedCharacteristics;

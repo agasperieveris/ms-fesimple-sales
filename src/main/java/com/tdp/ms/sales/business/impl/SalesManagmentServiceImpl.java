@@ -8,6 +8,8 @@ import com.tdp.ms.sales.model.dto.KeyValueType;
 import com.tdp.ms.sales.model.dto.productorder.CreateProductOrderGeneralRequest;
 import com.tdp.ms.sales.model.dto.productorder.FlexAttrType;
 import com.tdp.ms.sales.model.dto.productorder.FlexAttrValueType;
+import com.tdp.ms.sales.model.dto.productorder.caeq.ProductOrderCaeqRequest;
+import com.tdp.ms.sales.model.dto.productorder.caeqcapl.ProductOrderCaeqCaplRequest;
 import com.tdp.ms.sales.model.dto.productorder.capl.ProductOrderCaplRequest;
 import com.tdp.ms.sales.model.dto.productorder.caeq.ChangedCharacteristic;
 import com.tdp.ms.sales.model.dto.productorder.caeq.ChangedContainedProduct;
@@ -159,12 +161,12 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
 
                         NewProductCapl newProductCapl1 = new NewProductCapl();
                         newProductCapl1.setProductId(saleRequest.getCommercialOperation().get(0).getProduct().getId());
-                        newProductCapl1.setProductChanges(caplProductChanges);
                         if (flgOnlyCapl) {
                             caplProductChanges.setRemovedAssignedBillingOffers(caplBoRemovedList);
                         } else {
                             newProductCapl1.setProductCatalogId(saleRequest.getCommercialOperation().get(0).getProductOfferings().get(0).getProductOfferingProductSpecId());
                         }
+                        newProductCapl1.setProductChanges(caplProductChanges);
 
                         // Building Attributes
                         String deliveryCode = "";
@@ -224,94 +226,229 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                         ChangedCharacteristic changedCharacteristic1 = ChangedCharacteristic
                                 .builder()
                                 .characteristicId("9941")
-                                .characteristicValue("Private")
+                                .characteristicValue("ConsessionPurchased")
+                                .build();
+
+                        ChangedCharacteristic changedCharacteristic2 = ChangedCharacteristic
+                                .builder()
+                                .characteristicId("15734")
+                                .characteristicValue(saleRequest.getCommercialOperation().get(0).getDeviceOffering().get(0).getId()) // Consultar si esta caracteristica se agrega solamente cuando el device_type es simcard
+                                .build();
+
+                        ChangedCharacteristic changedCharacteristic3 = ChangedCharacteristic
+                                .builder()
+                                .characteristicId("9871")
+                                .characteristicValue("000000000000000") // IMEI, Consultar si se debe enviar valor real cuando viene de dealer
+                                .build();
+
+                        ChangedCharacteristic changedCharacteristic4 = ChangedCharacteristic
+                                .builder()
+                                .characteristicId("16524") // SIMGROUP, Pendiente revisar con Abraham y Ivonne, otro código 9871
+                                .characteristicValue("Estandar")
                                 .build();
 
                         List<ChangedCharacteristic> changedCharacteristicList = new ArrayList<>();
                         changedCharacteristicList.add(changedCharacteristic1);
+                        changedCharacteristicList.add(changedCharacteristic2);
+                        changedCharacteristicList.add(changedCharacteristic3);
+                        changedCharacteristicList.add(changedCharacteristic4);
 
-                        ChangedContainedProduct changedContainedProduct = ChangedContainedProduct
+                        ChangedContainedProduct changedContainedProduct1 = ChangedContainedProduct
                                 .builder()
-                                .productID("8091614432")
+                                .productId(saleRequest.getCommercialOperation().get(0).getProduct().getId()) // Consultar porque hay 2 product ids
                                 .temporaryId("temp1")
-                                .productCatalogId("7411")
+                                .productCatalogId(saleRequest.getCommercialOperation().get(0).getProductOfferings().get(0).getProductOfferingProductSpecId()) // Consultar
                                 .changedCharacteristics(changedCharacteristicList)
                                 .build();
 
+                        List<ChangedContainedProduct> changedContainedProductList = new ArrayList<>();
+                        changedContainedProductList.add(changedContainedProduct1);
+
                         ProductChangeCaeq productChangeCaeq = ProductChangeCaeq
                                 .builder()
-                                .changedContainedProducts(changedContainedProduct)
+                                .changedContainedProducts(changedContainedProductList)
                                 .build();
 
-                        NewProductCaeq newProductCaeq = NewProductCaeq
+                        NewProductCaeq newProductCaeq1 = NewProductCaeq
                                 .builder()
-                                .productID("8091614409")
+                                .productId(saleRequest.getCommercialOperation().get(0).getProduct().getId()) // Consultar porque hay 2 product ids
                                 .productChanges(productChangeCaeq)
                                 .build();
+                        List<NewProductCaeq> newProductCaeqList = new ArrayList<>();
+                        newProductCaeqList.add(newProductCaeq1);
 
                         CaeqRequest caeqRequest = CaeqRequest
                                 .builder()
-                                .productOfferingID("3232618")
-                                .newProducts(newProductCaeq)
+                                .sourceApp("FE")
+                                .newProducts(newProductCaeqList)
+                                .build();
+
+                        ProductOrderCaeqRequest caeqProductOrderRequest = new ProductOrderCaeqRequest();
+                        caeqProductOrderRequest.setSalesChannel(channelIdRequest);
+                        caeqProductOrderRequest.setCustomerId(customerIdRequest);
+                        caeqProductOrderRequest.setProductOfferingId(productOfferingIdRequest);
+                        caeqProductOrderRequest.setOnlyValidationIndicator(false);
+                        caeqProductOrderRequest.setActionType("CW");
+                        caeqProductOrderRequest.setRequest(caeqRequest);
+
+                        CreateProductOrderGeneralRequest mainCaeqRequestProductOrder = CreateProductOrderGeneralRequest
+                                .builder()
+                                .createProductOrderRequest(caeqProductOrderRequest)
                                 .build();
 
                         // CALL TO CREATE PRODUCT ORDER SERVICE
-                        ProductOrderRequest createProductOrderRequest = new ProductOrderRequest();
-                        createProductOrderRequest.setActionType("CW");
 
                     } else if (flgCapl && flgCaeq && !flgCasi) { // Recognizing CAEQ+CAPL Commercial Operation Type
                         // Building request for CAEQ+CAPL CommercialTypeOperation
 
-                        RemovedAssignedBillingOffers caplBoRemoved = RemovedAssignedBillingOffers
-                                .builder()
-                                .productSpecPricingId("2253558")
-                                .build();
+                        // Code from CAPL
+                        ProductOrderCaeqCaplRequest caeqCaplRequestProductOrder = new ProductOrderCaeqCaplRequest();
+                        caeqCaplRequestProductOrder.setSalesChannel(channelIdRequest);
+                        caeqCaplRequestProductOrder.setCustomerId(customerIdRequest);
+                        caeqCaplRequestProductOrder.setProductOfferingId(productOfferingIdRequest);
+                        caeqCaplRequestProductOrder.setOnlyValidationIndicator(false);
 
-                        NewAssignedBillingOffers caplNewBo = NewAssignedBillingOffers
+                        // Recognizing Capl into same plan or Capl with new plan
+                        Boolean flgOnlyCapl = true;
+                        RemovedAssignedBillingOffers caeqCaplBoRemoved1 = new RemovedAssignedBillingOffers();
+                        List<RemovedAssignedBillingOffers> caeqCaplBoRemovedList = new ArrayList<>();
+                        if (saleRequest.getCommercialOperation().get(0).getProduct().getProductSpec().getId() == null
+                                || saleRequest.getCommercialOperation().get(0).getProduct().getProductSpec().getId().equals("")
+                        ) {
+                            flgOnlyCapl = false;
+                            caeqCaplRequestProductOrder.setActionType("CH");
+                        } else {
+                            // Recognizing Capl Fija
+                            String productType = saleRequest.getProductType();
+                            if (productType.equals("landline") || productType.equals("cableTv") || productType.equals("broadband") || productType.equals("bundle") || productType.equals("mobile")) {
+                                caeqCaplRequestProductOrder.setActionType("CH");
+                            } else {
+                                caeqCaplRequestProductOrder.setActionType("CW");
+                            }
+
+                            caeqCaplBoRemoved1.setProductSpecPricingId(saleRequest.getCommercialOperation().get(0).getProduct().getProductSpec().getId());
+                            caeqCaplBoRemovedList.add(caeqCaplBoRemoved1);
+                        }
+
+                        NewAssignedBillingOffers caplNewBo1 = NewAssignedBillingOffers
                                 .builder()
-                                .productSpecPricingId("8091631427")
+                                .productSpecPricingId(saleRequest.getCommercialOperation().get(0).getProductOfferings().get(0).getProductOfferingProductSpecId())
                                 .parentProductCatalogId("7491")
                                 .build();
+                        List<NewAssignedBillingOffers> caeqCaplNewBoList = new ArrayList<>();
+                        caeqCaplNewBoList.add(caplNewBo1);
 
+                        // Setting RemoveAssignedBillingOffers if commercial operation type is Capl into same plan
+                        ProductChangeCaeqCapl caeqCaplProductChanges = new ProductChangeCaeqCapl();
+                        caeqCaplProductChanges.setNewAssignedBillingOffers(caeqCaplNewBoList);
+
+                        NewProductCaeqCapl newProductCaeqCapl1 = new NewProductCaeqCapl();
+                        newProductCaeqCapl1.setProductId(saleRequest.getCommercialOperation().get(0).getProduct().getId());
+                        if (flgOnlyCapl) {
+                            caeqCaplProductChanges.setRemovedAssignedBillingOffers(caeqCaplBoRemovedList);
+                        } else {
+                            newProductCaeqCapl1.setProductCatalogId(saleRequest.getCommercialOperation().get(0).getProductOfferings().get(0).getProductOfferingProductSpecId());
+                        }
+
+
+                        // Building Attributes
+                        String deliveryCode = "";
+                        for (KeyValueType kv : saleRequest.getAdditionalData()) {
+                            if (kv.getKey().equals("deliveryMethod")) {
+                                deliveryCode = kv.getValue();
+                            }
+                        }
+                        FlexAttrValueType deliveryAttrValue =  FlexAttrValueType
+                                .builder()
+                                .stringValue(deliveryCode)
+                                .valueType("STRING")
+                                .build();
+                        FlexAttrType deliveryAttr = FlexAttrType
+                                .builder()
+                                .attrName("DELIVERY_METHOD")
+                                .flexAttrValue(deliveryAttrValue)
+                                .build();
+
+                        FlexAttrValueType paymentAttrValue =  FlexAttrValueType
+                                .builder()
+                                .stringValue(saleRequest.getPaymenType().getPaymentType())
+                                .valueType("STRING")
+                                .build();
+                        FlexAttrType paymentAttr = FlexAttrType
+                                .builder()
+                                .attrName("PAYMENT_METHOD")
+                                .flexAttrValue(paymentAttrValue)
+                                .build();
+
+                        List<FlexAttrType> caeqCaplOrderAttributes = new ArrayList<>();
+                        caeqCaplOrderAttributes.add(deliveryAttr);
+                        caeqCaplOrderAttributes.add(paymentAttr);
+
+
+
+                        // Code from CAEQ
                         ChangedCharacteristic changedCharacteristic1 = ChangedCharacteristic
                                 .builder()
                                 .characteristicId("9941")
-                                .characteristicValue("Private")
+                                .characteristicValue("ConsessionPurchased")
+                                .build();
+
+                        ChangedCharacteristic changedCharacteristic2 = ChangedCharacteristic
+                                .builder()
+                                .characteristicId("15734")
+                                .characteristicValue(saleRequest.getCommercialOperation().get(0).getDeviceOffering().get(0).getId()) // Consultar si esta caracteristica se agrega solamente cuando el device_type es simcard
+                                .build();
+
+                        ChangedCharacteristic changedCharacteristic3 = ChangedCharacteristic
+                                .builder()
+                                .characteristicId("9871")
+                                .characteristicValue("000000000000000") // IMEI, Consultar si se debe enviar valor real cuando viene de dealer
+                                .build();
+
+                        ChangedCharacteristic changedCharacteristic4 = ChangedCharacteristic
+                                .builder()
+                                .characteristicId("16524") // SIMGROUP, Pendiente revisar con Abraham y Ivonne, otro código 9871
+                                .characteristicValue("Estandar")
                                 .build();
 
                         List<ChangedCharacteristic> changedCharacteristicList = new ArrayList<>();
                         changedCharacteristicList.add(changedCharacteristic1);
+                        changedCharacteristicList.add(changedCharacteristic2);
+                        changedCharacteristicList.add(changedCharacteristic3);
+                        changedCharacteristicList.add(changedCharacteristic4);
 
-                        ChangedContainedProduct changedContainedProduct = ChangedContainedProduct
+                        ChangedContainedProduct changedContainedProduct1 = ChangedContainedProduct
                                 .builder()
-                                .productID("8091614432")
+                                .productId(saleRequest.getCommercialOperation().get(0).getProduct().getId()) // Consultar porque hay 2 product ids
                                 .temporaryId("temp1")
-                                .productCatalogId("7411")
+                                .productCatalogId(saleRequest.getCommercialOperation().get(0).getProductOfferings().get(0).getProductOfferingProductSpecId()) // Consultar
                                 .changedCharacteristics(changedCharacteristicList)
                                 .build();
 
-                        ProductChangeCaeqCapl productChangeCaeqCapl = ProductChangeCaeqCapl
-                                .builder()
-                                .changedContainedProducts(changedContainedProduct)
-                                .newAssignedBillingOffers(caplNewBo)
-                                .removedAssignedBillingOffers(caplBoRemoved)
-                                .build();
+                        List<ChangedContainedProduct> changedContainedProductList = new ArrayList<>();
+                        changedContainedProductList.add(changedContainedProduct1);
 
-                        NewProductCaeqCapl newProductCaeqCapl = NewProductCaeqCapl
-                                .builder()
-                                .productID("8091614409")
-                                .productChanges(productChangeCaeqCapl)
-                                .build();
+                        caeqCaplProductChanges.setChangedContainedProducts(changedContainedProductList);
+                        newProductCaeqCapl1.setProductChanges(caeqCaplProductChanges);
+
+                        List<NewProductCaeqCapl> caeqCaplNewProductList = new ArrayList<>();
+                        caeqCaplNewProductList.add(newProductCaeqCapl1);
 
                         CaeqCaplRequest caeqCaplRequest = CaeqCaplRequest
                                 .builder()
-                                .productOfferingID("3232618")
-                                .newProducts(newProductCaeqCapl)
+                                .newProducts(caeqCaplNewProductList)
+                                .sourceApp("FE")
+                                .orderAttributes(caeqCaplOrderAttributes)
                                 .build();
 
+                        caeqCaplRequestProductOrder.setRequest(caeqCaplRequest);
+
+                        CreateProductOrderGeneralRequest mainCaeqCaplRequestProductOrder = CreateProductOrderGeneralRequest
+                                .builder()
+                                .createProductOrderRequest(caeqCaplRequestProductOrder)
+                                .build();
                         // CALL TO CREATE PRODUCT ORDER SERVICE
-                        ProductOrderRequest createProductOrderRequest = new ProductOrderRequest();
-                        createProductOrderRequest.setActionType("CW");
+
                     }
 
 
