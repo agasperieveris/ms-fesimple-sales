@@ -2,6 +2,7 @@ package com.tdp.ms.sales.business.impl;
 
 import com.tdp.ms.sales.business.SalesManagmentService;
 import com.tdp.ms.sales.client.BusinessParameterWebClient;
+import com.tdp.ms.sales.client.ProductOrderWebClient;
 import com.tdp.ms.sales.client.WebClientBusinessParameters;
 import com.tdp.ms.sales.model.dto.BusinessParameterExt;
 import com.tdp.ms.sales.model.dto.KeyValueType;
@@ -70,6 +71,9 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
     @Autowired
     private BusinessParameterWebClient businessParameterWebClient;
 
+    @Autowired
+    private ProductOrderWebClient productOrderWebClient;
+
     private final WebClientBusinessParameters webClient;
 
     private List<BusinessParameterExt> retrieveCharacteristics(GetSalesCharacteristicsResponse response) {
@@ -97,6 +101,9 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                         .build())
                 .map(this::retrieveCharacteristics)
                 .flatMap(salesCharacteristicsList -> {
+
+                    // Building Main Request to send to Create Product Order Service
+                    CreateProductOrderGeneralRequest mainRequestProductOrder = new CreateProductOrderGeneralRequest();
 
                     // Getting Commercial Operation Types from Additional Data
                     Boolean flgCapl = false;
@@ -213,12 +220,9 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
 
                         // Building Main Capl Request
                         caplRequestProductOrder.setRequest(caplRequest);
-                        CreateProductOrderGeneralRequest mainCaplRequestProductOrder = CreateProductOrderGeneralRequest
-                                .builder()
-                                .createProductOrderRequest(caplRequestProductOrder)
-                                .build();
 
-                        // CALL TO CREATE PRODUCT ORDER SERVICE
+                        // Setting capl request into main request to send to create product order service
+                        mainRequestProductOrder.setCreateProductOrderRequest(caplRequestProductOrder);
 
                     } else if (!flgCapl && flgCaeq && !flgCasi) { // Recognizing CAEQ Commercial Operation Type
                         // Building request for CAEQ CommercialTypeOperation
@@ -291,12 +295,8 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                         caeqProductOrderRequest.setActionType("CW");
                         caeqProductOrderRequest.setRequest(caeqRequest);
 
-                        CreateProductOrderGeneralRequest mainCaeqRequestProductOrder = CreateProductOrderGeneralRequest
-                                .builder()
-                                .createProductOrderRequest(caeqProductOrderRequest)
-                                .build();
-
-                        // CALL TO CREATE PRODUCT ORDER SERVICE
+                        // Setting capl request into main request to send to create product order service
+                        mainRequestProductOrder.setCreateProductOrderRequest(caeqProductOrderRequest);
 
                     } else if (flgCapl && flgCaeq && !flgCasi) { // Recognizing CAEQ+CAPL Commercial Operation Type
                         // Building request for CAEQ+CAPL CommercialTypeOperation
@@ -443,15 +443,11 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
 
                         caeqCaplRequestProductOrder.setRequest(caeqCaplRequest);
 
-                        CreateProductOrderGeneralRequest mainCaeqCaplRequestProductOrder = CreateProductOrderGeneralRequest
-                                .builder()
-                                .createProductOrderRequest(caeqCaplRequestProductOrder)
-                                .build();
-                        // CALL TO CREATE PRODUCT ORDER SERVICE
-
+                        // Setting capl request into main request to send to create product order service
+                        mainRequestProductOrder.setCreateProductOrderRequest(caeqCaplRequestProductOrder);
                     }
 
-
+                    Mono<Object> createProductOrderResponse = productOrderWebClient.createProductOrder(mainRequestProductOrder, request.getHeadersMap());
 
 
                     // START - POST SALES LEAD CODE

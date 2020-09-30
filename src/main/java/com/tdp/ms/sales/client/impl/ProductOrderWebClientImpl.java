@@ -5,6 +5,8 @@ import com.tdp.genesis.core.constants.HttpHeadersKey;
 import com.tdp.genesis.core.exception.GenesisException;
 import com.tdp.genesis.core.exception.GenesisExceptionBuilder;
 import com.tdp.ms.sales.client.BusinessParameterWebClient;
+import com.tdp.ms.sales.client.ProductOrderWebClient;
+import com.tdp.ms.sales.model.dto.productorder.CreateProductOrderGeneralRequest;
 import com.tdp.ms.sales.model.request.GetSalesCharacteristicsRequest;
 import com.tdp.ms.sales.model.response.GetSalesCharacteristicsResponse;
 import lombok.RequiredArgsConstructor;
@@ -14,6 +16,8 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
+
+import java.util.HashMap;
 
 /**
  * Class: BusinessParameterWebClientImpl. <br/>
@@ -34,24 +38,23 @@ import reactor.core.publisher.Mono;
  */
 @Component
 @RequiredArgsConstructor
-public class BusinessParameterWebClientImpl implements BusinessParameterWebClient {
+public class ProductOrderWebClientImpl implements ProductOrderWebClient {
 
     private final WebClient webClientInsecure;
 
-    @Value("${application.endpoints.business_parameters.get_sales_characteristics_url}")
-    private String getSalesCharacteristicsUrl;
+    @Value("${application.endpoints.product_order.create_product_order_url}")
+    private String createProductOrderUrl;
 
     @Override
-    public Mono<GetSalesCharacteristicsResponse> getSalesCharacteristicsByCommercialOperationType(
-                                                                        GetSalesCharacteristicsRequest request) {
+    public Mono<Object> createProductOrder(CreateProductOrderGeneralRequest request, HashMap<String,String> headersMap) {
         GenesisExceptionBuilder builder = GenesisException.builder();
         return webClientInsecure
-                .get()
-                .uri(getSalesCharacteristicsUrl, request.getCommercialOperationType())
-                .header(HttpHeadersKey.UNICA_APPLICATION, request.getHeadersMap().get(HttpHeadersKey.UNICA_APPLICATION))
-                .header(HttpHeadersKey.UNICA_PID, request.getHeadersMap().get(HttpHeadersKey.UNICA_PID))
-                .header(HttpHeadersKey.UNICA_SERVICE_ID, request.getHeadersMap().get(HttpHeadersKey.UNICA_SERVICE_ID))
-                .header(HttpHeadersKey.UNICA_USER, request.getHeadersMap().get(HttpHeadersKey.UNICA_USER))
+                .post()
+                .uri(createProductOrderUrl)
+                .header(HttpHeadersKey.UNICA_SERVICE_ID, headersMap.get(HttpHeadersKey.UNICA_SERVICE_ID))
+                .header(HttpHeadersKey.UNICA_APPLICATION, headersMap.get(HttpHeadersKey.UNICA_APPLICATION))
+                .header(HttpHeadersKey.UNICA_PID, headersMap.get(HttpHeadersKey.UNICA_PID))
+                .header(HttpHeadersKey.UNICA_USER, headersMap.get(HttpHeadersKey.UNICA_USER))
                 .accept(MediaType.APPLICATION_JSON)
                 .retrieve()
                 .onStatus(status -> status == HttpStatus.BAD_REQUEST,
@@ -59,8 +62,7 @@ public class BusinessParameterWebClientImpl implements BusinessParameterWebClien
                                 builder.category(ErrorCategory.INVALID_REQUEST)
                                         .addDetail(true)
                                         .withComponent("sales")
-                                        .withDescription("Bad Request from Get Sales Characteristics Operation in " +
-                                                "Business Parameters FE+Simple Service")
+                                        .withDescription("Bad Request from Post Create Product Order FE+Simple Service")
                                         .push()
                                         .build()))
                 .onStatus(status -> status == HttpStatus.NOT_FOUND,
@@ -68,11 +70,10 @@ public class BusinessParameterWebClientImpl implements BusinessParameterWebClien
                                 builder.category(ErrorCategory.RESOURCE_NOT_FOUND)
                                         .addDetail(true)
                                         .withComponent("sales")
-                                        .withDescription("Not Found Status from Get Sales Characteristics Operation " +
-                                                "in Business Parameters FE+Simple Service")
+                                        .withDescription("Not Found Status from Post Create Product Order FE+Simple Service")
                                         .push()
                                         .build()))
-                .bodyToMono(GetSalesCharacteristicsResponse.class);
+                .bodyToMono(Object.class);
     }
 
 }
