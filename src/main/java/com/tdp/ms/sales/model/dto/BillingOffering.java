@@ -7,7 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * Class: Installments. <br/>
+ * Class: BillingOfering. <br/>
  * <b>Copyright</b>: &copy; 2019 Telef&oacute;nica del Per&uacute;<br/>
  * <b>Company</b>: Telef&oacute;nica del Per&uacute;<br/>
  *
@@ -28,18 +28,9 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class Installments {
-    private String type;
-    private MoneyAmount rate;
-    private MoneyAmount discount;
-    private MoneyAmount portDiscount;
-    private MoneyAmount postPagoFacil;
-    private MoneyAmount totalAmount;
-    private MoneyAmount penaltyAmount;
-    private MoneyAmount amount;
-    private Integer numberOfInstallments;
-    private String recurrence;
-    private MoneyAmount openingQuota;
-    private MoneyAmount finalQuota;
-    private List<String> installmentsInfo;
+public class BillingOffering {
+    private String id;
+    private String name;
+    private List<Benefit> benefits;
+    private List<CommitmentPeriod> commitmentPeriods;
 }
