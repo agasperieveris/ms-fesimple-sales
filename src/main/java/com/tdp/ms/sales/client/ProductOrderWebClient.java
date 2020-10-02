@@ -24,6 +24,7 @@ import reactor.core.publisher.Mono;
  */
 public interface ProductOrderWebClient {
 
-    Mono<ProductorderResponse> createProductOrder(CreateProductOrderGeneralRequest request, HashMap<String,String> headersMap);
+    Mono<ProductorderResponse> createProductOrder(CreateProductOrderGeneralRequest request,
+                                                  HashMap<String,String> headersMap);
 
 }

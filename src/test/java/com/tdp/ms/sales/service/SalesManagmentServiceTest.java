@@ -1,7 +1,12 @@
-package com.tdp.ms.sales.expose;
+package com.tdp.ms.sales.service;
 
 import com.tdp.genesis.core.constants.HttpHeadersKey;
 import com.tdp.ms.sales.business.SalesManagmentService;
+import com.tdp.ms.sales.business.impl.SalesManagmentServiceImpl;
+import com.tdp.ms.sales.client.BusinessParameterWebClient;
+import com.tdp.ms.sales.client.ProductOrderWebClient;
+import com.tdp.ms.sales.model.dto.BusinessParameterData;
+import com.tdp.ms.sales.model.dto.BusinessParameterExt;
 import com.tdp.ms.sales.model.dto.ChannelRef;
 import com.tdp.ms.sales.model.dto.CommercialOperationType;
 import com.tdp.ms.sales.model.dto.ContactMedium;
@@ -17,35 +22,57 @@ import com.tdp.ms.sales.model.dto.Place;
 import com.tdp.ms.sales.model.dto.ProductInstanceType;
 import com.tdp.ms.sales.model.dto.RelatedParty;
 import com.tdp.ms.sales.model.dto.TimePeriod;
+import com.tdp.ms.sales.model.dto.productorder.CreateProductOrderGeneralRequest;
+import com.tdp.ms.sales.model.dto.productorder.FlexAttrType;
+import com.tdp.ms.sales.model.dto.productorder.caeq.ChangedContainedProduct;
 import com.tdp.ms.sales.model.entity.Sale;
+import com.tdp.ms.sales.model.request.GetSalesRequest;
 import com.tdp.ms.sales.model.request.PostSalesRequest;
+import com.tdp.ms.sales.model.request.SalesRequest;
+import com.tdp.ms.sales.model.response.GetSalesCharacteristicsResponse;
+import com.tdp.ms.sales.model.response.ProductorderResponse;
+import com.tdp.ms.sales.repository.SalesRepository;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import org.junit.Assert;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.http.MediaType;
-import org.springframework.test.web.reactive.server.WebTestClient;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 import reactor.core.publisher.Mono;
-
+import reactor.test.StepVerifier;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 
+@ExtendWith(SpringExtension.class)
 @SpringBootTest
-@AutoConfigureWebTestClient(timeout = "20000")
-public class SalesControllerTest {
-    @Autowired
-    private WebTestClient webClient;
+public class SalesManagmentServiceTest {
 
     @MockBean
+    private SalesRepository salesRepository;
+
+    @MockBean
+    private BusinessParameterWebClient businessParameterWebClient;
+
+    @MockBean
+    private ProductOrderWebClient productOrderWebClient;
+
+    @Autowired
     private SalesManagmentService salesManagmentService;
 
+    @Autowired
+    private SalesManagmentServiceImpl salesManagmentServiceImpl;
+
     private static Sale sale;
-    private static PostSalesRequest request;
+    private static PostSalesRequest salesRequest;
+    private static Sale sale2;
+    private static Sale salesResponse;
     private static final HashMap<String, String> headersMap = new HashMap();
     private static final String RH_UNICA_SERVICE_ID = "d4ce144c-6b26-4b5c-ad29-090a3a559d80";
     private static final String RH_UNICA_APPLICATION = "fesimple-sales";
@@ -53,13 +80,9 @@ public class SalesControllerTest {
     private static final String RH_UNICA_USER = "BackendUser";
     private static final String RH_UNICA_TIMESTAMP = "2020-08-26T17:15:20.509-0400";
 
+
     @BeforeAll
     static void setup() {
-        // Setting request headers
-        headersMap.put(HttpHeadersKey.UNICA_SERVICE_ID, RH_UNICA_SERVICE_ID);
-        headersMap.put(HttpHeadersKey.UNICA_APPLICATION, RH_UNICA_APPLICATION);
-        headersMap.put(HttpHeadersKey.UNICA_PID, RH_UNICA_PID);
-        headersMap.put(HttpHeadersKey.UNICA_USER, RH_UNICA_USER);
 
         ChannelRef channel= new ChannelRef();
         channel.setId("1");
@@ -206,7 +229,7 @@ public class SalesControllerTest {
                 .builder()
                 .id("1")
                 .salesId("FE-000000001")
-                .name("Cesar")
+                .name("Sergio")
                 .description("venta de lote")
                 .priority("x")
                 .channel(channel)
@@ -225,7 +248,13 @@ public class SalesControllerTest {
                 .paymenType(paymentType)
                 .build();
 
-        request = PostSalesRequest
+        // Setting request headers
+        headersMap.put(HttpHeadersKey.UNICA_SERVICE_ID, RH_UNICA_SERVICE_ID);
+        headersMap.put(HttpHeadersKey.UNICA_APPLICATION, RH_UNICA_APPLICATION);
+        headersMap.put(HttpHeadersKey.UNICA_PID, RH_UNICA_PID);
+        headersMap.put(HttpHeadersKey.UNICA_USER, RH_UNICA_USER);
+
+        salesRequest = PostSalesRequest
                 .builder()
                 .sale(sale)
                 .headersMap(headersMap)
@@ -233,26 +262,113 @@ public class SalesControllerTest {
     }
 
     @Test
-    void createdSales() {
-        Mockito.when(salesManagmentService.post(any()))
-                .thenReturn(Mono.just(sale));
+    void postSalesTest() {
+        BusinessParameterExt ext1 = BusinessParameterExt
+                .builder()
+                .comercialOperationType("CAEQ")
+                .actionType("CW")
+                .characteristicId("9941")
+                .characteristicCode("AcquisitionType")
+                .characteristicValue("private")
+                .build();
+        List<BusinessParameterExt> extList = new ArrayList<>();
+        extList.add(ext1);
+        BusinessParameterData businessParameterData1 = BusinessParameterData
+                .builder()
+                .ext(extList)
+                .build();
+        List<BusinessParameterData> data = new ArrayList<>();
+        data.add(businessParameterData1);
 
-        WebTestClient.ResponseSpec responseSpec = webClient.post()
-                .uri("/fesimple/v1/sales")
-                .accept(MediaType.APPLICATION_JSON)
-                .header(HttpHeadersKey.UNICA_SERVICE_ID, "550e8400-e29b-41d4-a716-446655440000")
-                .header(HttpHeadersKey.UNICA_APPLICATION, "genesis")
-                .header(HttpHeadersKey.UNICA_PID, "550e8400-e29b-41d4-a716-446655440000")
-                .header(HttpHeadersKey.UNICA_USER, "genesis")
-                .bodyValue(sale)
-                .exchange();
+        GetSalesCharacteristicsResponse businessParametersResponse = GetSalesCharacteristicsResponse
+                .builder()
+                .data(data)
+                .build();
+        Mockito.when(businessParameterWebClient.getSalesCharacteristicsByCommercialOperationType(any()))
+                .thenReturn(Mono.just(businessParametersResponse));
 
-        responseSpec.expectStatus().isCreated();
+        ProductorderResponse productorderResponse = new ProductorderResponse();
+        CreateProductOrderResponseType createProductOrderResponseType =  new CreateProductOrderResponseType();
+        productorderResponse.setCreateProductOrderResponse(createProductOrderResponseType);
+        Mockito.when(productOrderWebClient.createProductOrder(any(), eq(salesRequest.getHeadersMap())))
+                .thenReturn(Mono.just(productorderResponse));
 
-        responseSpec.expectBody()
-                .jsonPath("$.id").isEqualTo(sale.getId())
-                .jsonPath("$.name").isEqualTo(sale.getName())
-                .jsonPath("$.description").isEqualTo(sale.getDescription());
+        Mockito.when(salesRepository.findBySalesId(any())).thenReturn(Mono.just(sale));
+        Mockito.when(salesRepository.save(any())).thenReturn(Mono.just(sale));
+
+
+        Mono<Sale> result = salesManagmentService.post(salesRequest);
+
+    }
+
+
+    void postSalesTokenMcssNotFoundErrorTest() {
+        List<KeyValueType> additionalDatas = new ArrayList<>();
+        KeyValueType additionalData1 = new KeyValueType();
+        additionalData1.setKey("s");
+        additionalData1.setValue("d");
+        additionalDatas.add(additionalData1);
+
+        Sale saleTest = new Sale();
+        saleTest.setId("S001");
+        saleTest.setAdditionalData(additionalDatas);
+
+        PostSalesRequest salesRequest = PostSalesRequest
+                .builder()
+                .sale(saleTest)
+                .headersMap(headersMap)
+                .build();
+
+        Mono<Sale> result = salesManagmentService.post(salesRequest);
+
+        StepVerifier.create(result).verifyError();
+    }
+
+    @Test
+    void caplCommercialOperationTest() {
+        CreateProductOrderGeneralRequest mainCaplRequestProductOrder = new CreateProductOrderGeneralRequest();
+
+        CreateProductOrderGeneralRequest result = salesManagmentServiceImpl
+                .caplCommercialOperation(sale, mainCaplRequestProductOrder,
+                        "CC", "CS465", "OF824");
+
+    }
+
+    @Test
+    void caeqCommercialOperationTest() {
+        CreateProductOrderGeneralRequest mainCaeqRequestProductOrder = new CreateProductOrderGeneralRequest();
+
+        CreateProductOrderGeneralRequest result = salesManagmentServiceImpl
+                .caeqCommercialOperation(sale, mainCaeqRequestProductOrder,
+                        "CEC", "CS920", "OF201");
+
+    }
+
+    @Test
+    void caeqCaplCommercialOperationTest() {
+        CreateProductOrderGeneralRequest mainCaeqCaplRequestProductOrder = new CreateProductOrderGeneralRequest();
+
+        CreateProductOrderGeneralRequest result = salesManagmentServiceImpl
+                .caeqCaplCommercialOperation(sale, mainCaeqCaplRequestProductOrder,
+                        "CC", "CS158", "OF486");
+
+    }
+
+    @Test
+    void getCommonOrderAttributesTest() {
+        List<FlexAttrType> operationOrderAttributes = new ArrayList<>();
+
+        List<FlexAttrType> result = salesManagmentServiceImpl.commonOrderAttributes(sale);
+
+    }
+
+    @Test
+    void getChangedContainedCaeqListTest() {
+        List<ChangedContainedProduct> changedContainedProducts = new ArrayList<>();
+
+        List<ChangedContainedProduct> result = salesManagmentServiceImpl
+                .changedContainedCaeqList(sale);
+
     }
 
 }

@@ -9,21 +9,21 @@ import com.tdp.ms.sales.model.dto.KeyValueType;
 import com.tdp.ms.sales.model.dto.productorder.CreateProductOrderGeneralRequest;
 import com.tdp.ms.sales.model.dto.productorder.FlexAttrType;
 import com.tdp.ms.sales.model.dto.productorder.FlexAttrValueType;
-import com.tdp.ms.sales.model.dto.productorder.caeq.ProductOrderCaeqRequest;
-import com.tdp.ms.sales.model.dto.productorder.caeqcapl.ProductOrderCaeqCaplRequest;
-import com.tdp.ms.sales.model.dto.productorder.capl.ProductOrderCaplRequest;
+import com.tdp.ms.sales.model.dto.productorder.caeq.CaeqRequest;
 import com.tdp.ms.sales.model.dto.productorder.caeq.ChangedCharacteristic;
 import com.tdp.ms.sales.model.dto.productorder.caeq.ChangedContainedProduct;
 import com.tdp.ms.sales.model.dto.productorder.caeq.NewProductCaeq;
 import com.tdp.ms.sales.model.dto.productorder.caeq.ProductChangeCaeq;
-import com.tdp.ms.sales.model.dto.productorder.caeq.CaeqRequest;
+import com.tdp.ms.sales.model.dto.productorder.caeq.ProductOrderCaeqRequest;
+import com.tdp.ms.sales.model.dto.productorder.caeqcapl.CaeqCaplRequest;
 import com.tdp.ms.sales.model.dto.productorder.caeqcapl.NewProductCaeqCapl;
 import com.tdp.ms.sales.model.dto.productorder.caeqcapl.ProductChangeCaeqCapl;
-import com.tdp.ms.sales.model.dto.productorder.caeqcapl.CaeqCaplRequest;
+import com.tdp.ms.sales.model.dto.productorder.caeqcapl.ProductOrderCaeqCaplRequest;
+import com.tdp.ms.sales.model.dto.productorder.capl.CaplRequest;
 import com.tdp.ms.sales.model.dto.productorder.capl.NewAssignedBillingOffers;
 import com.tdp.ms.sales.model.dto.productorder.capl.NewProductCapl;
 import com.tdp.ms.sales.model.dto.productorder.capl.ProductChangeCapl;
-import com.tdp.ms.sales.model.dto.productorder.capl.CaplRequest;
+import com.tdp.ms.sales.model.dto.productorder.capl.ProductOrderCaplRequest;
 import com.tdp.ms.sales.model.dto.productorder.capl.RemovedAssignedBillingOffers;
 import com.tdp.ms.sales.model.entity.Sale;
 import com.tdp.ms.sales.model.request.GetSalesCharacteristicsRequest;
@@ -77,7 +77,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         // Getting Sale object
         Sale saleRequest = request.getSale();
 
-        // Getting token Mcss, request header to create producto order service
+        // Getting token Mcss, request header to create product order service
         String tokenMcss = "";
         for (KeyValueType kv : saleRequest.getAdditionalData()) {
             if (kv.getKey().equals("ufxauthorization")) {
@@ -88,8 +88,8 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
             throw GenesisException
                     .builder()
                     .exceptionId("SVC1000")
-                    .wildcards(new String[]{"Token MCSS is mandatory. Must be sent into Additional Data Property " +
-                            "with 'ufxauthorization' key value."})
+                    .wildcards(new String[]{"Token MCSS is mandatory. Must be sent into Additional Data Property "
+                            + "with 'ufxauthorization' key value."})
                     .build();
         }
         request.getHeadersMap().put("ufxauthorization", tokenMcss);
@@ -191,8 +191,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
             // Recognizing Capl Fija
             String productType = saleRequest.getProductType();
             if (productType.equals("landline") || productType.equals("cableTv")
-                    || productType.equals("broadband") || productType.equals("bundle")
-                    || productType.equals("mobile")) {
+                    || productType.equals("broadband") || productType.equals("bundle")) {
                 caplRequestProductOrder.setActionType("CH");
             } else {
                 caplRequestProductOrder.setActionType("CW");
@@ -226,38 +225,8 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         }
         newProductCapl1.setProductChanges(caplProductChanges);
 
-        // Building Attributes
-        String deliveryCode = "";
-        for (KeyValueType kv : saleRequest.getAdditionalData()) {
-            if (kv.getKey().equals("deliveryMethod")) {
-                deliveryCode = kv.getValue();
-            }
-        }
-        FlexAttrValueType deliveryAttrValue =  FlexAttrValueType
-                .builder()
-                .stringValue(deliveryCode)
-                .valueType("STRING")
-                .build();
-        FlexAttrType deliveryAttr = FlexAttrType
-                .builder()
-                .attrName("DELIVERY_METHOD")
-                .flexAttrValue(deliveryAttrValue)
-                .build();
-
-        FlexAttrValueType paymentAttrValue =  FlexAttrValueType
-                .builder()
-                .stringValue(saleRequest.getPaymenType().getPaymentType())
-                .valueType("STRING")
-                .build();
-        FlexAttrType paymentAttr = FlexAttrType
-                .builder()
-                .attrName("PAYMENT_METHOD")
-                .flexAttrValue(paymentAttrValue)
-                .build();
-
-        List<FlexAttrType> caplOrderAttributes = new ArrayList<>();
-        caplOrderAttributes.add(deliveryAttr);
-        caplOrderAttributes.add(paymentAttr);
+        // Refactored Code from CAPL
+        List<FlexAttrType> caplOrderAttributes = this.commonOrderAttributes(saleRequest);
 
         List<NewProductCapl> caplNewProductsList = new ArrayList<>();
         caplNewProductsList.add(newProductCapl1);
@@ -278,53 +247,13 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         return mainRequestProductOrder;
     }
 
-
     public CreateProductOrderGeneralRequest caeqCommercialOperation(Sale saleRequest,
                                     CreateProductOrderGeneralRequest mainRequestProductOrder, String channelIdRequest,
                                     String customerIdRequest, String productOfferingIdRequest) {
         // Building request for CAEQ CommercialTypeOperation
 
-        ChangedCharacteristic changedCharacteristic1 = ChangedCharacteristic
-                .builder()
-                .characteristicId("9941")
-                .characteristicValue("Private")
-                .build();
-
-        ChangedCharacteristic changedCharacteristic2 = ChangedCharacteristic
-                .builder()
-                .characteristicId("15734")
-                .characteristicValue(saleRequest.getCommercialOperation().get(0).getDeviceOffering().get(0).getId()) // Consultar si esta caracteristica se agrega solamente cuando el device_type es simcard
-                .build();
-
-        ChangedCharacteristic changedCharacteristic3 = ChangedCharacteristic
-                .builder()
-                .characteristicId("9871")
-                .characteristicValue("000000000000000") // IMEI, Consultar si se debe enviar valor real cuando viene de dealer
-                .build();
-
-        ChangedCharacteristic changedCharacteristic4 = ChangedCharacteristic
-                .builder()
-                .characteristicId("16524") // SIMGROUP, Pendiente revisar con Abraham y Ivonne, otro código 9871
-                .characteristicValue("Estandar")
-                .build();
-
-        List<ChangedCharacteristic> changedCharacteristicList = new ArrayList<>();
-        changedCharacteristicList.add(changedCharacteristic1);
-        changedCharacteristicList.add(changedCharacteristic2);
-        changedCharacteristicList.add(changedCharacteristic3);
-        changedCharacteristicList.add(changedCharacteristic4);
-
-        ChangedContainedProduct changedContainedProduct1 = ChangedContainedProduct
-                .builder()
-                .productId(saleRequest.getCommercialOperation().get(0).getProduct().getId()) // Consultar porque hay 2 product ids
-                .temporaryId("temp1")
-                .productCatalogId(saleRequest.getCommercialOperation().get(0)
-                        .getProductOfferings().get(0).getProductOfferingProductSpecId()) // Consultar
-                .changedCharacteristics(changedCharacteristicList)
-                .build();
-
-        List<ChangedContainedProduct> changedContainedProductList = new ArrayList<>();
-        changedContainedProductList.add(changedContainedProduct1);
+        // Refactored Code from CAEQ
+        List<ChangedContainedProduct> changedContainedProductList = this.changedContainedCaeqList(saleRequest);
 
         ProductChangeCaeq productChangeCaeq = ProductChangeCaeq
                 .builder()
@@ -384,7 +313,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
             // Recognizing Capl Fija
             String productType = saleRequest.getProductType();
             if (productType.equals("landline") || productType.equals("cableTv") || productType.equals("broadband")
-                    || productType.equals("bundle") || productType.equals("mobile")) {
+                    || productType.equals("bundle")) {
                 caeqCaplRequestProductOrder.setActionType("CH");
             } else {
                 caeqCaplRequestProductOrder.setActionType("CW");
@@ -417,7 +346,34 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                     .getProductOfferings().get(0).getProductOfferingProductSpecId());
         }
 
+        // Refactored Code from CAEQ
+        List<ChangedContainedProduct> changedContainedProductList = this.changedContainedCaeqList(saleRequest);
 
+        caeqCaplProductChanges.setChangedContainedProducts(changedContainedProductList);
+        newProductCaeqCapl1.setProductChanges(caeqCaplProductChanges);
+
+        List<NewProductCaeqCapl> caeqCaplNewProductList = new ArrayList<>();
+        caeqCaplNewProductList.add(newProductCaeqCapl1);
+
+        // Refactored Code from CAPL
+        List<FlexAttrType> caeqCaplOrderAttributes = this.commonOrderAttributes(saleRequest);
+
+        CaeqCaplRequest caeqCaplRequest = CaeqCaplRequest
+                .builder()
+                .newProducts(caeqCaplNewProductList)
+                .sourceApp("FE")
+                .orderAttributes(caeqCaplOrderAttributes)
+                .build();
+
+        caeqCaplRequestProductOrder.setRequest(caeqCaplRequest);
+
+        // Setting capl request into main request to send to create product order service
+        mainRequestProductOrder.setCreateProductOrderRequest(caeqCaplRequestProductOrder);
+
+        return mainRequestProductOrder;
+    }
+
+    public List<FlexAttrType> commonOrderAttributes(Sale saleRequest) {
         // Building Attributes
         String deliveryCode = "";
         for (KeyValueType kv : saleRequest.getAdditionalData()) {
@@ -447,16 +403,18 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                 .flexAttrValue(paymentAttrValue)
                 .build();
 
-        List<FlexAttrType> caeqCaplOrderAttributes = new ArrayList<>();
-        caeqCaplOrderAttributes.add(deliveryAttr);
-        caeqCaplOrderAttributes.add(paymentAttr);
+        List<FlexAttrType> caplOrderAttributes = new ArrayList<>();
+        caplOrderAttributes.add(deliveryAttr);
+        caplOrderAttributes.add(paymentAttr);
 
+        return caplOrderAttributes;
+    }
 
-        // Code from CAEQ
+    public List<ChangedContainedProduct> changedContainedCaeqList(Sale saleRequest) {
         ChangedCharacteristic changedCharacteristic1 = ChangedCharacteristic
                 .builder()
                 .characteristicId("9941")
-                .characteristicValue("Private")
+                .characteristicValue("private")
                 .build();
 
         ChangedCharacteristic changedCharacteristic2 = ChangedCharacteristic
@@ -495,25 +453,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         List<ChangedContainedProduct> changedContainedProductList = new ArrayList<>();
         changedContainedProductList.add(changedContainedProduct1);
 
-        caeqCaplProductChanges.setChangedContainedProducts(changedContainedProductList);
-        newProductCaeqCapl1.setProductChanges(caeqCaplProductChanges);
-
-        List<NewProductCaeqCapl> caeqCaplNewProductList = new ArrayList<>();
-        caeqCaplNewProductList.add(newProductCaeqCapl1);
-
-        CaeqCaplRequest caeqCaplRequest = CaeqCaplRequest
-                .builder()
-                .newProducts(caeqCaplNewProductList)
-                .sourceApp("FE")
-                .orderAttributes(caeqCaplOrderAttributes)
-                .build();
-
-        caeqCaplRequestProductOrder.setRequest(caeqCaplRequest);
-
-        // Setting capl request into main request to send to create product order service
-        mainRequestProductOrder.setCreateProductOrderRequest(caeqCaplRequestProductOrder);
-
-        return mainRequestProductOrder;
+        return changedContainedProductList;
     }
 
 }

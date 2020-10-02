@@ -1,9 +1,7 @@
 package com.tdp.ms.sales.client.impl;
 
-import com.tdp.genesis.core.constants.ErrorCategory;
 import com.tdp.genesis.core.constants.HttpHeadersKey;
 import com.tdp.genesis.core.exception.GenesisException;
-import com.tdp.genesis.core.exception.GenesisExceptionBuilder;
 import com.tdp.ms.sales.client.BusinessParameterWebClient;
 import com.tdp.ms.sales.model.request.GetSalesCharacteristicsRequest;
 import com.tdp.ms.sales.model.response.GetSalesCharacteristicsResponse;
@@ -54,21 +52,21 @@ public class BusinessParameterWebClientImpl implements BusinessParameterWebClien
                 .accept(MediaType.APPLICATION_JSON)
                 .retrieve()
                 .onStatus(status -> status == HttpStatus.BAD_REQUEST,
-                        clientResponse -> Mono.error(
-                                GenesisException
-                                        .builder()
-                                        .exceptionId("SVR1000")
-                                        .wildcards(new String[]{"Bad Request from Get Sales Characteristics " +
-                                                "Operation in Business Parameters FE+Simple Service"})
-                                        .build()))
+                    clientResponse -> Mono.error(
+                            GenesisException
+                                    .builder()
+                                    .exceptionId("SVR1000")
+                                    .wildcards(new String[]{"Bad Request from Get Sales Characteristics "
+                                            + "Operation in Business Parameters FE+Simple Service"})
+                                    .build()))
                 .onStatus(status -> status == HttpStatus.NOT_FOUND,
-                        clientResponse -> Mono.error(
-                                GenesisException
-                                        .builder()
-                                        .exceptionId("SVR1000")
-                                        .wildcards(new String[]{"Not Found Status from Get Sales Characteristics " +
-                                                "Operation in Business Parameters FE+Simple Service"})
-                                        .build()))
+                    clientResponse -> Mono.error(
+                            GenesisException
+                                    .builder()
+                                    .exceptionId("SVR1000")
+                                    .wildcards(new String[]{"Not Found Status from Get Sales Characteristics "
+                                            + "Operation in Business Parameters FE+Simple Service"})
+                                    .build()))
                 .bodyToMono(GetSalesCharacteristicsResponse.class);
     }
 

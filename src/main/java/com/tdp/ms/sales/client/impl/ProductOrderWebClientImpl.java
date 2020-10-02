@@ -1,14 +1,11 @@
 package com.tdp.ms.sales.client.impl;
 
-import com.tdp.genesis.core.constants.ErrorCategory;
 import com.tdp.genesis.core.constants.HttpHeadersKey;
 import com.tdp.genesis.core.exception.GenesisException;
-import com.tdp.genesis.core.exception.GenesisExceptionBuilder;
 import com.tdp.ms.sales.client.ProductOrderWebClient;
 import com.tdp.ms.sales.model.dto.productorder.CreateProductOrderGeneralRequest;
-import java.util.HashMap;
-
 import com.tdp.ms.sales.model.response.ProductorderResponse;
+import java.util.HashMap;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -44,7 +41,8 @@ public class ProductOrderWebClientImpl implements ProductOrderWebClient {
     private String createProductOrderUrl;
 
     @Override
-    public Mono<ProductorderResponse> createProductOrder(CreateProductOrderGeneralRequest request, HashMap<String,String> headersMap) {
+    public Mono<ProductorderResponse> createProductOrder(CreateProductOrderGeneralRequest request,
+                                                         HashMap<String,String> headersMap) {
         return webClientInsecure
                 .post()
                 .uri(createProductOrderUrl)
@@ -56,19 +54,21 @@ public class ProductOrderWebClientImpl implements ProductOrderWebClient {
                 .accept(MediaType.APPLICATION_JSON)
                 .retrieve()
                 .onStatus(status -> status == HttpStatus.BAD_REQUEST,
-                        clientResponse -> Mono.error(
-                                GenesisException
-                                        .builder()
-                                        .exceptionId("SVR1000")
-                                        .wildcards(new String[]{"Bad Request from Post Create Product Order FE+Simple Service"})
-                                        .build()))
+                    clientResponse -> Mono.error(
+                            GenesisException
+                                    .builder()
+                                    .exceptionId("SVR1000")
+                                    .wildcards(new String[]{"Bad Request from Post Create Product Order "
+                                            + "FE+Simple Service"})
+                                    .build()))
                 .onStatus(status -> status == HttpStatus.NOT_FOUND,
-                        clientResponse -> Mono.error(
-                                GenesisException
-                                        .builder()
-                                        .exceptionId("SVR1000")
-                                        .wildcards(new String[]{"Not Found Status from Post Create Product Order FE+Simple Service"})
-                                        .build()))
+                    clientResponse -> Mono.error(
+                            GenesisException
+                                    .builder()
+                                    .exceptionId("SVR1000")
+                                    .wildcards(new String[]{"Not Found Status from Post Create Product Order "
+                                            + "FE+Simple Service"})
+                                    .build()))
                 .bodyToMono(ProductorderResponse.class);
     }
 

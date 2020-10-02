@@ -4,7 +4,6 @@ import com.tdp.genesis.core.constants.HttpHeadersKey;
 import com.tdp.ms.sales.business.SalesManagmentService;
 import com.tdp.ms.sales.model.entity.Sale;
 import com.tdp.ms.sales.model.request.PostSalesRequest;
-import com.tdp.ms.sales.model.response.SalesResponse;
 import java.util.HashMap;
 import javax.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
