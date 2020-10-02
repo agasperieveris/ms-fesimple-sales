@@ -1,5 +1,6 @@
 package com.tdp.ms.sales.model.dto.productorder.caeqcapl;
 
+import com.tdp.ms.sales.model.dto.ShipmentDetailsType;
 import com.tdp.ms.sales.model.dto.productorder.FlexAttrType;
 import java.util.List;
 import lombok.AllArgsConstructor;
@@ -32,4 +33,5 @@ public class CaeqCaplRequest {
     private List<NewProductCaeqCapl> newProducts;
     private String sourceApp;
     private List<FlexAttrType> orderAttributes;
+    private ShipmentDetailsType shipmentDetails;
 }

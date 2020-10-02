@@ -4,11 +4,11 @@ import com.tdp.genesis.core.constants.ErrorCategory;
 import com.tdp.genesis.core.constants.HttpHeadersKey;
 import com.tdp.genesis.core.exception.GenesisException;
 import com.tdp.genesis.core.exception.GenesisExceptionBuilder;
-import com.tdp.ms.sales.client.BusinessParameterWebClient;
 import com.tdp.ms.sales.client.ProductOrderWebClient;
 import com.tdp.ms.sales.model.dto.productorder.CreateProductOrderGeneralRequest;
-import com.tdp.ms.sales.model.request.GetSalesCharacteristicsRequest;
-import com.tdp.ms.sales.model.response.GetSalesCharacteristicsResponse;
+import java.util.HashMap;
+
+import com.tdp.ms.sales.model.response.ProductorderResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -16,8 +16,6 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
-
-import java.util.HashMap;
 
 /**
  * Class: BusinessParameterWebClientImpl. <br/>
@@ -46,8 +44,7 @@ public class ProductOrderWebClientImpl implements ProductOrderWebClient {
     private String createProductOrderUrl;
 
     @Override
-    public Mono<Object> createProductOrder(CreateProductOrderGeneralRequest request, HashMap<String,String> headersMap) {
-        GenesisExceptionBuilder builder = GenesisException.builder();
+    public Mono<ProductorderResponse> createProductOrder(CreateProductOrderGeneralRequest request, HashMap<String,String> headersMap) {
         return webClientInsecure
                 .post()
                 .uri(createProductOrderUrl)
@@ -55,25 +52,24 @@ public class ProductOrderWebClientImpl implements ProductOrderWebClient {
                 .header(HttpHeadersKey.UNICA_APPLICATION, headersMap.get(HttpHeadersKey.UNICA_APPLICATION))
                 .header(HttpHeadersKey.UNICA_PID, headersMap.get(HttpHeadersKey.UNICA_PID))
                 .header(HttpHeadersKey.UNICA_USER, headersMap.get(HttpHeadersKey.UNICA_USER))
+                .header("ufxauthorization", headersMap.get("ufxauthorization"))
                 .accept(MediaType.APPLICATION_JSON)
                 .retrieve()
                 .onStatus(status -> status == HttpStatus.BAD_REQUEST,
                         clientResponse -> Mono.error(
-                                builder.category(ErrorCategory.INVALID_REQUEST)
-                                        .addDetail(true)
-                                        .withComponent("sales")
-                                        .withDescription("Bad Request from Post Create Product Order FE+Simple Service")
-                                        .push()
+                                GenesisException
+                                        .builder()
+                                        .exceptionId("SVR1000")
+                                        .wildcards(new String[]{"Bad Request from Post Create Product Order FE+Simple Service"})
                                         .build()))
                 .onStatus(status -> status == HttpStatus.NOT_FOUND,
                         clientResponse -> Mono.error(
-                                builder.category(ErrorCategory.RESOURCE_NOT_FOUND)
-                                        .addDetail(true)
-                                        .withComponent("sales")
-                                        .withDescription("Not Found Status from Post Create Product Order FE+Simple Service")
-                                        .push()
+                                GenesisException
+                                        .builder()
+                                        .exceptionId("SVR1000")
+                                        .wildcards(new String[]{"Not Found Status from Post Create Product Order FE+Simple Service"})
                                         .build()))
-                .bodyToMono(Object.class);
+                .bodyToMono(ProductorderResponse.class);
     }
 
 }

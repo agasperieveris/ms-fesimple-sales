@@ -42,7 +42,7 @@ public class ProductConfigurationRequestType {
     private String cip;
     private String upfrontIndicator;
     private List<OrderAttributes> orderAttributes;
-    private ShipmentDetails shipmentDetails;
+    private ShipmentDetailsType shipmentDetails;
     @JsonProperty("ServiceabilityInfo")
     private ServiceabilityInfo serviceabilityInfo;
     private List<NewProducts> newProducts;

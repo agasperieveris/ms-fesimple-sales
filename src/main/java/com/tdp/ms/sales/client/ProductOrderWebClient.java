@@ -1,9 +1,9 @@
 package com.tdp.ms.sales.client;
 
 import com.tdp.ms.sales.model.dto.productorder.CreateProductOrderGeneralRequest;
-import reactor.core.publisher.Mono;
-
+import com.tdp.ms.sales.model.response.ProductorderResponse;
 import java.util.HashMap;
+import reactor.core.publisher.Mono;
 
 /**
  * Class: ProductOrderWebClient. <br/>
@@ -24,6 +24,6 @@ import java.util.HashMap;
  */
 public interface ProductOrderWebClient {
 
-    Mono<Object> createProductOrder(CreateProductOrderGeneralRequest request, HashMap<String,String> headersMap);
+    Mono<ProductorderResponse> createProductOrder(CreateProductOrderGeneralRequest request, HashMap<String,String> headersMap);
 
 }

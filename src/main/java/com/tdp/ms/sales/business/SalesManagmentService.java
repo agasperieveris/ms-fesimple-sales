@@ -1,18 +1,18 @@
 package com.tdp.ms.sales.business;
 
+import com.tdp.ms.sales.model.entity.Sale;
 import com.tdp.ms.sales.model.request.PostSalesRequest;
-import com.tdp.ms.sales.model.response.SalesResponse;
 import reactor.core.publisher.Mono;
 
 public interface SalesManagmentService {
 
     /**
-     * Registra los datos de un nueva venta en la BBDD de la Web Convergente.
+     * Actualiza datos de la orden de Sales.
      *
-     * @author @srivasme
-     * @param request Datos de la nueva venta
-     * @return SalesResponse, datos de la nueva venta registrada en la BBDD de la Web Convergente
+     * @author @cesargomezeveris
+     * @param request Datos de la venta
+     * @return SalesResponse, datos de la venta con información de la orden creada
      */
-    Mono<SalesResponse> post(PostSalesRequest request);
+    Mono<Sale> post(PostSalesRequest request);
 
 }

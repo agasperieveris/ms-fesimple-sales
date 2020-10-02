@@ -44,16 +44,15 @@ public class SalesController {
     private SalesManagmentService salesManagmentService;
 
     /**
-     * Registra los datos de un Sale en la BBDD de la Web Convergente.
+     * Actualiza datos de la orden de Sales.
      *
-     * @author @srivasme
+     * @author @cesargomezeveris
      * @param sale Datos de la venta
-     * @return SalesResponse, datos de la venta registrada en la BBDD de la Web
-     *         Convergente
+     * @return Sale, datos de la venta con información de la orden creada
      */
     @PostMapping()
     @ResponseStatus(HttpStatus.CREATED)
-    public Mono<SalesResponse> createdSales(@Valid @RequestBody Sale sale,
+    public Mono<Sale> createdSales(@Valid @RequestBody Sale sale,
                                             @RequestHeader(HttpHeadersKey.UNICA_SERVICE_ID) String serviceId,
                                             @RequestHeader(HttpHeadersKey.UNICA_APPLICATION) String application,
                                             @RequestHeader(HttpHeadersKey.UNICA_PID) String pid,
