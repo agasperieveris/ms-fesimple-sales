@@ -28,6 +28,7 @@ application:
   endpoints:
     url:
       business_parameters:
-        sequential: https://aks-berserkers-ingress-dev.eastus2.cloudapp.azure.com/bussinesparameters/v2/parameters/{code}/dataparams?nomSeq={seq}
+        seq_number: SEQ001
+        sequential: https://localhost
   catalog-error:
-    url: http://aks-berserkers-ingress-dev.eastus2.cloudapp.azure.com
+    url: http://localhost

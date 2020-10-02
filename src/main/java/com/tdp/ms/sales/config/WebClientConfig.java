@@ -38,14 +38,6 @@ public class WebClientConfig {
     //@Value("${application.security.token.url}")
     private static String tokenUrl = "";
 
-    @Value("${application.endpoints.url.business_parameters.timeout.timeout}")
-    private String timeout;
-    @Value("${application.endpoints.url.business_parameters.timeout.timeout_read}")
-    private String readTimeout;
-    @Value("${application.endpoints.url.business_parameters.timeout.timeout_write}")
-    private String writeTimeout;
-
-
     /**
      * Bean to config Webclient.
      *
@@ -84,14 +76,13 @@ public class WebClientConfig {
      */
     @Bean
     public WebClient webClientInsecure() throws SSLException {
-        SslContext sslContext = sslContext();
-        HttpClient httpClient =
-                httpClient(Integer.parseInt(timeout),
-                        Integer.parseInt(readTimeout),
-                        Integer.parseInt(writeTimeout))
-                        .secure(t -> t.sslContext(sslContext));
+        SslContext sslContext = SslContextBuilder.forClient().trustManager(InsecureTrustManagerFactory.INSTANCE)
+                .build();
+        HttpClient httpClient = HttpClient.create().secure(t -> t.sslContext(sslContext));
+        return WebClient.builder()
+                // .baseUrl(tokenUrl)
+                .clientConnector(new ReactorClientHttpConnector(httpClient)).build();
 
-        return createWebclient(tokenUrl,httpClient);
 
     }
 
@@ -103,30 +94,6 @@ public class WebClientConfig {
     @Bean
     public WebClient webClientSecure() {
         return WebClient.builder().build();
-    }
-
-    private HttpClient httpClient(int connectionTimeOut, int readTimeout, int writeTimeout) {
-        return HttpClient.create()
-                .tcpConfiguration(client ->
-                        client.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, connectionTimeOut)
-                                .doOnConnected(conn -> conn
-                                        .addHandlerLast(new ReadTimeoutHandler(readTimeout / 1000))
-                                        .addHandlerLast(new WriteTimeoutHandler(writeTimeout / 1000))));
-    }
-
-    private SslContext sslContext() throws SSLException {
-        return SslContextBuilder
-                .forClient()
-                .trustManager(InsecureTrustManagerFactory.INSTANCE)
-                .build();
-    }
-
-    private WebClient createWebclient(String url, HttpClient httpClient) {
-        return WebClient
-                .builder()
-                .baseUrl(url)
-                .clientConnector(new ReactorClientHttpConnector(httpClient))
-                .build();
     }
 
 }
