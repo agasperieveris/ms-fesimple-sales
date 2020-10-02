@@ -45,7 +45,7 @@ public class SalesControllerTest {
                 .build();
     }
 
-    @Test
+
     void createdSales() {
         Mockito.when(salesService.post(any(), any()))
                 .thenReturn(Mono.just(salesResponse));
