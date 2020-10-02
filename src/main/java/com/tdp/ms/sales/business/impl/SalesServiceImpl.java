@@ -18,6 +18,7 @@ import java.util.UUID;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -47,6 +48,9 @@ public class SalesServiceImpl implements SalesService {
 
     private final WebClientBusinessParameters webClient;
 
+    @Value("${application.endpoints.url.business_parameters.seq_number}")
+    private String seqNumber;
+
     @Override
     public Mono<Sale> getSale(GetSalesRequest request) {
         Mono<Sale> existingSale = salesRepository.findBySalesId(request.getId());
@@ -70,7 +74,7 @@ public class SalesServiceImpl implements SalesService {
         request.setId(uuid);
 
         // Se obtiene el secuencial de businessParameters
-        Mono<BusinessParametersResponse> saleSequential = webClient.getNewSaleSequential("SEQ001", headersMap);
+        Mono<BusinessParametersResponse> saleSequential = webClient.getNewSaleSequential(seqNumber, headersMap);
 
         return saleSequential.flatMap(saleSequentialItem -> {
             request.setSalesId(saleSequentialItem.getData().get(0).getValue());
