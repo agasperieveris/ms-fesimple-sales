@@ -7,12 +7,6 @@ spring:
   main:
     allow-bean-definition-overriding: true
 
-azure:
-  cosmosdb:
-    uri: https://cosmosdbconvergentedev.documents.azure.com:443/
-    key: Dqormfg8aZmhUQ9UHAfOkD6BZkxF2t3smniH9Sxjfi0R1xP8eBU9pFN9mbz86lLIAUKDjbZ6rxjRPwGNoygaYA==
-    database: dbconvergentedev
-
 application:
   swagger:
     title: '@project.name@'
@@ -25,10 +19,3 @@ application:
     license:
       type: copyright
       url: https://www.telefonica.com.pe
-  endpoints:
-    url:
-      business_parameters:
-        seq_number: SEQ001
-        sequential: https://aks-berserkers-ingress-dev.eastus2.cloudapp.azure.com/bussinesparameters/v2/parameters/{code}/dataparams?nomSeq={seq}
-  catalog-error:
-    url: http://aks-berserkers-ingress-dev.eastus2.cloudapp.azure.com
