@@ -87,23 +87,6 @@ public class BusinessParameterWebClientImpl implements BusinessParameterWebClien
                 .accept(MediaType.APPLICATION_JSON)
                 .retrieve()
                 // TODO: Validar la estructura del Genesis
-                /*.onStatus(status -> status == HttpStatus.BAD_REQUEST,
-                        clientResponse -> Mono.error(
-                                GenesisException
-                                        .builder()
-                                        .exceptionId("SVR1000")
-                                        .wildcards(new String[]{"Bad Request from Get Risk Domain "
-                                                + "prospectContact domain: " + domain
-                                                + " Operation in Business Parameters FE+Simple Service"})
-                                        .build()))
-                .onStatus(status -> status == HttpStatus.NOT_FOUND,
-                        clientResponse -> Mono.error(
-                                GenesisException
-                                        .builder()
-                                        .exceptionId("SVR1000")
-                                        .wildcards(new String[]{"Not Found Domain" + domain + " from Get Risk Domain "
-                                                + "Operation in Business Parameters FE+Simple Service"})
-                                        .build()))*/
                 .bodyToMono(BusinessParametersResponse.class);
     }
 

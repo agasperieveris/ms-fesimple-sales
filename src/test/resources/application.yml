@@ -37,5 +37,7 @@ application:
         sequential: https://localhost
     stock:
       reserve_stock_url: https://localhost
+    payment:
+      generate_cip_payment_identifier: https://localhost
   catalog-error:
     url: http://localhost

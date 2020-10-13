@@ -2,6 +2,7 @@ package com.tdp.ms.sales.service;
 
 import com.tdp.genesis.core.constants.HttpHeadersKey;
 import com.tdp.ms.sales.business.SalesService;
+import com.tdp.ms.sales.business.impl.SalesServiceImpl;
 import com.tdp.ms.sales.client.WebClientBusinessParameters;
 import com.tdp.ms.sales.model.dto.*;
 import com.tdp.ms.sales.model.entity.Sale;
@@ -41,6 +42,9 @@ public class SalesServiceTest {
 
     @Autowired
     private SalesService salesService;
+
+    @Autowired
+    private SalesServiceImpl salesServiceImpl;
 
     private static Sale sale;
     private static SalesRequest salesRequest;
@@ -194,6 +198,7 @@ public class SalesServiceTest {
                 .statusChangeReason("s")
                 .audioStatus("s")
                 .validFor(validFor)
+                .saleCreationDate("24/09/2020T12:43:03")
                 .additionalData(additionalDatas)
                 .build();
 
@@ -331,5 +336,53 @@ public class SalesServiceTest {
 
         StepVerifier.create(result)
                 .expectNextCount(1);
+    }
+
+    @Test
+    void filterSaleCreationDateTest() {
+        salesServiceImpl.filterSaleCreationDate(sale, "24/09/2020T12:43:00",
+                "24/09/2020T12:43:21");
+    }
+
+    @Test
+    void filterSaleCreationDate_nullDateTest() {
+        sale.setSaleCreationDate(null);
+        salesServiceImpl.filterSaleCreationDate(sale, "24/09/2020T12:43:00",
+                "24/09/2020T12:43:21");
+    }
+
+    @Test
+    void filterSaleCreationDate_nullStartDate_nullEndDateTest() {
+        salesServiceImpl.filterSaleCreationDate(sale, null, null);
+    }
+
+    @Test
+    void filterSalesIdTest() {
+        salesServiceImpl.filterSalesId(sale, "FE-0000000486");
+    }
+
+    @Test
+    void filterSalesId_salesIdNullTest() {
+        salesServiceImpl.filterSalesId(sale, null);
+    }
+
+    @Test
+    void filterSalesId_salesIdEmptyTest() {
+        salesServiceImpl.filterSalesId(sale, "");
+    }
+
+    @Test
+    void filterExistingOrderIdTest() {
+        salesServiceImpl.filterExistingOrderId(sale, "930686A");
+    }
+
+    @Test
+    void filterExistingOrderId_orderIdNullTest() {
+        salesServiceImpl.filterExistingOrderId(sale, null);
+    }
+
+    @Test
+    void filterExistingOrderId_orderIdEmptyTest() {
+        salesServiceImpl.filterExistingOrderId(sale, "");
     }
 }

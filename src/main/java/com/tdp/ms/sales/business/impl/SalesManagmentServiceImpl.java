@@ -3,13 +3,16 @@ package com.tdp.ms.sales.business.impl;
 import com.tdp.genesis.core.exception.GenesisException;
 import com.tdp.ms.sales.business.SalesManagmentService;
 import com.tdp.ms.sales.client.BusinessParameterWebClient;
+import com.tdp.ms.sales.client.PaymentWebClient;
 import com.tdp.ms.sales.client.ProductOrderWebClient;
 import com.tdp.ms.sales.client.StockWebClient;
 import com.tdp.ms.sales.model.dto.BusinessParameterExt;
 import com.tdp.ms.sales.model.dto.ContactMedium;
 import com.tdp.ms.sales.model.dto.CreateProductOrderResponseType;
+import com.tdp.ms.sales.model.dto.FinancingInstalment;
 import com.tdp.ms.sales.model.dto.IdentityValidationType;
 import com.tdp.ms.sales.model.dto.KeyValueType;
+import com.tdp.ms.sales.model.dto.MoneyAmount;
 import com.tdp.ms.sales.model.dto.SiteRefType;
 import com.tdp.ms.sales.model.dto.productorder.CreateProductOrderGeneralRequest;
 import com.tdp.ms.sales.model.dto.productorder.FlexAttrType;
@@ -35,10 +38,12 @@ import com.tdp.ms.sales.model.dto.reservestock.Item;
 import com.tdp.ms.sales.model.dto.reservestock.Order;
 import com.tdp.ms.sales.model.dto.reservestock.StockItem;
 import com.tdp.ms.sales.model.entity.Sale;
+import com.tdp.ms.sales.model.request.GenerateCipRequest;
 import com.tdp.ms.sales.model.request.GetSalesCharacteristicsRequest;
 import com.tdp.ms.sales.model.request.PostSalesRequest;
 import com.tdp.ms.sales.model.request.ReserveStockRequest;
 import com.tdp.ms.sales.model.response.BusinessParametersResponse;
+import com.tdp.ms.sales.model.response.GenerateCipResponse;
 import com.tdp.ms.sales.model.response.GetSalesCharacteristicsResponse;
 import com.tdp.ms.sales.repository.SalesRepository;
 import java.text.DateFormat;
@@ -87,6 +92,9 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
     @Autowired
     private StockWebClient stockWebClient;
 
+    @Autowired
+    private PaymentWebClient paymentWebClient;
+
     public List<BusinessParameterExt> retrieveCharacteristics(GetSalesCharacteristicsResponse response) {
         return response.getData().get(0).getExt();
     }
@@ -103,6 +111,18 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
             return email.substring(++pos);
         }
         return null;
+    }
+
+    public String getStringValueByKeyFromAdditionalDataList(List<KeyValueType> additionalData, String key) {
+        final String[] stringValue = {""};
+
+        additionalData.stream().forEach(kv -> {
+            if (kv.getKey().equalsIgnoreCase(key)) {
+                stringValue[0] = kv.getValue();
+            }
+        });
+
+        return stringValue[0];
     }
 
     @Override
@@ -159,6 +179,16 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                                 .build());
                     }
 
+                    // Generating CIP Code
+                    if (saleRequest.getCommercialOperation().get(0).getWorkOrDeliveryType().getMediumDelivery().equalsIgnoreCase("DELIVERY")
+                            && saleRequest.getPaymenType().getPaymentType().equalsIgnoreCase("EX")
+                            && this.getStringValueByKeyFromAdditionalDataList(saleRequest.getAdditionalData(), "paymentTypeLabel").equals("PAGO EFECTIVO")
+                    ) {
+                        GenerateCipRequest generateCipRequest = new GenerateCipRequest();
+                        generateCipRequest.setHeadersMap(request.getHeadersMap());
+                        generateCipRequest = buildGenerateCipRequestFromSale(generateCipRequest, saleRequest);
+                        Mono<GenerateCipResponse> generateCip = paymentWebClient.generateCip(generateCipRequest);
+                    }
 
                     // Building Main Request to send to Create Product Order Service
                     CreateProductOrderGeneralRequest mainRequestProductOrder = new CreateProductOrderGeneralRequest();
@@ -216,37 +246,8 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
 
                                             // Ship Delivery logic (tambo) - SERGIO
                                             if (saleRequest.getCommercialOperation().get(0).getWorkOrDeliveryType().getMediumDelivery().equalsIgnoreCase("Tienda")) {
-                                                // add shipmentDetails structure to additionalData
-                                                List<KeyValueType> additionalDataAux = saleRequest.getAdditionalData();
-                                                if (additionalDataAux == null) {
-                                                    additionalDataAux = new ArrayList<>();
-                                                }
-                                                // assignments
-                                                KeyValueType mediumDeliveryLabel = KeyValueType.builder()
-                                                        .key("mediumDeliveryLabel").value("Chip Tienda").build();
-                                                KeyValueType collectStoreId = KeyValueType.builder()
-                                                        .key("collectStoreId").value("Validar campo").build();
-                                                KeyValueType shipmentAddressId = KeyValueType.builder()
-                                                        .key("shipmentAddressId").value("").build();
-                                                KeyValueType shipmentSiteId = KeyValueType.builder()
-                                                        .key("shipmentSiteId").value("NA").build();
-                                                KeyValueType shippingLocality = KeyValueType.builder()
-                                                        .key("shippingLocality").value("Pendiente").build();
-                                                KeyValueType provinceOfShippingAddress = KeyValueType.builder()
-                                                        .key("provinceOfShippingAddress").value("Pendiente").build();
-                                                KeyValueType shopAddress = KeyValueType.builder()
-                                                        .key("shopAddress").value("Pendiente").build();
-                                                KeyValueType shipmentInstructions = KeyValueType.builder()
-                                                        .key("shipmentInstructions").value("No se registró instrucciones").build();
-                                                additionalDataAux.add(mediumDeliveryLabel);
-                                                additionalDataAux.add(collectStoreId);
-                                                additionalDataAux.add(shipmentAddressId);
-                                                additionalDataAux.add(shipmentSiteId);
-                                                additionalDataAux.add(shippingLocality);
-                                                additionalDataAux.add(provinceOfShippingAddress);
-                                                additionalDataAux.add(shopAddress);
-                                                additionalDataAux.add(shipmentInstructions);
-                                                saleRequest.setAdditionalData(additionalDataAux);
+
+                                                saleFinded.setAdditionalData(additionalDataAssigments(saleRequest.getAdditionalData()));
                                             }
 
                                             ReserveStockRequest reserveStockRequest = new ReserveStockRequest();
@@ -291,6 +292,41 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                                         });
                             });
                 });
+    }
+
+    public List<KeyValueType> additionalDataAssigments(List<KeyValueType> input) {
+        // add shipmentDetails structure to additionalData
+        List<KeyValueType> additionalDataAux = input;
+        if (additionalDataAux == null) {
+            additionalDataAux = new ArrayList<>();
+        }
+        // assignments
+        KeyValueType mediumDeliveryLabel = KeyValueType.builder()
+                .key("mediumDeliveryLabel").value("Chip Tienda").build();
+        KeyValueType collectStoreId = KeyValueType.builder()
+                .key("collectStoreId").value("Validar campo").build();
+        KeyValueType shipmentAddressId = KeyValueType.builder()
+                .key("shipmentAddressId").value("").build();
+        KeyValueType shipmentSiteId = KeyValueType.builder()
+                .key("shipmentSiteId").value("NA").build();
+        KeyValueType shippingLocality = KeyValueType.builder()
+                .key("shippingLocality").value("Pendiente").build();
+        KeyValueType provinceOfShippingAddress = KeyValueType.builder()
+                .key("provinceOfShippingAddress").value("Pendiente").build();
+        KeyValueType shopAddress = KeyValueType.builder()
+                .key("shopAddress").value("Pendiente").build();
+        KeyValueType shipmentInstructions = KeyValueType.builder()
+                .key("shipmentInstructions").value("No se registró instrucciones").build();
+        additionalDataAux.add(mediumDeliveryLabel);
+        additionalDataAux.add(collectStoreId);
+        additionalDataAux.add(shipmentAddressId);
+        additionalDataAux.add(shipmentSiteId);
+        additionalDataAux.add(shippingLocality);
+        additionalDataAux.add(provinceOfShippingAddress);
+        additionalDataAux.add(shopAddress);
+        additionalDataAux.add(shipmentInstructions);
+
+        return additionalDataAux;
     }
 
     public Boolean validateNegotiation(List<KeyValueType> additionalData,
@@ -704,6 +740,23 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         request.setOrder(order);
 
         return  request;
+    }
+
+    public GenerateCipRequest buildGenerateCipRequestFromSale(GenerateCipRequest request, Sale sale) {
+        FinancingInstalment financingInstalment = sale.getCommercialOperation().get(0).getDeviceOffering().get(0).getOffers()
+                .get(0).getBillingOfferings().get(0).getCommitmentPeriods().get(0).getFinancingInstalments().get(0);
+        MoneyAmount montoCip;
+        // Identificando cliente al contado
+        if (financingInstalment.getDescription().equalsIgnoreCase("CONTADO")) {
+            montoCip = financingInstalment.getInstalments().getAmount();
+        } else {
+            montoCip = financingInstalment.getInstalments().getOpeningQuota();
+        }
+
+        request.getBody().setAmount(montoCip.getValue());
+        request.getBody().setCurrency(montoCip.getCurrency());
+
+        return request;
     }
 
 }

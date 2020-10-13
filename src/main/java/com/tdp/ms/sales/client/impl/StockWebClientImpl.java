@@ -5,6 +5,7 @@ import com.tdp.genesis.core.exception.GenesisException;
 import com.tdp.ms.sales.client.StockWebClient;
 import com.tdp.ms.sales.model.request.ReserveStockRequest;
 import com.tdp.ms.sales.model.response.ReserveStockResponse;
+import com.tdp.ms.commons.util.MapperUtils;
 import java.util.HashMap;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -12,6 +13,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Mono;
 
 /**
@@ -52,23 +54,45 @@ public class StockWebClientImpl implements StockWebClient {
                 .bodyValue(request)
                 .accept(MediaType.APPLICATION_JSON)
                 .retrieve()
-                .onStatus(status -> status == HttpStatus.BAD_REQUEST,
-                    clientResponse -> Mono.error(
-                            GenesisException
-                                    .builder()
-                                    .exceptionId("SVR1000")
-                                    .wildcards(new String[]{"Bad Request from Post Create Product Order "
-                                            + "FE+Simple Service"})
-                                    .build()))
-                .onStatus(status -> status == HttpStatus.NOT_FOUND,
-                    clientResponse -> Mono.error(
-                            GenesisException
-                                    .builder()
-                                    .exceptionId("SVR1000")
-                                    .wildcards(new String[]{"Not Found Status from Post Create Product Order "
-                                            + "FE+Simple Service"})
-                                    .build()))
-                .bodyToMono(ReserveStockResponse.class);
+                .bodyToMono(ReserveStockResponse.class)
+                .onErrorResume(this::fallbackTokenRenewal);
+    }
+
+    private Mono<ReserveStockResponse> fallbackTokenRenewal(Throwable error) {
+
+        if (error instanceof WebClientResponseException) {
+
+            String exp = ((WebClientResponseException) error).getResponseBodyAsString();
+            GenesisException genesisException = MapperUtils.mapper(GenesisException.class, exp);
+            String exceptionId = genesisException.getExceptionId();
+
+            if (exceptionId.equalsIgnoreCase("SVR1008")
+                    || exceptionId.equalsIgnoreCase("SVR1000"))
+            {
+                // Throw 500 status code
+                return Mono.error(GenesisException.builder()
+                        .exceptionId("SVR1000")
+                        .wildcards(new String[]{"There was a problem from Reserve Stock FE+Simple Service"})
+                        .build());
+            } else if (exceptionId.equalsIgnoreCase("SVC1000")) {
+                // Throw 400 status code
+                return Mono.error(GenesisException.builder()
+                        .exceptionId("SVC0001")
+                        .wildcards(new String[]{"Bad Request from Reserve Stock FE+Simple Service"})
+                        .build());
+            } else if (exceptionId.equalsIgnoreCase("SVC0001")) {
+                // Throw 404 status code
+                return Mono.error(GenesisException.builder()
+                        .exceptionId("SVC1006")
+                        .wildcards(new String[]{"Resource Not Found from Reserve Stock FE+Simple Service"})
+                        .build());
+            } else {
+                // Throw Other status code
+                return Mono.error(error);
+            }
+        } else {
+            return Mono.error(error);
+        }
     }
 
 }

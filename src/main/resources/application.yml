@@ -37,5 +37,7 @@ application:
         sequential: https://aks-berserkers-ingress-dev.eastus2.cloudapp.azure.com/bussinesparameters/v2/parameters/{code}/dataparams?nomSeq={seq}
     stock:
       reserve_stock_url: https://aks-berserkers-ingress-dev.eastus2.cloudapp.azure.com/fesimple/v1/stocks/reserveStock
+    payment:
+      generate_cip_payment_identifier: https://aks-berserkers-ingress-dev.eastus2.cloudapp.azure.com/fesimple/api/v1/payment/paymentIdentifier/createPaymentIdentifier
   catalog-error:
     url: http://aks-berserkers-ingress-dev.eastus2.cloudapp.azure.com

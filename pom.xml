@@ -288,6 +288,12 @@
 			<scope>test</scope>
 		</dependency>
 
+		<dependency>
+			<groupId>com.tdp.ms</groupId>
+			<artifactId>fr-fesimple-sharedlib</artifactId>
+			<version>1.0.4</version>
+		</dependency>
+
 	</dependencies>
 
 	<dependencyManagement>

@@ -54,22 +54,6 @@ public class ProductOrderWebClientImpl implements ProductOrderWebClient {
                 .bodyValue(request)
                 .accept(MediaType.APPLICATION_JSON)
                 .retrieve()
-                .onStatus(status -> status == HttpStatus.BAD_REQUEST,
-                    clientResponse -> Mono.error(
-                            GenesisException
-                                    .builder()
-                                    .exceptionId("SVR1000")
-                                    .wildcards(new String[]{"Bad Request from Post Create Product Order "
-                                            + "FE+Simple Service"})
-                                    .build()))
-                .onStatus(status -> status == HttpStatus.NOT_FOUND,
-                    clientResponse -> Mono.error(
-                            GenesisException
-                                    .builder()
-                                    .exceptionId("SVR1000")
-                                    .wildcards(new String[]{"Not Found Status from Post Create Product Order "
-                                            + "FE+Simple Service"})
-                                    .build()))
                 .bodyToMono(ProductorderResponse.class);
     }
 

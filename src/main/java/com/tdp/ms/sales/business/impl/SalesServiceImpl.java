@@ -112,42 +112,50 @@ public class SalesServiceImpl implements SalesService {
                                   String maxResultCount) {
 
         return salesRepository.findByChannel_DealerIdContainingAndAgent_IdContainingAndAgent_CustomerIdContainingAndAgent_NationalIdContainingAndAgent_NationalIdTypeContainingAndChannel_StoreIdContainingAndStatusContaining(dealerId, idAgent, customerId, nationalID, nationalIdType, storeId, status)
-                .filter(item -> {
-                    if (item.getSaleCreationDate() == null) {
-                        return false;
-                    } else if (startDateTime != null && endDateTime != null
-                            && !item.getSaleCreationDate().isEmpty() && !startDateTime.isEmpty() && !endDateTime.isEmpty()) {
+                .filter(item -> filterSaleCreationDate(item, startDateTime, endDateTime))
+                .filter(item -> filterSalesId(item, saleId))
+                .filter(item -> filterExistingOrderId(item, orderId));
+    }
 
-                        try {
-                            Date startDate = new SimpleDateFormat("dd/MM/yyyy'T'HH:mm:ss").parse(startDateTime);
-                            Date endDate = new SimpleDateFormat("dd/MM/yyyy'T'HH:mm:ss").parse(endDateTime);
-                            Date requestDate = new SimpleDateFormat("dd/MM/yyyy'T'HH:mm:ss").parse(item.getSaleCreationDate());
-                            return requestDate.after(startDate) && requestDate.before(endDate);
-                        } catch (ParseException e) {
-                            e.printStackTrace();
-                        }
+    public Boolean filterSaleCreationDate(Sale item, String startDateTime, String endDateTime) {
+        if (item.getSaleCreationDate() == null) {
+            return false;
+        } else if (startDateTime != null && endDateTime != null
+                && !item.getSaleCreationDate().isEmpty() && !startDateTime.isEmpty() && !endDateTime.isEmpty()) {
 
-                    }
-                    // No se hace el filtro
-                    return true;
-                }).filter(item -> {
-                    if (saleId != null && !saleId.isEmpty()) {
-                        return item.getSalesId().compareTo(saleId) == 0;
-                    }
-                    // No se hace el filtro
-                    return true;
-                }).filter(item -> {
-                    final boolean[] existOrderId = {false};
-                    if (orderId != null && !orderId.isEmpty()) {
-                        item.getCommercialOperation().forEach(cot -> {
-                            if (cot.getOrder().getProductOrderId().compareTo(orderId) == 0) {
-                                existOrderId[0] = true;
-                            }
-                        });
-                        return existOrderId[0];
-                    }
-                    // No se hace el filtro
-                    return true;
-                });
+            try {
+                Date startDate = new SimpleDateFormat("dd/MM/yyyy'T'HH:mm:ss").parse(startDateTime);
+                Date endDate = new SimpleDateFormat("dd/MM/yyyy'T'HH:mm:ss").parse(endDateTime);
+                Date requestDate = new SimpleDateFormat("dd/MM/yyyy'T'HH:mm:ss").parse(item.getSaleCreationDate());
+                return requestDate.after(startDate) && requestDate.before(endDate);
+            } catch (ParseException e) {
+                e.printStackTrace();
+            }
+
+        }
+        // No se hace el filtro
+        return true;
+    }
+
+    public Boolean filterSalesId(Sale item, String saleId) {
+        if (saleId != null && !saleId.isEmpty()) {
+            return item.getSalesId().compareTo(saleId) == 0;
+        }
+        // No se hace el filtro
+        return true;
+    }
+
+    public Boolean  filterExistingOrderId(Sale item, String orderId) {
+        final boolean[] existOrderId = {false};
+        if (orderId != null && !orderId.isEmpty()) {
+            item.getCommercialOperation().forEach(cot -> {
+                if (cot.getOrder().getProductOrderId().compareTo(orderId) == 0) {
+                    existOrderId[0] = true;
+                }
+            });
+            return existOrderId[0];
+        }
+        // No se hace el filtro
+        return true;
     }
 }

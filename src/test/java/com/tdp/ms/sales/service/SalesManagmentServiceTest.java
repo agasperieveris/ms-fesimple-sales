@@ -5,28 +5,13 @@ import com.tdp.ms.sales.business.SalesManagmentService;
 import com.tdp.ms.sales.business.impl.SalesManagmentServiceImpl;
 import com.tdp.ms.sales.client.BusinessParameterWebClient;
 import com.tdp.ms.sales.client.ProductOrderWebClient;
-import com.tdp.ms.sales.model.dto.BusinessParameterData;
-import com.tdp.ms.sales.model.dto.BusinessParameterExt;
-import com.tdp.ms.sales.model.dto.ChannelRef;
-import com.tdp.ms.sales.model.dto.CommercialOperationType;
-import com.tdp.ms.sales.model.dto.ContactMedium;
-import com.tdp.ms.sales.model.dto.CreateProductOrderResponseType;
-import com.tdp.ms.sales.model.dto.DeviceOffering;
-import com.tdp.ms.sales.model.dto.EntityRefType;
-import com.tdp.ms.sales.model.dto.IdentityValidationType;
-import com.tdp.ms.sales.model.dto.KeyValueType;
-import com.tdp.ms.sales.model.dto.MediumCharacteristic;
-import com.tdp.ms.sales.model.dto.Money;
-import com.tdp.ms.sales.model.dto.OfferingType;
-import com.tdp.ms.sales.model.dto.PaymentType;
-import com.tdp.ms.sales.model.dto.Place;
-import com.tdp.ms.sales.model.dto.ProductInstanceType;
-import com.tdp.ms.sales.model.dto.RelatedParty;
-import com.tdp.ms.sales.model.dto.TimePeriod;
+import com.tdp.ms.sales.model.dto.*;
+import com.tdp.ms.sales.model.dto.payment.GenerateCipRequestBody;
 import com.tdp.ms.sales.model.dto.productorder.CreateProductOrderGeneralRequest;
 import com.tdp.ms.sales.model.dto.productorder.FlexAttrType;
 import com.tdp.ms.sales.model.dto.productorder.caeq.ChangedContainedProduct;
 import com.tdp.ms.sales.model.entity.Sale;
+import com.tdp.ms.sales.model.request.GenerateCipRequest;
 import com.tdp.ms.sales.model.request.GetSalesRequest;
 import com.tdp.ms.sales.model.request.PostSalesRequest;
 import com.tdp.ms.sales.model.request.ReserveStockRequest;
@@ -39,6 +24,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import io.swagger.models.auth.In;
 import org.junit.Assert;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -143,6 +130,41 @@ public class SalesManagmentServiceTest {
         deviceOffering.setAdditionalData(additionalDatas);
         deviceOffering.setId("s");
         deviceOffering.setSapid("SAD123PID");
+
+
+        MoneyAmount moneyAmount1 = MoneyAmount
+                .builder()
+                .value(150.6)
+                .currency("SOL")
+                .build();
+
+        Instalments instalments = new Instalments();
+        instalments.setAmount(moneyAmount1);
+        instalments.setOpeningQuota(moneyAmount1);
+
+        FinancingInstalment financingInstalment1 = new FinancingInstalment();
+        financingInstalment1.setInstalments(instalments);
+        financingInstalment1.setDescription("CONTADO");
+        List<FinancingInstalment> financingInstalmentsList = new ArrayList<>();
+        financingInstalmentsList.add(financingInstalment1);
+
+        CommitmentPeriod commitmentPeriod1 = new CommitmentPeriod();
+        commitmentPeriod1.setFinancingInstalments(financingInstalmentsList);
+        List<CommitmentPeriod> commitmentPeriodsList = new ArrayList<>();
+        commitmentPeriodsList.add(commitmentPeriod1);
+
+        BillingOffering billingOffering1 = new BillingOffering();
+        billingOffering1.setCommitmentPeriods(commitmentPeriodsList);
+        List<BillingOffering> billingOfferingList = new ArrayList<>();
+        billingOfferingList.add(billingOffering1);
+
+        Offer offer1 = Offer
+                .builder()
+                .billingOfferings(billingOfferingList)
+                .build();
+        List<Offer> offersList = new ArrayList<>();
+        offersList.add(offer1);
+        deviceOffering.setOffers(offersList);
 
         deviceOfferings.add(deviceOffering);
         ProductInstanceType product= new ProductInstanceType();
@@ -379,6 +401,11 @@ public class SalesManagmentServiceTest {
     }
 
     @Test
+    void additionalDataAssigmentsTest() {
+        salesManagmentServiceImpl.additionalDataAssigments(null);
+    }
+
+    @Test
     void validateNegotiationTest() {
         Boolean isNegotiation = salesManagmentServiceImpl.validateNegotiation(additionalDatas,
                 identityValidationTypeList);
@@ -445,6 +472,18 @@ public class SalesManagmentServiceTest {
         ReserveStockRequest result = salesManagmentServiceImpl.buildReserveStockRequest(reserveStockRequest,
                 sale, createProductOrderResponse);
 
+    }
+
+    @Test
+    void buildGenerateCipRequestFromSaleTest() {
+        GenerateCipRequestBody generateCipRequestBody = new GenerateCipRequestBody();
+        GenerateCipRequest generateCipRequest = GenerateCipRequest
+                .builder()
+                .body(generateCipRequestBody)
+                .headersMap(headersMap)
+                .build();
+
+        GenerateCipRequest result = salesManagmentServiceImpl.buildGenerateCipRequestFromSale(generateCipRequest, sale);
     }
 
 }
