@@ -4,7 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.tdp.genesis.core.constants.HttpHeadersKey;
 import com.tdp.ms.sales.client.impl.WebClientBusinessParametersImpl;
-import com.tdp.ms.sales.model.dto.BusinessParametersData;
+import com.tdp.ms.sales.model.dto.BusinessParameterData;
 import com.tdp.ms.sales.model.response.BusinessParametersResponse;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -52,11 +52,11 @@ public class WebClientBusinessParametersTest {
     @Test
     void getNewSaleSequential() throws JsonProcessingException {
         // output
-        BusinessParametersData businessParametersData = BusinessParametersData
+        BusinessParameterData businessParametersData = BusinessParameterData
                 .builder()
                 .value("FE-0000000486")
                 .build();
-        List<BusinessParametersData> businessParametersDataList = new ArrayList<>();
+        List<BusinessParameterData> businessParametersDataList = new ArrayList<>();
         businessParametersDataList.add(businessParametersData);
 
         BusinessParametersResponse businessParametersResponse = BusinessParametersResponse

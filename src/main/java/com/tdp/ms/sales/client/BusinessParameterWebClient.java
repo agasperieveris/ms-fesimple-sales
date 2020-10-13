@@ -1,8 +1,11 @@
 package com.tdp.ms.sales.client;
 
 import com.tdp.ms.sales.model.request.GetSalesCharacteristicsRequest;
+import com.tdp.ms.sales.model.response.BusinessParametersResponse;
 import com.tdp.ms.sales.model.response.GetSalesCharacteristicsResponse;
 import reactor.core.publisher.Mono;
+
+import java.util.HashMap;
 
 /**
  * Class: BusinessParameterWebClient. <br/>
@@ -25,5 +28,8 @@ public interface BusinessParameterWebClient {
 
     Mono<GetSalesCharacteristicsResponse>
         getSalesCharacteristicsByCommercialOperationType(GetSalesCharacteristicsRequest request);
+
+    Mono<BusinessParametersResponse> getRiskDomain(String domain, HashMap<String, String> headersMap);
+
 
 }

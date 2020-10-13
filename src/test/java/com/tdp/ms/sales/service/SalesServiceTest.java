@@ -278,11 +278,11 @@ public class SalesServiceTest {
         Mockito.when(salesRepository.save(any()))
                 .thenReturn(Mono.just(sale));
 
-        BusinessParametersData businessParametersData = BusinessParametersData
+        BusinessParameterData businessParametersData = BusinessParameterData
                 .builder()
                 .value("FE-000000001")
                 .build();
-        List<BusinessParametersData> businessParametersDataList = new ArrayList<>();
+        List<BusinessParameterData> businessParametersDataList = new ArrayList<>();
         businessParametersDataList.add(businessParametersData);
 
         Mockito.when(webClientToken.getNewSaleSequential(any(), any()))

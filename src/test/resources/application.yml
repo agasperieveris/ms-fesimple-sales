@@ -28,11 +28,14 @@ application:
   endpoints:
     business_parameters:
       get_sales_characteristics_url: https://localhost
+      get_risk_domain_url: https://localhost
     product_order:
       create_product_order_url: https://localhost
     url:
       business_parameters:
         seq_number: SEQ001
         sequential: https://localhost
+    stock:
+      reserve_stock_url: https://localhost
   catalog-error:
     url: http://localhost

@@ -13,6 +13,7 @@ import com.tdp.ms.sales.model.dto.ContactMedium;
 import com.tdp.ms.sales.model.dto.CreateProductOrderResponseType;
 import com.tdp.ms.sales.model.dto.DeviceOffering;
 import com.tdp.ms.sales.model.dto.EntityRefType;
+import com.tdp.ms.sales.model.dto.IdentityValidationType;
 import com.tdp.ms.sales.model.dto.KeyValueType;
 import com.tdp.ms.sales.model.dto.MediumCharacteristic;
 import com.tdp.ms.sales.model.dto.Money;
@@ -28,7 +29,9 @@ import com.tdp.ms.sales.model.dto.productorder.caeq.ChangedContainedProduct;
 import com.tdp.ms.sales.model.entity.Sale;
 import com.tdp.ms.sales.model.request.GetSalesRequest;
 import com.tdp.ms.sales.model.request.PostSalesRequest;
+import com.tdp.ms.sales.model.request.ReserveStockRequest;
 import com.tdp.ms.sales.model.request.SalesRequest;
+import com.tdp.ms.sales.model.response.BusinessParametersResponse;
 import com.tdp.ms.sales.model.response.GetSalesCharacteristicsResponse;
 import com.tdp.ms.sales.model.response.ProductorderResponse;
 import com.tdp.ms.sales.repository.SalesRepository;
@@ -80,6 +83,9 @@ public class SalesManagmentServiceTest {
     private static final String RH_UNICA_USER = "BackendUser";
     private static final String RH_UNICA_TIMESTAMP = "2020-08-26T17:15:20.509-0400";
 
+    private static List<KeyValueType> additionalDatas;
+    private static ContactMedium contactMedium;
+    private static List<IdentityValidationType> identityValidationTypeList = new ArrayList<>();
 
     @BeforeAll
     static void setup() {
@@ -96,7 +102,7 @@ public class SalesManagmentServiceTest {
         agent.setId("1");
         agent.setNationalId("Peru");
         agent.setNationalIdType("DNI");
-        List<KeyValueType> additionalDatas = new ArrayList<>();
+        additionalDatas = new ArrayList<>();
 
         KeyValueType additionalData1 = new KeyValueType();
         additionalData1.setKey("s");
@@ -107,9 +113,11 @@ public class SalesManagmentServiceTest {
         KeyValueType additionalData3 = new KeyValueType();
         additionalData3.setKey("ufxauthorization");
         additionalData3.setValue("14fwTedaos4sdgZvyay8H");
+        KeyValueType additionalDataFlowSale = KeyValueType.builder().key("flowSale").value("Presencial").build();
         additionalDatas.add(additionalData1);
         additionalDatas.add(additionalData2);
         additionalDatas.add(additionalData3);
+        additionalDatas.add(additionalDataFlowSale);
 
         EntityRefType entityRefType = new EntityRefType();
         entityRefType.setHref("s");
@@ -134,6 +142,7 @@ public class SalesManagmentServiceTest {
 
         deviceOffering.setAdditionalData(additionalDatas);
         deviceOffering.setId("s");
+        deviceOffering.setSapid("SAD123PID");
 
         deviceOfferings.add(deviceOffering);
         ProductInstanceType product= new ProductInstanceType();
@@ -143,6 +152,7 @@ public class SalesManagmentServiceTest {
         CreateProductOrderResponseType order = CreateProductOrderResponseType
                 .builder()
                 .productOrderId("930686A")
+                .productOrderReferenceNumber("761787835447")
                 .build();
 
         OfferingType offeringType1= new OfferingType();
@@ -177,6 +187,9 @@ public class SalesManagmentServiceTest {
         estimatedRevenue.setValue(12f);
 
         ContactMedium prospectContact = new ContactMedium();
+        MediumCharacteristic mediumChar = MediumCharacteristic.builder().emailAddress("everis@everis.com").build();
+        contactMedium = ContactMedium.builder().mediumType("email").characteristic(mediumChar).build();
+
         MediumCharacteristic characteristic = new MediumCharacteristic();
         characteristic.setBaseType("s");
         characteristic.setCity("lima");
@@ -197,7 +210,8 @@ public class SalesManagmentServiceTest {
 
         List<ContactMedium> prospectContacts = new ArrayList<>();
 
-        prospectContacts.add(prospectContact);
+        //prospectContacts.add(prospectContact);
+        prospectContacts.add(contactMedium);
 
         RelatedParty relatedParty = new RelatedParty();
 
@@ -225,6 +239,13 @@ public class SalesManagmentServiceTest {
                 .paymentType("EX")
                 .build();
 
+
+
+        IdentityValidationType identityValidationType = IdentityValidationType.builder()
+                .date("2014-09-15T23:14:25.7251173Z").validationType("No Biometric").build();
+
+        identityValidationTypeList.add(identityValidationType);
+
         sale = Sale
                 .builder()
                 .id("1")
@@ -245,6 +266,7 @@ public class SalesManagmentServiceTest {
                 .audioStatus("s")
                 .validFor(validFor)
                 .additionalData(additionalDatas)
+                .identityValidations(identityValidationTypeList)
                 .paymenType(paymentType)
                 .build();
 
@@ -259,6 +281,23 @@ public class SalesManagmentServiceTest {
                 .sale(sale)
                 .headersMap(headersMap)
                 .build();
+
+
+    }
+
+    @Test
+    void retrieveDomainTest() {
+        List<ContactMedium> contactMediumList = new ArrayList<>();
+        contactMediumList.add(contactMedium);
+        String domain = salesManagmentServiceImpl.retrieveDomain(contactMediumList);
+        Assert.assertEquals(domain, "everis.com");
+    }
+
+    @Test
+    void retrieveDomain_nullTest() {
+        List<ContactMedium> contactMediumList = new ArrayList<>();
+        String domain = salesManagmentServiceImpl.retrieveDomain(contactMediumList);
+        Assert.assertEquals(domain, null);
     }
 
     @Test
@@ -277,15 +316,30 @@ public class SalesManagmentServiceTest {
                 .builder()
                 .ext(extList)
                 .build();
-        List<BusinessParameterData> data = new ArrayList<>();
-        data.add(businessParameterData1);
+        BusinessParameterData businessParameterData2 = BusinessParameterData
+                .builder()
+                .active("false")
+                .build();
+        List<BusinessParameterData> dataList = new ArrayList<>();
+        dataList.add(businessParameterData1);
+
+        List<BusinessParameterData> dataList2 = new ArrayList<>();
+        dataList2.add(businessParameterData2);
 
         GetSalesCharacteristicsResponse businessParametersResponse = GetSalesCharacteristicsResponse
                 .builder()
-                .data(data)
+                .data(dataList)
                 .build();
+        BusinessParametersResponse expectBusinessParametersResponse = BusinessParametersResponse
+                .builder()
+                .data(dataList2)
+                .build();
+
         Mockito.when(businessParameterWebClient.getSalesCharacteristicsByCommercialOperationType(any()))
                 .thenReturn(Mono.just(businessParametersResponse));
+
+        Mockito.when(businessParameterWebClient.getRiskDomain(any(), any()))
+                .thenReturn(Mono.just(expectBusinessParametersResponse));
 
         ProductorderResponse productorderResponse = new ProductorderResponse();
         CreateProductOrderResponseType createProductOrderResponseType =  new CreateProductOrderResponseType();
@@ -301,7 +355,7 @@ public class SalesManagmentServiceTest {
 
     }
 
-
+    @Test
     void postSalesTokenMcssNotFoundErrorTest() {
         List<KeyValueType> additionalDatas = new ArrayList<>();
         KeyValueType additionalData1 = new KeyValueType();
@@ -322,6 +376,14 @@ public class SalesManagmentServiceTest {
         Mono<Sale> result = salesManagmentService.post(salesRequest);
 
         StepVerifier.create(result).verifyError();
+    }
+
+    @Test
+    void validateNegotiationTest() {
+        Boolean isNegotiation = salesManagmentServiceImpl.validateNegotiation(additionalDatas,
+                identityValidationTypeList);
+
+        Assert.assertEquals(true, isNegotiation);
     }
 
     @Test
@@ -368,6 +430,20 @@ public class SalesManagmentServiceTest {
 
         List<ChangedContainedProduct> result = salesManagmentServiceImpl
                 .changedContainedCaeqList(sale);
+
+    }
+
+    @Test
+    void buildReserveStockRequestTest() {
+        ReserveStockRequest reserveStockRequest = new ReserveStockRequest();
+        CreateProductOrderResponseType createProductOrderResponse = CreateProductOrderResponseType
+                .builder()
+                .productOrderReferenceNumber("761787835447")
+                .productOrderId("930686A")
+                .build();
+
+        ReserveStockRequest result = salesManagmentServiceImpl.buildReserveStockRequest(reserveStockRequest,
+                sale, createProductOrderResponse);
 
     }
 

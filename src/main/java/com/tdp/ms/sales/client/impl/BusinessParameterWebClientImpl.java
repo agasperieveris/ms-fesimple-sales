@@ -4,7 +4,9 @@ import com.tdp.genesis.core.constants.HttpHeadersKey;
 import com.tdp.genesis.core.exception.GenesisException;
 import com.tdp.ms.sales.client.BusinessParameterWebClient;
 import com.tdp.ms.sales.model.request.GetSalesCharacteristicsRequest;
+import com.tdp.ms.sales.model.response.BusinessParametersResponse;
 import com.tdp.ms.sales.model.response.GetSalesCharacteristicsResponse;
+import java.util.HashMap;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -39,6 +41,9 @@ public class BusinessParameterWebClientImpl implements BusinessParameterWebClien
     @Value("${application.endpoints.business_parameters.get_sales_characteristics_url}")
     private String getSalesCharacteristicsUrl;
 
+    @Value("${application.endpoints.business_parameters.get_risk_domain_url}")
+    private String getRiskDomainUrl;
+
     @Override
     public Mono<GetSalesCharacteristicsResponse> getSalesCharacteristicsByCommercialOperationType(
                                                                         GetSalesCharacteristicsRequest request) {
@@ -68,6 +73,38 @@ public class BusinessParameterWebClientImpl implements BusinessParameterWebClien
                                             + "Operation in Business Parameters FE+Simple Service"})
                                     .build()))
                 .bodyToMono(GetSalesCharacteristicsResponse.class);
+    }
+
+    @Override
+    public Mono<BusinessParametersResponse> getRiskDomain(String domain, HashMap<String, String> headersMap) {
+        return webClientInsecure
+                .get()
+                .uri(getRiskDomainUrl, domain)
+                .header(HttpHeadersKey.UNICA_APPLICATION, headersMap.get(HttpHeadersKey.UNICA_APPLICATION))
+                .header(HttpHeadersKey.UNICA_PID, headersMap.get(HttpHeadersKey.UNICA_PID))
+                .header(HttpHeadersKey.UNICA_SERVICE_ID, headersMap.get(HttpHeadersKey.UNICA_SERVICE_ID))
+                .header(HttpHeadersKey.UNICA_USER, headersMap.get(HttpHeadersKey.UNICA_USER))
+                .accept(MediaType.APPLICATION_JSON)
+                .retrieve()
+                // TODO: Validar la estructura del Genesis
+                /*.onStatus(status -> status == HttpStatus.BAD_REQUEST,
+                        clientResponse -> Mono.error(
+                                GenesisException
+                                        .builder()
+                                        .exceptionId("SVR1000")
+                                        .wildcards(new String[]{"Bad Request from Get Risk Domain "
+                                                + "prospectContact domain: " + domain
+                                                + " Operation in Business Parameters FE+Simple Service"})
+                                        .build()))
+                .onStatus(status -> status == HttpStatus.NOT_FOUND,
+                        clientResponse -> Mono.error(
+                                GenesisException
+                                        .builder()
+                                        .exceptionId("SVR1000")
+                                        .wildcards(new String[]{"Not Found Domain" + domain + " from Get Risk Domain "
+                                                + "Operation in Business Parameters FE+Simple Service"})
+                                        .build()))*/
+                .bodyToMono(BusinessParametersResponse.class);
     }
 
 }

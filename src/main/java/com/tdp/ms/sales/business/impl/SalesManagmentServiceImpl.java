@@ -4,8 +4,13 @@ import com.tdp.genesis.core.exception.GenesisException;
 import com.tdp.ms.sales.business.SalesManagmentService;
 import com.tdp.ms.sales.client.BusinessParameterWebClient;
 import com.tdp.ms.sales.client.ProductOrderWebClient;
+import com.tdp.ms.sales.client.StockWebClient;
 import com.tdp.ms.sales.model.dto.BusinessParameterExt;
+import com.tdp.ms.sales.model.dto.ContactMedium;
+import com.tdp.ms.sales.model.dto.CreateProductOrderResponseType;
+import com.tdp.ms.sales.model.dto.IdentityValidationType;
 import com.tdp.ms.sales.model.dto.KeyValueType;
+import com.tdp.ms.sales.model.dto.SiteRefType;
 import com.tdp.ms.sales.model.dto.productorder.CreateProductOrderGeneralRequest;
 import com.tdp.ms.sales.model.dto.productorder.FlexAttrType;
 import com.tdp.ms.sales.model.dto.productorder.FlexAttrValueType;
@@ -25,13 +30,25 @@ import com.tdp.ms.sales.model.dto.productorder.capl.NewProductCapl;
 import com.tdp.ms.sales.model.dto.productorder.capl.ProductChangeCapl;
 import com.tdp.ms.sales.model.dto.productorder.capl.ProductOrderCaplRequest;
 import com.tdp.ms.sales.model.dto.productorder.capl.RemovedAssignedBillingOffers;
+import com.tdp.ms.sales.model.dto.reservestock.Destination;
+import com.tdp.ms.sales.model.dto.reservestock.Item;
+import com.tdp.ms.sales.model.dto.reservestock.Order;
+import com.tdp.ms.sales.model.dto.reservestock.StockItem;
 import com.tdp.ms.sales.model.entity.Sale;
 import com.tdp.ms.sales.model.request.GetSalesCharacteristicsRequest;
 import com.tdp.ms.sales.model.request.PostSalesRequest;
+import com.tdp.ms.sales.model.request.ReserveStockRequest;
+import com.tdp.ms.sales.model.response.BusinessParametersResponse;
 import com.tdp.ms.sales.model.response.GetSalesCharacteristicsResponse;
 import com.tdp.ms.sales.repository.SalesRepository;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -67,8 +84,25 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
     @Autowired
     private ProductOrderWebClient productOrderWebClient;
 
-    private List<BusinessParameterExt> retrieveCharacteristics(GetSalesCharacteristicsResponse response) {
+    @Autowired
+    private StockWebClient stockWebClient;
+
+    public List<BusinessParameterExt> retrieveCharacteristics(GetSalesCharacteristicsResponse response) {
         return response.getData().get(0).getExt();
+    }
+
+    public String retrieveDomain(List<ContactMedium> prospectContact) {
+        // Get domain from email
+        String email = prospectContact.stream()
+                .filter(p -> p.getMediumType().equalsIgnoreCase("email"))
+                .map(p -> p.getCharacteristic().getEmailAddress())
+                .collect(Collectors.joining());
+
+        if (email != null && !email.isEmpty()) {
+            int pos = email.indexOf("@");
+            return email.substring(++pos);
+        }
+        return null;
     }
 
     @Override
@@ -85,14 +119,18 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
             }
         }
         if (tokenMcss == null || tokenMcss.equals("")) {
-            throw GenesisException
+            return Mono.error(GenesisException
                     .builder()
                     .exceptionId("SVC1000")
                     .wildcards(new String[]{"Token MCSS is mandatory. Must be sent into Additional Data Property "
                             + "with 'ufxauthorization' key value."})
-                    .build();
+                    .build());
         }
         request.getHeadersMap().put("ufxauthorization", tokenMcss);
+
+        // Get mail Validation, dominio de riesgo - SERGIO
+        Mono<BusinessParametersResponse> getRiskDomain = businessParameterWebClient
+                        .getRiskDomain(retrieveDomain(saleRequest.getProspectContact()), request.getHeadersMap());
 
         // Getting commons request properties
         String channelIdRequest = saleRequest.getChannel().getId();
@@ -102,15 +140,25 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
 
         // Getting Main CommercialTypeOperation value
         String commercialOperationType = saleRequest.getCommercialOperation().get(0).getReason();
-
-        return businessParameterWebClient.getSalesCharacteristicsByCommercialOperationType(
+        Mono<List<BusinessParameterExt>> salesCharsByCOT = businessParameterWebClient.getSalesCharacteristicsByCommercialOperationType(
                 GetSalesCharacteristicsRequest
                         .builder()
                         .commercialOperationType(commercialOperationType)
                         .headersMap(request.getHeadersMap())
                         .build())
-                .map(this::retrieveCharacteristics)
-                .flatMap(salesCharacteristicsList -> {
+                .map(this::retrieveCharacteristics);
+
+        return Mono.zip(getRiskDomain, salesCharsByCOT)
+                .flatMap(tuple -> {
+                    if (tuple.getT1().getData().get(0).getActive().equals("true")) {
+                        // if it is a risk domain, cancel operation
+                        return Mono.error(GenesisException
+                                .builder()
+                                .exceptionId("SVR1000")
+                                .wildcards(new String[]{"Dominio de riesgo, se canceló la operación"})
+                                .build());
+                    }
+
 
                     // Building Main Request to send to Create Product Order Service
                     CreateProductOrderGeneralRequest mainRequestProductOrder = new CreateProductOrderGeneralRequest();
@@ -158,12 +206,129 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                                             // Adding Order info to sales
                                             saleFinded.getCommercialOperation().get(0)
                                                     .setOrder(createOrderResponse.getCreateProductOrderResponse());
-                                            saleFinded.setStatus("NUEVO");
 
-                                            return salesRepository.save(saleFinded);
+                                            if (validateNegotiation(saleRequest.getAdditionalData(),
+                                                    saleRequest.getIdentityValidations())) {
+                                                saleFinded.setStatus("NEGOCIACION");
+                                            } else {
+                                                saleFinded.setStatus("NUEVO");
+                                            }
+
+                                            // Ship Delivery logic (tambo) - SERGIO
+                                            if (saleRequest.getCommercialOperation().get(0).getWorkOrDeliveryType().getMediumDelivery().equalsIgnoreCase("Tienda")) {
+                                                // add shipmentDetails structure to additionalData
+                                                List<KeyValueType> additionalDataAux = saleRequest.getAdditionalData();
+                                                if (additionalDataAux == null) {
+                                                    additionalDataAux = new ArrayList<>();
+                                                }
+                                                // assignments
+                                                KeyValueType mediumDeliveryLabel = KeyValueType.builder()
+                                                        .key("mediumDeliveryLabel").value("Chip Tienda").build();
+                                                KeyValueType collectStoreId = KeyValueType.builder()
+                                                        .key("collectStoreId").value("Validar campo").build();
+                                                KeyValueType shipmentAddressId = KeyValueType.builder()
+                                                        .key("shipmentAddressId").value("").build();
+                                                KeyValueType shipmentSiteId = KeyValueType.builder()
+                                                        .key("shipmentSiteId").value("NA").build();
+                                                KeyValueType shippingLocality = KeyValueType.builder()
+                                                        .key("shippingLocality").value("Pendiente").build();
+                                                KeyValueType provinceOfShippingAddress = KeyValueType.builder()
+                                                        .key("provinceOfShippingAddress").value("Pendiente").build();
+                                                KeyValueType shopAddress = KeyValueType.builder()
+                                                        .key("shopAddress").value("Pendiente").build();
+                                                KeyValueType shipmentInstructions = KeyValueType.builder()
+                                                        .key("shipmentInstructions").value("No se registró instrucciones").build();
+                                                additionalDataAux.add(mediumDeliveryLabel);
+                                                additionalDataAux.add(collectStoreId);
+                                                additionalDataAux.add(shipmentAddressId);
+                                                additionalDataAux.add(shipmentSiteId);
+                                                additionalDataAux.add(shippingLocality);
+                                                additionalDataAux.add(provinceOfShippingAddress);
+                                                additionalDataAux.add(shopAddress);
+                                                additionalDataAux.add(shipmentInstructions);
+                                                saleRequest.setAdditionalData(additionalDataAux);
+                                            }
+
+                                            ReserveStockRequest reserveStockRequest = new ReserveStockRequest();
+                                            reserveStockRequest = this.buildReserveStockRequest(reserveStockRequest,
+                                                    saleRequest, createOrderResponse.getCreateProductOrderResponse());
+
+                                            return stockWebClient.reserveStock(reserveStockRequest,
+                                                    request.getHeadersMap())
+                                                    .flatMap(reserveStockResponse -> {
+                                                        DateFormat dateFormat = new SimpleDateFormat(
+                                                                "yyyy-MM-dd'T'HH:mm:ss.SSSSSSSZ");
+                                                        LocalDateTime nowDateTime = LocalDateTime.now();
+
+                                                        KeyValueType dateKv = KeyValueType
+                                                                .builder()
+                                                                .key("reservationDate")
+                                                                .value(dateFormat.format(nowDateTime))
+                                                                .build();
+                                                        saleFinded.getCommercialOperation().get(0).getDeviceOffering()
+                                                                .get(0).getAdditionalData().add(dateKv);
+
+
+                                                        saleFinded.getCommercialOperation().get(0).getDeviceOffering()
+                                                                .get(0).getStock()
+                                                                .setReservationId(reserveStockResponse.getId());
+
+
+                                                        saleFinded.getCommercialOperation().get(0).getDeviceOffering()
+                                                                .get(0).getStock()
+                                                                .setAmount(reserveStockResponse.getItems()
+                                                                        .get(0).getAmount());
+
+
+                                                        saleFinded.getCommercialOperation().get(0).getDeviceOffering()
+                                                                .get(0).getStock()
+                                                                .setSite(reserveStockResponse.getItems()
+                                                                        .get(0).getSite());
+
+                                                        return salesRepository.save(saleFinded);
+                                                    });
+
                                         });
                             });
                 });
+    }
+
+    public Boolean validateNegotiation(List<KeyValueType> additionalData,
+                                       List<IdentityValidationType> identityValidationTypes) {
+        final Boolean[] isPresencial = {false};
+        final Boolean[] isBiometric = {true};
+
+        additionalData.stream().forEach(kv -> {
+            if (kv.getKey().equalsIgnoreCase("flowSale")
+                    && kv.getValue().equalsIgnoreCase("Presencial")) {
+                isPresencial[0] = true;
+            }
+        });
+
+        // Sort identityValidationType by date field
+        final Date[] latestDate = {null};
+        final int[] cont = {0};
+        identityValidationTypes.stream().forEach(ivt -> {
+            // convert String date to Date
+            DateFormat format = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSSSSSZ");
+            try {
+                Date currentDate = format.parse(ivt.getDate());
+                if (latestDate[0] == null || latestDate[0].before(currentDate)) {
+                    latestDate[0] = currentDate;
+                    cont[0]++;
+                }
+            } catch (ParseException ex) {
+                System.out.println(ex);
+            }
+
+        });
+
+        // validate validationType
+        if (!identityValidationTypes.get(cont[0]).getValidationType().equalsIgnoreCase("Biometric")) {
+            isBiometric[0] = false;
+        }
+
+        return isPresencial[0] && !isBiometric[0];
     }
 
     public CreateProductOrderGeneralRequest caplCommercialOperation(Sale saleRequest,
@@ -221,7 +386,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
             caplProductChanges.setRemovedAssignedBillingOffers(caplBoRemovedList);
         } else {
             newProductCapl1.setProductCatalogId(saleRequest.getCommercialOperation().get(0)
-                    .getProductOfferings().get(0).getProductOfferingProductSpecId());
+                    .getProductOfferings().get(0).getProductOfferingProductSpecId()); // Consultar si el id del catalogo es = al id del nuevo plan
         }
         newProductCapl1.setProductChanges(caplProductChanges);
 
@@ -411,10 +576,12 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
     }
 
     public List<ChangedContainedProduct> changedContainedCaeqList(Sale saleRequest) {
+        String acquisitionType = "";
+        acquisitionType = getAcquisitionTypeValue(saleRequest);
         ChangedCharacteristic changedCharacteristic1 = ChangedCharacteristic
                 .builder()
                 .characteristicId("9941")
-                .characteristicValue("private")
+                .characteristicValue(acquisitionType)
                 .build();
 
         ChangedCharacteristic changedCharacteristic2 = ChangedCharacteristic
@@ -454,6 +621,89 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         changedContainedProductList.add(changedContainedProduct1);
 
         return changedContainedProductList;
+    }
+
+    public String getAcquisitionTypeValue(Sale saleRequest) {
+        String acquisitionType = "";
+        String saleChannelId = "";
+        String deliveryType = "";
+
+        // Getting Sale Channel
+        saleChannelId = saleRequest.getChannel().getId();
+
+        // Getting Delivery Method (IS, SP)
+        for (KeyValueType kv : saleRequest.getAdditionalData()) {
+            if (kv.getKey().equals("deliveryMethod")) {
+                deliveryType = kv.getValue();
+            }
+        }
+
+        // Logic for Set Acquisition Type Value
+        if (saleChannelId.equalsIgnoreCase("CC") && deliveryType.equalsIgnoreCase("SP")
+                || saleChannelId.equalsIgnoreCase("CEC")
+                || (saleChannelId.equalsIgnoreCase("ST") && deliveryType.equalsIgnoreCase("SP"))
+                || saleChannelId.equalsIgnoreCase("DLS")
+        ) {
+            acquisitionType = "ConsessionPurchased";
+        } else if ((saleChannelId.equalsIgnoreCase("ST") && deliveryType.equalsIgnoreCase("IS"))
+                || saleChannelId.equalsIgnoreCase("DLV")
+        ) {
+            acquisitionType = "Sale";
+        } else if (saleChannelId.equalsIgnoreCase("DLC")) {
+            acquisitionType = "Consignation";
+        } else {
+            acquisitionType = "Private";
+        }
+
+        return acquisitionType;
+    }
+
+    public ReserveStockRequest buildReserveStockRequest(ReserveStockRequest request, Sale sale, CreateProductOrderResponseType createOrderResponse) {
+        request.setReason("PRAEL");
+
+        List<String> requiredActionList =  new ArrayList<>();
+        requiredActionList.add("PR");
+        request.setRequiredActions(requiredActionList);
+
+        List<String> usageList =  new ArrayList<>();
+        usageList.add("sale");
+        request.setUsage(usageList);
+
+        SiteRefType site = SiteRefType
+                .builder()
+                .id(sale.getChannel().getStoreId())
+                .build();
+        Destination destination = Destination
+                .builder()
+                .site(site)
+                .type("store")
+                .build();
+        request.setDestination(destination);
+
+        request.setChannel(sale.getChannel().getId());
+
+        Item item = Item
+                .builder()
+                .id(sale.getCommercialOperation().get(0).getDeviceOffering().get(0).getSapid())
+                .type("IMEI")
+                .build();
+        StockItem stockItem1 = StockItem
+                .builder()
+                .item(item)
+                .build();
+        List<StockItem> itemsList =  new ArrayList<>();
+        itemsList.add(stockItem1);
+        request.setItems(itemsList);
+
+        request.setOrderAction(createOrderResponse.getProductOrderReferenceNumber());
+
+        Order order = Order
+                .builder()
+                .id(createOrderResponse.getProductOrderId())
+                .build();
+        request.setOrder(order);
+
+        return  request;
     }
 
 }

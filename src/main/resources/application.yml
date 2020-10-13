@@ -25,13 +25,17 @@ application:
     license:
       type: copyright
       url: https://www.telefonica.com.pe
-  catalog-error:
-    url: http://aks-berserkers-ingress-dev.eastus2.cloudapp.azure.com
   endpoints:
     business_parameters:
       get_sales_characteristics_url: http://aks-berserkers-ingress-dev.eastus2.cloudapp.azure.com/bussinesparameters/v2/parameters/033/dataparams?comercialOperationType={commercialOperationType}
+      get_risk_domain_url: https://aks-berserkers-ingress-dev.eastus2.cloudapp.azure.com/bussinesparameters/v2/parameters/034/dataparams?value={domain}
     product_order:
       create_product_order_url: https://aks-berserkers-ingress-dev.eastus2.cloudapp.azure.com/fesimple/v1/orders/createproduct
     url:
       business_parameters:
+        seq_number: SEQ001
         sequential: https://aks-berserkers-ingress-dev.eastus2.cloudapp.azure.com/bussinesparameters/v2/parameters/{code}/dataparams?nomSeq={seq}
+    stock:
+      reserve_stock_url: https://aks-berserkers-ingress-dev.eastus2.cloudapp.azure.com/fesimple/v1/stocks/reserveStock
+  catalog-error:
+    url: http://aks-berserkers-ingress-dev.eastus2.cloudapp.azure.com

@@ -2,9 +2,9 @@ package com.tdp.ms.sales.client.impl;
 
 import com.tdp.genesis.core.constants.HttpHeadersKey;
 import com.tdp.genesis.core.exception.GenesisException;
-import com.tdp.ms.sales.client.ProductOrderWebClient;
-import com.tdp.ms.sales.model.dto.productorder.CreateProductOrderGeneralRequest;
-import com.tdp.ms.sales.model.response.ProductorderResponse;
+import com.tdp.ms.sales.client.StockWebClient;
+import com.tdp.ms.sales.model.request.ReserveStockRequest;
+import com.tdp.ms.sales.model.response.ReserveStockResponse;
 import java.util.HashMap;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -15,7 +15,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
 /**
- * Class: BusinessParameterWebClientImpl. <br/>
+ * Class: StockWebClientImpl. <br/>
  * <b>Copyright</b>: &copy; 2020 Telef&oacute;nica del Per&uacute;<br/>
  * <b>Company</b>: Telef&oacute;nica del Per&uacute;<br/>
  *
@@ -33,24 +33,22 @@ import reactor.core.publisher.Mono;
  */
 @Component
 @RequiredArgsConstructor
-public class ProductOrderWebClientImpl implements ProductOrderWebClient {
+public class StockWebClientImpl implements StockWebClient {
 
     private final WebClient webClientInsecure;
 
-    @Value("${application.endpoints.product_order.create_product_order_url}")
-    private String createProductOrderUrl;
+    @Value("${application.endpoints.stock.reserve_stock_url}")
+    private String reserveStockUrl;
 
     @Override
-    public Mono<ProductorderResponse> createProductOrder(CreateProductOrderGeneralRequest request,
-                                                         HashMap<String,String> headersMap) {
+    public Mono<ReserveStockResponse> reserveStock(ReserveStockRequest request, HashMap<String, String> headersMap) {
         return webClientInsecure
                 .post()
-                .uri(createProductOrderUrl)
+                .uri(reserveStockUrl)
                 .header(HttpHeadersKey.UNICA_SERVICE_ID, headersMap.get(HttpHeadersKey.UNICA_SERVICE_ID))
                 .header(HttpHeadersKey.UNICA_APPLICATION, headersMap.get(HttpHeadersKey.UNICA_APPLICATION))
                 .header(HttpHeadersKey.UNICA_PID, headersMap.get(HttpHeadersKey.UNICA_PID))
                 .header(HttpHeadersKey.UNICA_USER, headersMap.get(HttpHeadersKey.UNICA_USER))
-                .header("ufxauthorization", headersMap.get("ufxauthorization"))
                 .bodyValue(request)
                 .accept(MediaType.APPLICATION_JSON)
                 .retrieve()
@@ -70,7 +68,7 @@ public class ProductOrderWebClientImpl implements ProductOrderWebClient {
                                     .wildcards(new String[]{"Not Found Status from Post Create Product Order "
                                             + "FE+Simple Service"})
                                     .build()))
-                .bodyToMono(ProductorderResponse.class);
+                .bodyToMono(ReserveStockResponse.class);
     }
 
 }

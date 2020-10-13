@@ -1,10 +1,13 @@
 package com.tdp.ms.sales.client;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.tdp.genesis.core.constants.HttpHeadersKey;
 import com.tdp.ms.sales.client.impl.BusinessParameterWebClientImpl;
 import com.tdp.ms.sales.model.request.GetSalesCharacteristicsRequest;
+import com.tdp.ms.sales.model.response.BusinessParametersResponse;
 import com.tdp.ms.sales.model.response.GetSalesCharacteristicsResponse;
+import com.tdp.ms.sales.utils.Constants;
 import java.io.IOException;
 import java.util.HashMap;
 import okhttp3.mockwebserver.MockResponse;
@@ -18,11 +21,6 @@ import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 public class BussinessParametersWebClientImplTest {
-    private static String UNICA_APPLICATION = "FrontendPlatform";
-    private static String UNICA_PID = "e4e361d2-2676-4f76-b95d-910c143a99b3";
-    private static String UNICA_SERVICE_ID = "1b567df3-0fa8-4ad2-ab0b-a97291904361";
-    private static String UNICA_USER = "UserFrontend";
-
     private static final HashMap<String,String> headersMap = mappingHeaders();
 
     public static MockWebServer mockBackEnd;
@@ -57,10 +55,10 @@ public class BussinessParametersWebClientImplTest {
         mockBackEnd.enqueue(new MockResponse()
                 .setBody(MAPPER.writeValueAsString(businessParametersResponse))
                 .addHeader("Content-Type", "application/json")
-                .addHeader(HttpHeadersKey.UNICA_SERVICE_ID, UNICA_USER)
-                .addHeader(HttpHeadersKey.UNICA_APPLICATION, UNICA_APPLICATION)
-                .addHeader(HttpHeadersKey.UNICA_PID, UNICA_PID)
-                .addHeader(HttpHeadersKey.UNICA_USER, UNICA_USER));
+                .addHeader(HttpHeadersKey.UNICA_SERVICE_ID, Constants.RH_UNICA_SERVICE_ID)
+                .addHeader(HttpHeadersKey.UNICA_APPLICATION, Constants.RH_UNICA_APPLICATION)
+                .addHeader(HttpHeadersKey.UNICA_PID, Constants.RH_UNICA_PID)
+                .addHeader(HttpHeadersKey.UNICA_USER, Constants.RH_UNICA_USER));
 
         businessParameterWebClientImpl.getSalesCharacteristicsByCommercialOperationType(GetSalesCharacteristicsRequest
                 .builder()
@@ -95,13 +93,27 @@ public class BussinessParametersWebClientImplTest {
         StepVerifier.create(result).verifyError();
     }
 
+    @Test
+    void getRiskDomainTest() throws JsonProcessingException {
+        BusinessParametersResponse businessParametersResponse = BusinessParametersResponse.builder().build();
+
+        mockBackEnd.enqueue(new MockResponse()
+                .setBody(MAPPER.writeValueAsString(businessParametersResponse))
+                .addHeader("Content-Type", "application/json")
+                .addHeader(HttpHeadersKey.UNICA_SERVICE_ID, Constants.RH_UNICA_SERVICE_ID)
+                .addHeader(HttpHeadersKey.UNICA_APPLICATION, Constants.RH_UNICA_APPLICATION)
+                .addHeader(HttpHeadersKey.UNICA_PID, Constants.RH_UNICA_PID)
+                .addHeader(HttpHeadersKey.UNICA_USER, Constants.RH_UNICA_USER));
+
+        businessParameterWebClientImpl.getRiskDomain("everis.com", headersMap);
+    }
 
     private static HashMap<String,String> mappingHeaders() {
         HashMap<String,String> headersMap = new HashMap();
-        headersMap.put(HttpHeadersKey.UNICA_SERVICE_ID, UNICA_SERVICE_ID);
-        headersMap.put(HttpHeadersKey.UNICA_APPLICATION, UNICA_APPLICATION);
-        headersMap.put(HttpHeadersKey.UNICA_PID, UNICA_PID);
-        headersMap.put(HttpHeadersKey.UNICA_USER, UNICA_USER);
+        headersMap.put(HttpHeadersKey.UNICA_SERVICE_ID, Constants.RH_UNICA_SERVICE_ID);
+        headersMap.put(HttpHeadersKey.UNICA_APPLICATION, Constants.RH_UNICA_APPLICATION);
+        headersMap.put(HttpHeadersKey.UNICA_PID, Constants.RH_UNICA_PID);
+        headersMap.put(HttpHeadersKey.UNICA_USER, Constants.RH_UNICA_USER);
         return headersMap;
     }
 

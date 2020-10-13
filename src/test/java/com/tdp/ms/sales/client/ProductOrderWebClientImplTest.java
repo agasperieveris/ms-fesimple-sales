@@ -7,6 +7,7 @@ import com.tdp.ms.sales.model.dto.productorder.CreateProductOrderGeneralRequest;
 import java.io.IOException;
 import java.util.HashMap;
 import com.tdp.ms.sales.model.response.ProductorderResponse;
+import com.tdp.ms.sales.utils.Constants;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import org.junit.jupiter.api.AfterAll;
@@ -18,11 +19,6 @@ import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 public class ProductOrderWebClientImplTest {
-    private static String UNICA_APPLICATION = "FrontendPlatform";
-    private static String UNICA_PID = "e4e361d2-2676-4f76-b95d-910c143a99b3";
-    private static String UNICA_SERVICE_ID = "1b567df3-0fa8-4ad2-ab0b-a97291904361";
-    private static String UNICA_USER = "UserFrontend";
-
     private static final HashMap<String,String> headersMap = mappingHeaders();
 
     public static MockWebServer mockBackEnd;
@@ -57,10 +53,10 @@ public class ProductOrderWebClientImplTest {
         mockBackEnd.enqueue(new MockResponse()
                 .setBody(MAPPER.writeValueAsString(businessParametersResponse))
                 .addHeader("Content-Type", "application/json")
-                .addHeader(HttpHeadersKey.UNICA_SERVICE_ID, UNICA_USER)
-                .addHeader(HttpHeadersKey.UNICA_APPLICATION, UNICA_APPLICATION)
-                .addHeader(HttpHeadersKey.UNICA_PID, UNICA_PID)
-                .addHeader(HttpHeadersKey.UNICA_USER, UNICA_USER));
+                .addHeader(HttpHeadersKey.UNICA_SERVICE_ID, Constants.RH_UNICA_SERVICE_ID)
+                .addHeader(HttpHeadersKey.UNICA_APPLICATION, Constants.RH_UNICA_APPLICATION)
+                .addHeader(HttpHeadersKey.UNICA_PID, Constants.RH_UNICA_PID)
+                .addHeader(HttpHeadersKey.UNICA_USER, Constants.RH_UNICA_USER));
 
         Mono<ProductorderResponse> result = productOrderWebClientImpl.createProductOrder(CreateProductOrderGeneralRequest
                 .builder()
@@ -78,7 +74,7 @@ public class ProductOrderWebClientImplTest {
         StepVerifier.create(result).verifyError();
     }
 
-    
+
     public void createProductOrder_OnNotFoundStatusTest() {
         mockBackEnd.enqueue(new MockResponse().setResponseCode(404));
 
@@ -91,10 +87,10 @@ public class ProductOrderWebClientImplTest {
 
     private static HashMap<String,String> mappingHeaders() {
         HashMap<String,String> headersMap = new HashMap();
-        headersMap.put(HttpHeadersKey.UNICA_SERVICE_ID, UNICA_SERVICE_ID);
-        headersMap.put(HttpHeadersKey.UNICA_APPLICATION, UNICA_APPLICATION);
-        headersMap.put(HttpHeadersKey.UNICA_PID, UNICA_PID);
-        headersMap.put(HttpHeadersKey.UNICA_USER, UNICA_USER);
+        headersMap.put(HttpHeadersKey.UNICA_SERVICE_ID, Constants.RH_UNICA_SERVICE_ID);
+        headersMap.put(HttpHeadersKey.UNICA_APPLICATION, Constants.RH_UNICA_APPLICATION);
+        headersMap.put(HttpHeadersKey.UNICA_PID, Constants.RH_UNICA_PID);
+        headersMap.put(HttpHeadersKey.UNICA_USER, Constants.RH_UNICA_USER);
         return headersMap;
     }
 
