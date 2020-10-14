@@ -6,16 +6,12 @@ import com.tdp.ms.sales.business.impl.SalesManagmentServiceImpl;
 import com.tdp.ms.sales.client.BusinessParameterWebClient;
 import com.tdp.ms.sales.client.ProductOrderWebClient;
 import com.tdp.ms.sales.model.dto.*;
-import com.tdp.ms.sales.model.dto.payment.GenerateCipRequestBody;
 import com.tdp.ms.sales.model.dto.productorder.CreateProductOrderGeneralRequest;
 import com.tdp.ms.sales.model.dto.productorder.FlexAttrType;
 import com.tdp.ms.sales.model.dto.productorder.caeq.ChangedContainedProduct;
 import com.tdp.ms.sales.model.entity.Sale;
-import com.tdp.ms.sales.model.request.GenerateCipRequest;
-import com.tdp.ms.sales.model.request.GetSalesRequest;
 import com.tdp.ms.sales.model.request.PostSalesRequest;
 import com.tdp.ms.sales.model.request.ReserveStockRequest;
-import com.tdp.ms.sales.model.request.SalesRequest;
 import com.tdp.ms.sales.model.response.BusinessParametersResponse;
 import com.tdp.ms.sales.model.response.GetSalesCharacteristicsResponse;
 import com.tdp.ms.sales.model.response.ProductorderResponse;
@@ -23,9 +19,6 @@ import com.tdp.ms.sales.repository.SalesRepository;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-
-import io.swagger.models.auth.In;
 import org.junit.Assert;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -89,6 +82,8 @@ public class SalesManagmentServiceTest {
         agent.setId("1");
         agent.setNationalId("Peru");
         agent.setNationalIdType("DNI");
+        agent.setFirstName("Sergio");
+        agent.setLastName("Rivas");
         additionalDatas = new ArrayList<>();
 
         KeyValueType additionalData1 = new KeyValueType();
@@ -111,6 +106,8 @@ public class SalesManagmentServiceTest {
         entityRefType.setId("s");
         entityRefType.setName("f");
 
+        AddressType addressType = AddressType.builder().stateOrProvince("Lima").build();
+
         List<EntityRefType> entityRefTypes = new ArrayList<>();
 
         entityRefTypes.add(entityRefType);
@@ -124,6 +121,7 @@ public class SalesManagmentServiceTest {
         place.setId("s");
         place.setName("s");
         place.setReferredType("s");
+        place.setAddress(addressType);
         places.add(place);
         DeviceOffering deviceOffering = new DeviceOffering();
 
@@ -189,6 +187,11 @@ public class SalesManagmentServiceTest {
         additionalDataCapl.setKey("CAPL");
         additionalDataCapl.setValue("true");
 
+        MediumCharacteristic mediumCharacteristic = MediumCharacteristic.builder()
+                .phoneNumber("976598623").emailAddress("ezample@everis.com").build();
+        WorkOrDeliveryType workOrDeliveryType = WorkOrDeliveryType.builder()
+                .contact(mediumCharacteristic).place(places).additionalData(additionalDatas).build();
+
         product.setAdditionalData(additionalDatas);
         List<CommercialOperationType> comercialOperationTypes = new ArrayList<>();
         CommercialOperationType comercialOperationType = new CommercialOperationType();
@@ -201,6 +204,7 @@ public class SalesManagmentServiceTest {
         comercialOperationType.setAdditionalData(additionalDataCommercialOperation);
         comercialOperationType.setOrder(order);
         comercialOperationType.setProductOfferings(productOfferings);
+        comercialOperationType.setWorkOrDeliveryType(workOrDeliveryType);
         comercialOperationTypes.add(comercialOperationType);
 
         Money estimatedRevenue = new Money();
@@ -419,7 +423,7 @@ public class SalesManagmentServiceTest {
 
         CreateProductOrderGeneralRequest result = salesManagmentServiceImpl
                 .caplCommercialOperation(sale, mainCaplRequestProductOrder,
-                        "CC", "CS465", "OF824");
+                        "CC", "CS465", "OF824", "A83HD345DS");
 
     }
 
@@ -429,7 +433,7 @@ public class SalesManagmentServiceTest {
 
         CreateProductOrderGeneralRequest result = salesManagmentServiceImpl
                 .caeqCommercialOperation(sale, mainCaeqRequestProductOrder,
-                        "CEC", "CS920", "OF201");
+                        "CEC", "CS920", "OF201", "JSG423DE6H");
 
     }
 
@@ -439,7 +443,7 @@ public class SalesManagmentServiceTest {
 
         CreateProductOrderGeneralRequest result = salesManagmentServiceImpl
                 .caeqCaplCommercialOperation(sale, mainCaeqCaplRequestProductOrder,
-                        "CC", "CS158", "OF486");
+                        "CC", "CS158", "OF486", "K3BD9EN349");
 
     }
 
@@ -475,15 +479,7 @@ public class SalesManagmentServiceTest {
     }
 
     @Test
-    void buildGenerateCipRequestFromSaleTest() {
-        GenerateCipRequestBody generateCipRequestBody = new GenerateCipRequestBody();
-        GenerateCipRequest generateCipRequest = GenerateCipRequest
-                .builder()
-                .body(generateCipRequestBody)
-                .headersMap(headersMap)
-                .build();
-
-        GenerateCipRequest result = salesManagmentServiceImpl.buildGenerateCipRequestFromSale(generateCipRequest, sale);
+    void createShipmentDetailTest() {
+        salesManagmentServiceImpl.createShipmentDetail(sale);
     }
-
 }

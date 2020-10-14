@@ -1,7 +1,9 @@
 package com.tdp.ms.sales.client.impl;
 
+import com.tdp.genesis.core.constants.ErrorCategory;
 import com.tdp.genesis.core.constants.HttpHeadersKey;
 import com.tdp.genesis.core.exception.GenesisException;
+import com.tdp.genesis.core.exception.GenesisExceptionBuilder;
 import com.tdp.ms.sales.client.StockWebClient;
 import com.tdp.ms.sales.model.request.ReserveStockRequest;
 import com.tdp.ms.sales.model.response.ReserveStockResponse;
@@ -55,40 +57,51 @@ public class StockWebClientImpl implements StockWebClient {
                 .accept(MediaType.APPLICATION_JSON)
                 .retrieve()
                 .bodyToMono(ReserveStockResponse.class)
-                .onErrorResume(this::fallbackTokenRenewal);
+                .onErrorResume(this::fallbackReserveStock);
     }
 
-    private Mono<ReserveStockResponse> fallbackTokenRenewal(Throwable error) {
+    public Mono<ReserveStockResponse> fallbackReserveStock(Throwable error) throws GenesisException {
 
         if (error instanceof WebClientResponseException) {
+            WebClientResponseException responseException = (WebClientResponseException) error;
+            HttpStatus statusException = responseException.getStatusCode();
 
-            String exp = ((WebClientResponseException) error).getResponseBodyAsString();
-            GenesisException genesisException = MapperUtils.mapper(GenesisException.class, exp);
-            String exceptionId = genesisException.getExceptionId();
+            String responseBodyExceptionAsString = responseException.getResponseBodyAsString();
+            GenesisException responseGenesisException = MapperUtils.mapper(GenesisException.class,
+                    responseBodyExceptionAsString);
+            GenesisExceptionBuilder builder = GenesisException.builder();
 
-            if (exceptionId.equalsIgnoreCase("SVR1008")
-                    || exceptionId.equalsIgnoreCase("SVR1000"))
-            {
-                // Throw 500 status code
-                return Mono.error(GenesisException.builder()
-                        .exceptionId("SVR1000")
-                        .wildcards(new String[]{"There was a problem from Reserve Stock FE+Simple Service"})
-                        .build());
-            } else if (exceptionId.equalsIgnoreCase("SVC1000")) {
+            String exceptionId = responseGenesisException.getExceptionId();
+            System.out.println("EXCEPTION ID RECEIVED: " + exceptionId);
+
+            //String[] wildcardsException = genesisException.getWildcards();
+            //System.out.println("WILDCARDS: " + wildcardsException.toString());
+
+            if (statusException.equals(HttpStatus.BAD_REQUEST)) {
                 // Throw 400 status code
-                return Mono.error(GenesisException.builder()
-                        .exceptionId("SVC0001")
-                        .wildcards(new String[]{"Bad Request from Reserve Stock FE+Simple Service"})
+                return Mono.error(builder.category(ErrorCategory.INVALID_REQUEST)
+                        .addDetail(true)
+                        .withComponent("device")
+                        .withDescription("Bad Request from Reserve Stock FE+Simple Service")
+                        .push()
                         .build());
-            } else if (exceptionId.equalsIgnoreCase("SVC0001")) {
+            } else if (statusException.equals(HttpStatus.NOT_FOUND)) {
                 // Throw 404 status code
-                return Mono.error(GenesisException.builder()
+                return Mono.error(builder
                         .exceptionId("SVC1006")
-                        .wildcards(new String[]{"Resource Not Found from Reserve Stock FE+Simple Service"})
+                        .userMessage("Resource Not Found from Reserve Stock FE+Simple Service")
+                        //.wildcards(wildcardsException)
+                        .build());
+            } else if (statusException.equals(HttpStatus.INTERNAL_SERVER_ERROR)) {
+                // Throw 500 status code
+                return Mono.error(builder
+                        .exceptionId("SVR1000")
+                        .userMessage("There was a problem from Reserve Stock FE+Simple Service")
+                        //.wildcards(wildcardsException)
+                        //.wildcards(new String[]{"Reserve Stock FE+Simple Service: "})
                         .build());
             } else {
-                // Throw Other status code
-                return Mono.error(error);
+                return Mono.error(responseException);
             }
         } else {
             return Mono.error(error);

@@ -40,4 +40,4 @@ application:
     payment:
       generate_cip_payment_identifier: https://aks-berserkers-ingress-dev.eastus2.cloudapp.azure.com/fesimple/api/v1/payment/paymentIdentifier/createPaymentIdentifier
   catalog-error:
-    url: http://aks-berserkers-ingress-dev.eastus2.cloudapp.azure.com
+    url: https://aks-berserkers-ingress-dev.eastus2.cloudapp.azure.com

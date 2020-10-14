@@ -1,11 +1,10 @@
-package com.tdp.ms.sales.client;
+package com.tdp.ms.sales.client.exception;
 
-import com.tdp.ms.sales.model.request.GenerateCipRequest;
-import com.tdp.ms.sales.model.response.GenerateCipResponse;
-import reactor.core.publisher.Mono;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 
 /**
- * Class: PaymentWebClient. <br/>
+ * Class: ExceptionByStatus. <br/>
  * <b>Copyright</b>: &copy; 2020 Telef&oacute;nica del Per&uacute;<br/>
  * <b>Company</b>: Telef&oacute;nica del Per&uacute;<br/>
  *
@@ -17,12 +16,15 @@ import reactor.core.publisher.Mono;
  *         </ul>
  *         <u>Changes</u>:<br/>
  *         <ul>
- *         <li>2020-10-12 Creaci&oacute;n del proyecto.</li>
+ *         <li>2020-10-14 Creaci&oacute;n del proyecto.</li>
  *         </ul>
  * @version 1.0
  */
-public interface PaymentWebClient {
-
-    Mono<GenerateCipResponse> generateCip(GenerateCipRequest request);
-
+@Getter
+@RequiredArgsConstructor
+public class ExceptionByStatus extends Exception {
+    private final Integer exceptionStatus;
+    private final String exceptionMessage;
 }
+
+

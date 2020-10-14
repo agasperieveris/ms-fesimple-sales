@@ -36,4 +36,5 @@ public class CaeqRequest {
     private String sourceApp;
     private List<FlexAttrType> orderAttributes;
     private ShipmentDetailsType shipmentDetails;
+    private String cip;
 }

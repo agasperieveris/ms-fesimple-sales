@@ -1,9 +1,13 @@
 package com.tdp.ms.sales.client;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.tdp.genesis.core.constants.ErrorCategory;
 import com.tdp.genesis.core.constants.HttpHeadersKey;
 import com.tdp.genesis.core.exception.GenesisException;
+import com.tdp.genesis.core.exception.GenesisExceptionBuilder;
 import com.tdp.ms.sales.client.impl.StockWebClientImpl;
+import com.tdp.ms.sales.model.ExceptionDto;
 import com.tdp.ms.sales.model.dto.SiteRefType;
 import com.tdp.ms.sales.model.dto.reservestock.Destination;
 import com.tdp.ms.sales.model.dto.reservestock.Item;
@@ -18,13 +22,12 @@ import java.util.HashMap;
 import java.util.List;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
-import org.junit.Rule;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.rules.ExpectedException;
 import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
@@ -35,9 +38,6 @@ public class StockWebClientImplTest {
     private StockWebClientImpl stockWebClientImpl;
     private ObjectMapper MAPPER = new ObjectMapper();
     private static ReserveStockRequest reserveStockRequest = new ReserveStockRequest();
-
-    @Rule
-    ExpectedException thrown = ExpectedException.none();
 
     @BeforeAll
     static void setUp() throws IOException {
@@ -123,7 +123,7 @@ public class StockWebClientImplTest {
 
     @Test
     public void reserveStock_OnBadRequestStatusTest() {
-        mockBackEnd.enqueue(new MockResponse().setResponseCode(400));
+        mockBackEnd.enqueue(new MockResponse().setResponseCode(404));
 
         Mono<ReserveStockResponse> result = stockWebClientImpl.reserveStock(reserveStockRequest, headersMap);
 
@@ -131,12 +131,17 @@ public class StockWebClientImplTest {
     }
 
     @Test
-    public void call2_should_throw_a_WantedException__not_call1() {
-        // expectations
-        thrown.expect(GenesisException.class);
-        thrown.expectMessage("boom");
+    public void fallbackReserveStock_On_SVR1008_Exception_Test() throws JsonProcessingException, GenesisException {
+        ExceptionDto exceptionDto = ExceptionDto
+                .builder()
+                .exceptionId("SVR1008")
+                .build();
 
-        Mono<ReserveStockResponse> result = stockWebClientImpl.reserveStock(reserveStockRequest, headersMap);
+        WebClientResponseException webClientResponseException =
+                new WebClientResponseException("There was a problem from Reserve Stock FE+Simple Service",
+                        400, "Problem", null, MAPPER.writeValueAsBytes(exceptionDto), null);
+
+        stockWebClientImpl.fallbackReserveStock(webClientResponseException);
 
     }
 

@@ -1,18 +1,17 @@
 package com.tdp.ms.sales.business.impl;
 
 import com.tdp.genesis.core.exception.GenesisException;
+import com.tdp.ms.commons.util.StringUtils;
 import com.tdp.ms.sales.business.SalesManagmentService;
 import com.tdp.ms.sales.client.BusinessParameterWebClient;
-import com.tdp.ms.sales.client.PaymentWebClient;
 import com.tdp.ms.sales.client.ProductOrderWebClient;
 import com.tdp.ms.sales.client.StockWebClient;
 import com.tdp.ms.sales.model.dto.BusinessParameterExt;
 import com.tdp.ms.sales.model.dto.ContactMedium;
 import com.tdp.ms.sales.model.dto.CreateProductOrderResponseType;
-import com.tdp.ms.sales.model.dto.FinancingInstalment;
 import com.tdp.ms.sales.model.dto.IdentityValidationType;
 import com.tdp.ms.sales.model.dto.KeyValueType;
-import com.tdp.ms.sales.model.dto.MoneyAmount;
+import com.tdp.ms.sales.model.dto.ShipmentDetailsType;
 import com.tdp.ms.sales.model.dto.SiteRefType;
 import com.tdp.ms.sales.model.dto.productorder.CreateProductOrderGeneralRequest;
 import com.tdp.ms.sales.model.dto.productorder.FlexAttrType;
@@ -38,12 +37,10 @@ import com.tdp.ms.sales.model.dto.reservestock.Item;
 import com.tdp.ms.sales.model.dto.reservestock.Order;
 import com.tdp.ms.sales.model.dto.reservestock.StockItem;
 import com.tdp.ms.sales.model.entity.Sale;
-import com.tdp.ms.sales.model.request.GenerateCipRequest;
 import com.tdp.ms.sales.model.request.GetSalesCharacteristicsRequest;
 import com.tdp.ms.sales.model.request.PostSalesRequest;
 import com.tdp.ms.sales.model.request.ReserveStockRequest;
 import com.tdp.ms.sales.model.response.BusinessParametersResponse;
-import com.tdp.ms.sales.model.response.GenerateCipResponse;
 import com.tdp.ms.sales.model.response.GetSalesCharacteristicsResponse;
 import com.tdp.ms.sales.repository.SalesRepository;
 import java.text.DateFormat;
@@ -91,9 +88,6 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
 
     @Autowired
     private StockWebClient stockWebClient;
-
-    @Autowired
-    private PaymentWebClient paymentWebClient;
 
     public List<BusinessParameterExt> retrieveCharacteristics(GetSalesCharacteristicsResponse response) {
         return response.getData().get(0).getExt();
@@ -179,15 +173,15 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                                 .build());
                     }
 
-                    // Generating CIP Code
-                    if (saleRequest.getCommercialOperation().get(0).getWorkOrDeliveryType().getMediumDelivery().equalsIgnoreCase("DELIVERY")
+                    // Getting CIP Code
+                    String cipCode = "";
+                    if (saleRequest.getCommercialOperation().get(0).getWorkOrDeliveryType().getMediumDelivery()
+                            .equalsIgnoreCase("DELIVERY")
                             && saleRequest.getPaymenType().getPaymentType().equalsIgnoreCase("EX")
-                            && this.getStringValueByKeyFromAdditionalDataList(saleRequest.getAdditionalData(), "paymentTypeLabel").equals("PAGO EFECTIVO")
+                            && this.getStringValueByKeyFromAdditionalDataList(saleRequest.getAdditionalData(),
+                            "paymentTypeLabel").equals("PAGO EFECTIVO")
                     ) {
-                        GenerateCipRequest generateCipRequest = new GenerateCipRequest();
-                        generateCipRequest.setHeadersMap(request.getHeadersMap());
-                        generateCipRequest = buildGenerateCipRequestFromSale(generateCipRequest, saleRequest);
-                        Mono<GenerateCipResponse> generateCip = paymentWebClient.generateCip(generateCipRequest);
+                        cipCode = saleRequest.getPaymenType().getCid(); // Validate if cipCode is empty
                     }
 
                     // Building Main Request to send to Create Product Order Service
@@ -213,18 +207,18 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                     // Recognizing CAPL Commercial Operation Type
                     if (flgCapl && !flgCaeq && !flgCasi) {
 
-                        mainRequestProductOrder = this.caplCommercialOperation(saleRequest,
-                                mainRequestProductOrder, channelIdRequest, customerIdRequest, productOfferingIdRequest);
+                        mainRequestProductOrder = this.caplCommercialOperation(saleRequest, mainRequestProductOrder,
+                                channelIdRequest, customerIdRequest, productOfferingIdRequest, cipCode);
 
                     } else if (!flgCapl && flgCaeq && !flgCasi) { // Recognizing CAEQ Commercial Operation Type
 
-                        mainRequestProductOrder = this.caeqCommercialOperation(saleRequest,
-                                mainRequestProductOrder, channelIdRequest, customerIdRequest, productOfferingIdRequest);
+                        mainRequestProductOrder = this.caeqCommercialOperation(saleRequest, mainRequestProductOrder,
+                                channelIdRequest, customerIdRequest, productOfferingIdRequest, cipCode);
 
                     } else if (flgCapl && flgCaeq && !flgCasi) { // Recognizing CAEQ+CAPL Commercial Operation Type
 
-                        mainRequestProductOrder = this.caeqCaplCommercialOperation(saleRequest,
-                                mainRequestProductOrder, channelIdRequest, customerIdRequest, productOfferingIdRequest);
+                        mainRequestProductOrder = this.caeqCaplCommercialOperation(saleRequest, mainRequestProductOrder,
+                                channelIdRequest, customerIdRequest, productOfferingIdRequest, cipCode);
                     }
 
                     return productOrderWebClient.createProductOrder(mainRequestProductOrder, request.getHeadersMap())
@@ -369,7 +363,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
 
     public CreateProductOrderGeneralRequest caplCommercialOperation(Sale saleRequest,
                                     CreateProductOrderGeneralRequest mainRequestProductOrder, String channelIdRequest,
-                                    String customerIdRequest, String productOfferingIdRequest) {
+                                    String customerIdRequest, String productOfferingIdRequest, String cipCode) {
 
         // Building request for CAPL CommercialTypeOperation
 
@@ -437,7 +431,9 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                 .newProducts(caplNewProductsList)
                 .sourceApp("FE")
                 .orderAttributes(caplOrderAttributes)
+                .shipmentDetails(createShipmentDetail(saleRequest))
                 .build();
+        if (!StringUtils.isEmpty(cipCode)) caplRequest.setCip(cipCode);
 
         // Building Main Capl Request
         caplRequestProductOrder.setRequest(caplRequest);
@@ -448,9 +444,47 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         return mainRequestProductOrder;
     }
 
+    public ShipmentDetailsType createShipmentDetail(Sale saleRequest) {
+        ShipmentDetailsType shipmentDetailsType = ShipmentDetailsType.builder()
+                .recipientFirstName(saleRequest.getRelatedParty().get(0).getFirstName())
+                .recipientLastName(saleRequest.getRelatedParty().get(0).getLastName()).build();
+        shipmentDetailsType.setRecipientTelephoneNumber(saleRequest.getCommercialOperation().get(0).getWorkOrDeliveryType().getContact().getPhoneNumber());
+        shipmentDetailsType.setShippingLocality(saleRequest.getCommercialOperation().get(0).getWorkOrDeliveryType().getPlace().get(0).getAddress().getStateOrProvince());
+        shipmentDetailsType.setShipmentAddressId(saleRequest.getCommercialOperation().get(0).getWorkOrDeliveryType().getPlace().get(0).getId());
+        shipmentDetailsType.setShipmentSiteId("NA");
+        shipmentDetailsType.setRecipientEmail(saleRequest.getCommercialOperation().get(0).getWorkOrDeliveryType().getContact().getEmailAddress());
+        // additional Datas
+        saleRequest.getAdditionalData().stream().forEach(item -> {
+            if (item.getKey().equalsIgnoreCase("shipmentInstructions")) {
+                shipmentDetailsType.setShipmentInstructions(item.getValue());
+            } else if (item.getKey().equalsIgnoreCase("shipmentOption")) {
+                shipmentDetailsType.setShipmentOption(item.getValue());
+            }
+        });
+
+        saleRequest.getCommercialOperation().get(0).getWorkOrDeliveryType().getAdditionalData().stream().forEach(item -> {
+            if (item.getKey().equalsIgnoreCase("shopAddress")) {
+                shipmentDetailsType.setShopAddress(item.getValue());
+            } else if (item.getKey().equalsIgnoreCase("shopName")) {
+                shipmentDetailsType.setShopName(item.getValue());
+            } else if (item.getKey().equalsIgnoreCase("collectStoreId")) {
+                shipmentDetailsType.setCollectStoreId(item.getValue());
+            }
+        });
+
+        saleRequest.getCommercialOperation().get(0).getWorkOrDeliveryType().getPlace().get(0).getAdditionalData()
+                .stream().forEach(item -> {
+                    if (item.getKey().equalsIgnoreCase("statOrProvinceCode")) {
+                        shipmentDetailsType.setProvinceOfShippingAddress(item.getValue());
+                    }
+        });
+
+        return shipmentDetailsType;
+    }
+
     public CreateProductOrderGeneralRequest caeqCommercialOperation(Sale saleRequest,
                                     CreateProductOrderGeneralRequest mainRequestProductOrder, String channelIdRequest,
-                                    String customerIdRequest, String productOfferingIdRequest) {
+                                    String customerIdRequest, String productOfferingIdRequest, String cipCode) {
         // Building request for CAEQ CommercialTypeOperation
 
         // Refactored Code from CAEQ
@@ -473,7 +507,9 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                 .builder()
                 .sourceApp("FE")
                 .newProducts(newProductCaeqList)
+                .shipmentDetails(createShipmentDetail(saleRequest))
                 .build();
+        if (!StringUtils.isEmpty(cipCode)) caeqRequest.setCip(cipCode);
 
         ProductOrderCaeqRequest caeqProductOrderRequest = new ProductOrderCaeqRequest();
         caeqProductOrderRequest.setSalesChannel(channelIdRequest);
@@ -491,7 +527,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
 
     public CreateProductOrderGeneralRequest caeqCaplCommercialOperation(Sale saleRequest,
                                     CreateProductOrderGeneralRequest mainRequestProductOrder, String channelIdRequest,
-                                    String customerIdRequest, String productOfferingIdRequest) {
+                                    String customerIdRequest, String productOfferingIdRequest, String cipCode) {
         // Building request for CAEQ+CAPL CommercialTypeOperation
 
         // Code from CAPL
@@ -564,7 +600,9 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                 .newProducts(caeqCaplNewProductList)
                 .sourceApp("FE")
                 .orderAttributes(caeqCaplOrderAttributes)
+                .shipmentDetails(createShipmentDetail(saleRequest))
                 .build();
+        if (!StringUtils.isEmpty(cipCode)) caeqCaplRequest.setCip(cipCode);
 
         caeqCaplRequestProductOrder.setRequest(caeqCaplRequest);
 
@@ -740,23 +778,6 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         request.setOrder(order);
 
         return  request;
-    }
-
-    public GenerateCipRequest buildGenerateCipRequestFromSale(GenerateCipRequest request, Sale sale) {
-        FinancingInstalment financingInstalment = sale.getCommercialOperation().get(0).getDeviceOffering().get(0).getOffers()
-                .get(0).getBillingOfferings().get(0).getCommitmentPeriods().get(0).getFinancingInstalments().get(0);
-        MoneyAmount montoCip;
-        // Identificando cliente al contado
-        if (financingInstalment.getDescription().equalsIgnoreCase("CONTADO")) {
-            montoCip = financingInstalment.getInstalments().getAmount();
-        } else {
-            montoCip = financingInstalment.getInstalments().getOpeningQuota();
-        }
-
-        request.getBody().setAmount(montoCip.getValue());
-        request.getBody().setCurrency(montoCip.getCurrency());
-
-        return request;
     }
 
 }

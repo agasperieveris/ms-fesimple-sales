@@ -39,5 +39,38 @@ application:
       reserve_stock_url: https://localhost
     payment:
       generate_cip_payment_identifier: https://localhost
+
+  genesis:
+    error-code:
+      unexpected:
+        userMessage: MessageTest
+        exceptionText: ExceptionText
+        moreInfo: MoreInfoTest
+        code: TL9999
+        description: Ocurrio un error inesperado. Por favor contactarse con
+          el Soporte Tecnico.
+        error-type: TECHNICAL
+
+      argument-mismatch:
+        code: TL0003
+        description: Parametro de entrada no coincide con la especificacion
+          de su formato.
+        error-type: TECHNICAL
+      external-timeout:
+        code: TL0009
+        description: Ocurrio un error intentando invocar servicios externos.
+          Por favor contactarse con el Soporte Tecnico.
+        error-type: TECHNICAL
+      invalid-request:
+        code: TL0003
+        description: Los datos proporcionados no son validos.
+        error-type: TECHNICAL
+      resource-not-found:
+        code: TL0010
+        description: No se encontro el recurso solicitado en la busqueda.
+        error-type: TECHNICAL
+
+
+
   catalog-error:
-    url: http://localhost
+    url: https://aks-berserkers-ingress-dev.eastus2.cloudapp.azure.com
