@@ -111,43 +111,61 @@ public class SalesServiceImpl implements SalesService {
                                   String endDateTime, String size, String pageCount, String page,
                                   String maxResultCount) {
 
-        return salesRepository.findByChannel_DealerIdContainingAndAgent_IdContainingAndAgent_CustomerIdContainingAndAgent_NationalIdContainingAndAgent_NationalIdTypeContainingAndChannel_StoreIdContainingAndStatusContaining(dealerId, idAgent, customerId, nationalID, nationalIdType, storeId, status)
-                .filter(item -> {
-                    if (item.getSaleCreationDate() == null) {
-                        return false;
-                    } else if (startDateTime != null && endDateTime != null
-                            && !item.getSaleCreationDate().isEmpty() && !startDateTime.isEmpty() && !endDateTime.isEmpty()) {
+        return salesRepository.findByChannel_IdContainingAndChannel_DealerIdContainingAndAgent_IdContainingAndAgent_NationalIdContainingAndAgent_NationalIdTypeContainingAndChannel_StoreIdContainingAndStatusContaining(channelId, dealerId, idAgent, nationalID, nationalIdType, storeId, status)
+                .filter(item -> filterCustomerId(item, customerId))
+                .filter(item -> filterSaleCreationDate(item, startDateTime, endDateTime))
+                .filter(item -> filterSalesId(item, saleId))
+                .filter(item -> filterExistingOrderId(item, orderId));
+    }
 
-                        try {
-                            Date startDate = new SimpleDateFormat("dd/MM/yyyy'T'HH:mm:ss").parse(startDateTime);
-                            Date endDate = new SimpleDateFormat("dd/MM/yyyy'T'HH:mm:ss").parse(endDateTime);
-                            Date requestDate = new SimpleDateFormat("dd/MM/yyyy'T'HH:mm:ss").parse(item.getSaleCreationDate());
-                            return requestDate.after(startDate) && requestDate.before(endDate);
-                        } catch (ParseException e) {
-                            e.printStackTrace();
-                        }
+    public Boolean filterCustomerId(Sale item, String customerId) {
+        if (customerId != null && !customerId.isEmpty() && item.getRelatedParty().get(0).getCustomerId() != null) {
+            return item.getRelatedParty().get(0).getCustomerId().equals(customerId);
+        }
+        // No se hace el filtro
+        return true;
+    }
 
-                    }
-                    // No se hace el filtro
-                    return true;
-                }).filter(item -> {
-                    if (saleId != null && !saleId.isEmpty()) {
-                        return item.getSalesId().compareTo(saleId) == 0;
-                    }
-                    // No se hace el filtro
-                    return true;
-                }).filter(item -> {
-                    final boolean[] existOrderId = {false};
-                    if (orderId != null && !orderId.isEmpty()) {
-                        item.getComercialOperationType().forEach(cot -> {
-                            if (cot.getOrder().getProductOrderId().compareTo(orderId) == 0) {
-                                existOrderId[0] = true;
-                            }
-                        });
-                        return existOrderId[0];
-                    }
-                    // No se hace el filtro
-                    return true;
-                });
+    public Boolean filterSaleCreationDate(Sale item, String startDateTime, String endDateTime) {
+        if (startDateTime != null && endDateTime != null && (item.getSaleCreationDate() == null
+                || item.getSaleCreationDate().isEmpty())) {
+            return false;
+        } else if (startDateTime != null && endDateTime != null && item.getSaleCreationDate() != null
+                && !item.getSaleCreationDate().isEmpty() && !startDateTime.isEmpty() && !endDateTime.isEmpty()) {
+
+            try {
+                Date startDate = new SimpleDateFormat("dd/MM/yyyy'T'HH:mm:ss").parse(startDateTime);
+                Date endDate = new SimpleDateFormat("dd/MM/yyyy'T'HH:mm:ss").parse(endDateTime);
+                Date requestDate = new SimpleDateFormat("dd/MM/yyyy'T'HH:mm:ss").parse(item.getSaleCreationDate());
+                return requestDate.after(startDate) && requestDate.before(endDate);
+            } catch (ParseException e) {
+                e.printStackTrace();
+            }
+
+        }
+        // No se hace el filtro
+        return true;
+    }
+
+    public Boolean filterSalesId(Sale item, String saleId) {
+        if (saleId != null && !saleId.isEmpty()) {
+            return item.getSalesId().compareTo(saleId) == 0;
+        }
+        // No se hace el filtro
+        return true;
+    }
+
+    public Boolean  filterExistingOrderId(Sale item, String orderId) {
+        final boolean[] existOrderId = {false};
+        if (orderId != null && !orderId.isEmpty()) {
+            item.getComercialOperationType().forEach(cot -> {
+                if (cot.getOrder().getProductOrderId().compareTo(orderId) == 0) {
+                    existOrderId[0] = true;
+                }
+            });
+            return existOrderId[0];
+        }
+        // No se hace el filtro
+        return true;
     }
 }
