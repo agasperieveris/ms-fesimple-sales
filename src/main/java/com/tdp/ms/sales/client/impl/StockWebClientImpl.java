@@ -1,6 +1,5 @@
 package com.tdp.ms.sales.client.impl;
 
-import com.tdp.genesis.core.constants.ErrorCategory;
 import com.tdp.genesis.core.constants.HttpHeadersKey;
 import com.tdp.genesis.core.exception.GenesisException;
 import com.tdp.genesis.core.exception.GenesisExceptionBuilder;
@@ -71,33 +70,28 @@ public class StockWebClientImpl implements StockWebClient {
                     responseBodyExceptionAsString);
             GenesisExceptionBuilder builder = GenesisException.builder();
 
-            String exceptionId = responseGenesisException.getExceptionId();
-            System.out.println("EXCEPTION ID RECEIVED: " + exceptionId);
-
-            //String[] wildcardsException = genesisException.getWildcards();
-            //System.out.println("WILDCARDS: " + wildcardsException.toString());
+            String[] wildcardsException = responseGenesisException.getWildcards();
 
             if (statusException.equals(HttpStatus.BAD_REQUEST)) {
                 // Throw 400 status code
-                return Mono.error(builder.category(ErrorCategory.INVALID_REQUEST)
-                        .addDetail(true)
-                        .withComponent("device")
-                        .withDescription("Bad Request from Reserve Stock FE+Simple Service")
-                        .push()
+                return Mono.error(builder
+                        .exceptionId("SVC0001")
+                        .userMessage("Bad Request from Reserve Stock FE+Simple Service")
+                        .wildcards(wildcardsException)
                         .build());
             } else if (statusException.equals(HttpStatus.NOT_FOUND)) {
                 // Throw 404 status code
                 return Mono.error(builder
                         .exceptionId("SVC1006")
                         .userMessage("Resource Not Found from Reserve Stock FE+Simple Service")
-                        //.wildcards(wildcardsException)
+                        .wildcards(wildcardsException)
                         .build());
             } else if (statusException.equals(HttpStatus.INTERNAL_SERVER_ERROR)) {
                 // Throw 500 status code
                 return Mono.error(builder
                         .exceptionId("SVR1000")
                         .userMessage("There was a problem from Reserve Stock FE+Simple Service")
-                        //.wildcards(wildcardsException)
+                        .wildcards(wildcardsException)
                         //.wildcards(new String[]{"Reserve Stock FE+Simple Service: "})
                         .build());
             } else {

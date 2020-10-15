@@ -221,69 +221,71 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                                 channelIdRequest, customerIdRequest, productOfferingIdRequest, cipCode);
                     }
 
+                    Boolean finalFlgCaeq = flgCaeq;
                     return productOrderWebClient.createProductOrder(mainRequestProductOrder, request.getHeadersMap())
                             .flatMap(createOrderResponse -> {
 
-                                return salesRepository.findBySalesId(saleRequest.getSalesId())
-                                        .flatMap(saleFinded -> {
+                                // Adding Order info to sales
+                                saleRequest.getCommercialOperation().get(0)
+                                        .setOrder(createOrderResponse.getCreateProductOrderResponse());
 
-                                            // Adding Order info to sales
-                                            saleFinded.getCommercialOperation().get(0)
-                                                    .setOrder(createOrderResponse.getCreateProductOrderResponse());
+                                if (validateNegotiation(saleRequest.getAdditionalData(),
+                                        saleRequest.getIdentityValidations())) {
+                                    saleRequest.setStatus("NEGOCIACION");
+                                } else if (!StringUtils.isEmpty(createOrderResponse.getCreateProductOrderResponse().getProductOrderId())) {
+                                    // When All is OK
+                                    saleRequest.setStatus("NUEVO");
+                                } else {
+                                    // When Create Product Order Service fail or doesnt respond with an Order Id
+                                    saleRequest.setStatus("PENDIENTE");
+                                }
 
-                                            if (validateNegotiation(saleRequest.getAdditionalData(),
-                                                    saleRequest.getIdentityValidations())) {
-                                                saleFinded.setStatus("NEGOCIACION");
-                                            } else {
-                                                saleFinded.setStatus("NUEVO");
-                                            }
+                                // Ship Delivery logic (tambo) - SERGIO
+                                if (saleRequest.getCommercialOperation().get(0).getWorkOrDeliveryType().getMediumDelivery().equalsIgnoreCase("Tienda")) {
 
-                                            // Ship Delivery logic (tambo) - SERGIO
-                                            if (saleRequest.getCommercialOperation().get(0).getWorkOrDeliveryType().getMediumDelivery().equalsIgnoreCase("Tienda")) {
+                                    saleRequest.setAdditionalData(additionalDataAssigments(saleRequest.getAdditionalData()));
+                                }
 
-                                                saleFinded.setAdditionalData(additionalDataAssigments(saleRequest.getAdditionalData()));
-                                            }
+                                ReserveStockRequest reserveStockRequest = new ReserveStockRequest();
+                                reserveStockRequest = this.buildReserveStockRequest(reserveStockRequest,
+                                        saleRequest, createOrderResponse.getCreateProductOrderResponse());
 
-                                            ReserveStockRequest reserveStockRequest = new ReserveStockRequest();
-                                            reserveStockRequest = this.buildReserveStockRequest(reserveStockRequest,
-                                                    saleRequest, createOrderResponse.getCreateProductOrderResponse());
+                                // Call to Reserve Stock Service When Commercial Operation include CAEQ
+                                if (finalFlgCaeq) {
+                                    return stockWebClient.reserveStock(reserveStockRequest,
+                                            request.getHeadersMap())
+                                            .flatMap(reserveStockResponse -> {
+                                                DateFormat dateFormat = new SimpleDateFormat(
+                                                        "yyyy-MM-dd'T'HH:mm:ss.SSSSSSSZ");
+                                                LocalDateTime nowDateTime = LocalDateTime.now();
 
-                                            return stockWebClient.reserveStock(reserveStockRequest,
-                                                    request.getHeadersMap())
-                                                    .flatMap(reserveStockResponse -> {
-                                                        DateFormat dateFormat = new SimpleDateFormat(
-                                                                "yyyy-MM-dd'T'HH:mm:ss.SSSSSSSZ");
-                                                        LocalDateTime nowDateTime = LocalDateTime.now();
+                                                KeyValueType dateKv = KeyValueType
+                                                        .builder()
+                                                        .key("reservationDate")
+                                                        .value(dateFormat.format(nowDateTime))
+                                                        .build();
+                                                saleRequest.getCommercialOperation().get(0).getDeviceOffering()
+                                                        .get(0).getAdditionalData().add(dateKv);
 
-                                                        KeyValueType dateKv = KeyValueType
-                                                                .builder()
-                                                                .key("reservationDate")
-                                                                .value(dateFormat.format(nowDateTime))
-                                                                .build();
-                                                        saleFinded.getCommercialOperation().get(0).getDeviceOffering()
-                                                                .get(0).getAdditionalData().add(dateKv);
+                                                saleRequest.getCommercialOperation().get(0).getDeviceOffering()
+                                                        .get(0).getStock()
+                                                        .setReservationId(reserveStockResponse.getId());
 
+                                                saleRequest.getCommercialOperation().get(0).getDeviceOffering()
+                                                        .get(0).getStock()
+                                                        .setAmount(reserveStockResponse.getItems()
+                                                                .get(0).getAmount());
 
-                                                        saleFinded.getCommercialOperation().get(0).getDeviceOffering()
-                                                                .get(0).getStock()
-                                                                .setReservationId(reserveStockResponse.getId());
+                                                saleRequest.getCommercialOperation().get(0).getDeviceOffering()
+                                                        .get(0).getStock()
+                                                        .setSite(reserveStockResponse.getItems()
+                                                                .get(0).getSite());
 
-
-                                                        saleFinded.getCommercialOperation().get(0).getDeviceOffering()
-                                                                .get(0).getStock()
-                                                                .setAmount(reserveStockResponse.getItems()
-                                                                        .get(0).getAmount());
-
-
-                                                        saleFinded.getCommercialOperation().get(0).getDeviceOffering()
-                                                                .get(0).getStock()
-                                                                .setSite(reserveStockResponse.getItems()
-                                                                        .get(0).getSite());
-
-                                                        return salesRepository.save(saleFinded);
-                                                    });
-
-                                        });
+                                                return salesRepository.save(saleRequest);
+                                            });
+                                } else {
+                                    return salesRepository.save(saleRequest);
+                                }
                             });
                 });
     }
