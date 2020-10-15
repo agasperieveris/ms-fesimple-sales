@@ -2,6 +2,7 @@ package com.tdp.ms.sales.service;
 
 import com.tdp.genesis.core.constants.HttpHeadersKey;
 import com.tdp.ms.sales.business.SalesService;
+import com.tdp.ms.sales.business.impl.SalesServiceImpl;
 import com.tdp.ms.sales.client.WebClientBusinessParameters;
 import com.tdp.ms.sales.model.dto.*;
 import com.tdp.ms.sales.model.entity.Sale;
@@ -14,8 +15,6 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mockito;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -40,6 +39,9 @@ public class SalesServiceTest {
 
     @MockBean
     private SalesRepository salesRepository;
+
+    @Autowired
+    private SalesServiceImpl salesServiceImpl;
 
     @Autowired
     private SalesService salesService;
@@ -168,6 +170,7 @@ public class SalesServiceTest {
         relatedParty.setNationalId("s");
         relatedParty.setNationalIdType("s");
         relatedParty.setRole("s");
+        relatedParty.setCustomerId("333333");
 
         List<RelatedParty> relatedParties = new ArrayList<>();
 
@@ -196,6 +199,7 @@ public class SalesServiceTest {
                 .statusChangeReason("s")
                 .audioStatus("s")
                 .validFor(validFor)
+                .saleCreationDate("24/09/2020T12:43:03")
                 .additionalData(additionalDatas)
                 .build();
 
@@ -323,7 +327,7 @@ public class SalesServiceTest {
 
     @Test
     void getSaleListTest(){
-        Mockito.when(salesRepository.findByChannel_DealerIdContainingAndAgent_IdContainingAndAgent_CustomerIdContainingAndAgent_NationalIdContainingAndAgent_NationalIdTypeContainingAndChannel_StoreIdContainingAndStatusContaining(
+        Mockito.when(salesRepository.findByChannel_IdContainingAndChannel_DealerIdContainingAndAgent_IdContainingAndAgent_NationalIdContainingAndAgent_NationalIdTypeContainingAndChannel_StoreIdContainingAndStatusContaining(
                 any(), any(), any(), any(), any(), any(), any())).thenReturn(Flux.just(sale));
 
         Flux<Sale> result = salesService.getSaleList("1","bc12",
@@ -334,4 +338,63 @@ public class SalesServiceTest {
         StepVerifier.create(result)
                 .expectNextCount(1);
     }
+
+    @Test
+    void filterCustomerIdTest() {
+        salesServiceImpl.filterCustomerId(sale, "333333");
+    }
+
+    @Test
+    void filterCustomerId_NullTest() {
+        salesServiceImpl.filterCustomerId(sale, null);
+    }
+
+    @Test
+    void filterSaleCreationDateTest() {
+        salesServiceImpl.filterSaleCreationDate(sale, "24/09/2020T12:43:00",
+                "24/09/2020T12:43:21");
+    }
+
+    @Test
+    void filterSaleCreationDate_nullDateTest() {
+        sale.setSaleCreationDate(null);
+        salesServiceImpl.filterSaleCreationDate(sale, "24/09/2020T12:43:00",
+                "24/09/2020T12:43:21");
+    }
+
+    @Test
+    void filterSaleCreationDate_nullStartDate_nullEndDateTest() {
+        salesServiceImpl.filterSaleCreationDate(sale, null, null);
+    }
+
+    @Test
+    void filterSalesIdTest() {
+        salesServiceImpl.filterSalesId(sale, "FE-0000000486");
+    }
+
+    @Test
+    void filterSalesId_salesIdNullTest() {
+        salesServiceImpl.filterSalesId(sale, null);
+    }
+
+    @Test
+    void filterSalesId_salesIdEmptyTest() {
+        salesServiceImpl.filterSalesId(sale, "");
+    }
+
+    @Test
+    void filterExistingOrderIdTest() {
+        salesServiceImpl.filterExistingOrderId(sale, "930686A");
+    }
+
+    @Test
+    void filterExistingOrderId_orderIdNullTest() {
+        salesServiceImpl.filterExistingOrderId(sale, null);
+    }
+
+    @Test
+    void filterExistingOrderId_orderIdEmptyTest() {
+        salesServiceImpl.filterExistingOrderId(sale, "");
+    }
+
 }
