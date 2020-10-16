@@ -304,8 +304,8 @@ public class SalesServiceTest {
 
     @Test
     void getSaleListTest(){
-        Mockito.when(salesRepository.findByChannel_IdContainingAndChannel_DealerIdContainingAndAgent_IdContainingAndAgent_NationalIdContainingAndAgent_NationalIdTypeContainingAndChannel_StoreIdContainingAndStatusContaining(
-                any(), any(), any(), any(), any(), any(), any())).thenReturn(Flux.just(sale));
+        Mockito.when(salesRepository.findByChannel_IdContainingAndChannel_DealerIdContainingAndAgent_IdContainingAndChannel_StoreIdContainingAndStatusContaining(
+                any(), any(), any(), any(), any())).thenReturn(Flux.just(sale));
 
         Flux<Sale> result = salesService.getSaleList("1","bc12",
                 "1", "1", "Peru", "DNI",
@@ -314,6 +314,16 @@ public class SalesServiceTest {
 
         StepVerifier.create(result)
                 .expectNextCount(1);
+    }
+
+    @Test
+    void filterNationalIdTest() {
+        salesServiceImpl.filterNationalId(sale, "930686A");
+    }
+
+    @Test
+    void filterNationalIdTypeTest() {
+        salesServiceImpl.filterNationalIdType(sale, "930686A");
     }
 
     @Test
