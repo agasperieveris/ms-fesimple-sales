@@ -111,13 +111,84 @@ public class SalesServiceImpl implements SalesService {
                                   String endDateTime, String size, String pageCount, String page,
                                   String maxResultCount) {
 
-        return salesRepository.findByChannel_IdContainingAndChannel_DealerIdContainingAndAgent_IdContainingAndChannel_StoreIdContainingAndStatusContaining(channelId, dealerId, idAgent, storeId, status)
-                .filter(item -> filterNationalId(item, nationalId))
-                .filter(item -> filterNationalIdType(item, nationalIdType))
-                .filter(item -> filterCustomerId(item, customerId))
-                .filter(item -> filterSaleCreationDate(item, startDateTime, endDateTime))
-                .filter(item -> filterSalesId(item, saleId))
-                .filter(item -> filterExistingOrderId(item, orderId));
+        return salesRepository.findAll().filter(item -> filterSalesWithParams(item, saleId, dealerId, idAgent,
+                customerId, nationalId, nationalIdType, status, channelId, storeId, orderId, startDateTime,
+                endDateTime));
+    }
+
+    public Boolean filterSalesWithParams(Sale item, String saleId, String dealerId,
+                                         String agentId, String customerId, String nationalId, String nationalIdType,
+                                         String status, String channelId, String storeId, String orderId, String startDateTime,
+                                         String endDateTime) {
+
+        Boolean channelIdBool = filterChannelId(item, channelId);
+        Boolean dealerIdBool = filterDealerId(item, dealerId);
+        Boolean agentIdBool = filterAgentId(item, agentId);
+        Boolean storeIdBool = filterStoreId(item, storeId);
+        Boolean statusBool = filterStatus(item, status);
+        Boolean nationalIdBool = filterNationalId(item, nationalId);
+        Boolean nationalIdTypeBool = filterNationalIdType(item, nationalIdType);
+        Boolean customerIdBool = filterCustomerId(item, customerId);
+        Boolean saleCreationDateBool = filterSaleCreationDate(item, startDateTime, endDateTime);
+        Boolean saleIdBool = filterSalesId(item, saleId);
+        Boolean orderIdBool = filterExistingOrderId(item, orderId);
+
+        return channelIdBool && dealerIdBool && agentIdBool && storeIdBool && statusBool && nationalIdBool
+                && nationalIdTypeBool && customerIdBool && saleCreationDateBool && saleIdBool && orderIdBool;
+    }
+
+    public Boolean filterChannelId(Sale item, String channelId) {
+        if (channelId != null && (item.getChannel() == null || item.getChannel().getId() == null)) {
+            return false;
+        } else if (channelId != null && item.getChannel() != null && item.getChannel().getId() != null
+                && !channelId.isEmpty()) {
+            return item.getChannel().getId().equalsIgnoreCase(channelId);
+        } else {
+            return true;
+        }
+    }
+
+    public Boolean filterDealerId(Sale item, String dealerId) {
+        if (dealerId != null && (item.getChannel() == null || item.getChannel().getDealerId() == null)) {
+            return false;
+        } else if (dealerId != null && item.getChannel() != null && item.getChannel().getDealerId() != null
+                && !dealerId.isEmpty()) {
+            return item.getChannel().getDealerId().equalsIgnoreCase(dealerId);
+        } else {
+            return true;
+        }
+    }
+
+    public Boolean filterAgentId(Sale item, String agentId) {
+        if (agentId != null && (item.getAgent() == null || item.getAgent().getId() == null)) {
+            return false;
+        } else if (agentId != null && item.getAgent() != null && item.getAgent().getId() != null
+                && !agentId.isEmpty()) {
+            return item.getAgent().getId().equalsIgnoreCase(agentId);
+        } else {
+            return true;
+        }
+    }
+
+    public Boolean filterStoreId(Sale item, String storeId) {
+        if (storeId != null && (item.getChannel() == null || item.getChannel().getStoreId() == null)) {
+            return false;
+        } else if (storeId != null && item.getChannel() != null && item.getChannel().getStoreId() != null
+                && !storeId.isEmpty()) {
+            return item.getChannel().getStoreId().equalsIgnoreCase(storeId);
+        } else {
+            return true;
+        }
+    }
+
+    public Boolean filterStatus(Sale item, String status) {
+        if (status != null && item.getStatus() == null) {
+            return false;
+        } else if (status != null && item.getStatus() != null && !status.isEmpty()) {
+            return item.getStatus().equalsIgnoreCase(status);
+        } else {
+            return true;
+        }
     }
 
     public Boolean filterNationalId(Sale item, String nationalId) {

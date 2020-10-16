@@ -304,16 +304,49 @@ public class SalesServiceTest {
 
     @Test
     void getSaleListTest(){
-        Mockito.when(salesRepository.findByChannel_IdContainingAndChannel_DealerIdContainingAndAgent_IdContainingAndChannel_StoreIdContainingAndStatusContaining(
-                any(), any(), any(), any(), any())).thenReturn(Flux.just(sale));
+        Mockito.when(salesRepository.findAll()).thenReturn(Flux.just(sale));
 
         Flux<Sale> result = salesService.getSaleList("1","bc12",
                 "1", "1", "Peru", "DNI",
-                "s", "1", "s", "orderId", null,
-                null, "size", "pageCount", "page", "maxResultCount");
+                "s", "1", "s", "orderId", "24/09/2020T12:43:00",
+                "24/09/2020T12:43:21", "size", "pageCount", "page",
+                "maxResultCount");
 
         StepVerifier.create(result)
                 .expectNextCount(1);
+    }
+
+    @Test
+    void filterSalesWithParamsTest() {
+        salesServiceImpl.filterSalesWithParams(sale, "1","bc12",
+                "1", "1", "Peru", "DNI",
+                "s", "1", "s", "orderId", "24/09/2020T12:43:00",
+                "24/09/2020T12:43:21");
+    }
+
+    @Test
+    void filterChannelIdTest() {
+        salesServiceImpl.filterChannelId(sale, "930686A");
+    }
+
+    @Test
+    void filterDealerIdTest() {
+        salesServiceImpl.filterDealerId(sale, "930686A");
+    }
+
+    @Test
+    void filterAgentIdTest() {
+        salesServiceImpl.filterAgentId(sale, "930686A");
+    }
+
+    @Test
+    void filterStoreIdTest() {
+        salesServiceImpl.filterStoreId(sale, "930686A");
+    }
+
+    @Test
+    void filterStatusTest() {
+        salesServiceImpl.filterStatus(sale, "930686A");
     }
 
     @Test
