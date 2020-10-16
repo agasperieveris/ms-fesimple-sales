@@ -29,7 +29,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class Product {
+public class ProductInstanceType {
     private String href;
     private String id;
     private String publicId;
@@ -45,6 +45,6 @@ public class Product {
     private List<ProductCharacteristicType> characteristic;
     private List<RelatedProductType> productRelationShip;
     private List<ComponentProdPriceType> productPrice;
-    private List<ProductRefInfoTypePlace> place;
-    private List<AdditionalData> additionalData;
+    private List<EntityRefType> place;
+    private List<KeyValueType> additionalData;
 }

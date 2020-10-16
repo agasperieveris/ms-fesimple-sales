@@ -23,22 +23,21 @@ import lombok.NoArgsConstructor;
  *         </ul>
  * @version 1.0
  */
-
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
 public class ProdPriceAlterationType {
     private String name;
-    private String descrition;
-    private ValidFor validFor;
+    private String description;
+    private TimePeriodType validFor;
     private String priceCondition;
     private String priority;
     private String priceType;
     private String recurringChargePeriod;
     private Integer applicationDuration;
     private String discountType;
-    private UnitOfMeasurement unitOfMeasurement;
+    private QuantityType unitOfMeasure;
     private MoneyType price;
-    private List<AdditionalData> additionalData;
+    private List<KeyValueType> additionalData;
 }

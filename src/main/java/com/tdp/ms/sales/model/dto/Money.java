@@ -27,7 +27,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Data
 @Builder
-public class EstimatedRevenue {
+public class Money {
     private String unit;
     private Float value;
 }

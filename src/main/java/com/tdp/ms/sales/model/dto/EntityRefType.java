@@ -32,8 +32,8 @@ public class EntityRefType {
     private String id;
     private String href;
     private String name;
-    private String type;
     private String role;
+    private TimePeriodType validFor;
     private String entityType;
     private String description;
     @JsonProperty("@referredType")
