@@ -330,8 +330,18 @@ public class SalesServiceTest {
     }
 
     @Test
+    void filterChannelId_Null_Test() {
+        salesServiceImpl.filterChannelId(sale, null);
+    }
+
+    @Test
     void filterDealerIdTest() {
         salesServiceImpl.filterDealerId(sale, "930686A");
+    }
+
+    @Test
+    void filterDealerId_Null_Test() {
+        salesServiceImpl.filterDealerId(sale, null);
     }
 
     @Test
@@ -340,8 +350,18 @@ public class SalesServiceTest {
     }
 
     @Test
+    void filterAgentId_Null_Test() {
+        salesServiceImpl.filterAgentId(sale, null);
+    }
+
+    @Test
     void filterStoreIdTest() {
         salesServiceImpl.filterStoreId(sale, "930686A");
+    }
+
+    @Test
+    void filterStoreId_Null_Test() {
+        salesServiceImpl.filterStoreId(sale, null);
     }
 
     @Test
@@ -350,13 +370,28 @@ public class SalesServiceTest {
     }
 
     @Test
+    void filterStatus_Null_Test() {
+        salesServiceImpl.filterStatus(sale, null);
+    }
+
+    @Test
     void filterNationalIdTest() {
         salesServiceImpl.filterNationalId(sale, "930686A");
     }
 
     @Test
+    void filterNationalId_Null_Test() {
+        salesServiceImpl.filterNationalId(sale, null);
+    }
+
+    @Test
     void filterNationalIdTypeTest() {
         salesServiceImpl.filterNationalIdType(sale, "930686A");
+    }
+
+    @Test
+    void filterNationalIdType_Null_Test() {
+        salesServiceImpl.filterNationalIdType(sale, null);
     }
 
     @Test
