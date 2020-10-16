@@ -35,11 +35,11 @@ public class ComponentProdPriceType {
     private Boolean isMandatory;
     private String priceType;
     private String recurringChargePeriod;
+    private QuantityType unitOfMeasure;
     private MoneyType price;
-    private UnitOfMeasurement unitOfMeasurement;
     private Boolean taxIncluded;
     private float taxRate;
     private String taxType;
     private List<ProdPriceAlterationType> prodPriceAlteration;
-    private List<AdditionalData> additionalData;
+    private List<KeyValueType> additionalData;
 }

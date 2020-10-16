@@ -6,7 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * Class: SalesController. <br/>
+ * Class: ProductOffering. <br/>
  * <b>Copyright</b>: &copy; 2019 Telef&oacute;nica del Per&uacute;<br/>
  * <b>Company</b>: Telef&oacute;nica del Per&uacute;<br/>
  *
@@ -14,7 +14,7 @@ import lombok.NoArgsConstructor;
  *         <u>Service Provider</u>: Everis Per&uacute; SAC (EVE) <br/>
  *         <u>Developed by</u>: <br/>
  *         <ul>
- *         <li>Developer name</li>
+ *         <li>Developer Ronald</li>
  *         </ul>
  *         <u>Changes</u>:<br/>
  *         <ul>
@@ -22,12 +22,14 @@ import lombok.NoArgsConstructor;
  *         </ul>
  * @version 1.0
  */
-
-@AllArgsConstructor
-@NoArgsConstructor
-@Data
 @Builder
-public class AdditionalData {
-    private String key;
-    private String value;
+@NoArgsConstructor
+@AllArgsConstructor
+@Data
+public class ProductOfferingType {
+    private String id;
+    private boolean isBundle;
+    private String description;
+    private String code;
+    private String name;
 }

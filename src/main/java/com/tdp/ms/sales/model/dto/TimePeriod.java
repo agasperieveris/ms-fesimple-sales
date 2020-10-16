@@ -6,7 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * Class: SalesResponse. <br/>
+ * Class: TimePeriod. <br/>
  * <b>Copyright</b>: &copy; 2019 Telef&oacute;nica del Per&uacute;<br/>
  * <b>Company</b>: Telef&oacute;nica del Per&uacute;<br/>
  *
@@ -14,7 +14,7 @@ import lombok.NoArgsConstructor;
  *         <u>Service Provider</u>: Everis Per&uacute; SAC (EVE) <br/>
  *         <u>Developed by</u>: <br/>
  *         <ul>
- *         <li>Developer Ronald Baron</li>
+ *         <li>Sergio Rivas</li>
  *         </ul>
  *         <u>Changes</u>:<br/>
  *         <ul>
@@ -27,11 +27,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Data
 @Builder
-public class Channel {
-    private String id;
-    private String href;
-    private String name;
-    private String storeId;
-    private String dealerId;
-    private String storeName;
+public class TimePeriod {
+    private String endDateTime;
+    private String startDateTime;
 }

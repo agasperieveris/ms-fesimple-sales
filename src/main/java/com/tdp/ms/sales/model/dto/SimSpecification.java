@@ -32,5 +32,5 @@ public class SimSpecification {
     private String sapid;
     private String type;
     private String description;
-    private List<MoneyType> price;
+    private List<MoneyAmount> price;
 }

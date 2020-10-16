@@ -106,16 +106,40 @@ public class SalesServiceImpl implements SalesService {
 
     @Override
     public Flux<Sale> getSaleList(String saleId, String dealerId,
-                                  String idAgent, String customerId, String nationalID, String nationalIdType,
+                                  String idAgent, String customerId, String nationalId, String nationalIdType,
                                   String status, String channelId, String storeId, String orderId, String startDateTime,
                                   String endDateTime, String size, String pageCount, String page,
                                   String maxResultCount) {
 
-        return salesRepository.findByChannel_IdContainingAndChannel_DealerIdContainingAndAgent_IdContainingAndAgent_NationalIdContainingAndAgent_NationalIdTypeContainingAndChannel_StoreIdContainingAndStatusContaining(channelId, dealerId, idAgent, nationalID, nationalIdType, storeId, status)
+        return salesRepository.findByChannel_IdContainingAndChannel_DealerIdContainingAndAgent_IdContainingAndChannel_StoreIdContainingAndStatusContaining(channelId, dealerId, idAgent, storeId, status)
+                .filter(item -> filterNationalId(item, nationalId))
+                .filter(item -> filterNationalIdType(item, nationalIdType))
                 .filter(item -> filterCustomerId(item, customerId))
                 .filter(item -> filterSaleCreationDate(item, startDateTime, endDateTime))
                 .filter(item -> filterSalesId(item, saleId))
                 .filter(item -> filterExistingOrderId(item, orderId));
+    }
+
+    public Boolean filterNationalId(Sale item, String nationalId) {
+        if (nationalId != null && (item.getAgent() == null || item.getAgent().getNationalId() == null)) {
+            return false;
+        } else if (nationalId != null && item.getAgent() != null && item.getAgent().getNationalId() != null
+                && !nationalId.isEmpty()) {
+            return item.getAgent().getNationalId().equalsIgnoreCase(nationalId);
+        } else {
+            return true;
+        }
+    }
+
+    public Boolean filterNationalIdType(Sale item, String nationalIdType) {
+        if (nationalIdType != null && (item.getAgent() == null || item.getAgent().getNationalIdType() == null)) {
+            return false;
+        } else if (nationalIdType != null && item.getAgent() != null && item.getAgent().getNationalIdType() != null
+                && !nationalIdType.isEmpty()) {
+            return item.getAgent().getNationalIdType().equalsIgnoreCase(nationalIdType);
+        } else {
+            return true;
+        }
     }
 
     public Boolean filterCustomerId(Sale item, String customerId) {
@@ -157,9 +181,13 @@ public class SalesServiceImpl implements SalesService {
 
     public Boolean  filterExistingOrderId(Sale item, String orderId) {
         final boolean[] existOrderId = {false};
-        if (orderId != null && !orderId.isEmpty()) {
-            item.getComercialOperationType().forEach(cot -> {
-                if (cot.getOrder().getProductOrderId().compareTo(orderId) == 0) {
+        if (orderId != null && !orderId.isEmpty() && item.getCommercialOperation() == null) {
+            // Se quita de la respuesta
+            return false;
+        } else if (orderId != null && !orderId.isEmpty() && item.getCommercialOperation() != null) {
+            item.getCommercialOperation().forEach(cot -> {
+                if (cot.getOrder() != null && cot.getOrder().getProductOrderId() != null
+                        && cot.getOrder().getProductOrderId().compareTo(orderId) == 0) {
                     existOrderId[0] = true;
                 }
             });

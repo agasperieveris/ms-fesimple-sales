@@ -1,13 +1,13 @@
 package com.tdp.ms.sales.model.dto;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * Class: SalesController. <br/>
+ * Class: WorkforceTeamAvailabilityType. <br/>
  * <b>Copyright</b>: &copy; 2019 Telef&oacute;nica del Per&uacute;<br/>
  * <b>Company</b>: Telef&oacute;nica del Per&uacute;<br/>
  *
@@ -24,26 +24,10 @@ import lombok.NoArgsConstructor;
  * @version 1.0
  */
 
-@NoArgsConstructor
 @AllArgsConstructor
+@NoArgsConstructor
 @Data
 @Builder
-public class Characteristic {
-    @JsonProperty("@baseType")
-    private String baseType;
-    @JsonProperty("@schemaLocation")
-    private String schemaLocation;
-    @JsonProperty("@type")
-    private String type;
-    private String city;
-    private String contactType;
-    private String country;
-    private String emailAddress;
-    private String faxNumber;
-    private String phoneNumber;
-    private String postCode;
-    private String socialNetworkId;
-    private String stateOrProvince;
-    private String street1;
-    private String street2;
+public class WorkforceTeamTimeSlotType {
+    private List<WorkforceTeamAvailabilityType> workForceTeams;
 }

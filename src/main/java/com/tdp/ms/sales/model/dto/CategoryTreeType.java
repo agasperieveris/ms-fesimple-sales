@@ -31,4 +31,5 @@ public class CategoryTreeType {
     private String id;
     private String href;
     private String name;
+    private Object subcategories;
 }

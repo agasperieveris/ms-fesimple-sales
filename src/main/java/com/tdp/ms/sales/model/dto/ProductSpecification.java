@@ -7,7 +7,7 @@ import lombok.NoArgsConstructor;
 
 /**
  * Class: ProductSpecification. <br/>
- * <b>Copyright</b>: &copy; 2019 Telef&oacute;nica del Per&uacute;<br/>
+ * <b>Copyright</b>: &copy; 2020 Telef&oacute;nica del Per&uacute;<br/>
  * <b>Company</b>: Telef&oacute;nica del Per&uacute;<br/>
  *
  * @author Telef&oacute;nica del Per&uacute; (TDP) <br/>
@@ -27,8 +27,8 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Data
 public class ProductSpecification {
-    private String name;
-    private String code;
     private String id;
+    private String code;
+    private String name;
     private String level;
 }
