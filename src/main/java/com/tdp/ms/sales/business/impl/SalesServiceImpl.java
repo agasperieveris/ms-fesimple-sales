@@ -158,7 +158,7 @@ public class SalesServiceImpl implements SalesService {
     public Boolean  filterExistingOrderId(Sale item, String orderId) {
         final boolean[] existOrderId = {false};
         if (orderId != null && !orderId.isEmpty()) {
-            item.getComercialOperationType().forEach(cot -> {
+            item.getCommercialOperation().forEach(cot -> {
                 if (cot.getOrder().getProductOrderId().compareTo(orderId) == 0) {
                     existOrderId[0] = true;
                 }

@@ -1,5 +1,6 @@
 package com.tdp.ms.sales.model.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -33,11 +34,13 @@ public class RelatedParty {
     private String fullName;
     private String firstName;
     private String lastName;
+    @JsonProperty("nationalID")
     private String nationalId;
+    @JsonProperty("nationalIDType")
     private String nationalIdType;
     private String customerId;
     private String role;
     private String accountId;
-    private String billingArragement;
-    private Score score;
+    private String billingArragmentId;
+    private ScoreType score;
 }

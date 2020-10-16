@@ -1,5 +1,6 @@
 package com.tdp.ms.sales.model.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -23,14 +24,17 @@ import lombok.NoArgsConstructor;
  *         </ul>
  * @version 1.0
  */
-
 @Data
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
 public class PriceRequires {
+    @JsonProperty("is_customer")
     private String isCustomer;
+    @JsonProperty("is_bound_to_product")
     private Boolean isBoundToProduct;
+    @JsonProperty("offer_ids")
     private List<String> offerIds;
+    @JsonProperty("conditions_descriptions")
     private List<String> conditionsDescriptions;
 }

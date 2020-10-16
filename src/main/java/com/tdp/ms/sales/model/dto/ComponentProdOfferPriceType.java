@@ -1,5 +1,6 @@
 package com.tdp.ms.sales.model.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -23,7 +24,6 @@ import lombok.NoArgsConstructor;
  *         </ul>
  * @version 1.0
  */
-
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
@@ -32,13 +32,15 @@ public class ComponentProdOfferPriceType {
     private String id;
     private String name;
     private String description;
+    @JsonProperty("productSpecContainmentID")
     private String productSpecContainmentId;
+    @JsonProperty("pricePlanSpecContainmentID")
     private String pricePlanSpecContainmentId;
     private Boolean isMandatory;
-    private ValidFor validFor;
+    private TimePeriodType validFor;
     private String priceType;
     private String recurringChargePeriod;
-    private UnitOfMeasurement unitOfMeasure;
+    private QuantityType unitOfMeasure;
     private MoneyType price;
     private MoneyType minPrice;
     private MoneyType maxPrice;
@@ -49,10 +51,10 @@ public class ComponentProdOfferPriceType {
     private Boolean taxIncluded;
     private float taxRate;
     private String taxType;
-    private List<ProdOfferPriceAlterationType> prodOfferPriceAlteration;
+    private List<ProdOfferPriceAlterationType> productOfferPriceAlteration;
     private List<KeyValueType> pricedComponents;
     private List<String> priceLocation;
     private EntityRefType priceConsumer;
     private List<BenefitType> benefits;
-    private List<AdditionalData> additionalData;
+    private List<KeyValueType> additionalData;
 }

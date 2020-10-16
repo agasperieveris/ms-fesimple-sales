@@ -31,5 +31,5 @@ import lombok.NoArgsConstructor;
 public class PaymentType {
     private String paymentType;
     private String cid;
-    private List<AdditionalData> additionalData;
+    private List<KeyValueType> additionalData;
 }
