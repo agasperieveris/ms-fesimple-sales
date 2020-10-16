@@ -36,7 +36,7 @@ public class ProdOfferPriceAlterationType {
     private String priceType;
     private String recurringChargePeriod;
     private Integer applicationDuration;
-    private UnitOfMeasurement unitOfMeasurement;
+    private QuantityType unitOfMeasure;
     private String discountType;
     private MoneyType price;
     private List<MoneyType> additionalData;

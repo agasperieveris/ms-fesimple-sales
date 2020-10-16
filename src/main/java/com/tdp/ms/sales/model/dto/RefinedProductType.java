@@ -23,11 +23,11 @@ import lombok.NoArgsConstructor;
  *         </ul>
  * @version 1.0
  */
-
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
 @Builder
 public class RefinedProductType {
     private List<ProductSpecCharacteristicType> productCharacteristics;
+    private List<Object> subProducts;
 }

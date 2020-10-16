@@ -22,7 +22,6 @@ import lombok.NoArgsConstructor;
  *         </ul>
  * @version 1.0
  */
-
 @Data
 @NoArgsConstructor
 @Builder
