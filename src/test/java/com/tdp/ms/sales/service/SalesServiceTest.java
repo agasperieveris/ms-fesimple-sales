@@ -304,16 +304,74 @@ public class SalesServiceTest {
 
     @Test
     void getSaleListTest(){
-        Mockito.when(salesRepository.findByChannel_IdContainingAndChannel_DealerIdContainingAndAgent_IdContainingAndChannel_StoreIdContainingAndStatusContaining(
-                any(), any(), any(), any(), any())).thenReturn(Flux.just(sale));
+        Mockito.when(salesRepository.findAll()).thenReturn(Flux.just(sale));
 
         Flux<Sale> result = salesService.getSaleList("1","bc12",
                 "1", "1", "Peru", "DNI",
-                "s", "1", "s", "orderId", null,
-                null, "size", "pageCount", "page", "maxResultCount");
+                "s", "1", "s", "orderId", "24/09/2020T12:43:00",
+                "24/09/2020T12:43:21", "size", "pageCount", "page",
+                "maxResultCount");
 
         StepVerifier.create(result)
                 .expectNextCount(1);
+    }
+
+    @Test
+    void filterSalesWithParamsTest() {
+        salesServiceImpl.filterSalesWithParams(sale, "1","bc12",
+                "1", "1", "Peru", "DNI",
+                "s", "1", "s", "orderId", "24/09/2020T12:43:00",
+                "24/09/2020T12:43:21");
+    }
+
+    @Test
+    void filterChannelIdTest() {
+        salesServiceImpl.filterChannelId(sale, "930686A");
+    }
+
+    @Test
+    void filterChannelId_Null_Test() {
+        salesServiceImpl.filterChannelId(sale, null);
+    }
+
+    @Test
+    void filterDealerIdTest() {
+        salesServiceImpl.filterDealerId(sale, "930686A");
+    }
+
+    @Test
+    void filterDealerId_Null_Test() {
+        salesServiceImpl.filterDealerId(sale, null);
+    }
+
+    @Test
+    void filterAgentIdTest() {
+        salesServiceImpl.filterAgentId(sale, "930686A");
+    }
+
+    @Test
+    void filterAgentId_Null_Test() {
+        salesServiceImpl.filterAgentId(sale, null);
+    }
+
+    @Test
+    void filterStoreIdTest() {
+        salesServiceImpl.filterStoreId(sale, "930686A");
+    }
+
+    @Test
+    void filterStoreId_Null_Test() {
+        salesServiceImpl.filterStoreId(sale, null);
+    }
+
+    @Test
+    void filterStatusTest() {
+        salesServiceImpl.filterStatus(sale, "930686A");
+    }
+
+    @Test
+    void filterStatus_Null_Test() {
+        salesServiceImpl.filterStatus(sale, null);
     }
 
     @Test
@@ -322,8 +380,18 @@ public class SalesServiceTest {
     }
 
     @Test
+    void filterNationalId_Null_Test() {
+        salesServiceImpl.filterNationalId(sale, null);
+    }
+
+    @Test
     void filterNationalIdTypeTest() {
         salesServiceImpl.filterNationalIdType(sale, "930686A");
+    }
+
+    @Test
+    void filterNationalIdType_Null_Test() {
+        salesServiceImpl.filterNationalIdType(sale, null);
     }
 
     @Test
