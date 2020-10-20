@@ -11,7 +11,9 @@ import com.tdp.ms.sales.repository.SalesRepository;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.Calendar;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.Map;
 import java.util.UUID;
@@ -80,10 +82,10 @@ public class SalesServiceImpl implements SalesService {
             request.setSalesId(saleSequentialItem.getData().get(0).getValue());
 
             // asignar fecha de creación
-            Date todayDate = Calendar.getInstance().getTime();
-            SimpleDateFormat dateFormatter = new SimpleDateFormat("dd/MM/yyyy'T'HH:mm:ss");
-            String todayDateString = dateFormatter.format(todayDate);
-            request.setSaleCreationDate(todayDateString);
+            ZoneId zone = ZoneId.of("America/Lima");
+            ZonedDateTime date = ZonedDateTime.now(zone);
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy'T'HH:mm:ss");
+            request.setSaleCreationDate(date.format(formatter));
 
             return salesRepository.save(request);
         });
@@ -138,10 +140,11 @@ public class SalesServiceImpl implements SalesService {
     }
 
     public Boolean filterChannelId(Sale item, String channelId) {
-        if (channelId != null && (item.getChannel() == null || item.getChannel().getId() == null)) {
+        if (channelId != null && !channelId.isEmpty()
+                && (item.getChannel() == null || item.getChannel().getId() == null)) {
             return false;
-        } else if (channelId != null && item.getChannel() != null && item.getChannel().getId() != null
-                && !channelId.isEmpty()) {
+        } else if (channelId != null && !channelId.isEmpty() && item.getChannel() != null
+                && item.getChannel().getId() != null && !channelId.isEmpty()) {
             return item.getChannel().getId().equalsIgnoreCase(channelId);
         } else {
             return true;
@@ -149,10 +152,11 @@ public class SalesServiceImpl implements SalesService {
     }
 
     public Boolean filterDealerId(Sale item, String dealerId) {
-        if (dealerId != null && (item.getChannel() == null || item.getChannel().getDealerId() == null)) {
+        if (dealerId != null && !dealerId.isEmpty()
+                && (item.getChannel() == null || item.getChannel().getDealerId() == null)) {
             return false;
-        } else if (dealerId != null && item.getChannel() != null && item.getChannel().getDealerId() != null
-                && !dealerId.isEmpty()) {
+        } else if (dealerId != null && !dealerId.isEmpty() && item.getChannel() != null
+                && item.getChannel().getDealerId() != null && !dealerId.isEmpty()) {
             return item.getChannel().getDealerId().equalsIgnoreCase(dealerId);
         } else {
             return true;
@@ -160,9 +164,9 @@ public class SalesServiceImpl implements SalesService {
     }
 
     public Boolean filterAgentId(Sale item, String agentId) {
-        if (agentId != null && (item.getAgent() == null || item.getAgent().getId() == null)) {
+        if (agentId != null && !agentId.isEmpty() && (item.getAgent() == null || item.getAgent().getId() == null)) {
             return false;
-        } else if (agentId != null && item.getAgent() != null && item.getAgent().getId() != null
+        } else if (agentId != null && !agentId.isEmpty() && item.getAgent() != null && item.getAgent().getId() != null
                 && !agentId.isEmpty()) {
             return item.getAgent().getId().equalsIgnoreCase(agentId);
         } else {
@@ -171,10 +175,11 @@ public class SalesServiceImpl implements SalesService {
     }
 
     public Boolean filterStoreId(Sale item, String storeId) {
-        if (storeId != null && (item.getChannel() == null || item.getChannel().getStoreId() == null)) {
+        if (storeId != null && !storeId.isEmpty()
+                && (item.getChannel() == null || item.getChannel().getStoreId() == null)) {
             return false;
-        } else if (storeId != null && item.getChannel() != null && item.getChannel().getStoreId() != null
-                && !storeId.isEmpty()) {
+        } else if (storeId != null && !storeId.isEmpty() && item.getChannel() != null
+                && item.getChannel().getStoreId() != null && !storeId.isEmpty()) {
             return item.getChannel().getStoreId().equalsIgnoreCase(storeId);
         } else {
             return true;
@@ -182,9 +187,9 @@ public class SalesServiceImpl implements SalesService {
     }
 
     public Boolean filterStatus(Sale item, String status) {
-        if (status != null && item.getStatus() == null) {
+        if (status != null && !status.isEmpty() && item.getStatus() == null) {
             return false;
-        } else if (status != null && item.getStatus() != null && !status.isEmpty()) {
+        } else if (status != null && !status.isEmpty() && item.getStatus() != null && !status.isEmpty()) {
             return item.getStatus().equalsIgnoreCase(status);
         } else {
             return true;
@@ -192,9 +197,9 @@ public class SalesServiceImpl implements SalesService {
     }
 
     public Boolean filterNationalId(Sale item, String nationalId) {
-        if (nationalId != null && (item.getAgent() == null || item.getAgent().getNationalId() == null)) {
+        if (nationalId != null && !nationalId.isEmpty() && (item.getAgent() == null || item.getAgent().getNationalId() == null)) {
             return false;
-        } else if (nationalId != null && item.getAgent() != null && item.getAgent().getNationalId() != null
+        } else if (nationalId != null && !nationalId.isEmpty() && item.getAgent() != null && item.getAgent().getNationalId() != null
                 && !nationalId.isEmpty()) {
             return item.getAgent().getNationalId().equalsIgnoreCase(nationalId);
         } else {
@@ -203,9 +208,9 @@ public class SalesServiceImpl implements SalesService {
     }
 
     public Boolean filterNationalIdType(Sale item, String nationalIdType) {
-        if (nationalIdType != null && (item.getAgent() == null || item.getAgent().getNationalIdType() == null)) {
+        if (nationalIdType != null && !nationalIdType.isEmpty() && (item.getAgent() == null || item.getAgent().getNationalIdType() == null)) {
             return false;
-        } else if (nationalIdType != null && item.getAgent() != null && item.getAgent().getNationalIdType() != null
+        } else if (nationalIdType != null && !nationalIdType.isEmpty() && item.getAgent() != null && item.getAgent().getNationalIdType() != null
                 && !nationalIdType.isEmpty()) {
             return item.getAgent().getNationalIdType().equalsIgnoreCase(nationalIdType);
         } else {
@@ -222,19 +227,26 @@ public class SalesServiceImpl implements SalesService {
     }
 
     public Boolean filterSaleCreationDate(Sale item, String startDateTime, String endDateTime) {
-        if (startDateTime != null && endDateTime != null && (item.getSaleCreationDate() == null
-                || item.getSaleCreationDate().isEmpty())) {
+        if (startDateTime != null && endDateTime != null && !startDateTime.isEmpty() && !endDateTime.isEmpty()
+                && (item.getSaleCreationDate() == null || item.getSaleCreationDate().isEmpty())) {
             return false;
-        } else if (startDateTime != null && endDateTime != null && item.getSaleCreationDate() != null
-                && !item.getSaleCreationDate().isEmpty() && !startDateTime.isEmpty() && !endDateTime.isEmpty()) {
+        } else if (startDateTime != null && endDateTime != null && !startDateTime.isEmpty() && !endDateTime.isEmpty()
+                && item.getSaleCreationDate() != null && !item.getSaleCreationDate().isEmpty()
+                && !startDateTime.isEmpty() && !endDateTime.isEmpty()) {
 
             try {
                 Date startDate = new SimpleDateFormat("dd/MM/yyyy'T'HH:mm:ss").parse(startDateTime);
+                System.out.print("startDate: ");
+                System.out.print(startDate + " - ");
+                System.out.println(startDateTime);
                 Date endDate = new SimpleDateFormat("dd/MM/yyyy'T'HH:mm:ss").parse(endDateTime);
                 Date requestDate = new SimpleDateFormat("dd/MM/yyyy'T'HH:mm:ss").parse(item.getSaleCreationDate());
+                System.out.print("requestDate: ");
+                System.out.print(requestDate + " - ");
+                System.out.println(item.getSaleCreationDate());
                 return requestDate.after(startDate) && requestDate.before(endDate);
             } catch (ParseException e) {
-                e.printStackTrace();
+                return false;
             }
 
         }
