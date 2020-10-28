@@ -90,6 +90,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
     private StockWebClient stockWebClient;
 
     public List<BusinessParameterExt> retrieveCharacteristics(GetSalesCharacteristicsResponse response) {
+        System.out.println("retrieveCharacteristics: " + response.getData().get(0).getExt());
         return response.getData().get(0).getExt();
     }
 
@@ -129,9 +130,11 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         String tokenMcss = "";
         for (KeyValueType kv : saleRequest.getAdditionalData()) {
             if (kv.getKey().equals("ufxauthorization")) {
+                System.out.println("KJAHSDKJHASD: " + kv.getValue());
                 tokenMcss = kv.getValue();
             }
         }
+        System.out.println("TOKEEEEEEEEEEEEEEEEEEEEN: " + tokenMcss);
         if (tokenMcss == null || tokenMcss.equals("")) {
             return Mono.error(GenesisException
                     .builder()
@@ -154,6 +157,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
 
         // Getting Main CommercialTypeOperation value
         String commercialOperationType = saleRequest.getCommercialOperation().get(0).getReason();
+        System.out.println("COMMERCIA OPERACTION: " + commercialOperationType);
         Mono<List<BusinessParameterExt>> salesCharsByCOT = businessParameterWebClient.getSalesCharacteristicsByCommercialOperationType(
                 GetSalesCharacteristicsRequest
                         .builder()
@@ -164,7 +168,11 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
 
         return Mono.zip(getRiskDomain, salesCharsByCOT)
                 .flatMap(tuple -> {
-                    if (tuple.getT1().getData().get(0).getActive().equals("true")) {
+                    System.out.println("RESPONSEEEEEEEEEEEEEEEEEE T1: " + tuple.getT1());
+                    System.out.println("RESPONSEEEEEEEEEEEEEEEEEE T2: " + tuple.getT2());
+                    if (!tuple.getT1().getData().isEmpty()
+                            && tuple.getT1().getData().get(0).getActive()
+                    ) {
                         // if it is a risk domain, cancel operation
                         return Mono.error(GenesisException
                                 .builder()
@@ -220,11 +228,17 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                         mainRequestProductOrder = this.caeqCaplCommercialOperation(saleRequest, mainRequestProductOrder,
                                 channelIdRequest, customerIdRequest, productOfferingIdRequest, cipCode);
                     }
+                    System.out.println("BOOLEAN flgCapl: " + flgCapl);
+                    System.out.println("BOOLEAN flgCaeq: " + flgCaeq);
+                    System.out.println("BOOLEAN flgCasi: " + flgCasi);
 
                     Boolean finalFlgCaeq = flgCaeq;
-                    return productOrderWebClient.createProductOrder(mainRequestProductOrder, request.getHeadersMap())
-                            .flatMap(createOrderResponse -> {
+                    System.out.println("BOOLEAN CAEQCAEQ: " + finalFlgCaeq);
 
+                    System.out.println("REQUESTTTTT PRODUCT ORDER: " + mainRequestProductOrder);
+                    return productOrderWebClient.createProductOrder(mainRequestProductOrder, request.getHeadersMap(), saleRequest)
+                            .flatMap(createOrderResponse -> {
+                                System.out.println("CREATE PRODUCT ORDER RESPONSE: " + createOrderResponse);
                                 // Adding Order info to sales
                                 saleRequest.getCommercialOperation().get(0)
                                         .setOrder(createOrderResponse.getCreateProductOrderResponse());
@@ -245,15 +259,15 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
 
                                     saleRequest.setAdditionalData(additionalDataAssigments(saleRequest.getAdditionalData()));
                                 }
-
-                                ReserveStockRequest reserveStockRequest = new ReserveStockRequest();
-                                reserveStockRequest = this.buildReserveStockRequest(reserveStockRequest,
-                                        saleRequest, createOrderResponse.getCreateProductOrderResponse());
-
+                                System.out.println("BOOLEAN CAEQ: " + finalFlgCaeq);
                                 // Call to Reserve Stock Service When Commercial Operation include CAEQ
                                 if (finalFlgCaeq) {
+                                    ReserveStockRequest reserveStockRequest = new ReserveStockRequest();
+                                    reserveStockRequest = this.buildReserveStockRequest(reserveStockRequest,
+                                            saleRequest, createOrderResponse.getCreateProductOrderResponse());
+
                                     return stockWebClient.reserveStock(reserveStockRequest,
-                                            request.getHeadersMap())
+                                            request.getHeadersMap(), saleRequest)
                                             .flatMap(reserveStockResponse -> {
                                                 DateFormat dateFormat = new SimpleDateFormat(
                                                         "yyyy-MM-dd'T'HH:mm:ss.SSSSSSSZ");
@@ -371,7 +385,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
 
         ProductOrderCaplRequest caplRequestProductOrder = new ProductOrderCaplRequest();
         caplRequestProductOrder.setSalesChannel(channelIdRequest);
-        caplRequestProductOrder.setCustomerId(customerIdRequest);
+        caplRequestProductOrder.getCustomer().setCustomerId(customerIdRequest);
         caplRequestProductOrder.setProductOfferingId(productOfferingIdRequest);
         caplRequestProductOrder.setOnlyValidationIndicator(false);
 
@@ -435,7 +449,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                 .orderAttributes(caplOrderAttributes)
                 .shipmentDetails(createShipmentDetail(saleRequest))
                 .build();
-        if (!StringUtils.isEmpty(cipCode)) caplRequest.setCip(cipCode);
+        //if (!StringUtils.isEmpty(cipCode)) caplRequest.setCip(cipCode);
 
         // Building Main Capl Request
         caplRequestProductOrder.setRequest(caplRequest);
@@ -476,7 +490,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
 
         saleRequest.getCommercialOperation().get(0).getWorkOrDeliveryType().getPlace().get(0).getAdditionalData()
                 .stream().forEach(item -> {
-                    if (item.getKey().equalsIgnoreCase("statOrProvinceCode")) {
+                    if (item.getKey().equalsIgnoreCase("stateOrProvinceCode")) {
                         shipmentDetailsType.setProvinceOfShippingAddress(item.getValue());
                     }
         });

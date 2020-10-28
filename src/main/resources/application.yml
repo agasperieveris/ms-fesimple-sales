@@ -27,7 +27,7 @@ application:
       url: https://www.telefonica.com.pe
   endpoints:
     business_parameters:
-      get_sales_characteristics_url: http://aks-berserkers-ingress-dev.eastus2.cloudapp.azure.com/bussinesparameters/v2/parameters/033/dataparams?comercialOperationType={commercialOperationType}
+      get_sales_characteristics_url: https://aks-berserkers-ingress-dev.eastus2.cloudapp.azure.com/bussinesparameters/v2/parameters/033/dataparams?codComercialOperationType={commercialOperationType}
       get_risk_domain_url: https://aks-berserkers-ingress-dev.eastus2.cloudapp.azure.com/bussinesparameters/v2/parameters/034/dataparams?value={domain}
     product_order:
       create_product_order_url: https://aks-berserkers-ingress-dev.eastus2.cloudapp.azure.com/fesimple/v1/orders/createproduct

@@ -1,13 +1,12 @@
-package com.tdp.ms.sales.model.dto;
+package com.tdp.ms.sales.model.dto.productorder;
 
-import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * Class: BusinessParameterData. <br/>
+ * Class: Customer. <br/>
  * <b>Copyright</b>: &copy; 2020 Telef&oacute;nica del Per&uacute;<br/>
  * <b>Company</b>: Telef&oacute;nica del Per&uacute;<br/>
  *
@@ -19,7 +18,7 @@ import lombok.NoArgsConstructor;
  *         </ul>
  *         <u>Changes</u>:<br/>
  *         <ul>
- *         <li>2020-09-23 Creaci&oacute;n del proyecto.</li>
+ *         <li>2020-10-16 Creaci&oacute;n del proyecto.</li>
  *         </ul>
  * @version 1.0
  */
@@ -27,11 +26,6 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class BusinessParameterData {
-
-    private String key;
-    private String value;
-    private Boolean active;
-    private List<BusinessParameterExt> ext;
-
+public class Customer {
+    private String customerId;
 }

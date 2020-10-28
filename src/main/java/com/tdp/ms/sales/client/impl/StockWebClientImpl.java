@@ -4,11 +4,14 @@ import com.tdp.genesis.core.constants.HttpHeadersKey;
 import com.tdp.genesis.core.exception.GenesisException;
 import com.tdp.genesis.core.exception.GenesisExceptionBuilder;
 import com.tdp.ms.sales.client.StockWebClient;
+import com.tdp.ms.sales.model.entity.Sale;
 import com.tdp.ms.sales.model.request.ReserveStockRequest;
 import com.tdp.ms.sales.model.response.ReserveStockResponse;
 import com.tdp.ms.commons.util.MapperUtils;
+import com.tdp.ms.sales.repository.SalesRepository;
 import java.util.HashMap;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -40,11 +43,15 @@ public class StockWebClientImpl implements StockWebClient {
 
     private final WebClient webClientInsecure;
 
+    @Autowired
+    private SalesRepository salesRepository;
+
     @Value("${application.endpoints.stock.reserve_stock_url}")
     private String reserveStockUrl;
 
     @Override
-    public Mono<ReserveStockResponse> reserveStock(ReserveStockRequest request, HashMap<String, String> headersMap) {
+    public Mono<ReserveStockResponse> reserveStock(ReserveStockRequest request, HashMap<String, String> headersMap,
+                                                   Sale sale) {
         return webClientInsecure
                 .post()
                 .uri(reserveStockUrl)
@@ -56,10 +63,17 @@ public class StockWebClientImpl implements StockWebClient {
                 .accept(MediaType.APPLICATION_JSON)
                 .retrieve()
                 .bodyToMono(ReserveStockResponse.class)
-                .onErrorResume(this::fallbackReserveStock);
+                .onErrorResume(throwable -> fallbackReserveStock(throwable, sale));
     }
 
-    public Mono<ReserveStockResponse> fallbackReserveStock(Throwable error) throws GenesisException {
+    @Override
+    public Mono<ReserveStockResponse> fallbackReserveStock(Throwable error, Sale sale) throws GenesisException {
+        sale.setStatus("PENDIENTE");
+        return salesRepository.save(sale)
+                .flatMap(saleSaved -> this.throwExceptionReserveStock(error));
+    }
+
+    public Mono<ReserveStockResponse> throwExceptionReserveStock(Throwable error) throws GenesisException {
 
         if (error instanceof WebClientResponseException) {
             WebClientResponseException responseException = (WebClientResponseException) error;

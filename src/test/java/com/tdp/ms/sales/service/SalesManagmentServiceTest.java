@@ -330,11 +330,11 @@ public class SalesManagmentServiceTest {
     void postSalesTest() {
         BusinessParameterExt ext1 = BusinessParameterExt
                 .builder()
-                .comercialOperationType("CAEQ")
-                .actionType("CW")
-                .characteristicId("9941")
-                .characteristicCode("AcquisitionType")
-                .characteristicValue("private")
+                .codComercialOperationType("CAEQ")
+                .codActionType("CW")
+                .codCharacteristicId("9941")
+                .codCharacteristicCode("AcquisitionType")
+                .codCharacteristicValue("private")
                 .build();
         List<BusinessParameterExt> extList = new ArrayList<>();
         extList.add(ext1);
@@ -344,7 +344,7 @@ public class SalesManagmentServiceTest {
                 .build();
         BusinessParameterData businessParameterData2 = BusinessParameterData
                 .builder()
-                .active("false")
+                .active(false)
                 .build();
         List<BusinessParameterData> dataList = new ArrayList<>();
         dataList.add(businessParameterData1);
@@ -370,7 +370,7 @@ public class SalesManagmentServiceTest {
         ProductorderResponse productorderResponse = new ProductorderResponse();
         CreateProductOrderResponseType createProductOrderResponseType =  new CreateProductOrderResponseType();
         productorderResponse.setCreateProductOrderResponse(createProductOrderResponseType);
-        Mockito.when(productOrderWebClient.createProductOrder(any(), eq(salesRequest.getHeadersMap())))
+        Mockito.when(productOrderWebClient.createProductOrder(any(), eq(salesRequest.getHeadersMap()), any()))
                 .thenReturn(Mono.just(productorderResponse));
 
         Mockito.when(salesRepository.findBySalesId(any())).thenReturn(Mono.just(sale));

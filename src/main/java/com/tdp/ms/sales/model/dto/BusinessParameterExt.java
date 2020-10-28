@@ -29,18 +29,18 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class BusinessParameterExt {
 
-    private String comercialOperationType;
-    private String actionType;
-    private String characteristicId;
-    private String characteristicCode;
-    private String elementName;
-    private String level;
-    @JsonProperty("sendToSIMS")
-    private Boolean sendToSims;
-    @JsonProperty("sendToRMS")
-    private Boolean sendToRms;
-    private Boolean impactQuote;
-    private String characteristicValue;
-    private String status;
+    private String codComercialOperationType;
+    private String codActionType;
+    private String codCharacteristicId;
+    private String codCharacteristicCode;
+    private String nomElementName;
+    private String codLevel;
+    @JsonProperty("indSendtoSIMS")
+    private Boolean indSendToSims;
+    @JsonProperty("indSendtoRMS")
+    private Boolean indSendToRms;
+    private Boolean indMpactquote;
+    private String codCharacteristicValue;
+    private String codStatus;
 
 }

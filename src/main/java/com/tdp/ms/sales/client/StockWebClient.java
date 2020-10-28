@@ -1,5 +1,7 @@
 package com.tdp.ms.sales.client;
 
+import com.tdp.genesis.core.exception.GenesisException;
+import com.tdp.ms.sales.model.entity.Sale;
 import com.tdp.ms.sales.model.request.ReserveStockRequest;
 import com.tdp.ms.sales.model.response.ReserveStockResponse;
 import java.util.HashMap;
@@ -24,6 +26,10 @@ import reactor.core.publisher.Mono;
  */
 public interface StockWebClient {
 
-    Mono<ReserveStockResponse> reserveStock(ReserveStockRequest request, HashMap<String,String> headersMap);
+    Mono<ReserveStockResponse> reserveStock(ReserveStockRequest request, HashMap<String,String> headersMap, Sale sale);
+
+    Mono<ReserveStockResponse> fallbackReserveStock(Throwable error, Sale sale) throws GenesisException;
+
+    Mono<ReserveStockResponse> throwExceptionReserveStock(Throwable error) throws GenesisException;
 
 }

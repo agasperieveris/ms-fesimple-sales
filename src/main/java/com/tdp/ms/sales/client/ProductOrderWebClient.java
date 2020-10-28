@@ -1,6 +1,8 @@
 package com.tdp.ms.sales.client;
 
+import com.tdp.genesis.core.exception.GenesisException;
 import com.tdp.ms.sales.model.dto.productorder.CreateProductOrderGeneralRequest;
+import com.tdp.ms.sales.model.entity.Sale;
 import com.tdp.ms.sales.model.response.ProductorderResponse;
 import java.util.HashMap;
 import reactor.core.publisher.Mono;
@@ -25,6 +27,9 @@ import reactor.core.publisher.Mono;
 public interface ProductOrderWebClient {
 
     Mono<ProductorderResponse> createProductOrder(CreateProductOrderGeneralRequest request,
-                                                  HashMap<String,String> headersMap);
+                                                  HashMap<String,String> headersMap, Sale sale);
 
+    Mono<ProductorderResponse> fallbackCreateProductOrder(Throwable error, Sale sale) throws GenesisException;
+
+    Mono<ProductorderResponse> throwExceptionCreateProductOrder(Throwable error) throws GenesisException;
 }

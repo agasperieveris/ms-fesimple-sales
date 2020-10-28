@@ -1,6 +1,8 @@
 package com.tdp.ms.sales.model.dto.productorder.capl;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.tdp.ms.sales.model.dto.productorder.Customer;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -30,7 +32,9 @@ import lombok.NoArgsConstructor;
 public class ProductOrderCaplRequest {
     private String salesChannel;
     private CaplRequest request;
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     private String customerId;
+    private Customer customer = new Customer();
     @JsonProperty("productOfferingID")
     private String productOfferingId;
     private Boolean onlyValidationIndicator;

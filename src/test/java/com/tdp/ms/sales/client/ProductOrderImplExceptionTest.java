@@ -1,34 +1,32 @@
 package com.tdp.ms.sales.client;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.tdp.genesis.core.constants.HttpHeadersKey;
-import com.tdp.ms.sales.client.impl.ProductOrderWebClientImpl;
+import com.tdp.genesis.core.exception.GenesisException;
+import com.tdp.genesis.core.exception.GenesisExceptionBuilder;
+import com.tdp.genesis.core.utils.PropertyUtils;
 import com.tdp.ms.sales.model.dto.*;
-import com.tdp.ms.sales.model.dto.productorder.CreateProductOrderGeneralRequest;
 import com.tdp.ms.sales.model.entity.Sale;
-import com.tdp.ms.sales.model.response.ProductorderResponse;
 import com.tdp.ms.sales.repository.SalesRepository;
-import com.tdp.ms.sales.utils.Constants;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import okhttp3.mockwebserver.MockResponse;
-import okhttp3.mockwebserver.MockWebServer;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mockito;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.core.env.PropertyResolver;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
-import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Mono;
+import java.util.ArrayList;
+import java.util.List;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
 
 @ExtendWith(SpringExtension.class)
 @SpringBootTest
-public class ProductOrderWebClientImplTest {
+public class ProductOrderImplExceptionTest {
 
     @MockBean
     private SalesRepository salesRepository;
@@ -37,16 +35,13 @@ public class ProductOrderWebClientImplTest {
     private static ContactMedium contactMedium;
     private static List<IdentityValidationType> identityValidationTypeList = new ArrayList<>();
 
-    private static final HashMap<String,String> headersMap = mappingHeaders();
-
-    public static MockWebServer mockBackEnd;
-    private ProductOrderWebClientImpl productOrderWebClientImpl;
+    @Autowired
+    private ProductOrderWebClient productOrderWebClient;
     private ObjectMapper MAPPER = new ObjectMapper();
 
     @BeforeAll
-    static void setUp() throws IOException {
-        mockBackEnd = new MockWebServer();
-        mockBackEnd.start();
+    static void setUp() {
+        preparePropertyResolverForPropertyUtils();
 
         ChannelRef channel= new ChannelRef();
         channel.setId("1");
@@ -243,8 +238,6 @@ public class ProductOrderWebClientImplTest {
                 .paymentType("EX")
                 .build();
 
-
-
         IdentityValidationType identityValidationType = IdentityValidationType.builder()
                 .date("2014-09-15T23:14:25.7251173Z").validationType("No Biometric").build();
 
@@ -275,45 +268,119 @@ public class ProductOrderWebClientImplTest {
                 .build();
     }
 
-    @AfterAll
-    static void tearDown() throws IOException {
-        mockBackEnd.shutdown();
-    }
-
-    @BeforeEach
-    void initialize() {
-        String baseUrl = String.format("http://localhost:%s",
-                mockBackEnd.getPort());
-        productOrderWebClientImpl = new ProductOrderWebClientImpl(WebClient.create(baseUrl));
+    private static void preparePropertyResolverForPropertyUtils() {
+        PropertyResolver resolver = mock(PropertyResolver.class);
+        PropertyUtils.setResolver(resolver);
     }
 
     @Test
-    void createProductOrderTest() throws Exception {
+    public void fallbackReserveStockTest() throws JsonProcessingException, GenesisException {
+        Mockito.when(salesRepository.save(any())).thenReturn(Mono.just(sale));
 
-        ProductorderResponse businessParametersResponse = ProductorderResponse
-                .builder()
-                .build();
+        GenesisExceptionBuilder builder = GenesisException.builder();
 
-        mockBackEnd.enqueue(new MockResponse()
-                .setBody(MAPPER.writeValueAsString(businessParametersResponse))
-                .addHeader("Content-Type", "application/json")
-                .addHeader(HttpHeadersKey.UNICA_SERVICE_ID, Constants.RH_UNICA_SERVICE_ID)
-                .addHeader(HttpHeadersKey.UNICA_APPLICATION, Constants.RH_UNICA_APPLICATION)
-                .addHeader(HttpHeadersKey.UNICA_PID, Constants.RH_UNICA_PID)
-                .addHeader(HttpHeadersKey.UNICA_USER, Constants.RH_UNICA_USER));
+        builder.exceptionId("SVC0001")
+                .userMessage("Test")
+                .exceptionText("Test")
+                .wildcards(new String[]{"Bad Request"})
+                .addDetail(true)
+                .withDescription("Test");
 
-        Mono<ProductorderResponse> result = productOrderWebClientImpl.createProductOrder(CreateProductOrderGeneralRequest
-                .builder()
-                .build(), headersMap, sale);
+        GenesisException ge = builder.build();
+
+        WebClientResponseException webClientResponseException =
+                new WebClientResponseException("There was a problem from Create Product Order FE+Simple Service",
+                        400, "Problem", null, MAPPER.writeValueAsBytes(ge), null);
+
+        productOrderWebClient.fallbackCreateProductOrder(webClientResponseException, sale);
     }
 
-    private static HashMap<String,String> mappingHeaders() {
-        HashMap<String,String> headersMap = new HashMap();
-        headersMap.put(HttpHeadersKey.UNICA_SERVICE_ID, Constants.RH_UNICA_SERVICE_ID);
-        headersMap.put(HttpHeadersKey.UNICA_APPLICATION, Constants.RH_UNICA_APPLICATION);
-        headersMap.put(HttpHeadersKey.UNICA_PID, Constants.RH_UNICA_PID);
-        headersMap.put(HttpHeadersKey.UNICA_USER, Constants.RH_UNICA_USER);
-        return headersMap;
+    @Test
+    public void throwExceptionCreateProductOrder_On_BadRequest_Test() throws JsonProcessingException, GenesisException {
+        Mockito.when(salesRepository.save(any())).thenReturn(Mono.just(sale));
+
+        GenesisExceptionBuilder builder = GenesisException.builder();
+
+        builder.exceptionId("SVC0001")
+                .userMessage("Test")
+                .exceptionText("Test")
+                .wildcards(new String[]{"Bad Request"})
+                .addDetail(true)
+                .withDescription("Test");
+
+        GenesisException ge = builder.build();
+
+        WebClientResponseException webClientResponseException =
+                new WebClientResponseException("There was a problem from Create Product Order FE+Simple Service",
+                        400, "Problem", null, MAPPER.writeValueAsBytes(ge), null);
+
+        productOrderWebClient.throwExceptionCreateProductOrder(webClientResponseException);
+    }
+
+    @Test
+    public void throwExceptionCreateProductOrder_On_NotFound_Exception_Test() throws JsonProcessingException, GenesisException {
+        Mockito.when(salesRepository.save(any())).thenReturn(Mono.just(sale));
+
+        GenesisExceptionBuilder builder = GenesisException.builder();
+
+        builder.exceptionId("SVC0004")
+                .userMessage("Test")
+                .exceptionText("Test")
+                .wildcards(new String[]{"Not FOund"})
+                .addDetail(true)
+                .withDescription("Test");
+
+        GenesisException ge = builder.build();
+
+        WebClientResponseException webClientResponseException =
+                new WebClientResponseException("There was a problem from Create Product Order FE+Simple Service",
+                        404, "Problem", null, MAPPER.writeValueAsBytes(ge), null);
+
+        productOrderWebClient.throwExceptionCreateProductOrder(webClientResponseException);
+    }
+
+    @Test
+    public void throwExceptionCreateProductOrder_On_ServerFailed_Exception_Test() throws JsonProcessingException, GenesisException {
+        Mockito.when(salesRepository.save(any())).thenReturn(Mono.just(sale));
+
+        GenesisExceptionBuilder builder = GenesisException.builder();
+
+        builder.exceptionId("SVR1008")
+                .userMessage("Test")
+                .exceptionText("Test")
+                .wildcards(new String[]{"Service Failed"})
+                .addDetail(true)
+                .withDescription("Test");
+
+        GenesisException ge = builder.build();
+
+        WebClientResponseException webClientResponseException =
+                new WebClientResponseException("There was a problem from Create Product Order FE+Simple Service",
+                        500, "Problem", null, MAPPER.writeValueAsBytes(ge), null);
+
+        productOrderWebClient.throwExceptionCreateProductOrder(webClientResponseException);
+    }
+
+    @Test
+    public void throwExceptionCreateProductOrder_On_Unauthorized_Exception_Test() throws JsonProcessingException, GenesisException {
+        Mockito.when(salesRepository.save(any())).thenReturn(Mono.just(sale));
+
+        GenesisExceptionBuilder builder = GenesisException.builder();
+
+        builder.exceptionId("SVC0001")
+                .userMessage("Test")
+                .exceptionText("Test")
+                .wildcards(new String[]{"Unauthorized"})
+                .addDetail(true)
+                .withDescription("Test");
+
+        GenesisException ge = builder.build();
+
+        WebClientResponseException webClientResponseException =
+                new WebClientResponseException("There was a problem from Create Product Order FE+Simple Service",
+                        401, "Problem", null, MAPPER.writeValueAsBytes(ge), null);
+
+        productOrderWebClient.throwExceptionCreateProductOrder(webClientResponseException);
     }
 
 }
