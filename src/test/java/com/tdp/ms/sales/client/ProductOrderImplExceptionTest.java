@@ -383,4 +383,8 @@ public class ProductOrderImplExceptionTest {
         productOrderWebClient.throwExceptionCreateProductOrder(webClientResponseException);
     }
 
+    @Test
+    public void throwExceptionCreateProductOrder_Generic_Error_Test() throws GenesisException {
+        productOrderWebClient.throwExceptionCreateProductOrder(new Throwable());
+    }
 }

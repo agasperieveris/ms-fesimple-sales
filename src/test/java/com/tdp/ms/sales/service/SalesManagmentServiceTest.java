@@ -405,8 +405,57 @@ public class SalesManagmentServiceTest {
     }
 
     @Test
-    void additionalDataAssigmentsTest() {
-        salesManagmentServiceImpl.additionalDataAssigments(null);
+    void additionalDataAssigments_Lima_Test() {
+        Place place = Place.builder().address(AddressType.builder().region("LIMA").build()).build();
+        List<Place> placeList = new ArrayList<>();
+        placeList.add(place);
+
+        CommercialOperationType commercialOperationType = CommercialOperationType
+                .builder()
+                .workOrDeliveryType(WorkOrDeliveryType.builder().place(placeList).build())
+                .build();
+        List<CommercialOperationType> commercialOperationTypeList = new ArrayList<>();
+        commercialOperationTypeList.add(commercialOperationType);
+
+        salesManagmentServiceImpl.additionalDataAssigments(null, Sale.builder()
+                .channel(ChannelRef.builder().storeId("string").build())
+                .commercialOperation(commercialOperationTypeList).build());
+    }
+
+    @Test
+    void additionalDataAssigments_Callao_Test() {
+        Place place = Place.builder().address(AddressType.builder().region("CALLAO").build()).build();
+        List<Place> placeList = new ArrayList<>();
+        placeList.add(place);
+
+        CommercialOperationType commercialOperationType = CommercialOperationType
+                .builder()
+                .workOrDeliveryType(WorkOrDeliveryType.builder().place(placeList).build())
+                .build();
+        List<CommercialOperationType> commercialOperationTypeList = new ArrayList<>();
+        commercialOperationTypeList.add(commercialOperationType);
+
+        salesManagmentServiceImpl.additionalDataAssigments(null, Sale.builder()
+                .channel(ChannelRef.builder().storeId("string").build())
+                .commercialOperation(commercialOperationTypeList).build());
+    }
+
+    @Test
+    void additionalDataAssigments_Province_Test() {
+        Place place = Place.builder().address(AddressType.builder().region("AREQUIPA").build()).build();
+        List<Place> placeList = new ArrayList<>();
+        placeList.add(place);
+
+        CommercialOperationType commercialOperationType = CommercialOperationType
+                .builder()
+                .workOrDeliveryType(WorkOrDeliveryType.builder().place(placeList).build())
+                .build();
+        List<CommercialOperationType> commercialOperationTypeList = new ArrayList<>();
+        commercialOperationTypeList.add(commercialOperationType);
+
+        salesManagmentServiceImpl.additionalDataAssigments(null, Sale.builder()
+                .channel(ChannelRef.builder().storeId("string").build())
+                .commercialOperation(commercialOperationTypeList).build());
     }
 
     @Test

@@ -89,6 +89,10 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
     @Autowired
     private StockWebClient stockWebClient;
 
+    private final static String SHIPPING_LOCALITY = "shippingLocality";
+    private final static String PROVINCE_OF_SHIPPING_ADDRESS = "provinceOfShippingAddress";
+    private final static String SHOP_ADDRESS = "shopAddress";
+
     public List<BusinessParameterExt> retrieveCharacteristics(GetSalesCharacteristicsResponse response) {
         System.out.println("retrieveCharacteristics: " + response.getData().get(0).getExt());
         return response.getData().get(0).getExt();
@@ -256,8 +260,8 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
 
                                 // Ship Delivery logic (tambo) - SERGIO
                                 if (saleRequest.getCommercialOperation().get(0).getWorkOrDeliveryType().getMediumDelivery().equalsIgnoreCase("Tienda")) {
-
-                                    saleRequest.setAdditionalData(additionalDataAssigments(saleRequest.getAdditionalData()));
+                                    saleRequest.setAdditionalData(additionalDataAssigments(saleRequest.getAdditionalData(),
+                                            saleRequest));
                                 }
                                 System.out.println("BOOLEAN CAEQ: " + finalFlgCaeq);
                                 // Call to Reserve Stock Service When Commercial Operation include CAEQ
@@ -304,7 +308,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                 });
     }
 
-    public List<KeyValueType> additionalDataAssigments(List<KeyValueType> input) {
+    public List<KeyValueType> additionalDataAssigments(List<KeyValueType> input, Sale saleRequest) {
         // add shipmentDetails structure to additionalData
         List<KeyValueType> additionalDataAux = input;
         if (additionalDataAux == null) {
@@ -314,27 +318,62 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         KeyValueType mediumDeliveryLabel = KeyValueType.builder()
                 .key("mediumDeliveryLabel").value("Chip Tienda").build();
         KeyValueType collectStoreId = KeyValueType.builder()
-                .key("collectStoreId").value("Validar campo").build();
+                .key("collectStoreId").value(saleRequest.getChannel().getStoreId()).build();
         KeyValueType shipmentAddressId = KeyValueType.builder()
                 .key("shipmentAddressId").value("").build();
         KeyValueType shipmentSiteId = KeyValueType.builder()
                 .key("shipmentSiteId").value("NA").build();
-        KeyValueType shippingLocality = KeyValueType.builder()
-                .key("shippingLocality").value("Pendiente").build();
-        KeyValueType provinceOfShippingAddress = KeyValueType.builder()
-                .key("provinceOfShippingAddress").value("Pendiente").build();
-        KeyValueType shopAddress = KeyValueType.builder()
-                .key("shopAddress").value("Pendiente").build();
         KeyValueType shipmentInstructions = KeyValueType.builder()
                 .key("shipmentInstructions").value("No se registró instrucciones").build();
         additionalDataAux.add(mediumDeliveryLabel);
         additionalDataAux.add(collectStoreId);
         additionalDataAux.add(shipmentAddressId);
         additionalDataAux.add(shipmentSiteId);
+        additionalDataAux.add(shipmentInstructions);
+
+        KeyValueType shippingLocality;
+        KeyValueType provinceOfShippingAddress;
+        KeyValueType shopAddress;
+
+        if (saleRequest.getCommercialOperation() != null && !saleRequest.getCommercialOperation().isEmpty()
+                && saleRequest.getCommercialOperation().get(0).getWorkOrDeliveryType().getPlace() != null
+                && !saleRequest.getCommercialOperation().get(0).getWorkOrDeliveryType().getPlace().isEmpty()
+                && saleRequest.getCommercialOperation().get(0).getWorkOrDeliveryType().getPlace().get(0).getAddress().getRegion().equalsIgnoreCase("LIMA")) {
+            // case when is Lima
+            shippingLocality = KeyValueType.builder()
+                    .key(SHIPPING_LOCALITY).value("PUEBLO LIBRE").build();
+            provinceOfShippingAddress = KeyValueType.builder()
+                    .key(PROVINCE_OF_SHIPPING_ADDRESS).value("15").build();
+            shopAddress = KeyValueType.builder()
+                    .key(SHOP_ADDRESS).value("AV. SUCRE NRO 1183 LIMA-LIMA-PUEBLO").build();
+
+        } else if (saleRequest.getCommercialOperation() != null
+                && saleRequest.getCommercialOperation().get(0).getWorkOrDeliveryType().getPlace() != null
+                && !saleRequest.getCommercialOperation().isEmpty()
+                && !saleRequest.getCommercialOperation().get(0).getWorkOrDeliveryType().getPlace().isEmpty()
+                && saleRequest.getCommercialOperation().get(0).getWorkOrDeliveryType().getPlace().get(0).getAddress().getRegion().equalsIgnoreCase("CALLAO")) {
+            // case when is Callao
+            shippingLocality = KeyValueType.builder()
+                    .key(SHIPPING_LOCALITY).value("PUEBLO LIBRE").build();
+            provinceOfShippingAddress = KeyValueType.builder()
+                    .key(PROVINCE_OF_SHIPPING_ADDRESS).value("07").build();
+            shopAddress = KeyValueType.builder()
+                    .key(SHOP_ADDRESS).value("AV. SUCRE NRO 1183 LIMA-LIMA-PUEBLO").build();
+
+        } else {
+            // case when is not Lima and is not Callao
+            shippingLocality = KeyValueType.builder()
+                    .key(SHIPPING_LOCALITY).value("TRUJILLO").build();
+            provinceOfShippingAddress = KeyValueType.builder()
+                    .key(PROVINCE_OF_SHIPPING_ADDRESS).value("13").build();
+            shopAddress = KeyValueType.builder()
+                    .key(SHOP_ADDRESS).value("AV. AMERICA NORTE 1245 URB. LOS JARDINES - TRUJILLO").build();
+        }
+
         additionalDataAux.add(shippingLocality);
         additionalDataAux.add(provinceOfShippingAddress);
         additionalDataAux.add(shopAddress);
-        additionalDataAux.add(shipmentInstructions);
+
 
         return additionalDataAux;
     }
