@@ -2,13 +2,12 @@ package com.tdp.ms.sales.client;
 
 import com.tdp.genesis.core.exception.GenesisException;
 import com.tdp.ms.sales.model.entity.Sale;
-import com.tdp.ms.sales.model.request.ReserveStockRequest;
-import com.tdp.ms.sales.model.response.ReserveStockResponse;
-import java.util.HashMap;
+import com.tdp.ms.sales.model.request.CreateQuotationRequest;
+import com.tdp.ms.sales.model.response.CreateQuotationResponse;
 import reactor.core.publisher.Mono;
 
 /**
- * Class: StockWebClient. <br/>
+ * Interface: QuotationWebClient. <br/>
  * <b>Copyright</b>: &copy; 2020 Telef&oacute;nica del Per&uacute;<br/>
  * <b>Company</b>: Telef&oacute;nica del Per&uacute;<br/>
  *
@@ -20,14 +19,14 @@ import reactor.core.publisher.Mono;
  *         </ul>
  *         <u>Changes</u>:<br/>
  *         <ul>
- *         <li>2020-10-09 Creaci&oacute;n del proyecto.</li>
+ *         <li>2020-11-03 Creaci&oacute;n del proyecto.</li>
  *         </ul>
  * @version 1.0
  */
-public interface StockWebClient {
+public interface QuotationWebClient {
 
-    Mono<ReserveStockResponse> reserveStock(ReserveStockRequest request, HashMap<String,String> headersMap, Sale sale);
+    Mono<CreateQuotationResponse> createQuotation(CreateQuotationRequest request, Sale sale);
 
-    Mono<ReserveStockResponse> throwExceptionReserveStock(Sale sale) throws GenesisException;
+    Mono<CreateQuotationResponse> throwExceptionCreateQuotation(Sale sale) throws GenesisException;
 
 }

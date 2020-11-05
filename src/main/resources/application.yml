@@ -39,5 +39,7 @@ application:
       reserve_stock_url: https://aks-berserkers-ingress-dev.eastus2.cloudapp.azure.com/fesimple/v1/stocks/reserveStock
     payment:
       generate_cip_payment_identifier: https://aks-berserkers-ingress-dev.eastus2.cloudapp.azure.com/fesimple/api/v1/payment/paymentIdentifier/createPaymentIdentifier
+    quotation:
+      create_quotation: https://aks-berserkers-ingress-dev.eastus2.cloudapp.azure.com/fesimple/api/v1/quotations
   catalog-error:
     url: https://aks-berserkers-ingress-dev.eastus2.cloudapp.azure.com

@@ -10,7 +10,6 @@ import com.tdp.ms.sales.model.entity.Sale;
 import com.tdp.ms.sales.model.response.ProductorderResponse;
 import java.util.HashMap;
 import com.tdp.ms.sales.repository.SalesRepository;
-import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;

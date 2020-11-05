@@ -39,5 +39,7 @@ application:
       reserve_stock_url: https://localhost
     payment:
       generate_cip_payment_identifier: https://localhost
+    quotation:
+      create_quotation: https://localhost
   catalog-error:
     url: https://aks-berserkers-ingress-dev.eastus2.cloudapp.azure.com
