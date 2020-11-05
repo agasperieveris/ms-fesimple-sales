@@ -134,6 +134,7 @@ public class CommonsMocks {
         product.setId("s");
         product.setProductSpec(entityRefType);
         product.setPublicId("234562433");
+        product.setProductOffering(entityRefType);
 
         CreateProductOrderResponseType order = CreateProductOrderResponseType
                 .builder()

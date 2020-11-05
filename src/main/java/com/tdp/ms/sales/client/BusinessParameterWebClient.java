@@ -3,9 +3,8 @@ package com.tdp.ms.sales.client;
 import com.tdp.ms.sales.model.request.GetSalesCharacteristicsRequest;
 import com.tdp.ms.sales.model.response.BusinessParametersResponse;
 import com.tdp.ms.sales.model.response.GetSalesCharacteristicsResponse;
-import reactor.core.publisher.Mono;
-
 import java.util.HashMap;
+import reactor.core.publisher.Mono;
 
 /**
  * Class: BusinessParameterWebClient. <br/>

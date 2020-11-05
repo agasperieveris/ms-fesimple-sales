@@ -710,44 +710,45 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
     public CreateProductOrderGeneralRequest caplCommercialOperation(Sale saleRequest,
                                     CreateProductOrderGeneralRequest mainRequestProductOrder, String channelIdRequest,
                                     String customerIdRequest, String productOfferingIdRequest, String cipCode) {
+        Boolean flgOnlyCapl = true;
+
+        // Recognizing Capl into same plan or Capl with new plan
+        if (!saleRequest.getCommercialOperation().get(0).getProduct().getProductOffering().getId().equals(saleRequest
+                .getCommercialOperation().get(0).getProductOfferings().get(0).getId())
+        ) {
+            flgOnlyCapl = false;
+        }
 
         // Building request for CAPL CommercialTypeOperation
-
         ProductOrderCaplRequest caplRequestProductOrder = new ProductOrderCaplRequest();
         caplRequestProductOrder.setSalesChannel(channelIdRequest);
         caplRequestProductOrder.getCustomer().setCustomerId(customerIdRequest);
         caplRequestProductOrder.setProductOfferingId(productOfferingIdRequest);
         caplRequestProductOrder.setOnlyValidationIndicator(false);
 
-        // Recognizing Capl into same plan or Capl with new plan
-        Boolean flgOnlyCapl = true;
         RemovedAssignedBillingOffers caplBoRemoved1 = new RemovedAssignedBillingOffers();
         List<RemovedAssignedBillingOffers> caplBoRemovedList = new ArrayList<>();
-        if (saleRequest.getCommercialOperation().get(0).getProduct().getProductSpec().getId() == null
-                || saleRequest.getCommercialOperation().get(0).getProduct().getProductSpec().getId().equals("")
-        ) {
-            flgOnlyCapl = false;
-            caplRequestProductOrder.setActionType("CH");
-        } else {
-            // Recognizing Capl Fija
-            String productType = saleRequest.getProductType();
-            if (productType.equals("landline") || productType.equals("cableTv")
-                    || productType.equals("broadband") || productType.equals("bundle")) {
-                caplRequestProductOrder.setActionType("CH");
-            } else {
+        if (flgOnlyCapl) {
+            // Recognizing Capl Mobile or Fija
+            if (saleRequest.getProductType().equals("mobile")) {
                 caplRequestProductOrder.setActionType("CW");
+            } else {
+                caplRequestProductOrder.setActionType("CH"); // landline, cableTv, broadband, bundle
             }
 
-            caplBoRemoved1.setProductSpecPricingId(saleRequest.getCommercialOperation().get(0)
-                    .getProduct().getProductSpec().getId());
+            caplBoRemoved1.setProductSpecPricingId(this.getStringValueByKeyFromAdditionalDataList(saleRequest
+                    .getCommercialOperation().get(0).getProduct().getAdditionalData(), "productSpecPricingID"));
             caplBoRemovedList.add(caplBoRemoved1);
+        } else {
+            caplRequestProductOrder.setActionType("CH");
         }
 
         NewAssignedBillingOffers caplNewBo1 = NewAssignedBillingOffers
                 .builder()
                 .productSpecPricingId(saleRequest.getCommercialOperation().get(0)
-                        .getProductOfferings().get(0).getProductOfferingProductSpecId())
-                .parentProductCatalogId("7491")
+                        .getProductOfferings().get(0).getProductOfferingPrice().get(0).getPricePlanSpecContainmentId())
+                .parentProductCatalogId(saleRequest.getCommercialOperation().get(0)
+                        .getProductOfferings().get(0).getProductOfferingPrice().get(0).getProductSpecContainmentId())
                 .build();
         List<NewAssignedBillingOffers> caplNewBoList = new ArrayList<>();
         caplNewBoList.add(caplNewBo1);
@@ -762,7 +763,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
             caplProductChanges.setRemovedAssignedBillingOffers(caplBoRemovedList);
         } else {
             newProductCapl1.setProductCatalogId(saleRequest.getCommercialOperation().get(0)
-                    .getProductOfferings().get(0).getProductOfferingProductSpecId()); // Consultar si el id del catalogo es = al id del nuevo plan
+                    .getProductOfferings().get(0).getProductOfferingProductSpecId());
         }
         newProductCapl1.setProductChanges(caplProductChanges);
 
@@ -881,6 +882,15 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                                     String customerIdRequest, String productOfferingIdRequest, String cipCode) {
         // Building request for CAEQ+CAPL CommercialTypeOperation
 
+        Boolean flgOnlyCapl = true;
+
+        // Recognizing Capl into same plan or Capl with new plan
+        if (!saleRequest.getCommercialOperation().get(0).getProduct().getProductOffering().getId().equals(saleRequest
+                .getCommercialOperation().get(0).getProductOfferings().get(0).getId())
+        ) {
+            flgOnlyCapl = false;
+        }
+
         // Code from CAPL
         ProductOrderCaeqCaplRequest caeqCaplRequestProductOrder = new ProductOrderCaeqCaplRequest();
         caeqCaplRequestProductOrder.setSalesChannel(channelIdRequest);
@@ -888,35 +898,29 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         caeqCaplRequestProductOrder.setProductOfferingId(productOfferingIdRequest);
         caeqCaplRequestProductOrder.setOnlyValidationIndicator(false);
 
-        // Recognizing Capl into same plan or Capl with new plan
-        Boolean flgOnlyCapl = true;
         RemovedAssignedBillingOffers caeqCaplBoRemoved1 = new RemovedAssignedBillingOffers();
         List<RemovedAssignedBillingOffers> caeqCaplBoRemovedList = new ArrayList<>();
-        if (saleRequest.getCommercialOperation().get(0).getProduct().getProductSpec().getId() == null
-                || saleRequest.getCommercialOperation().get(0).getProduct().getProductSpec().getId().equals("")
-        ) {
-            flgOnlyCapl = false;
-            caeqCaplRequestProductOrder.setActionType("CH");
-        } else {
+        if (flgOnlyCapl) {
             // Recognizing Capl Fija
-            String productType = saleRequest.getProductType();
-            if (productType.equals("landline") || productType.equals("cableTv") || productType.equals("broadband")
-                    || productType.equals("bundle")) {
-                caeqCaplRequestProductOrder.setActionType("CH");
-            } else {
+            if (saleRequest.getProductType().equals("mobile")) {
                 caeqCaplRequestProductOrder.setActionType("CW");
+            } else {
+                caeqCaplRequestProductOrder.setActionType("CH"); // landline, cableTv, broadband, bundle
             }
 
-            caeqCaplBoRemoved1.setProductSpecPricingId(saleRequest.getCommercialOperation().get(0)
-                    .getProduct().getProductSpec().getId());
+            caeqCaplBoRemoved1.setProductSpecPricingId(this.getStringValueByKeyFromAdditionalDataList(saleRequest
+                    .getCommercialOperation().get(0).getProduct().getAdditionalData(), "productSpecPricingID"));
             caeqCaplBoRemovedList.add(caeqCaplBoRemoved1);
+        } else {
+            caeqCaplRequestProductOrder.setActionType("CH");
         }
 
         NewAssignedBillingOffers caplNewBo1 = NewAssignedBillingOffers
                 .builder()
                 .productSpecPricingId(saleRequest.getCommercialOperation().get(0)
-                        .getProductOfferings().get(0).getProductOfferingProductSpecId())
-                .parentProductCatalogId("7491")
+                        .getProductOfferings().get(0).getProductOfferingPrice().get(0).getPricePlanSpecContainmentId())
+                .parentProductCatalogId(saleRequest.getCommercialOperation().get(0)
+                        .getProductOfferings().get(0).getProductOfferingPrice().get(0).getProductSpecContainmentId())
                 .build();
         List<NewAssignedBillingOffers> caeqCaplNewBoList = new ArrayList<>();
         caeqCaplNewBoList.add(caplNewBo1);
@@ -945,6 +949,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
 
         // Refactored Code from CAPL
         List<FlexAttrType> caeqCaplOrderAttributes = this.commonOrderAttributes(saleRequest);
+        // Adding Caeq Order Attributes
         this.addCaeqOderAttributes(caeqCaplOrderAttributes, saleRequest);
 
         CaeqCaplRequest caeqCaplRequest = CaeqCaplRequest
@@ -954,7 +959,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                 .orderAttributes(caeqCaplOrderAttributes)
                 .shipmentDetails(createShipmentDetail(saleRequest))
                 .build();
-        if (!StringUtils.isEmpty(cipCode)) caeqCaplRequest.setCip(cipCode);
+        //if (!StringUtils.isEmpty(cipCode)) caeqCaplRequest.setCip(cipCode);
 
         caeqCaplRequestProductOrder.setRequest(caeqCaplRequest);
 

@@ -30,6 +30,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class NewProductCapl {
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     private String productCatalogId;
     @JsonProperty("productID")
     private String productId;
