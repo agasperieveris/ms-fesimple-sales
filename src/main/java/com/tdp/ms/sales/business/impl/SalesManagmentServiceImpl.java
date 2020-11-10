@@ -6,6 +6,7 @@ import com.tdp.ms.sales.client.BusinessParameterWebClient;
 import com.tdp.ms.sales.client.ProductOrderWebClient;
 import com.tdp.ms.sales.client.QuotationWebClient;
 import com.tdp.ms.sales.client.StockWebClient;
+import com.tdp.ms.sales.model.dto.BusinessParameterDataObjectExt;
 import com.tdp.ms.sales.model.dto.BusinessParameterExt;
 import com.tdp.ms.sales.model.dto.ContactMedium;
 import com.tdp.ms.sales.model.dto.CreateProductOrderResponseType;
@@ -17,6 +18,10 @@ import com.tdp.ms.sales.model.dto.TimePeriod;
 import com.tdp.ms.sales.model.dto.productorder.CreateProductOrderGeneralRequest;
 import com.tdp.ms.sales.model.dto.productorder.FlexAttrType;
 import com.tdp.ms.sales.model.dto.productorder.FlexAttrValueType;
+import com.tdp.ms.sales.model.dto.productorder.alta.AltaRequest;
+import com.tdp.ms.sales.model.dto.productorder.alta.NewProductAlta;
+import com.tdp.ms.sales.model.dto.productorder.alta.ProductChangeAlta;
+import com.tdp.ms.sales.model.dto.productorder.alta.ProductOrderAltaRequest;
 import com.tdp.ms.sales.model.dto.productorder.caeq.CaeqRequest;
 import com.tdp.ms.sales.model.dto.productorder.caeq.ChangedCharacteristic;
 import com.tdp.ms.sales.model.dto.productorder.caeq.ChangedContainedProduct;
@@ -50,6 +55,7 @@ import com.tdp.ms.sales.model.request.GetSalesCharacteristicsRequest;
 import com.tdp.ms.sales.model.request.PostSalesRequest;
 import com.tdp.ms.sales.model.request.ReserveStockRequest;
 import com.tdp.ms.sales.model.response.BusinessParametersResponse;
+import com.tdp.ms.sales.model.response.BusinessParametersResponseObjectExt;
 import com.tdp.ms.sales.model.response.CreateQuotationResponse;
 import com.tdp.ms.sales.model.response.GetSalesCharacteristicsResponse;
 import com.tdp.ms.sales.model.response.ReserveStockResponse;
@@ -149,7 +155,9 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         final Boolean[] flgCapl = {false};
         final Boolean[] flgCaeq = {false};
         final Boolean[] flgCasi = {false};
+        final Boolean[] flgAlta = {false};
         final Boolean[] flgFinanciamiento = {false};
+        final String[] sapidSimcard = {""};
 
         // Getting Commercial Operation Types from Additional Data
         for (KeyValueType kv : saleRequest.getCommercialOperation().get(0).getAdditionalData()) {
@@ -162,6 +170,8 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                 flgCaeq[0] = booleanValue;
             } else if (stringKey.equalsIgnoreCase("CASI")) {
                 flgCasi[0] = booleanValue;
+            } else if (stringKey.equalsIgnoreCase("ALTA")) {
+                flgAlta[0] = booleanValue;
             }
         }
 
@@ -215,8 +225,15 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                                     .build())
                     .map(this::retrieveCharacteristics);
 
+            // Get Bonificacion Sim
+            Mono<BusinessParametersResponseObjectExt> getBonificacionSim = businessParameterWebClient
+                    .getBonificacionSimcard(saleRequest.getChannel().getId(), request.getHeadersMap());
 
-            return Mono.zip(getRiskDomain, salesCharsByCOT)
+            // Get Bonificacion Sim
+            Mono<BusinessParametersResponseObjectExt> getParameterSapidSimCard = businessParameterWebClient
+                    .getParametersSimcard(request.getHeadersMap());
+
+            return Mono.zip(getRiskDomain, salesCharsByCOT, getBonificacionSim, getParameterSapidSimCard)
                     .flatMap(tuple -> {
                         System.out.println("RESPONSEEEE T1: " + tuple.getT1());
                         System.out.println("RESPONSEEEE T2: " + tuple.getT2());
@@ -230,6 +247,10 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                                     .wildcards(new String[]{"Dominio de riesgo, se canceló la operación"})
                                     .build());
                         }
+
+                        // Getting simcard sapid from bussiness parameter
+                        sapidSimcard[0] = getStringValueFromBusinessParameterDataListByKeyAndActiveTrue(
+                                tuple.getT4().getData(), "sapid");
 
                         // Getting CIP Code
                         String cipCode = "";
@@ -246,20 +267,24 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                         CreateProductOrderGeneralRequest mainRequestProductOrder = new CreateProductOrderGeneralRequest();
 
                         // Recognizing CAPL Commercial Operation Type
-                        if (flgCapl[0] && !flgCaeq[0] && !flgCasi[0]) {
+                        if (flgCapl[0] && !flgCaeq[0] && !flgCasi[0] && !flgAlta[0]) {
 
                             mainRequestProductOrder = this.caplCommercialOperation(saleRequest, mainRequestProductOrder,
                                     channelIdRequest, customerIdRequest, productOfferingIdRequest, cipCode);
 
-                        } else if (!flgCapl[0] && flgCaeq[0] && !flgCasi[0]) { // Recognizing CAEQ Commercial Operation Type
+                        } else if (!flgCapl[0] && flgCaeq[0] && !flgCasi[0] && !flgAlta[0]) { // Recognizing CAEQ Commercial Operation Type
 
                             mainRequestProductOrder = this.caeqCommercialOperation(saleRequest, mainRequestProductOrder,
                                     channelIdRequest, customerIdRequest, productOfferingIdRequest, cipCode);
 
-                        } else if (flgCapl[0] && flgCaeq[0] && !flgCasi[0]) { // Recognizing CAEQ+CAPL Commercial Operation Type
+                        } else if (flgCapl[0] && flgCaeq[0] && !flgCasi[0] && !flgAlta[0]) { // Recognizing CAEQ+CAPL Commercial Operation Type
 
                             mainRequestProductOrder = this.caeqCaplCommercialOperation(saleRequest, mainRequestProductOrder,
                                     channelIdRequest, customerIdRequest, productOfferingIdRequest, cipCode);
+                        } else if (!flgCapl[0] && !flgCaeq[0] && !flgCasi[0] && flgAlta[0]) {
+                            mainRequestProductOrder = this.altaCommercialOperation(saleRequest, mainRequestProductOrder,
+                                    channelIdRequest, customerIdRequest, productOfferingIdRequest, cipCode,
+                                    tuple.getT3(), sapidSimcard[0]);
                         }
                         System.out.println("BOOLEAN flgCapl: " + flgCapl[0]);
                         System.out.println("BOOLEAN flgCaeq: " + flgCaeq[0]);
@@ -294,10 +319,11 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                                     }
                                     System.out.println("BOOLEAN CAEQ: " + flgCaeq[0]);
                                     // Call to Reserve Stock Service When Commercial Operation include CAEQ
-                                    if (flgCaeq[0]) {
+                                    if (flgCaeq[0] || flgAlta[0]) {
                                         ReserveStockRequest reserveStockRequest = new ReserveStockRequest();
                                         reserveStockRequest = this.buildReserveStockRequest(reserveStockRequest,
-                                                saleRequest, createOrderResponse.getCreateProductOrderResponse());
+                                                saleRequest, createOrderResponse.getCreateProductOrderResponse(),
+                                                                                                    sapidSimcard[0]);
 
                                         return stockWebClient.reserveStock(reserveStockRequest,
                                                 request.getHeadersMap(), saleRequest)
@@ -329,10 +355,10 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                                                                                     .getStock().getReservationId())) { // Retry from Reservation
 
             // Call to Reserve Stock Service When Commercial Operation include CAEQ
-            if (flgCaeq[0]) {
+            if (flgCaeq[0] || flgAlta[0]) {
                 ReserveStockRequest reserveStockRequest = new ReserveStockRequest();
                 reserveStockRequest = this.buildReserveStockRequest(reserveStockRequest,
-                        saleRequest, saleRequest.getCommercialOperation().get(0).getOrder());
+                        saleRequest, saleRequest.getCommercialOperation().get(0).getOrder(), sapidSimcard[0]);
 
                 return stockWebClient.reserveStock(reserveStockRequest,
                         request.getHeadersMap(), saleRequest)
@@ -583,7 +609,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                 .billingAgreement(sale.getRelatedParty().get(0).getBillingArragmentId())
                 .commercialAgreement("N")
                 .customer(customerQuotation)
-                .operationType(sale.getCommercialOperation().get(0).getReason())
+                .operationType(sale.getCommercialOperation().get(0).getReason()) // Pendiente confirmación para alta, reason = ALTA
                 .totalAmount(totalAmount)
                 .associatedPlanRecurrentCost(associatedPlanRecurrentCost)
                 .totalCustomerRecurrentCost(totalCustomerRecurrentCost)
@@ -705,6 +731,233 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         }
 
         return isPresencial[0] && !isBiometric[0];
+    }
+
+    private String getStringValueFromBusinessParameterDataListByKeyAndActiveTrue(
+            List<BusinessParameterDataObjectExt> businessParameterDataList,
+            String key) {
+
+        final String[] stringValue = {""};
+
+        if (businessParameterDataList != null && !businessParameterDataList.isEmpty()) {
+            businessParameterDataList.stream().forEach(kv -> {
+                if (kv.getKey().equalsIgnoreCase(key) && kv.getActive()) {
+                    stringValue[0] = kv.getValue();
+                }
+            });
+        }
+
+        return stringValue[0];
+    }
+
+    private CreateProductOrderGeneralRequest altaCommercialOperation(Sale saleRequest,
+                                    CreateProductOrderGeneralRequest mainRequestProductOrder, String channelIdRequest,
+                                    String customerIdRequest, String productOfferingIdRequest, String cipCode,
+                             BusinessParametersResponseObjectExt bonificacionSimcardResponse, String sapidSimcardBp) {
+
+        // Building request for ALTA CommercialTypeOperation
+        ProductOrderAltaRequest altaRequestProductOrder = new ProductOrderAltaRequest();
+        altaRequestProductOrder.setSalesChannel(channelIdRequest);
+        altaRequestProductOrder.setCustomerId(customerIdRequest);
+        altaRequestProductOrder.setProductOfferingId(productOfferingIdRequest);
+        altaRequestProductOrder.setOnlyValidationIndicator(false);
+        altaRequestProductOrder.setActionType("PR");
+
+        // Identifying if is Alta Only Simcard or Alta Combo (Equipment + Simcard)
+        Boolean altaCombo = saleRequest.getCommercialOperation().get(0).getDeviceOffering().size() > 1;
+
+        // ALTA Product Changes
+        ProductChangeAlta altaProductChanges = new ProductChangeAlta();
+
+        // ALTA NewAssignedBillingOffers
+        List<NewAssignedBillingOffers> altaNewBoList = new ArrayList<>();
+        if (altaCombo) { // Pendiente de confirmación, para el caso de alta solo simcard en canal CEC no se envían NewAssignedBillingOffers? Revisar en el request de la casuística
+            // NewAssignedBillingOffer Equipment
+            NewAssignedBillingOffers altaNewBo1 = NewAssignedBillingOffers
+                    .builder()
+                    .productSpecPricingId(saleRequest.getCommercialOperation().get(0)
+                            .getProductOfferings().get(0).getProductOfferingPrice().get(0)
+                                                                                    .getPricePlanSpecContainmentId())
+                    .parentProductCatalogId(saleRequest.getCommercialOperation().get(0)
+                            .getProductOfferings().get(0).getProductOfferingPrice().get(0)
+                                                                                        .getProductSpecContainmentId())
+                    .build();
+            altaNewBoList.add(altaNewBo1);
+        }
+
+        if (saleRequest.getChannel().getId().equalsIgnoreCase("CC")) {
+            // NewAssignedBillingOffer SIM
+            String productSpecPricingId = bonificacionSimcardResponse.getData().get(0).getValue(); // "34572615"
+            String parentProductCatalogId = bonificacionSimcardResponse.getData().get(0).getExt().toString(); // "7431"
+
+            NewAssignedBillingOffers altaNewBo2 = NewAssignedBillingOffers
+                    .builder()
+                    .productSpecPricingId(productSpecPricingId)
+                    .parentProductCatalogId(parentProductCatalogId)
+                    .build();
+            altaNewBoList.add(altaNewBo2);
+        }
+
+        altaProductChanges.setNewAssignedBillingOffers(altaNewBoList);
+
+        // ALTA ChangeContainedProducts
+        List<ChangedContainedProduct> altaChangedContainedProductList = new ArrayList<>();
+
+        if (altaCombo) {
+            // ChangeContainedProduct Equipment
+            altaChangedContainedProductList = this.changedContainedCaeqList(saleRequest, "temp2");
+            altaChangedContainedProductList.get(0).setProductId(""); // Doesnt sent it in Alta
+        }
+
+        // ChangeContainedProduct SIM
+        List<ChangedCharacteristic> changedCharacteristicList = new ArrayList<>();
+        if (!altaCombo) {
+            // SIMGROUP Characteristic when is only Alta Simcard
+            ChangedCharacteristic changedCharacteristic1 = ChangedCharacteristic
+                    .builder()
+                    .characteristicId("9941")
+                    .characteristicValue("Private")
+                    .build();
+            changedCharacteristicList.add(changedCharacteristic1);
+
+            ChangedCharacteristic changedCharacteristic2 = ChangedCharacteristic
+                    .builder()
+                    .characteristicId("16524")
+                    .characteristicValue("nanoSIM") // Pendiente
+                    .build();
+            changedCharacteristicList.add(changedCharacteristic2);
+        }
+
+        // SIM TYPE SKU Characteristic
+        ChangedCharacteristic changedCharacteristic3 = ChangedCharacteristic
+                .builder()
+                .characteristicId("9751")
+                .characteristicValue(sapidSimcardBp) // SAPID PARAMETRIZADO EN BP
+                .build();
+        changedCharacteristicList.add(changedCharacteristic3);
+        // ICCID Characteristic
+        String iccidSim = this.getStringValueByKeyFromAdditionalDataList(saleRequest.getAdditionalData(),
+                                                                                                    "SIM_ICCID ");
+        ChangedCharacteristic changedCharacteristic4 = ChangedCharacteristic
+                .builder()
+                .characteristicId("799244")
+                .characteristicValue(iccidSim) // 8958080008100067567
+                .build();
+        changedCharacteristicList.add(changedCharacteristic4);
+
+        ChangedContainedProduct changedContainedProduct2 = ChangedContainedProduct
+                .builder()
+                .productId("")
+                .temporaryId("temp3")
+                .productCatalogId("7431")
+                .changedCharacteristics(changedCharacteristicList)
+                .build();
+        altaChangedContainedProductList.add(changedContainedProduct2);
+
+        altaProductChanges.setChangedContainedProducts(altaChangedContainedProductList);
+
+
+        NewProductAlta newProductAlta1 = new NewProductAlta();
+        newProductAlta1.setProductCatalogId(saleRequest.getCommercialOperation().get(0)
+                    .getProductOfferings().get(0).getProductOfferingProductSpecId());
+        newProductAlta1.setTemporaryId("temp1");
+        newProductAlta1.setBaId(saleRequest.getRelatedParty().get(0).getBillingArragmentId());
+        newProductAlta1.setAccountId(saleRequest.getRelatedParty().get(0).getAccountId());
+        newProductAlta1.setInvoiceCompany("TEF");
+        newProductAlta1.setProductChanges(altaProductChanges);
+
+        List<NewProductAlta> altaNewProductsList = new ArrayList<>();
+        altaNewProductsList.add(newProductAlta1);
+
+        // Building Order Attributes
+        List<FlexAttrType> altaOrderAttributesList = this.commonOrderAttributes(saleRequest);
+
+        // Order Attributes when channel is retail
+        if (!saleRequest.getChannel().getId().equalsIgnoreCase("CC")
+                && !saleRequest.getChannel().getId().equalsIgnoreCase("CEC")) {
+            //  RETAIL PAYMENT NUMBER ATTRIBUTE
+            String paymentNumber = this.getStringValueByKeyFromAdditionalDataList(saleRequest.getAdditionalData(),
+                    "NUMERO_TICKET");
+
+            FlexAttrValueType paymentRegisterAttrValue =  FlexAttrValueType
+                    .builder()
+                    .stringValue(paymentNumber)
+                    .valueType("STRING")
+                    .build();
+            FlexAttrType paymentRegisterAttr = FlexAttrType
+                    .builder()
+                    .attrName("PAYMENT_REGISTER_NUMBER")
+                    .flexAttrValue(paymentRegisterAttrValue)
+                    .build();
+
+            //  RETAIL DEVICE SKU ATTRIBUTE
+            String deviceSku = this.getStringValueByKeyFromAdditionalDataList(saleRequest.getAdditionalData(),
+                    "DEVICE_SKU");
+
+            FlexAttrValueType deviceSkuAttrValue =  FlexAttrValueType
+                    .builder()
+                    .stringValue(deviceSku)
+                    .valueType("STRING")
+                    .build();
+            FlexAttrType deviceSkuAttr = FlexAttrType
+                    .builder()
+                    .attrName("DEVICE_SKU")
+                    .flexAttrValue(deviceSkuAttrValue)
+                    .build();
+
+            //  RETAIL SIM SKU ATTRIBUTE
+            String simSku = this.getStringValueByKeyFromAdditionalDataList(saleRequest.getAdditionalData(),
+                                                                                                        "SIM_SKU");
+
+            FlexAttrValueType simSkuAttrValue =  FlexAttrValueType
+                    .builder()
+                    .stringValue(simSku)
+                    .valueType("STRING")
+                    .build();
+            FlexAttrType simSkuAttr = FlexAttrType
+                    .builder()
+                    .attrName("SIM_SKU")
+                    .flexAttrValue(simSkuAttrValue)
+                    .build();
+
+            //  RETAIL CASHIER REGISTER NUMBER ATTRIBUTE
+            String cashierRegisterNumber = this.getStringValueByKeyFromAdditionalDataList(saleRequest
+                                                                            .getAdditionalData(),"NUMERO_CAJA");
+
+            FlexAttrValueType cashierRegisterAttrValue =  FlexAttrValueType
+                    .builder()
+                    .stringValue(cashierRegisterNumber)
+                    .valueType("STRING")
+                    .build();
+            FlexAttrType cashierRegisterAttr = FlexAttrType
+                    .builder()
+                    .attrName("SIM_SKU")
+                    .flexAttrValue(cashierRegisterAttrValue)
+                    .build();
+
+            altaOrderAttributesList.add(paymentRegisterAttr);
+            altaOrderAttributesList.add(deviceSkuAttr);
+            altaOrderAttributesList.add(simSkuAttr);
+            altaOrderAttributesList.add(cashierRegisterAttr);
+        }
+
+
+        AltaRequest altaRequest = AltaRequest
+                .builder()
+                .newProducts(altaNewProductsList)
+                .sourceApp("FE")
+                .orderAttributes(altaOrderAttributesList)
+                .shipmentDetails(createShipmentDetail(saleRequest))
+                .build();
+        //if (!StringUtils.isEmpty(cipCode)) altaRequest.setCip(cipCode);
+
+        // Building Main Alta Request
+        altaRequestProductOrder.setRequest(altaRequest);
+
+        // Setting Alta request into main request to send to create product order service
+        mainRequestProductOrder.setCreateProductOrderRequest(altaRequestProductOrder);
+
+        return mainRequestProductOrder;
     }
 
     public CreateProductOrderGeneralRequest caplCommercialOperation(Sale saleRequest,
@@ -835,7 +1088,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         // Building request for CAEQ CommercialTypeOperation
 
         // Refactored Code from CAEQ
-        List<ChangedContainedProduct> changedContainedProductList = this.changedContainedCaeqList(saleRequest);
+        List<ChangedContainedProduct> changedContainedProductList = this.changedContainedCaeqList(saleRequest, "temp1");
 
         ProductChangeCaeq productChangeCaeq = ProductChangeCaeq
                 .builder()
@@ -939,7 +1192,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         }
 
         // Refactored Code from CAEQ
-        List<ChangedContainedProduct> changedContainedProductList = this.changedContainedCaeqList(saleRequest);
+        List<ChangedContainedProduct> changedContainedProductList = this.changedContainedCaeqList(saleRequest, "temp1");
 
         caeqCaplProductChanges.setChangedContainedProducts(changedContainedProductList);
         newProductCaeqCapl1.setProductChanges(caeqCaplProductChanges);
@@ -999,11 +1252,11 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                 .flexAttrValue(paymentAttrValue)
                 .build();
 
-        List<FlexAttrType> caplOrderAttributes = new ArrayList<>();
-        caplOrderAttributes.add(deliveryAttr);
-        caplOrderAttributes.add(paymentAttr);
+        List<FlexAttrType> commonOrderAttributes = new ArrayList<>();
+        commonOrderAttributes.add(deliveryAttr);
+        commonOrderAttributes.add(paymentAttr);
 
-        return caplOrderAttributes;
+        return commonOrderAttributes;
     }
 
     public void addCaeqOderAttributes(List<FlexAttrType> caeqOrderAttributes, Sale saleRequest) {
@@ -1047,45 +1300,58 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         caeqOrderAttributes.add(customerRucAttr);
     }
 
-    public List<ChangedContainedProduct> changedContainedCaeqList(Sale saleRequest) {
+    public List<ChangedContainedProduct> changedContainedCaeqList(Sale saleRequest, String tempNum) {
         String acquisitionType = "";
         acquisitionType = getAcquisitionTypeValue(saleRequest);
+
+        // AcquisitionType Characteristic
         ChangedCharacteristic changedCharacteristic1 = ChangedCharacteristic
                 .builder()
                 .characteristicId("9941")
                 .characteristicValue(acquisitionType)
                 .build();
 
+        // EquipmentCID Characteristic
         ChangedCharacteristic changedCharacteristic2 = ChangedCharacteristic
                 .builder()
                 .characteristicId("15734")
-                .characteristicValue(saleRequest.getCommercialOperation().get(0).getDeviceOffering().get(0).getId()) // Consultar si esta caracteristica se agrega solamente cuando el device_type es simcard
+                .characteristicValue(saleRequest.getCommercialOperation().get(0).getDeviceOffering().get(0).getId())
                 .build();
 
+        // EquipmentIMEI Characteristic
+        String deviceImei = "000000000000000";
+        if (saleRequest.getChannel().getId().equalsIgnoreCase("DLC")
+                || saleRequest.getChannel().getId().equalsIgnoreCase("DALV")) {
+            deviceImei = this.getStringValueByKeyFromAdditionalDataList(saleRequest.getAdditionalData(), "MOVILE_IMEI");
+        }
         ChangedCharacteristic changedCharacteristic3 = ChangedCharacteristic
                 .builder()
                 .characteristicId("9871")
-                .characteristicValue("000000000000000") // IMEI, Consultar si se debe enviar valor real cuando viene de dealer
-                .build();
-
-        ChangedCharacteristic changedCharacteristic4 = ChangedCharacteristic
-                .builder()
-                .characteristicId("16524") // SIMGROUP, Pendiente revisar con Abraham y Ivonne, otro código 9871
-                .characteristicValue("Estandar")
+                .characteristicValue(deviceImei)
                 .build();
 
         List<ChangedCharacteristic> changedCharacteristicList = new ArrayList<>();
         changedCharacteristicList.add(changedCharacteristic1);
         changedCharacteristicList.add(changedCharacteristic2);
         changedCharacteristicList.add(changedCharacteristic3);
-        changedCharacteristicList.add(changedCharacteristic4);
+
+        // SIMGROUP Characteristic (Conditional)
+        if (saleRequest.getCommercialOperation().get(0).getDeviceOffering().size() > 1) {
+            String simGroup = saleRequest.getCommercialOperation().get(0).getDeviceOffering().get(1)
+                                                                            .getSimSpecifications().get(0).getType(); // Pendiente confirmación si este atributo tiene como valores nanoSim, estandar, etc.
+            ChangedCharacteristic changedCharacteristic4 = ChangedCharacteristic
+                    .builder()
+                    .characteristicId("16524")
+                    .characteristicValue(simGroup)
+                    .build();
+            changedCharacteristicList.add(changedCharacteristic4);
+        }
 
         ChangedContainedProduct changedContainedProduct1 = ChangedContainedProduct
                 .builder()
                 .productId(saleRequest.getCommercialOperation().get(0).getProduct().getId()) // Consultar porque hay 2 product ids
-                .temporaryId("temp1")
-                .productCatalogId(saleRequest.getCommercialOperation().get(0)
-                        .getProductOfferings().get(0).getProductOfferingProductSpecId()) // Consultar
+                .temporaryId(tempNum)
+                .productCatalogId("7411")
                 .changedCharacteristics(changedCharacteristicList)
                 .build();
 
@@ -1110,8 +1376,20 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
             }
         }
 
+        // Getting Commercial Operation Types from Additional Data
+        final Boolean[] flgAlta = {false};
+        for (KeyValueType kv : saleRequest.getCommercialOperation().get(0).getAdditionalData()) {
+            String stringKey = kv.getKey();
+            Boolean booleanValue = kv.getValue().equalsIgnoreCase("true");
+            if (stringKey.equalsIgnoreCase("ALTA")) {
+                flgAlta[0] = booleanValue;
+            }
+        }
+
         // Logic for Set Acquisition Type Value
-        if (saleChannelId.equalsIgnoreCase("CC") && deliveryType.equalsIgnoreCase("SP")
+        if (flgAlta[0] && saleRequest.getCommercialOperation().get(0).getDeviceOffering().size() == 1) { // Identifying if is Alta only Sim
+            acquisitionType = "Private";
+        } else if (saleChannelId.equalsIgnoreCase("CC") && deliveryType.equalsIgnoreCase("SP")
                 || saleChannelId.equalsIgnoreCase("CEC")
                 || (saleChannelId.equalsIgnoreCase("ST") && deliveryType.equalsIgnoreCase("SP"))
                 || saleChannelId.equalsIgnoreCase("DLS")
@@ -1130,7 +1408,9 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         return acquisitionType;
     }
 
-    public ReserveStockRequest buildReserveStockRequest(ReserveStockRequest request, Sale sale, CreateProductOrderResponseType createOrderResponse) {
+    public ReserveStockRequest buildReserveStockRequest(ReserveStockRequest request, Sale sale,
+                                                        CreateProductOrderResponseType createOrderResponse,
+                                                        String sapidSimcardBp) {
         request.setReason("PRAEL");
 
         List<String> requiredActionList =  new ArrayList<>();
@@ -1154,17 +1434,32 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
 
         request.setChannel(sale.getChannel().getId());
 
-        Item item = Item
+        List<StockItem> itemsList =  new ArrayList<>();
+        // Equipment Item
+        Item item1 = Item
                 .builder()
                 .id(sale.getCommercialOperation().get(0).getDeviceOffering().get(0).getSapid())
                 .type("IMEI")
                 .build();
         StockItem stockItem1 = StockItem
                 .builder()
-                .item(item)
+                .item(item1)
                 .build();
-        List<StockItem> itemsList =  new ArrayList<>();
         itemsList.add(stockItem1);
+
+        if (sale.getCommercialOperation().get(0).getDeviceOffering().size() > 1) {
+            // SIM Item
+            Item item2 = Item
+                    .builder()
+                    .id(sapidSimcardBp)
+                    .type("IMEI")
+                    .build();
+            StockItem stockItem2 = StockItem
+                    .builder()
+                    .item(item2)
+                    .build();
+            itemsList.add(stockItem2);
+        }
         request.setItems(itemsList);
 
         request.setOrderAction(createOrderResponse.getProductOrderReferenceNumber());

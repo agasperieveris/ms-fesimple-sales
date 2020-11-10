@@ -2,6 +2,7 @@ package com.tdp.ms.sales.client;
 
 import com.tdp.ms.sales.model.request.GetSalesCharacteristicsRequest;
 import com.tdp.ms.sales.model.response.BusinessParametersResponse;
+import com.tdp.ms.sales.model.response.BusinessParametersResponseObjectExt;
 import com.tdp.ms.sales.model.response.GetSalesCharacteristicsResponse;
 import java.util.HashMap;
 import reactor.core.publisher.Mono;
@@ -30,5 +31,8 @@ public interface BusinessParameterWebClient {
 
     Mono<BusinessParametersResponse> getRiskDomain(String domain, HashMap<String, String> headersMap);
 
+    Mono<BusinessParametersResponseObjectExt> getBonificacionSimcard(String channelId, HashMap<String, String> headersMap);
+
+    Mono<BusinessParametersResponseObjectExt> getParametersSimcard(HashMap<String, String> headersMap);
 
 }

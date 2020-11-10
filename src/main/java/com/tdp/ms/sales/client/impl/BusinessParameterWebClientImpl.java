@@ -5,6 +5,7 @@ import com.tdp.genesis.core.exception.GenesisException;
 import com.tdp.ms.sales.client.BusinessParameterWebClient;
 import com.tdp.ms.sales.model.request.GetSalesCharacteristicsRequest;
 import com.tdp.ms.sales.model.response.BusinessParametersResponse;
+import com.tdp.ms.sales.model.response.BusinessParametersResponseObjectExt;
 import com.tdp.ms.sales.model.response.GetSalesCharacteristicsResponse;
 import java.util.HashMap;
 import lombok.RequiredArgsConstructor;
@@ -43,6 +44,12 @@ public class BusinessParameterWebClientImpl implements BusinessParameterWebClien
 
     @Value("${application.endpoints.business_parameters.get_risk_domain_url}")
     private String getRiskDomainUrl;
+
+    @Value("${application.endpoints.business_parameters.get_bonificacion_simcard}")
+    private String getBonificacionSimcardUrl;
+
+    @Value("${application.endpoints.business_parameters.get_parameters_simcard}")
+    private String getParameterSimcardUrl;
 
     @Override
     public Mono<GetSalesCharacteristicsResponse> getSalesCharacteristicsByCommercialOperationType(
@@ -88,6 +95,36 @@ public class BusinessParameterWebClientImpl implements BusinessParameterWebClien
                 .retrieve()
                 // TODO: Validar la estructura del Genesis
                 .bodyToMono(BusinessParametersResponse.class);
+    }
+
+    @Override
+    public Mono<BusinessParametersResponseObjectExt> getBonificacionSimcard(String channelId, HashMap<String,String> headersMap) {
+        return webClientInsecure
+                .get()
+                .uri(getBonificacionSimcardUrl, channelId)
+                .header(HttpHeadersKey.UNICA_APPLICATION, headersMap.get(HttpHeadersKey.UNICA_APPLICATION))
+                .header(HttpHeadersKey.UNICA_PID, headersMap.get(HttpHeadersKey.UNICA_PID))
+                .header(HttpHeadersKey.UNICA_SERVICE_ID, headersMap.get(HttpHeadersKey.UNICA_SERVICE_ID))
+                .header(HttpHeadersKey.UNICA_USER, headersMap.get(HttpHeadersKey.UNICA_USER))
+                .accept(MediaType.APPLICATION_JSON)
+                .retrieve()
+                // TODO: Configuración del WebClient para los headers
+                .bodyToMono(BusinessParametersResponseObjectExt.class);
+    }
+
+    @Override
+    public Mono<BusinessParametersResponseObjectExt> getParametersSimcard(HashMap<String, String> headersMap) {
+        return webClientInsecure
+                .get()
+                .uri(getParameterSimcardUrl)
+                .header(HttpHeadersKey.UNICA_APPLICATION, headersMap.get(HttpHeadersKey.UNICA_APPLICATION))
+                .header(HttpHeadersKey.UNICA_PID, headersMap.get(HttpHeadersKey.UNICA_PID))
+                .header(HttpHeadersKey.UNICA_SERVICE_ID, headersMap.get(HttpHeadersKey.UNICA_SERVICE_ID))
+                .header(HttpHeadersKey.UNICA_USER, headersMap.get(HttpHeadersKey.UNICA_USER))
+                .accept(MediaType.APPLICATION_JSON)
+                .retrieve()
+                // TODO: Configuración del WebClient para los headers
+                .bodyToMono(BusinessParametersResponseObjectExt.class);
     }
 
 }

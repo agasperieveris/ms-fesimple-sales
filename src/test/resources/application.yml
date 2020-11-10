@@ -29,6 +29,8 @@ application:
     business_parameters:
       get_sales_characteristics_url: https://localhost
       get_risk_domain_url: https://localhost
+      get_bonificacion_simcard: https://localhost
+      get_parameters_simcard: https://localhost
     product_order:
       create_product_order_url: https://localhost
     url:

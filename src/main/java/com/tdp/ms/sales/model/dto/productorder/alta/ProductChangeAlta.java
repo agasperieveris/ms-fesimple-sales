@@ -1,14 +1,15 @@
-package com.tdp.ms.sales.model.dto.productorder.caeqcapl;
+package com.tdp.ms.sales.model.dto.productorder.alta;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.tdp.ms.sales.model.dto.productorder.caeq.ChangedContainedProduct;
+import com.tdp.ms.sales.model.dto.productorder.capl.NewAssignedBillingOffers;
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * Class: NewProductCaeqCapl. <br/>
+ * Class: ProductChangeAlta. <br/>
  * <b>Copyright</b>: &copy; 2020 Telef&oacute;nica del Per&uacute;<br/>
  * <b>Company</b>: Telef&oacute;nica del Per&uacute;<br/>
  *
@@ -28,11 +29,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@JsonInclude(JsonInclude.Include.NON_NULL)
-public class NewProductCaeqCapl {
-    @JsonInclude(JsonInclude.Include.NON_NULL)
-    private String productCatalogId;
-    @JsonProperty("productID")
-    private String productId;
-    private ProductChangeCaeqCapl productChanges;
+public class ProductChangeAlta {
+    private List<NewAssignedBillingOffers> newAssignedBillingOffers;
+    private List<ChangedContainedProduct> changedContainedProducts;
 }

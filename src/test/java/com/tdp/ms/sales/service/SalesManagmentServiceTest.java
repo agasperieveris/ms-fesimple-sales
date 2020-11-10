@@ -288,7 +288,7 @@ public class SalesManagmentServiceTest {
         List<ChangedContainedProduct> changedContainedProducts = new ArrayList<>();
 
         List<ChangedContainedProduct> result = salesManagmentServiceImpl
-                .changedContainedCaeqList(sale);
+                .changedContainedCaeqList(sale, "temp1");
 
     }
 
@@ -302,7 +302,7 @@ public class SalesManagmentServiceTest {
                 .build();
 
         ReserveStockRequest result = salesManagmentServiceImpl.buildReserveStockRequest(reserveStockRequest,
-                sale, createProductOrderResponse);
+                sale, createProductOrderResponse, "");
 
     }
 

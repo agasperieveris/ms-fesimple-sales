@@ -1,14 +1,16 @@
-package com.tdp.ms.sales.model.dto.productorder.caeqcapl;
+package com.tdp.ms.sales.model.dto.productorder.alta;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.tdp.ms.sales.model.dto.ShipmentDetailsType;
+import com.tdp.ms.sales.model.dto.productorder.FlexAttrType;
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * Class: NewProductCaeqCapl. <br/>
+ * Class: AltaRequest. <br/>
  * <b>Copyright</b>: &copy; 2020 Telef&oacute;nica del Per&uacute;<br/>
  * <b>Company</b>: Telef&oacute;nica del Per&uacute;<br/>
  *
@@ -29,10 +31,10 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class NewProductCaeqCapl {
-    @JsonInclude(JsonInclude.Include.NON_NULL)
-    private String productCatalogId;
-    @JsonProperty("productID")
-    private String productId;
-    private ProductChangeCaeqCapl productChanges;
+public class AltaRequest {
+    private List<NewProductAlta> newProducts;
+    private String sourceApp;
+    private List<FlexAttrType> orderAttributes;
+    private ShipmentDetailsType shipmentDetails;
+    //private String cip; // Consultar cuando estará solucionado el envío de cip
 }

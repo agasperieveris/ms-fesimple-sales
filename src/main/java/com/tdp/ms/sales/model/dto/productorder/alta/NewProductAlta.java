@@ -1,4 +1,4 @@
-package com.tdp.ms.sales.model.dto.productorder.caeqcapl;
+package com.tdp.ms.sales.model.dto.productorder.alta;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -8,7 +8,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * Class: NewProductCaeqCapl. <br/>
+ * Class: NewProductAlta. <br/>
  * <b>Copyright</b>: &copy; 2020 Telef&oacute;nica del Per&uacute;<br/>
  * <b>Company</b>: Telef&oacute;nica del Per&uacute;<br/>
  *
@@ -29,10 +29,12 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class NewProductCaeqCapl {
-    @JsonInclude(JsonInclude.Include.NON_NULL)
+public class NewProductAlta {
     private String productCatalogId;
-    @JsonProperty("productID")
-    private String productId;
-    private ProductChangeCaeqCapl productChanges;
+    private String temporaryId;
+    private String baId;
+    @JsonProperty("AccountId")
+    private String accountId;
+    private String invoiceCompany;
+    private ProductChangeAlta productChanges;
 }
