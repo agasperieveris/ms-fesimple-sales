@@ -215,7 +215,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
 
             // Getting Main CommercialTypeOperation value
             String commercialOperationType = saleRequest.getCommercialOperation().get(0).getReason();
-            System.out.println("COMMERCIAL OPERACTION: " + commercialOperationType);
+            System.out.println("COMMERCIAL OPERATION: " + commercialOperationType);
             Mono<List<BusinessParameterExt>> salesCharsByCOT = businessParameterWebClient
                     .getSalesCharacteristicsByCommercialOperationType(
                             GetSalesCharacteristicsRequest
@@ -225,15 +225,15 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                                     .build())
                     .map(this::retrieveCharacteristics);
 
-            // Get Bonificacion Sim
+            // Get Bonificacion Simcard
             Mono<BusinessParametersResponseObjectExt> getBonificacionSim = businessParameterWebClient
                     .getBonificacionSimcard(saleRequest.getChannel().getId(), request.getHeadersMap());
 
-            // Get Bonificacion Sim
-            Mono<BusinessParametersResponseObjectExt> getParameterSapidSimCard = businessParameterWebClient
+            // Get Parameters Simcard
+            Mono<BusinessParametersResponseObjectExt> getParametersSimCard = businessParameterWebClient
                     .getParametersSimcard(request.getHeadersMap());
 
-            return Mono.zip(getRiskDomain, salesCharsByCOT, getBonificacionSim, getParameterSapidSimCard)
+            return Mono.zip(getRiskDomain, salesCharsByCOT, getBonificacionSim, getParametersSimCard)
                     .flatMap(tuple -> {
                         System.out.println("RESPONSEEEE T1: " + tuple.getT1());
                         System.out.println("RESPONSEEEE T2: " + tuple.getT2());
@@ -320,21 +320,9 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                                     System.out.println("BOOLEAN CAEQ: " + flgCaeq[0]);
                                     // Call to Reserve Stock Service When Commercial Operation include CAEQ
                                     if (flgCaeq[0] || flgAlta[0]) {
-                                        ReserveStockRequest reserveStockRequest = new ReserveStockRequest();
-                                        reserveStockRequest = this.buildReserveStockRequest(reserveStockRequest,
-                                                saleRequest, createOrderResponse.getCreateProductOrderResponse(),
-                                                                                                    sapidSimcard[0]);
 
-                                        return stockWebClient.reserveStock(reserveStockRequest,
-                                                request.getHeadersMap(), saleRequest)
-                                                .flatMap(reserveStockResponse -> {
-
-                                                    this.setReserveReponseInSales(reserveStockResponse, saleRequest);
-
-                                                    // Call to Create Quotation Service When CommercialOperation Contains CAEQ
-                                                    return this.callToCreateQuotation(request, saleRequest, flgCasi[0],
-                                                            flgFinanciamiento[0]);
-                                                });
+                                        return this.callToReserveStockAndCreateQuotation(request, saleRequest, flgCasi[0], flgFinanciamiento[0],
+                                                sapidSimcard[0]);
                                     } else {
                                         if (flgCasi[0]) {
                                             // Call to Create Quotation Service When CommercialOperation Contains CASI
@@ -356,19 +344,9 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
 
             // Call to Reserve Stock Service When Commercial Operation include CAEQ
             if (flgCaeq[0] || flgAlta[0]) {
-                ReserveStockRequest reserveStockRequest = new ReserveStockRequest();
-                reserveStockRequest = this.buildReserveStockRequest(reserveStockRequest,
-                        saleRequest, saleRequest.getCommercialOperation().get(0).getOrder(), sapidSimcard[0]);
 
-                return stockWebClient.reserveStock(reserveStockRequest,
-                        request.getHeadersMap(), saleRequest)
-                        .flatMap(reserveStockResponse -> {
-
-                            this.setReserveReponseInSales(reserveStockResponse, saleRequest);
-
-                            // Call to Create Quotation Service When CommercialOperation Contains CAEQ
-                            return this.callToCreateQuotation(request, saleRequest, flgCasi[0], flgFinanciamiento[0]);
-                        });
+                return this.callToReserveStockAndCreateQuotation(request, saleRequest, flgCasi[0], flgFinanciamiento[0],
+                                                                                                    sapidSimcard[0]);
             } else {
                 if (flgCasi[0]) {
 
@@ -389,6 +367,23 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         } else {
             return salesRepository.save(saleRequest);
         }
+    }
+
+    private Mono<Sale> callToReserveStockAndCreateQuotation(PostSalesRequest request, Sale saleRequest, Boolean flgCasi,
+                                             Boolean flgFinanciamiento, String sapidSimcard) {
+        ReserveStockRequest reserveStockRequest = new ReserveStockRequest();
+        reserveStockRequest = this.buildReserveStockRequest(reserveStockRequest,
+                saleRequest, saleRequest.getCommercialOperation().get(0).getOrder(), sapidSimcard);
+
+        return stockWebClient.reserveStock(reserveStockRequest,
+                request.getHeadersMap(), saleRequest)
+                .flatMap(reserveStockResponse -> {
+
+                    this.setReserveReponseInSales(reserveStockResponse, saleRequest);
+
+                    // Call to Create Quotation Service When CommercialOperation Contains CAEQ
+                    return this.callToCreateQuotation(request, saleRequest, flgCasi, flgFinanciamiento);
+                });
     }
 
     private void setReserveReponseInSales(ReserveStockResponse reserveStockResponse, Sale saleRequest) {
@@ -823,7 +818,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
             ChangedCharacteristic changedCharacteristic2 = ChangedCharacteristic
                     .builder()
                     .characteristicId("16524")
-                    .characteristicValue("nanoSIM") // Pendiente
+                    .characteristicValue("nanoSIM")
                     .build();
             changedCharacteristicList.add(changedCharacteristic2);
         }
@@ -1320,9 +1315,12 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
 
         // EquipmentIMEI Characteristic
         String deviceImei = "000000000000000";
-        if (saleRequest.getChannel().getId().equalsIgnoreCase("DLC")
-                || saleRequest.getChannel().getId().equalsIgnoreCase("DALV")) {
-            deviceImei = this.getStringValueByKeyFromAdditionalDataList(saleRequest.getAdditionalData(), "MOVILE_IMEI");
+        String channelId = saleRequest.getChannel().getId();
+        if (channelId.equalsIgnoreCase("DLC")
+                || channelId.equalsIgnoreCase("DLV")
+                || channelId.equalsIgnoreCase("DLS")) {
+            deviceImei = this.getStringValueByKeyFromAdditionalDataList(saleRequest.getAdditionalData(),
+                                                                                                    "MOVILE_IMEI");
         }
         ChangedCharacteristic changedCharacteristic3 = ChangedCharacteristic
                 .builder()
