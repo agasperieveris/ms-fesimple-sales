@@ -102,7 +102,7 @@ public class SalesServiceImpl implements SalesService {
     }
 
     @Override
-    public Mono<Sale> put(String salesId, Sale request) {
+    public Mono<Sale> put(String salesId, Sale request, Map<String, String> headersMap) {
         // buscar en la colección
         Mono<Sale> existingSale = salesRepository.findBySalesId(salesId);
 
@@ -119,7 +119,8 @@ public class SalesServiceImpl implements SalesService {
                                             .builder()
                                             .typeEventFlow(FLOW_SALE_PUT)
                                             .message(request)
-                                            .build()
+                                            .build(),
+                                            headersMap
                                     )
                                     .subscribe();
                                 return r;
