@@ -58,6 +58,7 @@ public class SalesServiceImpl implements SalesService {
 
     Logger logger = LoggerFactory.getLogger(SalesServiceImpl.class);
     
+    private static final String FLOW_SALE_POST = "01";
     private static final String FLOW_SALE_PUT = "02";
     
     @Value("${application.endpoints.url.business_parameters.seq_number}")
@@ -97,7 +98,21 @@ public class SalesServiceImpl implements SalesService {
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy'T'HH:mm:ss");
             request.setSaleCreationDate(date.format(formatter));
 
-            return salesRepository.save(request);
+            return salesRepository.save(request)
+                    .map(r -> {
+                        // Llamada a receptor
+                        webClientReceptor
+                            .register(
+                                    ReceptorRequest
+                                    .builder()
+                                    .typeEventFlow(FLOW_SALE_POST)
+                                    .message(request)
+                                    .build(),
+                                    headersMap
+                            )
+                            .subscribe();
+                        return r;
+                    });
         });
     }
 
