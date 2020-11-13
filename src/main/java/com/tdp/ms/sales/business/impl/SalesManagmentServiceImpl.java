@@ -12,6 +12,7 @@ import com.tdp.ms.sales.model.dto.ContactMedium;
 import com.tdp.ms.sales.model.dto.CreateProductOrderResponseType;
 import com.tdp.ms.sales.model.dto.IdentityValidationType;
 import com.tdp.ms.sales.model.dto.KeyValueType;
+import com.tdp.ms.sales.model.dto.OfferingType;
 import com.tdp.ms.sales.model.dto.ShipmentDetailsType;
 import com.tdp.ms.sales.model.dto.SiteRefType;
 import com.tdp.ms.sales.model.dto.TimePeriod;
@@ -227,6 +228,36 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         {
             // Fija Commercial Operations
 
+            // Identifying New Assigned Billing Offers SVAs
+            List<NewAssignedBillingOffers> newAssignedBillingOffersCableTvList = new ArrayList<>();
+            List<NewAssignedBillingOffers> newAssignedBillingOffersBroadbandList = new ArrayList<>();
+            List<NewAssignedBillingOffers> newAssignedBillingOffersLandlineList = new ArrayList<>();
+
+            List<OfferingType> productOfferings = saleRequest.getCommercialOperation().get(0).getProductOfferings();
+            for (int i = 1; i < productOfferings.size(); i++) {
+                String productTypeSva = productOfferings.get(i).getProductSpecification().get(0).getProductType();
+                String productTypeComponent = this.getStringValueByKeyFromAdditionalDataList(productOfferings.get(i)
+                        .getAdditionalData(), "productType"); // Pendiente confirmación de la ruta de referencia del Additional Data
+
+                if (productTypeSva.equalsIgnoreCase("sva")) {
+
+                    if (productTypeComponent.equalsIgnoreCase("cableTv")
+                            || productTypeComponent.equalsIgnoreCase("broadband")
+                            || productTypeComponent.equalsIgnoreCase("landline")) {
+
+                        NewAssignedBillingOffers newAssignedBillingOffers = NewAssignedBillingOffers
+                                .builder()
+                                .productSpecPricingId(productOfferings.get(i).getId())
+                                .parentProductCatalogId(this.getStringValueByKeyFromAdditionalDataList(productOfferings
+                                        .get(i).getAdditionalData(), "parentProductCatalogID"))
+                                .build();
+                        if (productTypeComponent.equalsIgnoreCase("cableTv")) newAssignedBillingOffersCableTvList.add(newAssignedBillingOffers);
+                        if (productTypeComponent.equalsIgnoreCase("broadband")) newAssignedBillingOffersBroadbandList.add(newAssignedBillingOffers);
+                        if (productTypeComponent.equalsIgnoreCase("landline")) newAssignedBillingOffersLandlineList.add(newAssignedBillingOffers);
+                    }
+                }
+            }
+
             // New Products Alta Fija
             List<NewProductAltaFija> newProductsAltaFijaList = new ArrayList<>();
             String baId = saleRequest.getRelatedParty().get(0).getBillingArragmentId();
@@ -247,6 +278,17 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                                     .accountId(accountId)
                                     .invoiceCompany("TDP")
                                     .build();
+
+                            //Adding Landline SVAs
+                            if (!newAssignedBillingOffersLandlineList.isEmpty()) {
+
+                                ProductChangeAltaFija productChangesLandline = ProductChangeAltaFija
+                                        .builder()
+                                        .newAssignedBillingOffers(newAssignedBillingOffersLandlineList)
+                                        .build();
+                                newProductAltaFijaLandline.setProductChanges(productChangesLandline);
+                            }
+
                             newProductsAltaFijaList.add(newProductAltaFijaLandline);
 
                         } else if (productType.equalsIgnoreCase("broadband")) {
@@ -288,6 +330,10 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                                     .builder()
                                     .changedContainedProducts(changedContainedProductsBroadbandList)
                                     .build();
+                            //Adding Broadband SVAs
+                            if (!newAssignedBillingOffersBroadbandList.isEmpty()) {
+                                productChangesBroadband.setNewAssignedBillingOffers(newAssignedBillingOffersBroadbandList);
+                            }
 
                             NewProductAltaFija newProductAltaFijaBroadband = NewProductAltaFija
                                     .builder()
@@ -300,6 +346,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                                     .productChanges(productChangesBroadband)
                                     .build();
                             newProductsAltaFijaList.add(newProductAltaFijaBroadband);
+
                         } else if (productType.equalsIgnoreCase("cableTv")) {
 
                             NewProductAltaFija newProductAltaFijaCableTv = NewProductAltaFija
@@ -311,7 +358,19 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                                     .accountId(accountId)
                                     .invoiceCompany("TDP")
                                     .build();
+
+                            //Adding CableTv SVAs
+                            if (!newAssignedBillingOffersCableTvList.isEmpty()) {
+
+                                ProductChangeAltaFija productChangesCableTv = ProductChangeAltaFija
+                                        .builder()
+                                        .newAssignedBillingOffers(newAssignedBillingOffersCableTvList)
+                                        .build();
+                                newProductAltaFijaCableTv.setProductChanges(productChangesCableTv);
+                            }
+
                             newProductsAltaFijaList.add(newProductAltaFijaCableTv);
+
                         } else if (productType.equalsIgnoreCase("ShEq")) {
 
                             NewProductAltaFija newProductAltaFijaShareEquipment = NewProductAltaFija
@@ -324,6 +383,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                                     .invoiceCompany("TDP")
                                     .build();
                             newProductsAltaFijaList.add(newProductAltaFijaShareEquipment);
+
                         } else if (productType.equalsIgnoreCase("Accesories")) {
 
                             ChangedCharacteristic changedCharacteristicAccesories1 = ChangedCharacteristic
