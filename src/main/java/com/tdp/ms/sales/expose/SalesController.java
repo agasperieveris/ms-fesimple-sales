@@ -1,6 +1,7 @@
 package com.tdp.ms.sales.expose;
 
 import com.tdp.genesis.core.constants.HttpHeadersKey;
+import com.tdp.ms.sales.business.SalesManagementService;
 import com.tdp.ms.sales.business.SalesService;
 import com.tdp.ms.sales.model.entity.Sale;
 import java.util.HashMap;
@@ -40,7 +41,7 @@ import reactor.core.publisher.Mono;
 @CrossOrigin
 public class SalesController {
     @Autowired
-    private SalesService salesService;
+    private SalesManagementService salesManagementService;
 
     /**
      * Registra los datos de un Sale en la BBDD de la Web Convergente.
@@ -58,9 +59,7 @@ public class SalesController {
                                             @RequestHeader(HttpHeadersKey.UNICA_APPLICATION) String application,
                                             @RequestHeader(HttpHeadersKey.UNICA_PID) String pid,
                                             @RequestHeader(HttpHeadersKey.UNICA_USER) String user) {
-
-        //TODO: Por ahora solo se hace lo mismo que el post de salesLead
-        return salesService.post(request, fillHeaders(serviceId, application, pid, user));
+        return salesManagementService.post(request, fillHeaders(serviceId, application, pid, user));
     }
 
     private Map<String, String> fillHeaders(String serviceId, String application, String pid, String user) {
