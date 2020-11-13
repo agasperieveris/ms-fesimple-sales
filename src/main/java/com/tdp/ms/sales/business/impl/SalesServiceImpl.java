@@ -4,8 +4,10 @@ import com.azure.cosmos.implementation.NotFoundException;
 import com.tdp.genesis.core.exception.GenesisException;
 import com.tdp.ms.sales.business.SalesService;
 import com.tdp.ms.sales.client.WebClientBusinessParameters;
+import com.tdp.ms.sales.client.WebClientReceptor;
 import com.tdp.ms.sales.model.entity.Sale;
 import com.tdp.ms.sales.model.request.GetSalesRequest;
+import com.tdp.ms.sales.model.request.ReceptorRequest;
 import com.tdp.ms.sales.model.response.BusinessParametersResponse;
 import com.tdp.ms.sales.repository.SalesRepository;
 
@@ -19,6 +21,9 @@ import java.util.Map;
 import java.util.UUID;
 
 import lombok.RequiredArgsConstructor;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -49,7 +54,12 @@ public class SalesServiceImpl implements SalesService {
     private SalesRepository salesRepository;
 
     private final WebClientBusinessParameters webClient;
+    private final WebClientReceptor webClientReceptor;
 
+    Logger logger = LoggerFactory.getLogger(SalesServiceImpl.class);
+    
+    private static final String FLOW_SALE_PUT = "02";
+    
     @Value("${application.endpoints.url.business_parameters.seq_number}")
     private String seqNumber;
 
@@ -96,13 +106,25 @@ public class SalesServiceImpl implements SalesService {
         // buscar en la colección
         Mono<Sale> existingSale = salesRepository.findBySalesId(salesId);
 
-
         return existingSale
                 .switchIfEmpty(Mono.error(new NotFoundException("El salesId solicitado no se encuentra registrado.")))
                 .flatMap(item -> {
                     request.setSalesId(item.getSalesId());
-                    return salesRepository.save(request);
-        });
+                    return salesRepository.save(request)
+                            .map(r -> {
+                                // Llamada a receptor
+                                webClientReceptor
+                                    .register(
+                                            ReceptorRequest
+                                            .builder()
+                                            .typeEventFlow(FLOW_SALE_PUT)
+                                            .message(request)
+                                            .build()
+                                    )
+                                    .subscribe();
+                                return r;
+                            });
+                });
 
     }
 

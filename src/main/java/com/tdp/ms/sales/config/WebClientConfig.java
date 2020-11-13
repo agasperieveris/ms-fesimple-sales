@@ -5,6 +5,7 @@ import io.netty.handler.ssl.SslContextBuilder;
 import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
 import javax.net.ssl.SSLException;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
@@ -33,6 +34,8 @@ public class WebClientConfig {
 
     //@Value("${application.security.token.url}")
     private static String tokenUrl = "";
+    @Value("${application.endpoints.receptor.register_url}")
+    private String urlReceptorRegister;
 
     /**
      * Bean to config Webclient.
@@ -91,6 +94,28 @@ public class WebClientConfig {
     public WebClient webClientSecure() {
         return WebClient.builder().build();
     }
-
+    
+    /**
+     * Bean para configurar la conexión contra el receptor de colas.
+     * 
+     * @return WebClient.
+     * @throws SSLException SSLException.
+     */
+    @Bean
+    public WebClient webClientInsecureReceptor() throws SSLException {
+        SslContext sslContext = SslContextBuilder
+                .forClient()
+                .trustManager(InsecureTrustManagerFactory.INSTANCE)
+                .build();
+        
+        HttpClient httpClient = HttpClient
+                .create().secure(t -> t.sslContext(sslContext));
+        
+        return WebClient
+                .builder()
+                .baseUrl(urlReceptorRegister)
+                .clientConnector(new ReactorClientHttpConnector(httpClient))
+                .build();
+    }
 }
 
