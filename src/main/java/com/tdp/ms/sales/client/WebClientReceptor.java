@@ -1,5 +1,7 @@
 package com.tdp.ms.sales.client;
 
+import java.util.Map;
+
 import com.tdp.ms.sales.model.request.ReceptorRequest;
 import com.tdp.ms.sales.model.response.ReceptorResponse;
 
@@ -23,5 +25,5 @@ import reactor.core.publisher.Mono;
  * @version 1.0
  */
 public interface WebClientReceptor {
-    Mono<ReceptorResponse> register(ReceptorRequest request);
+    Mono<ReceptorResponse> register(ReceptorRequest request, Map<String, String> headers);
 }

@@ -52,7 +52,7 @@ public interface SalesService {
      * @param request Datos de la venta actualizados
      * @return SalesResponse, datos actualizados de la venta
      */
-    Mono<Sale> put(String salesId, Sale request);
+    Mono<Sale> put(String salesId, Sale request, Map<String, String> headersMap);
 
     /**
      * Se listan las ventas dependiendo de los parámetros que se le pasen.

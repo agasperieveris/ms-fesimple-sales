@@ -117,7 +117,7 @@ public class SalesLeadController {
                                   @RequestHeader(HttpHeadersKey.UNICA_PID) String pid,
                                   @RequestHeader(HttpHeadersKey.UNICA_USER) String user) {
 
-        return salesService.put(salesId, request);
+        return salesService.put(salesId, request, fillHeaders(serviceId, application, pid, user));
     }
 
     /**
