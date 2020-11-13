@@ -5,9 +5,9 @@ import com.tdp.ms.sales.client.WebClientReceptor;
 import com.tdp.ms.sales.model.request.ReceptorRequest;
 import com.tdp.ms.sales.model.response.ReceptorResponse;
 
-import lombok.RequiredArgsConstructor;
-
 import java.util.Map;
+
+import lombok.RequiredArgsConstructor;
 
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
