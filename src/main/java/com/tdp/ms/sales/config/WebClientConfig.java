@@ -1,10 +1,10 @@
 package com.tdp.ms.sales.config;
 
+import com.tdp.genesis.core.starter.reactive.webclient.filters.LogWebClientFilters;
 import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.SslContextBuilder;
 import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
 import javax.net.ssl.SSLException;
-
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -44,7 +44,11 @@ public class WebClientConfig {
      */
     @Bean
     public WebClient webClient() {
-        return WebClient.builder().build();
+        return WebClient.builder()
+                .filter(LogWebClientFilters.logResponse())
+                .filter(LogWebClientFilters.logRequest())
+                .filter(LogWebClientFilters.mdcFilter)
+                .build();
     }
 
     /**
@@ -63,6 +67,9 @@ public class WebClientConfig {
         HttpClient httpClient = HttpClient.create().secure(t -> t.sslContext(sslContext));
         return WebClient
                 .builder()
+                .filter(LogWebClientFilters.logResponse())
+                .filter(LogWebClientFilters.logRequest())
+                .filter(LogWebClientFilters.mdcFilter)
                 .baseUrl(tokenUrl)
                 .clientConnector(new ReactorClientHttpConnector(httpClient))
                 .build();
@@ -77,9 +84,12 @@ public class WebClientConfig {
     public WebClient webClientInsecure() throws SSLException {
         SslContext sslContext = SslContextBuilder.forClient().trustManager(InsecureTrustManagerFactory.INSTANCE)
                 .build();
-        HttpClient httpClient = HttpClient.create().secure(t -> t.sslContext(sslContext));
+        HttpClient httpClient = HttpClient.create()
+                .secure(t -> t.sslContext(sslContext));
         return WebClient.builder()
-                // .baseUrl(tokenUrl)
+                .filter(LogWebClientFilters.logResponse())
+                .filter(LogWebClientFilters.logRequest())
+                .filter(LogWebClientFilters.mdcFilter)
                 .clientConnector(new ReactorClientHttpConnector(httpClient)).build();
 
 
@@ -92,7 +102,11 @@ public class WebClientConfig {
      */
     @Bean
     public WebClient webClientSecure() {
-        return WebClient.builder().build();
+        return WebClient.builder()
+                .filter(LogWebClientFilters.logResponse())
+                .filter(LogWebClientFilters.logRequest())
+                .filter(LogWebClientFilters.mdcFilter)
+                .build();
     }
     
     /**
@@ -113,6 +127,9 @@ public class WebClientConfig {
         
         return WebClient
                 .builder()
+                .filter(LogWebClientFilters.logResponse())
+                .filter(LogWebClientFilters.logRequest())
+                .filter(LogWebClientFilters.mdcFilter)
                 .baseUrl(urlReceptorRegister)
                 .clientConnector(new ReactorClientHttpConnector(httpClient))
                 .build();
