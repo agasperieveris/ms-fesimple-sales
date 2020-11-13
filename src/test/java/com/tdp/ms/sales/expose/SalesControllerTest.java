@@ -1,7 +1,7 @@
 package com.tdp.ms.sales.expose;
 
 import com.tdp.genesis.core.constants.HttpHeadersKey;
-import com.tdp.ms.sales.business.SalesService;
+import com.tdp.ms.sales.business.SalesManagementService;
 import com.tdp.ms.sales.model.entity.Sale;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -23,7 +23,7 @@ public class SalesControllerTest {
     private WebTestClient webClient;
 
     @MockBean
-    private SalesService salesService;
+    private SalesManagementService salesManagementService;
 
     private static Sale sale;
     private static Sale salesResponse;
@@ -47,7 +47,7 @@ public class SalesControllerTest {
 
     @Test
     void createdSales() {
-        Mockito.when(salesService.post(any(), any()))
+        Mockito.when(salesManagementService.post(any(), any()))
                 .thenReturn(Mono.just(salesResponse));
 
         WebTestClient.ResponseSpec responseSpec = webClient.post()
