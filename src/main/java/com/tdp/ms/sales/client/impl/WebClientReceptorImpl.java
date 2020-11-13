@@ -1,10 +1,13 @@
 package com.tdp.ms.sales.client.impl;
 
+import com.tdp.genesis.core.constants.HttpHeadersKey;
 import com.tdp.ms.sales.client.WebClientReceptor;
 import com.tdp.ms.sales.model.request.ReceptorRequest;
 import com.tdp.ms.sales.model.response.ReceptorResponse;
 
 import lombok.RequiredArgsConstructor;
+
+import java.util.Map;
 
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
@@ -35,9 +38,13 @@ public class WebClientReceptorImpl implements WebClientReceptor {
     private final WebClient webClientInsecureReceptor;
 
     @Override
-    public Mono<ReceptorResponse> register(ReceptorRequest request) {
+    public Mono<ReceptorResponse> register(ReceptorRequest request, Map<String, String> headers) {
         WebClient.ResponseSpec response = webClientInsecureReceptor
                 .post()
+                .header(HttpHeadersKey.UNICA_SERVICE_ID, headers.get(HttpHeadersKey.UNICA_SERVICE_ID))
+                .header(HttpHeadersKey.UNICA_APPLICATION, headers.get(HttpHeadersKey.UNICA_APPLICATION))
+                .header(HttpHeadersKey.UNICA_PID, headers.get(HttpHeadersKey.UNICA_PID))
+                .header(HttpHeadersKey.UNICA_USER, headers.get(HttpHeadersKey.UNICA_USER))
                 .accept(MediaType.APPLICATION_JSON)
                 .bodyValue(request)
                 .retrieve();

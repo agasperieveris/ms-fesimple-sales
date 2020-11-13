@@ -287,13 +287,19 @@ public class SalesServiceTest {
 
     @Test
     void putSaveSale() {
+        Map<String, String> headersMap = new HashMap<String, String>();
+        headersMap.put(HttpHeadersKey.UNICA_SERVICE_ID, "serviceId");
+        headersMap.put(HttpHeadersKey.UNICA_PID, "pid");
+        headersMap.put(HttpHeadersKey.UNICA_APPLICATION, "application");
+        headersMap.put(HttpHeadersKey.UNICA_USER, "user");
+        
         Mockito.when(salesRepository.findBySalesId(any()))
                 .thenReturn(Mono.just(sale2));
 
         Mockito.when(salesRepository.save(any()))
                 .thenReturn(Mono.just(sale2));
 
-        Mono<Sale> result = salesService.put("FE-000000001", sale);
+        Mono<Sale> result = salesService.put("FE-000000001", sale, headersMap);
 
         StepVerifier.create(result)
                 .assertNext(c -> {
