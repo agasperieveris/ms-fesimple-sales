@@ -92,7 +92,7 @@ public class SalesLeadControllerTest {
 
     @Test
     void updateSales() {
-        Mockito.when(salesService.put(any(), any()))
+        Mockito.when(salesService.put(any(), any(), any()))
                 .thenReturn(Mono.just(salesResponse));
 
         WebTestClient.ResponseSpec responseSpec = webClient.put()
