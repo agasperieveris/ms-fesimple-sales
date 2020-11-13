@@ -1,14 +1,14 @@
-package com.tdp.ms.sales.model.dto.productorder.alta;
+package com.tdp.ms.sales.model.dto.productorder.altafija;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 /**
- * Class: NewProductAlta. <br/>
+ * Class: ServiceabilityInfoType. <br/>
  * <b>Copyright</b>: &copy; 2020 Telef&oacute;nica del Per&uacute;<br/>
  * <b>Company</b>: Telef&oacute;nica del Per&uacute;<br/>
  *
@@ -20,21 +20,18 @@ import lombok.NoArgsConstructor;
  *         </ul>
  *         <u>Changes</u>:<br/>
  *         <ul>
- *         <li>2020-09-24 Creaci&oacute;n del proyecto.</li>
+ *         <li>2020-11-11 Creaci&oacute;n del proyecto.</li>
  *         </ul>
  * @version 1.0
  */
-@Data
 @Builder
-@AllArgsConstructor
+@Getter
 @NoArgsConstructor
-@JsonInclude(JsonInclude.Include.NON_NULL)
-public class NewProductAlta {
-    private String productCatalogId;
-    private String temporaryId;
-    private String baId;
-    @JsonProperty("AccountId")
-    private String accountId;
-    private String invoiceCompany;
-    private ProductChangeAlta productChanges;
+@AllArgsConstructor
+public class ServiceabilityInfoType {
+    @JsonProperty("serviceabilityID")
+    private String serviceabilityId;
+    private List<ServiceabilityOfferType> offers;
+    @JsonProperty("CommercialZone")
+    private CommercialZoneType commercialZone;
 }

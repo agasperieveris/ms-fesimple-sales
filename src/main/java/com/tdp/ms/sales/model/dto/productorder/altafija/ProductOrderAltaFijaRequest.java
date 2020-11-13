@@ -1,13 +1,13 @@
-package com.tdp.ms.sales.model.dto.productorder.alta;
+package com.tdp.ms.sales.model.dto.productorder.altafija;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 /**
- * Class: ProductOrderAltaRequest. <br/>
+ * Class: ProductOrderAltaFijaRequest. <br/>
  * <b>Copyright</b>: &copy; 2020 Telef&oacute;nica del Per&uacute;<br/>
  * <b>Company</b>: Telef&oacute;nica del Per&uacute;<br/>
  *
@@ -19,17 +19,17 @@ import lombok.NoArgsConstructor;
  *         </ul>
  *         <u>Changes</u>:<br/>
  *         <ul>
- *         <li>2020-09-29 Creaci&oacute;n del proyecto.</li>
+ *         <li>2020-11-11 Creaci&oacute;n del proyecto.</li>
  *         </ul>
  * @version 1.0
  */
-@Data
 @Builder
-@AllArgsConstructor
+@Getter
 @NoArgsConstructor
-public class ProductOrderAltaRequest {
+@AllArgsConstructor
+public class ProductOrderAltaFijaRequest {
     private String salesChannel;
-    private AltaRequest request;
+    private AltaFijaRequest request;
     private String customerId;
     @JsonProperty("productOfferingID")
     private String productOfferingId;

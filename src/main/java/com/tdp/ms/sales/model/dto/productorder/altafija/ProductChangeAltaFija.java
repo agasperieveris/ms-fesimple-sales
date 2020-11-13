@@ -1,16 +1,16 @@
-package com.tdp.ms.sales.model.dto.productorder.alta;
+package com.tdp.ms.sales.model.dto.productorder.altafija;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.tdp.ms.sales.model.dto.ShipmentDetailsType;
-import com.tdp.ms.sales.model.dto.productorder.FlexAttrType;
+import com.tdp.ms.sales.model.dto.productorder.caeq.ChangedContainedProduct;
+import com.tdp.ms.sales.model.dto.productorder.capl.NewAssignedBillingOffers;
 import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 /**
- * Class: AltaRequest. <br/>
+ * Class: ProductChangeAltaFija. <br/>
  * <b>Copyright</b>: &copy; 2020 Telef&oacute;nica del Per&uacute;<br/>
  * <b>Company</b>: Telef&oacute;nica del Per&uacute;<br/>
  *
@@ -22,19 +22,17 @@ import lombok.NoArgsConstructor;
  *         </ul>
  *         <u>Changes</u>:<br/>
  *         <ul>
- *         <li>2020-09-24 Creaci&oacute;n del proyecto.</li>
+ *         <li>2020-11-11 Creaci&oacute;n del proyecto.</li>
  *         </ul>
  * @version 1.0
  */
-@Data
 @Builder
-@AllArgsConstructor
+@Getter
 @NoArgsConstructor
-@JsonInclude(JsonInclude.Include.NON_NULL)
-public class AltaRequest {
-    private List<NewProductAlta> newProducts;
-    private String sourceApp;
-    private List<FlexAttrType> orderAttributes;
-    private ShipmentDetailsType shipmentDetails;
-    //private String cip; // Consultar cuando estará solucionado el envío de cip
+@AllArgsConstructor
+public class ProductChangeAltaFija {
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private List<ChangedContainedProduct> changedContainedProducts;
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private List<NewAssignedBillingOffers> newAssignedBillingOffers;
 }

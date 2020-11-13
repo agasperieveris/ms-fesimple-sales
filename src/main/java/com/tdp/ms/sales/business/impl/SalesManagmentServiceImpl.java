@@ -18,10 +18,19 @@ import com.tdp.ms.sales.model.dto.TimePeriod;
 import com.tdp.ms.sales.model.dto.productorder.CreateProductOrderGeneralRequest;
 import com.tdp.ms.sales.model.dto.productorder.FlexAttrType;
 import com.tdp.ms.sales.model.dto.productorder.FlexAttrValueType;
-import com.tdp.ms.sales.model.dto.productorder.alta.AltaRequest;
-import com.tdp.ms.sales.model.dto.productorder.alta.NewProductAlta;
-import com.tdp.ms.sales.model.dto.productorder.alta.ProductChangeAlta;
-import com.tdp.ms.sales.model.dto.productorder.alta.ProductOrderAltaRequest;
+import com.tdp.ms.sales.model.dto.productorder.altafija.AltaFijaRequest;
+import com.tdp.ms.sales.model.dto.productorder.altafija.CharacteristicOfferType;
+import com.tdp.ms.sales.model.dto.productorder.altafija.CommercialZoneType;
+import com.tdp.ms.sales.model.dto.productorder.altafija.NewProductAltaFija;
+import com.tdp.ms.sales.model.dto.productorder.altafija.ProductChangeAltaFija;
+import com.tdp.ms.sales.model.dto.productorder.altafija.ProductLineType;
+import com.tdp.ms.sales.model.dto.productorder.altafija.ProductOrderAltaFijaRequest;
+import com.tdp.ms.sales.model.dto.productorder.altafija.ServiceabilityInfoType;
+import com.tdp.ms.sales.model.dto.productorder.altafija.ServiceabilityOfferType;
+import com.tdp.ms.sales.model.dto.productorder.altamobile.AltaMobileRequest;
+import com.tdp.ms.sales.model.dto.productorder.altamobile.NewProductAltaMobile;
+import com.tdp.ms.sales.model.dto.productorder.altamobile.ProductChangeAltaMobile;
+import com.tdp.ms.sales.model.dto.productorder.altamobile.ProductOrderAltaMobileRequest;
 import com.tdp.ms.sales.model.dto.productorder.caeq.CaeqRequest;
 import com.tdp.ms.sales.model.dto.productorder.caeq.ChangedCharacteristic;
 import com.tdp.ms.sales.model.dto.productorder.caeq.ChangedContainedProduct;
@@ -69,6 +78,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -114,6 +125,8 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
     private final static String PROVINCE_OF_SHIPPING_ADDRESS = "provinceOfShippingAddress";
     private final static String SHOP_ADDRESS = "shopAddress";
 
+    private static final Logger LOG = LoggerFactory.getLogger(SalesManagmentServiceImpl.class);
+
     public List<BusinessParameterExt> retrieveCharacteristics(GetSalesCharacteristicsResponse response) {
         System.out.println("retrieveCharacteristics: " + response.getData().get(0).getExt());
         return response.getData().get(0).getExt();
@@ -152,6 +165,27 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
 
         // Getting Sale object
         Sale saleRequest = request.getSale();
+
+        // Getting token Mcss, request header to create product order service
+        String tokenMcss = "";
+        for (KeyValueType kv : saleRequest.getAdditionalData()) {
+            if (kv.getKey().equals("ufxauthorization")) {
+                System.out.println("ufxauthorization VALUE: " + kv.getValue());
+                tokenMcss = kv.getValue();
+            }
+        }
+        System.out.println("TOKEEEN: " + tokenMcss);
+        if (tokenMcss == null || tokenMcss.equals("")) {
+            return Mono.error(GenesisException
+                    .builder()
+                    .exceptionId("SVC1000")
+                    .wildcards(new String[]{"Token MCSS is mandatory. Must be sent into Additional Data Property "
+                            + "with 'ufxauthorization' key value."})
+                    .build());
+        }
+        request.getHeadersMap().put("ufxauthorization", tokenMcss);
+
+        // Commercial Operations Types Flags
         final Boolean[] flgCapl = {false};
         final Boolean[] flgCaeq = {false};
         final Boolean[] flgCasi = {false};
@@ -175,198 +209,548 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
             }
         }
 
-        flgFinanciamiento[0] = !StringUtils.isEmpty(saleRequest.getCommercialOperation().get(0).getDeviceOffering().get(0).getOffers()
-                .get(0).getBillingOfferings().get(0).getCommitmentPeriods().get(0).getFinancingInstalments().get(0)
-                .getDescription()) && !saleRequest.getCommercialOperation().get(0).getDeviceOffering().get(0).getOffers()
-                .get(0).getBillingOfferings().get(0).getCommitmentPeriods().get(0).getFinancingInstalments().get(0)
-                .getDescription().equals("CONTADO");
+        flgFinanciamiento[0] = !StringUtils.isEmpty(saleRequest.getCommercialOperation().get(0).getDeviceOffering()
+                .get(0).getOffers().get(0).getBillingOfferings().get(0).getCommitmentPeriods().get(0)
+                .getFinancingInstalments().get(0).getDescription()) && !saleRequest.getCommercialOperation().get(0)
+                .getDeviceOffering().get(0).getOffers().get(0).getBillingOfferings().get(0).getCommitmentPeriods()
+                .get(0).getFinancingInstalments().get(0).getDescription().equals("CONTADO");
 
-        if (StringUtils.isEmpty(saleRequest.getCommercialOperation().get(0).getOrder().getProductOrderId())
-                && StringUtils.isEmpty(saleRequest.getCommercialOperation().get(0).getDeviceOffering().get(0)
-                .getStock().getReservationId())) {
-            // Getting token Mcss, request header to create product order service
-            String tokenMcss = "";
-            for (KeyValueType kv : saleRequest.getAdditionalData()) {
-                if (kv.getKey().equals("ufxauthorization")) {
-                    System.out.println("ufxauthorization VALUE: " + kv.getValue());
-                    tokenMcss = kv.getValue();
-                }
-            }
-            System.out.println("TOKEEEN: " + tokenMcss);
-            if (tokenMcss == null || tokenMcss.equals("")) {
-                return Mono.error(GenesisException
-                        .builder()
-                        .exceptionId("SVC1000")
-                        .wildcards(new String[]{"Token MCSS is mandatory. Must be sent into Additional Data Property "
-                                + "with 'ufxauthorization' key value."})
-                        .build());
-            }
-            request.getHeadersMap().put("ufxauthorization", tokenMcss);
+        // Getting Main CommercialTypeOperation value
+        String commercialOperationReason = saleRequest.getCommercialOperation().get(0).getReason();
+        String mainProductType = saleRequest.getProductType();
+        System.out.println("MAIN COMMERCIAL OPERATION TYPE: " + commercialOperationReason);
 
-            // Get mail Validation, dominio de riesgo - SERGIO
-            Mono<BusinessParametersResponse> getRiskDomain = businessParameterWebClient
-                    .getRiskDomain(retrieveDomain(saleRequest.getProspectContact()), request.getHeadersMap());
+        // ALTA FIJA
+        if (commercialOperationReason.equalsIgnoreCase("ALTA")
+                && mainProductType.equalsIgnoreCase("WIRELINE")
+                && saleRequest.getCommercialOperation().get(0).getAction().equalsIgnoreCase("PROVIDE"))
+        {
+            // Fija Commercial Operations
 
-            // Getting commons request properties
-            String channelIdRequest = saleRequest.getChannel().getId();
-            String customerIdRequest = saleRequest.getRelatedParty().get(0).getCustomerId();
-            String productOfferingIdRequest = saleRequest.getCommercialOperation()
-                    .get(0).getProductOfferings().get(0).getId();
+            // New Products Alta Fija
+            List<NewProductAltaFija> newProductsAltaFijaList = new ArrayList<>();
+            String baId = saleRequest.getRelatedParty().get(0).getBillingArragmentId();
+            String accountId = saleRequest.getRelatedParty().get(0).getAccountId();
 
-            // Getting Main CommercialTypeOperation value
-            String commercialOperationType = saleRequest.getCommercialOperation().get(0).getReason();
-            System.out.println("COMMERCIAL OPERATION: " + commercialOperationType);
-            Mono<List<BusinessParameterExt>> salesCharsByCOT = businessParameterWebClient
-                    .getSalesCharacteristicsByCommercialOperationType(
-                            GetSalesCharacteristicsRequest
+            saleRequest.getCommercialOperation().get(0).getProductOfferings().get(0).getProductSpecification().stream()
+                    .forEach(productSpecification -> {
+
+                        String productType = productSpecification.getProductType();
+                        if (productType.equalsIgnoreCase("landline")) {
+
+                            NewProductAltaFija newProductAltaFijaLandline = NewProductAltaFija
                                     .builder()
-                                    .commercialOperationType(commercialOperationType)
-                                    .headersMap(request.getHeadersMap())
-                                    .build())
-                    .map(this::retrieveCharacteristics);
+                                    .productCatalogId(productSpecification.getRefinedProduct()
+                                                                            .getProductCharacteristics().get(0).getId())
+                                    .temporaryId("temp")
+                                    .baId(baId)
+                                    .accountId(accountId)
+                                    .invoiceCompany("TDP")
+                                    .build();
+                            newProductsAltaFijaList.add(newProductAltaFijaLandline);
 
-            // Get Bonificacion Simcard
-            Mono<BusinessParametersResponseObjectExt> getBonificacionSim = businessParameterWebClient
-                    .getBonificacionSimcard(saleRequest.getChannel().getId(), request.getHeadersMap());
+                        } else if (productType.equalsIgnoreCase("broadband")) {
 
-            // Get Parameters Simcard
-            Mono<BusinessParametersResponseObjectExt> getParametersSimCard = businessParameterWebClient
-                    .getParametersSimcard(request.getHeadersMap());
+                            List<ChangedCharacteristic> changedCharacteristicsBroadbandList = new ArrayList<>();
 
-            return Mono.zip(getRiskDomain, salesCharsByCOT, getBonificacionSim, getParametersSimCard)
-                    .flatMap(tuple -> {
-                        System.out.println("RESPONSEEEE T1: " + tuple.getT1());
-                        System.out.println("RESPONSEEEE T2: " + tuple.getT2());
-                        if (!tuple.getT1().getData().isEmpty()
-                                && tuple.getT1().getData().get(0).getActive()
-                        ) {
-                            // if it is a risk domain, cancel operation
-                            return Mono.error(GenesisException
+                            ChangedCharacteristic changedCharacteristicBroadband1 = ChangedCharacteristic
                                     .builder()
-                                    .exceptionId("SVR1000")
-                                    .wildcards(new String[]{"Dominio de riesgo, se canceló la operación"})
-                                    .build());
+                                    .characteristicId("3241482")
+                                    .characteristicValue(saleRequest.getCommercialOperation().get(0)
+                                            .getProductOfferings().get(0).getProductOfferingPrice().get(0)
+                                                                            .getBenefits().get(0).getDownloadSpeed())
+                                    .build();
+                            changedCharacteristicsBroadbandList.add(changedCharacteristicBroadband1);
+
+                            try {
+                                ChangedCharacteristic changedCharacteristicBroadband2 = ChangedCharacteristic
+                                        .builder()
+                                        .characteristicId("3241532")
+                                        .characteristicValue(Commons.getTimeNowInMillis())
+                                        .build();
+                                changedCharacteristicsBroadbandList.add(changedCharacteristicBroadband2);
+                            } catch (ParseException e) {
+                                LOG.error("Post Sales Exception Getting Time at Now in Milliseconds");
+                            }
+
+                            ChangedContainedProduct changedContainedProductBroadband1 = ChangedContainedProduct
+                                    .builder()
+                                    .temporaryId("temp")
+                                    .productCatalogId("3241312")
+                                    .changedCharacteristics(changedCharacteristicsBroadbandList)
+                                    .productId("") // Empty when is alta fija
+                                    .build();
+
+                            List<ChangedContainedProduct> changedContainedProductsBroadbandList = new ArrayList<>();
+                            changedContainedProductsBroadbandList.add(changedContainedProductBroadband1);
+
+                            ProductChangeAltaFija productChangesBroadband = ProductChangeAltaFija
+                                    .builder()
+                                    .changedContainedProducts(changedContainedProductsBroadbandList)
+                                    .build();
+
+                            NewProductAltaFija newProductAltaFijaBroadband = NewProductAltaFija
+                                    .builder()
+                                    .productCatalogId(productSpecification.getRefinedProduct()
+                                            .getProductCharacteristics().get(0).getId())
+                                    .temporaryId("temp")
+                                    .baId(baId)
+                                    .accountId(accountId)
+                                    .invoiceCompany("TDP")
+                                    .productChanges(productChangesBroadband)
+                                    .build();
+                            newProductsAltaFijaList.add(newProductAltaFijaBroadband);
+                        } else if (productType.equalsIgnoreCase("cableTv")) {
+
+                            NewProductAltaFija newProductAltaFijaCableTv = NewProductAltaFija
+                                    .builder()
+                                    .productCatalogId(productSpecification.getRefinedProduct()
+                                            .getProductCharacteristics().get(0).getId())
+                                    .temporaryId("temp")
+                                    .baId(baId)
+                                    .accountId(accountId)
+                                    .invoiceCompany("TDP")
+                                    .build();
+                            newProductsAltaFijaList.add(newProductAltaFijaCableTv);
+                        } else if (productType.equalsIgnoreCase("ShEq")) {
+
+                            NewProductAltaFija newProductAltaFijaShareEquipment = NewProductAltaFija
+                                    .builder()
+                                    .productCatalogId(productSpecification.getRefinedProduct()
+                                            .getProductCharacteristics().get(0).getId())
+                                    .temporaryId("temp")
+                                    .baId(baId)
+                                    .accountId(accountId)
+                                    .invoiceCompany("TDP")
+                                    .build();
+                            newProductsAltaFijaList.add(newProductAltaFijaShareEquipment);
+                        } else if (productType.equalsIgnoreCase("Accesories")) {
+
+                            ChangedCharacteristic changedCharacteristicAccesories1 = ChangedCharacteristic
+                                    .builder()
+                                    .characteristicId("15734")
+                                    .characteristicValue("34203411")
+                                    .build();
+
+                            List<ChangedCharacteristic> changedCharacteristicsAccesoriesList = new ArrayList<>();
+                            changedCharacteristicsAccesoriesList.add(changedCharacteristicAccesories1);
+
+                            ChangedContainedProduct changedContainedProductAccesories1 = ChangedContainedProduct
+                                    .builder()
+                                    .temporaryId("temp")
+                                    .productCatalogId("34134811")
+                                    .changedCharacteristics(changedCharacteristicsAccesoriesList)
+                                    .productId("") // Empty when is alta fija
+                                    .build();
+
+                            List<ChangedContainedProduct> changedContainedProductsAccesoriesList = new ArrayList<>();
+                            changedContainedProductsAccesoriesList.add(changedContainedProductAccesories1);
+
+                            ProductChangeAltaFija productChangesAccesories = ProductChangeAltaFija
+                                    .builder()
+                                    .changedContainedProducts(changedContainedProductsAccesoriesList)
+                                    .build();
+
+                            NewProductAltaFija newProductAltaFijaAccesories = NewProductAltaFija
+                                    .builder()
+                                    .productCatalogId(productSpecification.getRefinedProduct()
+                                            .getProductCharacteristics().get(0).getId())
+                                    .temporaryId("temp")
+                                    .baId(baId)
+                                    .accountId(accountId)
+                                    .invoiceCompany("TDP")
+                                    .productChanges(productChangesAccesories)
+                                    .build();
+                            newProductsAltaFijaList.add(newProductAltaFijaAccesories);
                         }
 
-                        // Getting simcard sapid from bussiness parameter
-                        sapidSimcard[0] = getStringValueFromBusinessParameterDataListByKeyAndActiveTrue(
-                                tuple.getT4().getData(), "sapid");
-
-                        // Getting CIP Code
-                        String cipCode = "";
-                        if (saleRequest.getCommercialOperation().get(0).getWorkOrDeliveryType().getMediumDelivery()
-                                .equalsIgnoreCase("DELIVERY")
-                                && saleRequest.getPaymenType().getPaymentType().equalsIgnoreCase("EX")
-                                && this.getStringValueByKeyFromAdditionalDataList(saleRequest.getAdditionalData(),
-                                "paymentTypeLabel").equals("PAGO EFECTIVO")
-                        ) {
-                            cipCode = saleRequest.getPaymenType().getCid(); // Validate if cipCode is empty
-                        }
-
-                        // Building Main Request to send to Create Product Order Service
-                        CreateProductOrderGeneralRequest mainRequestProductOrder = new CreateProductOrderGeneralRequest();
-
-                        // Recognizing CAPL Commercial Operation Type
-                        if (flgCapl[0] && !flgCaeq[0] && !flgCasi[0] && !flgAlta[0]) {
-
-                            mainRequestProductOrder = this.caplCommercialOperation(saleRequest, mainRequestProductOrder,
-                                    channelIdRequest, customerIdRequest, productOfferingIdRequest, cipCode);
-
-                        } else if (!flgCapl[0] && flgCaeq[0] && !flgCasi[0] && !flgAlta[0]) { // Recognizing CAEQ Commercial Operation Type
-
-                            mainRequestProductOrder = this.caeqCommercialOperation(saleRequest, mainRequestProductOrder,
-                                    channelIdRequest, customerIdRequest, productOfferingIdRequest, cipCode);
-
-                        } else if (flgCapl[0] && flgCaeq[0] && !flgCasi[0] && !flgAlta[0]) { // Recognizing CAEQ+CAPL Commercial Operation Type
-
-                            mainRequestProductOrder = this.caeqCaplCommercialOperation(saleRequest, mainRequestProductOrder,
-                                    channelIdRequest, customerIdRequest, productOfferingIdRequest, cipCode);
-                        } else if (!flgCapl[0] && !flgCaeq[0] && !flgCasi[0] && flgAlta[0]) {
-                            mainRequestProductOrder = this.altaCommercialOperation(saleRequest, mainRequestProductOrder,
-                                    channelIdRequest, customerIdRequest, productOfferingIdRequest, cipCode,
-                                    tuple.getT3(), sapidSimcard[0]);
-                        }
-                        System.out.println("BOOLEAN flgCapl: " + flgCapl[0]);
-                        System.out.println("BOOLEAN flgCaeq: " + flgCaeq[0]);
-                        System.out.println("BOOLEAN flgCasi: " + flgCasi[0]);
-
-                        System.out.println("REQUESTTT PRODUCT ORDER: " + mainRequestProductOrder);
-                        return productOrderWebClient.createProductOrder(mainRequestProductOrder, request.getHeadersMap(),
-                                saleRequest)
-                                .flatMap(createOrderResponse -> {
-                                    System.out.println("CREATE PRODUCT ORDER RESPONSE: " + createOrderResponse);
-                                    // Adding Order info to sales
-                                    saleRequest.getCommercialOperation().get(0)
-                                            .setOrder(createOrderResponse.getCreateProductOrderResponse());
-
-                                    if (validateNegotiation(saleRequest.getAdditionalData(),
-                                            saleRequest.getIdentityValidations())) {
-                                        saleRequest.setStatus("NEGOCIACION");
-                                    } else if (!StringUtils.isEmpty(createOrderResponse.getCreateProductOrderResponse()
-                                            .getProductOrderId())) {
-                                        // When All is OK
-                                        saleRequest.setStatus("NUEVO");
-                                    } else {
-                                        // When Create Product Order Service fail or doesnt respond with an Order Id
-                                        saleRequest.setStatus("PENDIENTE");
-                                    }
-
-                                    // Ship Delivery logic (tambo) - SERGIO
-                                    if (saleRequest.getCommercialOperation().get(0).getWorkOrDeliveryType()
-                                            .getMediumDelivery().equalsIgnoreCase("Tienda")) {
-                                        saleRequest.setAdditionalData(additionalDataAssigments(saleRequest
-                                                .getAdditionalData(), saleRequest));
-                                    }
-                                    System.out.println("BOOLEAN CAEQ: " + flgCaeq[0]);
-                                    // Call to Reserve Stock Service When Commercial Operation include CAEQ
-                                    if (flgCaeq[0] || flgAlta[0]) {
-
-                                        return this.callToReserveStockAndCreateQuotation(request, saleRequest, flgCasi[0], flgFinanciamiento[0],
-                                                sapidSimcard[0]);
-                                    } else {
-                                        if (flgCasi[0]) {
-                                            // Call to Create Quotation Service When CommercialOperation Contains CASI
-                                            return this.callToCreateQuotation(request, saleRequest, flgCasi[0],
-                                                                                                flgFinanciamiento[0]);
-                                        } else {
-                                            // Case when is Only CAPL
-                                            return salesRepository.save(saleRequest);
-                                        }
-                                    }
-                                });
                     });
 
-        } else if (!StringUtils.isEmpty(saleRequest.getCommercialOperation().get(0).getOrder().getProductOrderId())
-                && StringUtils.isEmpty(saleRequest.getCommercialOperation().get(0).getDeviceOffering().get(0)
-                                                                                                        .getStock())
-                && StringUtils.isEmpty(saleRequest.getCommercialOperation().get(0).getDeviceOffering().get(0)
-                                                                                    .getStock().getReservationId())) { // Retry from Reservation
+            // Building ServiceAvailability
 
-            // Call to Reserve Stock Service When Commercial Operation include CAEQ
-            if (flgCaeq[0] || flgAlta[0]) {
+            // ServiceAvailability Offers
+            List<ServiceabilityOfferType> serviceabilityOffersList = new ArrayList<>();
+            saleRequest.getCommercialOperation().get(0).getServiceAvailability().getOffers().stream()
+                    .forEach(availabilityOffer -> {
+                        String serviceAbilityType = availabilityOffer.getServices().get(0).getType();
 
-                return this.callToReserveStockAndCreateQuotation(request, saleRequest, flgCasi[0], flgFinanciamiento[0],
-                                                                                                    sapidSimcard[0]);
-            } else {
-                if (flgCasi[0]) {
+                        if (serviceAbilityType.equalsIgnoreCase("VOICE")) {
 
-                    // Call to Create Quotation Service When CommercialOperation Contains CASI
-                    return this.callToCreateQuotation(request, saleRequest, flgCasi[0], flgFinanciamiento[0]);
+                            // Serviceability Landline
+                            CharacteristicOfferType describeByLandline1 =  CharacteristicOfferType
+                                    .builder()
+                                    .characteristicName("ALLOCATION_ID")
+                                    .characteristicValue(availabilityOffer.getServices().get(0).getAllocationId())
+                                    .build();
+
+                            List<CharacteristicOfferType> describeByLandlineList = new ArrayList<>();
+                            describeByLandlineList.add(describeByLandline1);
+
+                            ProductLineType productOfferLandline1 = ProductLineType
+                                    .builder()
+                                    .type(serviceAbilityType)
+                                    .description("Servicio de Voz")
+                                    .networkTechnology(this.getStringValueByKeyFromAdditionalDataList(saleRequest.
+                                            getCommercialOperation().get(0).getServiceAvailability()
+                                            .getAdditionalData(),"networkAccessTechnologyLandline"))
+                                    .serviceTechnology(this.getStringValueByKeyFromAdditionalDataList(saleRequest.
+                                            getCommercialOperation().get(0).getServiceAvailability()
+                                            .getAdditionalData(),"serviceTechnologyLandline"))
+                                    .describeByList(describeByLandlineList)
+                                    .build();
+                            List<ProductLineType> productOfferLandlineList = new ArrayList<>();
+                            productOfferLandlineList.add(productOfferLandline1);
+
+                            ServiceabilityOfferType serviceabilityOfferLandline = ServiceabilityOfferType
+                                    .builder()
+                                    .idOfferPriority(availabilityOffer.getPriority().toString())
+                                    .productOffer(productOfferLandlineList)
+                                    .build();
+                            serviceabilityOffersList.add(serviceabilityOfferLandline);
+
+                        } else if (serviceAbilityType.equalsIgnoreCase("BB")) {
+
+                            // Serviceability Broadband
+                            CharacteristicOfferType describeByBroadband1 =  CharacteristicOfferType
+                                    .builder()
+                                    .characteristicName("MaxTheoricalSpeed")
+                                    .characteristicValue(this.getStringValueByKeyFromAdditionalDataList(saleRequest
+                                            .getCommercialOperation().get(0).getServiceAvailability()
+                                            .getAdditionalData(), "maxSpeed"))
+                                    .build();
+
+                            List<CharacteristicOfferType> describeByBroadbandList = new ArrayList<>();
+                            describeByBroadbandList.add(describeByBroadband1);
+
+                            ProductLineType productOfferBroadband1 = ProductLineType
+                                    .builder()
+                                    .type(serviceAbilityType)
+                                    .description("Servicio de banda ancha")
+                                    .networkTechnology(this.getStringValueByKeyFromAdditionalDataList(saleRequest.
+                                            getCommercialOperation().get(0).getServiceAvailability()
+                                            .getAdditionalData(),"networkAccessTechnologyBroadband"))
+                                    .serviceTechnology(this.getStringValueByKeyFromAdditionalDataList(saleRequest.
+                                            getCommercialOperation().get(0).getServiceAvailability()
+                                            .getAdditionalData(),"serviceTechnologyBroadband"))
+                                    .describeByList(describeByBroadbandList)
+                                    .build();
+                            List<ProductLineType> productOfferBroadbandList = new ArrayList<>();
+                            productOfferBroadbandList.add(productOfferBroadband1);
+
+                            ServiceabilityOfferType serviceabilityOfferBroadband = ServiceabilityOfferType
+                                    .builder()
+                                    .idOfferPriority(availabilityOffer.getPriority().toString())
+                                    .productOffer(productOfferBroadbandList)
+                                    .build();
+                            serviceabilityOffersList.add(serviceabilityOfferBroadband);
+
+                        } else if (serviceAbilityType.equalsIgnoreCase("TV")) {
+
+                            // Serviceability CableTv
+                            ProductLineType productOfferCableTv1 = ProductLineType
+                                    .builder()
+                                    .type(serviceAbilityType)
+                                    .description("Servicio de Television")
+                                    .networkTechnology(this.getStringValueByKeyFromAdditionalDataList(saleRequest.
+                                            getCommercialOperation().get(0).getServiceAvailability()
+                                            .getAdditionalData(),"networkAccessTechnologyTv"))
+                                    .serviceTechnology(this.getStringValueByKeyFromAdditionalDataList(saleRequest.
+                                            getCommercialOperation().get(0).getServiceAvailability()
+                                            .getAdditionalData(),"serviceTechnologyTv"))
+                                    .build();
+                            List<ProductLineType> productOfferCableTvList = new ArrayList<>();
+                            productOfferCableTvList.add(productOfferCableTv1);
+
+                            ServiceabilityOfferType serviceabilityOfferCableTv = ServiceabilityOfferType
+                                    .builder()
+                                    .idOfferPriority(availabilityOffer.getPriority().toString())
+                                    .productOffer(productOfferCableTvList)
+                                    .build();
+                            serviceabilityOffersList.add(serviceabilityOfferCableTv);
+                        }
+                    });
+
+            // CommercialZoneType
+            CommercialZoneType commercialZone = CommercialZoneType
+                    .builder()
+                    .commercialZoneId(saleRequest.getCommercialOperation().get(0).getServiceAvailability()
+                                                                                                .getCommercialAreaId())
+                    .commercialZoneName(saleRequest.getCommercialOperation().get(0).getServiceAvailability()
+                                                                                        .getCommercialAreaDescription())
+                    .build();
+
+            ServiceabilityInfoType serviceabilityInfo = ServiceabilityInfoType
+                    .builder()
+                    .serviceabilityId(saleRequest.getCommercialOperation().get(0).getServiceAvailability().getId())
+                    .offers(serviceabilityOffersList)
+                    .commercialZone(commercialZone)
+                    .build();
+
+            // Order Attributes Alta Fija
+            FlexAttrValueType externalFinancialAttrValue =  FlexAttrValueType
+                    .builder()
+                    .stringValue(flgFinanciamiento[0]? "Y" : "N")
+                    .valueType("STRING") // Pendiente confirmar si no se enviará contenido
+                    .build();
+            FlexAttrType externalFinancialAttr = FlexAttrType
+                    .builder()
+                    .attrName("IS_EXTERNAL_FINANCING")
+                    .flexAttrValue(externalFinancialAttrValue)
+                    .build();
+
+            FlexAttrValueType upFrontIndAttrValue =  FlexAttrValueType
+                    .builder()
+                    .stringValue(saleRequest.getCommercialOperation().get(0).getProductOfferings().get(0)
+                                                                                        .getUpFront().getIndicator())
+                    .valueType("STRING")
+                    .build();
+            FlexAttrType upFrontIndAttr = FlexAttrType
+                    .builder()
+                    .attrName("UPFRONT_IND")
+                    .flexAttrValue(upFrontIndAttrValue)
+                    .build();
+
+            FlexAttrValueType paymentMethodAttrValue =  FlexAttrValueType
+                    .builder()
+                    .stringValue("EX")
+                    .valueType("STRING")
+                    .build();
+            FlexAttrType paymentMethodAttr = FlexAttrType
+                    .builder()
+                    .attrName("PAYMENT_METHOD")
+                    .flexAttrValue(paymentMethodAttrValue)
+                    .build();
+
+            List<FlexAttrType> altaFijaOrderAttributesList = new ArrayList<>();
+            altaFijaOrderAttributesList.add(externalFinancialAttr);
+            altaFijaOrderAttributesList.add(upFrontIndAttr);
+            altaFijaOrderAttributesList.add(paymentMethodAttr);
+
+            AltaFijaRequest altaFijaRequest = new AltaFijaRequest();
+            altaFijaRequest.setNewProducts(newProductsAltaFijaList);
+            altaFijaRequest.setAppointmentId(saleRequest.getCommercialOperation().get(0).getWorkOrDeliveryType()
+                                                                    .getWorkOrder().getWorkForceTeams().get(0).getId());
+            altaFijaRequest.setAppointmentNumber(saleRequest.getSalesId());
+            altaFijaRequest.setServiceabilityInfo(serviceabilityInfo);
+            altaFijaRequest.setSourceApp(saleRequest.getSalesId());
+            altaFijaRequest.setOrderAttributes(altaFijaOrderAttributesList);
+            if (!StringUtils.isEmpty(saleRequest.getPaymenType().getCid())) {
+                altaFijaRequest.setCip(saleRequest.getPaymenType().getCid());
+            }
+            altaFijaRequest.setUpfrontIndicator(saleRequest.getCommercialOperation().get(0)
+                                                            .getProductOfferings().get(0).getUpFront().getIndicator());
+
+            // Alta Fija Customize Request
+            ProductOrderAltaFijaRequest productOrderAltaFijaRequest = ProductOrderAltaFijaRequest
+                    .builder()
+                    .salesChannel(saleRequest.getChannel().getId())
+                    .request(altaFijaRequest)
+                    .customerId(saleRequest.getRelatedParty().get(0).getCustomerId())
+                    .productOfferingId(saleRequest.getCommercialOperation().get(0).getProductOfferings().get(0).getId())
+                    .onlyValidationIndicator(false)
+                    .actionType("PR")
+                    .build();
+
+            // Building Main Request to send to Create Product Order Service
+            CreateProductOrderGeneralRequest mainRequestProductOrder = new CreateProductOrderGeneralRequest();
+            mainRequestProductOrder.setCreateProductOrderRequest(productOrderAltaFijaRequest);
+
+            // Call de Create Alta Fija Order
+            return productOrderWebClient.createProductOrder(mainRequestProductOrder, request.getHeadersMap(),
+                    saleRequest)
+                    .flatMap(createOrderResponse -> {
+                        System.out.println("CREATE PRODUCT ORDER RESPONSE: " + createOrderResponse);
+                        // Adding Order info to sales
+                        saleRequest.getCommercialOperation().get(0)
+                                .setOrder(createOrderResponse.getCreateProductOrderResponse());
+
+                        if (validateNegotiation(saleRequest.getAdditionalData(),
+                                saleRequest.getIdentityValidations())) {
+                            saleRequest.setStatus("NEGOCIACION");
+                        } else if (!StringUtils.isEmpty(createOrderResponse.getCreateProductOrderResponse()
+                                .getProductOrderId())) {
+                            // When All is OK
+                            saleRequest.setStatus("NUEVO");
+                        } else {
+                            // When Create Product Order Service fail or doesnt respond with an Order Id
+                            saleRequest.setStatus("PENDIENTE");
+                        }
+
+                        return salesRepository.save(saleRequest);
+                    });
+        } else if (mainProductType.equalsIgnoreCase("WIRELESS")) {
+            // Mobile Commercial Operations
+
+            if (StringUtils.isEmpty(saleRequest.getCommercialOperation().get(0).getOrder().getProductOrderId())
+                    && StringUtils.isEmpty(saleRequest.getCommercialOperation().get(0).getDeviceOffering().get(0)
+                    .getStock().getReservationId())) {
+
+                // Get mail Validation, dominio de riesgo - SERGIO
+                Mono<BusinessParametersResponse> getRiskDomain = businessParameterWebClient
+                        .getRiskDomain(retrieveDomain(saleRequest.getProspectContact()), request.getHeadersMap());
+
+                // Getting commons request properties
+                String channelIdRequest = saleRequest.getChannel().getId();
+                String customerIdRequest = saleRequest.getRelatedParty().get(0).getCustomerId();
+                String productOfferingIdRequest = saleRequest.getCommercialOperation()
+                        .get(0).getProductOfferings().get(0).getId();
+
+                // Getting Characteristics By Main Commercial Operation - Check if is used it to remove
+                Mono<List<BusinessParameterExt>> salesCharsByCOT = businessParameterWebClient
+                        .getSalesCharacteristicsByCommercialOperationType(
+                                GetSalesCharacteristicsRequest
+                                        .builder()
+                                        .commercialOperationType(commercialOperationReason)
+                                        .headersMap(request.getHeadersMap())
+                                        .build())
+                        .map(this::retrieveCharacteristics);
+
+                // Get Bonificacion Simcard
+                Mono<BusinessParametersResponseObjectExt> getBonificacionSim = businessParameterWebClient
+                        .getBonificacionSimcard(saleRequest.getChannel().getId(), request.getHeadersMap());
+
+                // Get Parameters Simcard
+                Mono<BusinessParametersResponseObjectExt> getParametersSimCard = businessParameterWebClient
+                        .getParametersSimcard(request.getHeadersMap());
+
+                return Mono.zip(getRiskDomain, salesCharsByCOT, getBonificacionSim, getParametersSimCard)
+                        .flatMap(tuple -> {
+                            System.out.println("RESPONSEEEE T1: " + tuple.getT1());
+                            System.out.println("RESPONSEEEE T2: " + tuple.getT2());
+                            if (!tuple.getT1().getData().isEmpty()
+                                    && tuple.getT1().getData().get(0).getActive()
+                            ) {
+                                // if it is a risk domain, cancel operation
+                                return Mono.error(GenesisException
+                                        .builder()
+                                        .exceptionId("SVR1000")
+                                        .wildcards(new String[]{"Dominio de riesgo, se canceló la operación"})
+                                        .build());
+                            }
+
+                            // Getting simcard sapid from bussiness parameter
+                            sapidSimcard[0] = getStringValueFromBusinessParameterDataListByKeyAndActiveTrue(
+                                    tuple.getT4().getData(), "sapid");
+
+                            // Getting CIP Code
+                            String cipCode = "";
+                            if (saleRequest.getCommercialOperation().get(0).getWorkOrDeliveryType().getMediumDelivery()
+                                    .equalsIgnoreCase("DELIVERY")
+                                    && saleRequest.getPaymenType().getPaymentType().equalsIgnoreCase("EX")
+                                    && this.getStringValueByKeyFromAdditionalDataList(saleRequest.getAdditionalData(),
+                                    "paymentTypeLabel").equals("PAGO EFECTIVO")
+                            ) {
+                                cipCode = saleRequest.getPaymenType().getCid(); // Validate if cipCode is empty
+                            }
+
+                            // Building Main Request to send to Create Product Order Service
+                            CreateProductOrderGeneralRequest mainRequestProductOrder = new CreateProductOrderGeneralRequest();
+
+                            // Recognizing CAPL Commercial Operation Type
+                            if (flgCapl[0] && !flgCaeq[0] && !flgCasi[0] && !flgAlta[0]) {
+
+                                mainRequestProductOrder = this.caplCommercialOperation(saleRequest, mainRequestProductOrder,
+                                        channelIdRequest, customerIdRequest, productOfferingIdRequest, cipCode);
+
+                            } else if (!flgCapl[0] && flgCaeq[0] && !flgCasi[0] && !flgAlta[0]) { // Recognizing CAEQ Commercial Operation Type
+
+                                mainRequestProductOrder = this.caeqCommercialOperation(saleRequest, mainRequestProductOrder,
+                                        channelIdRequest, customerIdRequest, productOfferingIdRequest, cipCode);
+
+                            } else if (flgCapl[0] && flgCaeq[0] && !flgCasi[0] && !flgAlta[0]) { // Recognizing CAEQ+CAPL Commercial Operation Type
+
+                                mainRequestProductOrder = this.caeqCaplCommercialOperation(saleRequest, mainRequestProductOrder,
+                                        channelIdRequest, customerIdRequest, productOfferingIdRequest, cipCode);
+                            } else if (!flgCapl[0] && !flgCaeq[0] && !flgCasi[0] && flgAlta[0]) {
+                                mainRequestProductOrder = this.altaCommercialOperation(saleRequest, mainRequestProductOrder,
+                                        channelIdRequest, customerIdRequest, productOfferingIdRequest, cipCode,
+                                        tuple.getT3(), sapidSimcard[0]);
+                            }
+                            System.out.println("BOOLEAN flgCapl: " + flgCapl[0]);
+                            System.out.println("BOOLEAN flgCaeq: " + flgCaeq[0]);
+                            System.out.println("BOOLEAN flgCasi: " + flgCasi[0]);
+
+                            System.out.println("REQUESTTT PRODUCT ORDER: " + mainRequestProductOrder);
+                            return productOrderWebClient.createProductOrder(mainRequestProductOrder, request.getHeadersMap(),
+                                    saleRequest)
+                                    .flatMap(createOrderResponse -> {
+                                        System.out.println("CREATE PRODUCT ORDER RESPONSE: " + createOrderResponse);
+                                        // Adding Order info to sales
+                                        saleRequest.getCommercialOperation().get(0)
+                                                .setOrder(createOrderResponse.getCreateProductOrderResponse());
+
+                                        if (validateNegotiation(saleRequest.getAdditionalData(),
+                                                saleRequest.getIdentityValidations())) {
+                                            saleRequest.setStatus("NEGOCIACION");
+                                        } else if (!StringUtils.isEmpty(createOrderResponse.getCreateProductOrderResponse()
+                                                .getProductOrderId())) {
+                                            // When All is OK
+                                            saleRequest.setStatus("NUEVO");
+                                        } else {
+                                            // When Create Product Order Service fail or doesnt respond with an Order Id
+                                            saleRequest.setStatus("PENDIENTE");
+                                        }
+
+                                        // Ship Delivery logic (tambo) - SERGIO
+                                        if (saleRequest.getCommercialOperation().get(0).getWorkOrDeliveryType()
+                                                .getMediumDelivery().equalsIgnoreCase("Tienda")) {
+                                            saleRequest.setAdditionalData(additionalDataAssigments(saleRequest
+                                                    .getAdditionalData(), saleRequest));
+                                        }
+                                        System.out.println("BOOLEAN CAEQ: " + flgCaeq[0]);
+                                        // Call to Reserve Stock Service When Commercial Operation include CAEQ
+                                        if (flgCaeq[0] || flgAlta[0]) {
+
+                                            return this.callToReserveStockAndCreateQuotation(request, saleRequest, flgCasi[0], flgFinanciamiento[0],
+                                                    sapidSimcard[0]);
+                                        } else {
+                                            if (flgCasi[0]) {
+                                                // Call to Create Quotation Service When CommercialOperation Contains CASI
+                                                return this.callToCreateQuotation(request, saleRequest, flgCasi[0],
+                                                        flgFinanciamiento[0]);
+                                            } else {
+                                                // Case when is Only CAPL
+                                                return salesRepository.save(saleRequest);
+                                            }
+                                        }
+                                    });
+                        });
+
+            } else if (!StringUtils.isEmpty(saleRequest.getCommercialOperation().get(0).getOrder().getProductOrderId())
+                    && StringUtils.isEmpty(saleRequest.getCommercialOperation().get(0).getDeviceOffering().get(0)
+                    .getStock())
+                    && StringUtils.isEmpty(saleRequest.getCommercialOperation().get(0).getDeviceOffering().get(0)
+                    .getStock().getReservationId())) { // Retry from Reservation
+
+                // Call to Reserve Stock Service When Commercial Operation include CAEQ
+                if (flgCaeq[0] || flgAlta[0]) {
+
+                    return this.callToReserveStockAndCreateQuotation(request, saleRequest, flgCasi[0], flgFinanciamiento[0],
+                            sapidSimcard[0]);
                 } else {
-                    // Case when is Only CAPL
-                    return salesRepository.save(saleRequest);
+                    if (flgCasi[0]) {
+
+                        // Call to Create Quotation Service When CommercialOperation Contains CASI
+                        return this.callToCreateQuotation(request, saleRequest, flgCasi[0], flgFinanciamiento[0]);
+                    } else {
+                        // Case when is Only CAPL
+                        return salesRepository.save(saleRequest);
+                    }
                 }
+
+            } else if (!StringUtils.isEmpty(saleRequest.getCommercialOperation().get(0).getOrder().getProductOrderId())
+                    && !StringUtils.isEmpty(saleRequest.getCommercialOperation().get(0).getDeviceOffering().get(0)
+                    .getStock().getReservationId())) { // Retry from Create Quotation
+
+                // Call to Create Quotation Service When CommercialOperation Contains CAEQ
+                return this.callToCreateQuotation(request, saleRequest, flgCasi[0], flgFinanciamiento[0]);
+            } else {
+                return salesRepository.save(saleRequest);
             }
 
-        } else if (!StringUtils.isEmpty(saleRequest.getCommercialOperation().get(0).getOrder().getProductOrderId())
-                && !StringUtils.isEmpty(saleRequest.getCommercialOperation().get(0).getDeviceOffering().get(0)
-                .getStock().getReservationId())) { // Retry from Create Quotation
-
-            // Call to Create Quotation Service When CommercialOperation Contains CAEQ
-            return this.callToCreateQuotation(request, saleRequest, flgCasi[0], flgFinanciamiento[0]);
-        } else {
-            return salesRepository.save(saleRequest);
         }
+
+        return salesRepository.save(saleRequest);
     }
 
     private Mono<Sale> callToReserveStockAndCreateQuotation(PostSalesRequest request, Sale saleRequest, Boolean flgCasi,
@@ -751,7 +1135,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                              BusinessParametersResponseObjectExt bonificacionSimcardResponse, String sapidSimcardBp) {
 
         // Building request for ALTA CommercialTypeOperation
-        ProductOrderAltaRequest altaRequestProductOrder = new ProductOrderAltaRequest();
+        ProductOrderAltaMobileRequest altaRequestProductOrder = new ProductOrderAltaMobileRequest();
         altaRequestProductOrder.setSalesChannel(channelIdRequest);
         altaRequestProductOrder.setCustomerId(customerIdRequest);
         altaRequestProductOrder.setProductOfferingId(productOfferingIdRequest);
@@ -762,23 +1146,22 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         Boolean altaCombo = saleRequest.getCommercialOperation().get(0).getDeviceOffering().size() > 1;
 
         // ALTA Product Changes
-        ProductChangeAlta altaProductChanges = new ProductChangeAlta();
+        ProductChangeAltaMobile altaProductChanges = new ProductChangeAltaMobile();
 
         // ALTA NewAssignedBillingOffers
         List<NewAssignedBillingOffers> altaNewBoList = new ArrayList<>();
-        if (altaCombo) { // Pendiente de confirmación, para el caso de alta solo simcard en canal CEC no se envían NewAssignedBillingOffers? Revisar en el request de la casuística
-            // NewAssignedBillingOffer Equipment
-            NewAssignedBillingOffers altaNewBo1 = NewAssignedBillingOffers
-                    .builder()
-                    .productSpecPricingId(saleRequest.getCommercialOperation().get(0)
-                            .getProductOfferings().get(0).getProductOfferingPrice().get(0)
-                                                                                    .getPricePlanSpecContainmentId())
-                    .parentProductCatalogId(saleRequest.getCommercialOperation().get(0)
-                            .getProductOfferings().get(0).getProductOfferingPrice().get(0)
-                                                                                        .getProductSpecContainmentId())
-                    .build();
-            altaNewBoList.add(altaNewBo1);
-        }
+
+        // NewAssignedBillingOffer Plan
+        NewAssignedBillingOffers altaNewBo1 = NewAssignedBillingOffers
+                .builder()
+                .productSpecPricingId(saleRequest.getCommercialOperation().get(0)
+                        .getProductOfferings().get(0).getProductOfferingPrice().get(0)
+                                                                                .getPricePlanSpecContainmentId())
+                .parentProductCatalogId(saleRequest.getCommercialOperation().get(0)
+                        .getProductOfferings().get(0).getProductOfferingPrice().get(0)
+                                                                                    .getProductSpecContainmentId())
+                .build();
+        altaNewBoList.add(altaNewBo1);
 
         if (saleRequest.getChannel().getId().equalsIgnoreCase("CC")) {
             // NewAssignedBillingOffer SIM
@@ -806,39 +1189,23 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
 
         // ChangeContainedProduct SIM
         List<ChangedCharacteristic> changedCharacteristicList = new ArrayList<>();
-        if (!altaCombo) {
-            // SIMGROUP Characteristic when is only Alta Simcard
-            ChangedCharacteristic changedCharacteristic1 = ChangedCharacteristic
-                    .builder()
-                    .characteristicId("9941")
-                    .characteristicValue("Private")
-                    .build();
-            changedCharacteristicList.add(changedCharacteristic1);
-
-            ChangedCharacteristic changedCharacteristic2 = ChangedCharacteristic
-                    .builder()
-                    .characteristicId("16524")
-                    .characteristicValue("nanoSIM")
-                    .build();
-            changedCharacteristicList.add(changedCharacteristic2);
-        }
 
         // SIM TYPE SKU Characteristic
-        ChangedCharacteristic changedCharacteristic3 = ChangedCharacteristic
+        ChangedCharacteristic changedCharacteristic1 = ChangedCharacteristic
                 .builder()
                 .characteristicId("9751")
                 .characteristicValue(sapidSimcardBp) // SAPID PARAMETRIZADO EN BP
                 .build();
-        changedCharacteristicList.add(changedCharacteristic3);
+        changedCharacteristicList.add(changedCharacteristic1);
         // ICCID Characteristic
         String iccidSim = this.getStringValueByKeyFromAdditionalDataList(saleRequest.getAdditionalData(),
                                                                                                     "SIM_ICCID ");
-        ChangedCharacteristic changedCharacteristic4 = ChangedCharacteristic
+        ChangedCharacteristic changedCharacteristic2 = ChangedCharacteristic
                 .builder()
                 .characteristicId("799244")
                 .characteristicValue(iccidSim) // 8958080008100067567
                 .build();
-        changedCharacteristicList.add(changedCharacteristic4);
+        changedCharacteristicList.add(changedCharacteristic2);
 
         ChangedContainedProduct changedContainedProduct2 = ChangedContainedProduct
                 .builder()
@@ -852,7 +1219,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         altaProductChanges.setChangedContainedProducts(altaChangedContainedProductList);
 
 
-        NewProductAlta newProductAlta1 = new NewProductAlta();
+        NewProductAltaMobile newProductAlta1 = new NewProductAltaMobile();
         newProductAlta1.setProductCatalogId(saleRequest.getCommercialOperation().get(0)
                     .getProductOfferings().get(0).getProductOfferingProductSpecId());
         newProductAlta1.setTemporaryId("temp1");
@@ -861,15 +1228,16 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         newProductAlta1.setInvoiceCompany("TEF");
         newProductAlta1.setProductChanges(altaProductChanges);
 
-        List<NewProductAlta> altaNewProductsList = new ArrayList<>();
+        List<NewProductAltaMobile> altaNewProductsList = new ArrayList<>();
         altaNewProductsList.add(newProductAlta1);
 
         // Building Order Attributes
         List<FlexAttrType> altaOrderAttributesList = this.commonOrderAttributes(saleRequest);
 
         // Order Attributes when channel is retail
-        if (!saleRequest.getChannel().getId().equalsIgnoreCase("CC")
-                && !saleRequest.getChannel().getId().equalsIgnoreCase("CEC")) {
+        String channelId = saleRequest.getChannel().getId();
+        if (channelId.equalsIgnoreCase("DLC") || channelId.equalsIgnoreCase("DLV")
+                || channelId.equalsIgnoreCase("DLS")) {
             //  RETAIL PAYMENT NUMBER ATTRIBUTE
             String paymentNumber = this.getStringValueByKeyFromAdditionalDataList(saleRequest.getAdditionalData(),
                     "NUMERO_TICKET");
@@ -937,7 +1305,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         }
 
 
-        AltaRequest altaRequest = AltaRequest
+        AltaMobileRequest altaRequest = AltaMobileRequest
                 .builder()
                 .newProducts(altaNewProductsList)
                 .sourceApp("FE")
@@ -978,7 +1346,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         List<RemovedAssignedBillingOffers> caplBoRemovedList = new ArrayList<>();
         if (flgOnlyCapl) {
             // Recognizing Capl Mobile or Fija
-            if (saleRequest.getProductType().equals("mobile")) {
+            if (saleRequest.getProductType().equalsIgnoreCase("WIRELESS")) {
                 caplRequestProductOrder.setActionType("CW");
             } else {
                 caplRequestProductOrder.setActionType("CH"); // landline, cableTv, broadband, bundle
@@ -1150,7 +1518,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         List<RemovedAssignedBillingOffers> caeqCaplBoRemovedList = new ArrayList<>();
         if (flgOnlyCapl) {
             // Recognizing Capl Fija
-            if (saleRequest.getProductType().equals("mobile")) {
+            if (saleRequest.getProductType().equalsIgnoreCase("WIRELESS")) {
                 caeqCaplRequestProductOrder.setActionType("CW");
             } else {
                 caeqCaplRequestProductOrder.setActionType("CH"); // landline, cableTv, broadband, bundle
@@ -1218,12 +1586,22 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
     }
 
     public List<FlexAttrType> commonOrderAttributes(Sale saleRequest) {
-        // Building Attributes
+        // Building Common Order Attributes
+        List<FlexAttrType> commonOrderAttributes = new ArrayList<>();
+
+        // Delivery Method Attribute
         String deliveryCode = "";
         for (KeyValueType kv : saleRequest.getAdditionalData()) {
             if (kv.getKey().equals("deliveryMethod")) {
                 deliveryCode = kv.getValue();
             }
+        }
+        String channelId = saleRequest.getChannel().getId();
+        Boolean flgRetailChannel = channelId.equalsIgnoreCase("DLC")
+                || channelId.equalsIgnoreCase("DLV")
+                || channelId.equalsIgnoreCase("DLS");
+        if (flgRetailChannel) {
+            deliveryCode = "IS";
         }
         FlexAttrValueType deliveryAttrValue =  FlexAttrValueType
                 .builder()
@@ -1235,21 +1613,22 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                 .attrName("DELIVERY_METHOD")
                 .flexAttrValue(deliveryAttrValue)
                 .build();
-
-        FlexAttrValueType paymentAttrValue =  FlexAttrValueType
-                .builder()
-                .stringValue(saleRequest.getPaymenType().getPaymentType())
-                .valueType("STRING")
-                .build();
-        FlexAttrType paymentAttr = FlexAttrType
-                .builder()
-                .attrName("PAYMENT_METHOD")
-                .flexAttrValue(paymentAttrValue)
-                .build();
-
-        List<FlexAttrType> commonOrderAttributes = new ArrayList<>();
         commonOrderAttributes.add(deliveryAttr);
-        commonOrderAttributes.add(paymentAttr);
+
+        // Payment Method Attribute - Conditional
+        if (!flgRetailChannel) {
+            FlexAttrValueType paymentAttrValue =  FlexAttrValueType
+                    .builder()
+                    .stringValue(saleRequest.getPaymenType().getPaymentType())
+                    .valueType("STRING")
+                    .build();
+            FlexAttrType paymentAttr = FlexAttrType
+                    .builder()
+                    .attrName("PAYMENT_METHOD")
+                    .flexAttrValue(paymentAttrValue)
+                    .build();
+            commonOrderAttributes.add(paymentAttr);
+        }
 
         return commonOrderAttributes;
     }

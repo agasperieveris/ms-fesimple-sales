@@ -1,15 +1,13 @@
-package com.tdp.ms.sales.model.dto.productorder.alta;
+package com.tdp.ms.sales.model.dto.productorder.altafija;
 
-import com.tdp.ms.sales.model.dto.productorder.caeq.ChangedContainedProduct;
-import com.tdp.ms.sales.model.dto.productorder.capl.NewAssignedBillingOffers;
-import java.util.List;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 /**
- * Class: ProductChangeAlta. <br/>
+ * Class: CommercialZoneType. <br/>
  * <b>Copyright</b>: &copy; 2020 Telef&oacute;nica del Per&uacute;<br/>
  * <b>Company</b>: Telef&oacute;nica del Per&uacute;<br/>
  *
@@ -21,15 +19,17 @@ import lombok.NoArgsConstructor;
  *         </ul>
  *         <u>Changes</u>:<br/>
  *         <ul>
- *         <li>2020-09-24 Creaci&oacute;n del proyecto.</li>
+ *         <li>2020-11-11 Creaci&oacute;n del proyecto.</li>
  *         </ul>
  * @version 1.0
  */
-@Data
 @Builder
-@AllArgsConstructor
+@Getter
 @NoArgsConstructor
-public class ProductChangeAlta {
-    private List<NewAssignedBillingOffers> newAssignedBillingOffers;
-    private List<ChangedContainedProduct> changedContainedProducts;
+@AllArgsConstructor
+public class CommercialZoneType {
+    @JsonProperty("CommercialZoneId")
+    private String commercialZoneId;
+    @JsonProperty("CommercialZoneName")
+    private String commercialZoneName;
 }
