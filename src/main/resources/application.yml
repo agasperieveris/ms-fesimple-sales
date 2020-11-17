@@ -26,6 +26,8 @@ application:
       type: copyright
       url: https://www.telefonica.com.pe
   endpoints:
+    sku:
+      create_sku: https://aks-berserkers-ingress-dev.eastus2.cloudapp.azure.com/fesimple/v1/devices/skus?chanel.id={channelId}&planGroup={planGroup}&simSapId={simSapId}&simPrice={simPrice}&operationType={operationType}&customer.segment={customerSegment}&store.id={storeId}&subscriberType={subscriberType}&dealer.id={dealerId}&deviceSapId={deviceSapId}&devicePrice={devicePrice}
     business_parameters:
       get_sales_characteristics_url: https://aks-berserkers-ingress-dev.eastus2.cloudapp.azure.com/bussinesparameters/v2/parameters/033/dataparams?codComercialOperationType={commercialOperationType}
       get_risk_domain_url: https://aks-berserkers-ingress-dev.eastus2.cloudapp.azure.com/bussinesparameters/v2/parameters/034/dataparams?value={domain}

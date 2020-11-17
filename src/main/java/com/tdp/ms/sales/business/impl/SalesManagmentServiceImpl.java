@@ -2,20 +2,8 @@ package com.tdp.ms.sales.business.impl;
 
 import com.tdp.genesis.core.exception.GenesisException;
 import com.tdp.ms.sales.business.SalesManagmentService;
-import com.tdp.ms.sales.client.BusinessParameterWebClient;
-import com.tdp.ms.sales.client.ProductOrderWebClient;
-import com.tdp.ms.sales.client.QuotationWebClient;
-import com.tdp.ms.sales.client.StockWebClient;
-import com.tdp.ms.sales.model.dto.BusinessParameterDataObjectExt;
-import com.tdp.ms.sales.model.dto.BusinessParameterExt;
-import com.tdp.ms.sales.model.dto.ContactMedium;
-import com.tdp.ms.sales.model.dto.CreateProductOrderResponseType;
-import com.tdp.ms.sales.model.dto.IdentityValidationType;
-import com.tdp.ms.sales.model.dto.KeyValueType;
-import com.tdp.ms.sales.model.dto.OfferingType;
-import com.tdp.ms.sales.model.dto.ShipmentDetailsType;
-import com.tdp.ms.sales.model.dto.SiteRefType;
-import com.tdp.ms.sales.model.dto.TimePeriod;
+import com.tdp.ms.sales.client.*;
+import com.tdp.ms.sales.model.dto.*;
 import com.tdp.ms.sales.model.dto.productorder.CreateProductOrderGeneralRequest;
 import com.tdp.ms.sales.model.dto.productorder.FlexAttrType;
 import com.tdp.ms.sales.model.dto.productorder.FlexAttrValueType;
@@ -64,19 +52,13 @@ import com.tdp.ms.sales.model.request.CreateQuotationRequest;
 import com.tdp.ms.sales.model.request.GetSalesCharacteristicsRequest;
 import com.tdp.ms.sales.model.request.PostSalesRequest;
 import com.tdp.ms.sales.model.request.ReserveStockRequest;
-import com.tdp.ms.sales.model.response.BusinessParametersResponse;
-import com.tdp.ms.sales.model.response.BusinessParametersResponseObjectExt;
-import com.tdp.ms.sales.model.response.CreateQuotationResponse;
-import com.tdp.ms.sales.model.response.GetSalesCharacteristicsResponse;
-import com.tdp.ms.sales.model.response.ReserveStockResponse;
+import com.tdp.ms.sales.model.response.*;
 import com.tdp.ms.sales.repository.SalesRepository;
 import com.tdp.ms.sales.utils.Commons;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -121,6 +103,9 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
 
     @Autowired
     private QuotationWebClient quotationWebClient;
+
+    @Autowired
+    private GetSkuWebClient getSkuWebClient;
 
     private final static String SHIPPING_LOCALITY = "shippingLocality";
     private final static String PROVINCE_OF_SHIPPING_ADDRESS = "provinceOfShippingAddress";
@@ -636,7 +621,11 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                             saleRequest.setStatus("PENDIENTE");
                         }
 
-                        return salesRepository.save(saleRequest);
+                        // FEMS-1514 Validación de creación Orden
+                        Mono<Sale> saleRequestUpdated = creationOrderValidation(saleRequest, mainRequestProductOrder, request.getHeadersMap());
+                        return saleRequestUpdated.flatMap(saleItem -> {
+                            return salesRepository.save(saleItem);
+                        });
                     });
         } else if (mainProductType.equalsIgnoreCase("WIRELESS")) {
             // Mobile Commercial Operations
@@ -731,6 +720,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                             System.out.println("BOOLEAN flgCasi: " + flgCasi[0]);
 
                             System.out.println("REQUESTTT PRODUCT ORDER: " + mainRequestProductOrder);
+                            CreateProductOrderGeneralRequest finalMainRequestProductOrder = mainRequestProductOrder;
                             return productOrderWebClient.createProductOrder(mainRequestProductOrder, request.getHeadersMap(),
                                     saleRequest)
                                     .flatMap(createOrderResponse -> {
@@ -757,22 +747,27 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                                             saleRequest.setAdditionalData(additionalDataAssigments(saleRequest
                                                     .getAdditionalData(), saleRequest));
                                         }
-                                        System.out.println("BOOLEAN CAEQ: " + flgCaeq[0]);
-                                        // Call to Reserve Stock Service When Commercial Operation include CAEQ
-                                        if (flgCaeq[0] || flgAlta[0]) {
 
-                                            return this.callToReserveStockAndCreateQuotation(request, saleRequest, flgCasi[0], flgFinanciamiento[0],
-                                                    sapidSimcard[0]);
-                                        } else {
-                                            if (flgCasi[0]) {
-                                                // Call to Create Quotation Service When CommercialOperation Contains CASI
-                                                return this.callToCreateQuotation(request, saleRequest, flgCasi[0],
-                                                        flgFinanciamiento[0]);
+                                        // FEMS-1514 Validación de creación Orden
+                                        Mono<Sale> saleRequestUpdated = creationOrderValidation(saleRequest, finalMainRequestProductOrder, request.getHeadersMap());
+                                        return saleRequestUpdated.flatMap(saleItem -> {
+                                            System.out.println("BOOLEAN CAEQ: " + flgCaeq[0]);
+                                            // Call to Reserve Stock Service When Commercial Operation include CAEQ
+                                            if (flgCaeq[0] || flgAlta[0]) {
+
+                                                return this.callToReserveStockAndCreateQuotation(request, saleItem, flgCasi[0], flgFinanciamiento[0],
+                                                        sapidSimcard[0]);
                                             } else {
-                                                // Case when is Only CAPL
-                                                return salesRepository.save(saleRequest);
+                                                if (flgCasi[0]) {
+                                                    // Call to Create Quotation Service When CommercialOperation Contains CASI
+                                                    return this.callToCreateQuotation(request, saleItem, flgCasi[0],
+                                                            flgFinanciamiento[0]);
+                                                } else {
+                                                    // Case when is Only CAPL
+                                                    return salesRepository.save(saleItem);
+                                                }
                                             }
-                                        }
+                                        });
                                     });
                         });
 
@@ -811,6 +806,97 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         }
 
         return salesRepository.save(saleRequest);
+    }
+
+    private Mono<Sale> creationOrderValidation(Sale saleRequest, CreateProductOrderGeneralRequest productOrderRequest,
+                                         HashMap<String, String> headersMap) {
+        System.out.println("hola0");
+        KeyValueType keyValueType = saleRequest.getAdditionalData().stream()
+                .filter(item -> item.getKey().equalsIgnoreCase("flowSale"))
+                .findFirst()
+                .orElse(null);
+
+        if (keyValueType.getValue().equalsIgnoreCase("Retail")
+                && saleRequest.getStatus().equalsIgnoreCase("NEGOCIACION")) {
+            System.out.println("hola1");
+
+            DeviceOffering saleDeviceOffering = saleRequest.getCommercialOperation().get(0).getDeviceOffering().get(0);
+            System.out.println("hola2");
+
+            Mono<List<GetSkuResponse>> getSku = getSkuWebClient.createSku(saleRequest.getChannel().getId(),
+                    "default", saleDeviceOffering.getSimSpecifications().get(0).getSapid(),
+                    saleDeviceOffering.getSimSpecifications().get(0).getPrice().get(0).getValue().doubleValue(),
+                    "", "", saleRequest.getChannel().getStoreId(), "2",
+                    saleRequest.getChannel().getDealerId(), saleDeviceOffering.getSapid(),
+                    saleDeviceOffering.getCostoPromedioSinIgvSoles(), headersMap).collectList();
+
+            System.out.println("hola3");
+
+            // set onlyValidatonIndicator == true
+            String classObjectName = productOrderRequest.getCreateProductOrderRequest().getClass().getName();
+            int index = classObjectName.lastIndexOf(".");
+            classObjectName = classObjectName.substring(index + 1);
+            if (classObjectName.equalsIgnoreCase("ProductOrderCaplRequest")) {
+                ProductOrderCaplRequest productOrderCaplRequest =
+                        (ProductOrderCaplRequest) productOrderRequest.getCreateProductOrderRequest();
+                productOrderCaplRequest.setOnlyValidationIndicator(true);
+                productOrderRequest.setCreateProductOrderRequest(productOrderCaplRequest);
+            } else if (classObjectName.equalsIgnoreCase("ProductOrderCaeqRequest")) {
+                ProductOrderCaeqRequest productOrderCaeqRequest =
+                        (ProductOrderCaeqRequest) productOrderRequest.getCreateProductOrderRequest();
+                productOrderCaeqRequest.setOnlyValidationIndicator(true);
+                productOrderRequest.setCreateProductOrderRequest(productOrderCaeqRequest);
+            } else if (classObjectName.equalsIgnoreCase("ProductOrderCaeqCaplRequest")) {
+                ProductOrderCaeqCaplRequest productOrderCaeqCaplRequest =
+                        (ProductOrderCaeqCaplRequest) productOrderRequest.getCreateProductOrderRequest();
+                productOrderCaeqCaplRequest.setOnlyValidationIndicator(true);
+                productOrderRequest.setCreateProductOrderRequest(productOrderCaeqCaplRequest);
+            } else if (classObjectName.equalsIgnoreCase("ProductOrderAltaFijaRequest")) {
+                ProductOrderAltaFijaRequest productOrderAltaFijaRequest =
+                        (ProductOrderAltaFijaRequest) productOrderRequest.getCreateProductOrderRequest();
+                productOrderAltaFijaRequest.setOnlyValidationIndicator(true);
+                productOrderRequest.setCreateProductOrderRequest(productOrderAltaFijaRequest);
+            } else if (classObjectName.equalsIgnoreCase("ProductOrderAltaMobileRequest")) {
+                ProductOrderAltaMobileRequest productOrderAltaMobileRequest =
+                        (ProductOrderAltaMobileRequest) productOrderRequest.getCreateProductOrderRequest();
+                productOrderAltaMobileRequest.setOnlyValidationIndicator(true);
+                productOrderRequest.setCreateProductOrderRequest(productOrderAltaMobileRequest);
+            }
+
+            System.out.println("hola4");
+
+            Mono<ProductorderResponse> productOrderResponse =
+                    productOrderWebClient.createProductOrder(productOrderRequest, headersMap, saleRequest);
+
+            System.out.println("hola5");
+            System.out.println(saleRequest.getChannel().getId() +
+                    "default"+ saleDeviceOffering.getSimSpecifications().get(0).getSapid()+
+                    saleDeviceOffering.getSimSpecifications().get(0).getPrice().get(0).getValue().doubleValue()+
+                    ""+ ""+ saleRequest.getChannel().getStoreId()+ "2"+
+                    saleRequest.getChannel().getDealerId()+ saleDeviceOffering.getSapid()+
+                    saleDeviceOffering.getCostoPromedioSinIgvSoles()+ headersMap);
+
+            // Creación del sku
+            return Mono.zip(getSku, productOrderResponse).map(tuple -> {
+                // añadir respuesta a sale.additionalData y hacer validación de la orden
+                saleRequest.getAdditionalData().add(KeyValueType.builder()
+                        .key("DEVICE_SKU")
+                        .value(tuple.getT1().get(0).getDeviceType().equals("mobile_phone")
+                                ? tuple.getT1().get(0).getSku() : tuple.getT1().get(1).getSku())
+                        .build());
+                saleRequest.getAdditionalData().add(KeyValueType.builder()
+                        .key("SIM_SKU")
+                        .value(tuple.getT1().get(0).getDeviceType().equals("sim")
+                                ? tuple.getT1().get(0).getSku() : tuple.getT1().get(1).getSku())
+                        .build());
+
+                // cambiar status a "VALIDADO"
+                saleRequest.setStatus("VALIDADO");
+                return saleRequest;
+            });
+        } else {
+            return Mono.just(saleRequest);
+        }
     }
 
     private Mono<Sale> callToReserveStockAndCreateQuotation(PostSalesRequest request, Sale saleRequest, Boolean flgCasi,

@@ -26,6 +26,8 @@ application:
       type: copyright
       url: https://www.telefonica.com.pe
   endpoints:
+    sku:
+      create_sku: https://localhost
     business_parameters:
       get_sales_characteristics_url: https://localhost
       get_risk_domain_url: https://localhost

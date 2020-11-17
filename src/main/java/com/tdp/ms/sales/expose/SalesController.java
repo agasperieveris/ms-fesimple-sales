@@ -1,20 +1,21 @@
 package com.tdp.ms.sales.expose;
 
+import com.google.gson.JsonObject;
 import com.tdp.genesis.core.constants.HttpHeadersKey;
 import com.tdp.ms.sales.business.SalesManagmentService;
+import com.tdp.ms.sales.client.GetSkuWebClient;
+import com.tdp.ms.sales.model.dto.Agent;
 import com.tdp.ms.sales.model.entity.Sale;
 import com.tdp.ms.sales.model.request.PostSalesRequest;
 import java.util.HashMap;
+import java.util.List;
 import javax.validation.Valid;
+
+import com.tdp.ms.sales.model.response.GetSkuResponse;
+import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseStatus;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
 
 /**
@@ -79,5 +80,4 @@ public class SalesController {
         headersMap.put(HttpHeadersKey.UNICA_USER, user);
         return headersMap;
     }
-
 }
