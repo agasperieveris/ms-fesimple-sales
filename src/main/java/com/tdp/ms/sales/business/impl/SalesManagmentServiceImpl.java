@@ -810,27 +810,25 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
 
     private Mono<Sale> creationOrderValidation(Sale saleRequest, CreateProductOrderGeneralRequest productOrderRequest,
                                          HashMap<String, String> headersMap) {
-        System.out.println("hola0");
         KeyValueType keyValueType = saleRequest.getAdditionalData().stream()
                 .filter(item -> item.getKey().equalsIgnoreCase("flowSale"))
                 .findFirst()
                 .orElse(null);
 
+        String operationType =
+                saleRequest.getCommercialOperation().get(0).getReason().equals("ALTA") ? "Provide" : "Change";
+
         if (keyValueType.getValue().equalsIgnoreCase("Retail")
                 && saleRequest.getStatus().equalsIgnoreCase("NEGOCIACION")) {
-            System.out.println("hola1");
 
             DeviceOffering saleDeviceOffering = saleRequest.getCommercialOperation().get(0).getDeviceOffering().get(0);
-            System.out.println("hola2");
 
             Mono<List<GetSkuResponse>> getSku = getSkuWebClient.createSku(saleRequest.getChannel().getId(),
                     "default", saleDeviceOffering.getSimSpecifications().get(0).getSapid(),
                     saleDeviceOffering.getSimSpecifications().get(0).getPrice().get(0).getValue().doubleValue(),
-                    "", "", saleRequest.getChannel().getStoreId(), "2",
+                    operationType, "", saleRequest.getChannel().getStoreId(), "2",
                     saleRequest.getChannel().getDealerId(), saleDeviceOffering.getSapid(),
                     saleDeviceOffering.getCostoPromedioSinIgvSoles(), headersMap).collectList();
-
-            System.out.println("hola3");
 
             // set onlyValidatonIndicator == true
             String classObjectName = productOrderRequest.getCreateProductOrderRequest().getClass().getName();
@@ -863,18 +861,8 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                 productOrderRequest.setCreateProductOrderRequest(productOrderAltaMobileRequest);
             }
 
-            System.out.println("hola4");
-
             Mono<ProductorderResponse> productOrderResponse =
                     productOrderWebClient.createProductOrder(productOrderRequest, headersMap, saleRequest);
-
-            System.out.println("hola5");
-            System.out.println(saleRequest.getChannel().getId() +
-                    "default"+ saleDeviceOffering.getSimSpecifications().get(0).getSapid()+
-                    saleDeviceOffering.getSimSpecifications().get(0).getPrice().get(0).getValue().doubleValue()+
-                    ""+ ""+ saleRequest.getChannel().getStoreId()+ "2"+
-                    saleRequest.getChannel().getDealerId()+ saleDeviceOffering.getSapid()+
-                    saleDeviceOffering.getCostoPromedioSinIgvSoles()+ headersMap);
 
             // Creación del sku
             return Mono.zip(getSku, productOrderResponse).map(tuple -> {

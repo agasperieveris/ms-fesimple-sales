@@ -234,7 +234,7 @@ public class SalesManagmentServicePrivateMethodsTest {
         List<GetSkuResponse> getSkuResponseList = Arrays.asList(GetSkuResponse.builder().deviceType("mobile_phone").sku("31024026").build(),
                 GetSkuResponse.builder().deviceType("sim").sku("32004482").build());
 
-        Mockito.when(getSkuWebClient.createSku("", "", "", 1.00, "", "", "", "", "", "", "", headersMap))
+        Mockito.when(getSkuWebClient.createSku("", "", "", 1.00, "Provide", "", "", "", "", "", "", headersMap))
                 .thenReturn(Mono.just(getSkuResponseList).flatMapMany(Flux::fromIterable));
 
         Mockito.when(productOrderWebClient.createProductOrder(any(), any(), any()))
@@ -244,6 +244,7 @@ public class SalesManagmentServicePrivateMethodsTest {
                 .builder().createProductOrderRequest(ProductOrderCaplRequest.builder().build()).build();
 
         Sale saleRequest = Sale.builder()
+                .commercialOperation(Arrays.asList(CommercialOperationType.builder().reason("ALTA").build()))
                 .additionalData(Arrays.asList(KeyValueType.builder().key("flowSale").value("Retail").build()))
                 .status("NUEVO")
                 .build();
@@ -257,7 +258,7 @@ public class SalesManagmentServicePrivateMethodsTest {
                 CreateProductOrderGeneralRequest.class, HashMap.class);
         method.setAccessible(true);
 
-        Mockito.when(getSkuWebClient.createSku("string", "default","string",1.00,"","","string","2","string","string","1.00",headersMap))
+        Mockito.when(getSkuWebClient.createSku("string", "default","string",1.00,"Provide","","string","2","string","string","1.00",headersMap))
                 .thenReturn(Flux.just(GetSkuResponse.builder().deviceType("mobile_phone").sku("31024026").build(),
                         GetSkuResponse.builder().deviceType("sim").sku("32004482").build()));
 
@@ -276,7 +277,7 @@ public class SalesManagmentServicePrivateMethodsTest {
                 .status("NEGOCIACION")
                 .channel(ChannelRef.builder().storeId("string").dealerId("string").href("string").id("string")
                         .name("string").storeName("string").build())
-                .commercialOperation(Arrays.asList(CommercialOperationType.builder()
+                .commercialOperation(Arrays.asList(CommercialOperationType.builder().reason("ALTA")
                         .deviceOffering(Arrays.asList(DeviceOffering.builder()
                                 .sapid("string").costoPromedioSinIgvSoles("1.00")
                                 .simSpecifications(Arrays.asList(SimSpecification.builder()
@@ -293,7 +294,7 @@ public class SalesManagmentServicePrivateMethodsTest {
                 CreateProductOrderGeneralRequest.class, HashMap.class);
         method.setAccessible(true);
 
-        Mockito.when(getSkuWebClient.createSku("string", "default","string",1.00,"","","string","2","string","string","1.00",headersMap))
+        Mockito.when(getSkuWebClient.createSku("string", "default","string",1.00,"Provide","","string","2","string","string","1.00",headersMap))
                 .thenReturn(Flux.just(GetSkuResponse.builder().deviceType("mobile_phone").sku("31024026").build(),
                         GetSkuResponse.builder().deviceType("sim").sku("32004482").build()));
 
@@ -311,7 +312,7 @@ public class SalesManagmentServicePrivateMethodsTest {
                 .status("NEGOCIACION")
                 .channel(ChannelRef.builder().storeId("string").dealerId("string").href("string").id("string")
                         .name("string").storeName("string").build())
-                .commercialOperation(Arrays.asList(CommercialOperationType.builder()
+                .commercialOperation(Arrays.asList(CommercialOperationType.builder().reason("ALTA")
                         .deviceOffering(Arrays.asList(DeviceOffering.builder()
                                 .sapid("string").costoPromedioSinIgvSoles("1.00")
                                 .simSpecifications(Arrays.asList(SimSpecification.builder()
@@ -328,7 +329,7 @@ public class SalesManagmentServicePrivateMethodsTest {
                 CreateProductOrderGeneralRequest.class, HashMap.class);
         method.setAccessible(true);
 
-        Mockito.when(getSkuWebClient.createSku("string", "default","string",1.00,"","","string","2","string","string","1.00",headersMap))
+        Mockito.when(getSkuWebClient.createSku("string", "default","string",1.00,"Provide","","string","2","string","string","1.00",headersMap))
                 .thenReturn(Flux.just(GetSkuResponse.builder().deviceType("mobile_phone").sku("31024026").build(),
                         GetSkuResponse.builder().deviceType("sim").sku("32004482").build()));
 
@@ -345,7 +346,7 @@ public class SalesManagmentServicePrivateMethodsTest {
                 .status("NEGOCIACION")
                 .channel(ChannelRef.builder().storeId("string").dealerId("string").href("string").id("string")
                         .name("string").storeName("string").build())
-                .commercialOperation(Arrays.asList(CommercialOperationType.builder()
+                .commercialOperation(Arrays.asList(CommercialOperationType.builder().reason("ALTA")
                         .deviceOffering(Arrays.asList(DeviceOffering.builder()
                                 .sapid("string").costoPromedioSinIgvSoles("1.00")
                                 .simSpecifications(Arrays.asList(SimSpecification.builder()
@@ -362,7 +363,7 @@ public class SalesManagmentServicePrivateMethodsTest {
                 CreateProductOrderGeneralRequest.class, HashMap.class);
         method.setAccessible(true);
 
-        Mockito.when(getSkuWebClient.createSku("string", "default","string",1.00,"","","string","2","string","string","1.00",headersMap))
+        Mockito.when(getSkuWebClient.createSku("string", "default","string",1.00,"Provide","","string","2","string","string","1.00",headersMap))
                 .thenReturn(Flux.just(GetSkuResponse.builder().deviceType("mobile_phone").sku("31024026").build(),
                         GetSkuResponse.builder().deviceType("sim").sku("32004482").build()));
 
@@ -379,7 +380,7 @@ public class SalesManagmentServicePrivateMethodsTest {
                 .status("NEGOCIACION")
                 .channel(ChannelRef.builder().storeId("string").dealerId("string").href("string").id("string")
                         .name("string").storeName("string").build())
-                .commercialOperation(Arrays.asList(CommercialOperationType.builder()
+                .commercialOperation(Arrays.asList(CommercialOperationType.builder().reason("ALTA")
                         .deviceOffering(Arrays.asList(DeviceOffering.builder()
                                 .sapid("string").costoPromedioSinIgvSoles("1.00")
                                 .simSpecifications(Arrays.asList(SimSpecification.builder()
@@ -396,7 +397,7 @@ public class SalesManagmentServicePrivateMethodsTest {
                 CreateProductOrderGeneralRequest.class, HashMap.class);
         method.setAccessible(true);
 
-        Mockito.when(getSkuWebClient.createSku("string", "default","string",1.00,"","","string","2","string","string","1.00",headersMap))
+        Mockito.when(getSkuWebClient.createSku("string", "default","string",1.00,"Change","","string","2","string","string","1.00",headersMap))
                 .thenReturn(Flux.just(GetSkuResponse.builder().deviceType("mobile_phone").sku("31024026").build(),
                         GetSkuResponse.builder().deviceType("sim").sku("32004482").build()));
 
@@ -413,7 +414,7 @@ public class SalesManagmentServicePrivateMethodsTest {
                 .status("NEGOCIACION")
                 .channel(ChannelRef.builder().storeId("string").dealerId("string").href("string").id("string")
                         .name("string").storeName("string").build())
-                .commercialOperation(Arrays.asList(CommercialOperationType.builder()
+                .commercialOperation(Arrays.asList(CommercialOperationType.builder().reason("CAPL")
                         .deviceOffering(Arrays.asList(DeviceOffering.builder()
                                 .sapid("string").costoPromedioSinIgvSoles("1.00")
                                 .simSpecifications(Arrays.asList(SimSpecification.builder()

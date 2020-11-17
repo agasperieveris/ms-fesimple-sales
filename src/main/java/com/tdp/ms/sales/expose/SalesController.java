@@ -57,7 +57,6 @@ public class SalesController {
                                             @RequestHeader(HttpHeadersKey.UNICA_APPLICATION) String application,
                                             @RequestHeader(HttpHeadersKey.UNICA_PID) String pid,
                                             @RequestHeader(HttpHeadersKey.UNICA_USER) String user) {
-        System.out.println("===ENTRO AL CONTROLLER===");
 
         return salesManagmentService.post(PostSalesRequest
                 .builder()
