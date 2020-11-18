@@ -34,8 +34,8 @@ public class WebClientConfig {
 
     //@Value("${application.security.token.url}")
     private static String tokenUrl = "";
-    @Value("${application.endpoints.receptor.register_url}")
-    private String urlReceptorRegister;
+//    @Value("${application.endpoints.receptor.register_url}")
+    private String urlReceptorRegister = "http://localhost:8081/fesimple/api/v1/receptor";
 
     /**
      * Bean to config Webclient.

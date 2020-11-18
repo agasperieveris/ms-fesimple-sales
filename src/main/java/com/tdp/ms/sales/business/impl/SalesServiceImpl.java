@@ -129,6 +129,7 @@ public class SalesServiceImpl implements SalesService {
                                     .register(
                                             ReceptorRequest
                                             .builder()
+                                            .businessId(request.getSalesId())
                                             .typeEventFlow(FLOW_SALE_PUT)
                                             .message(request)
                                             .build(),

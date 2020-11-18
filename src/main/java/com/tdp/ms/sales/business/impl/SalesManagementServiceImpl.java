@@ -109,6 +109,7 @@ public class SalesManagementServiceImpl implements SalesManagementService {
                             .register(
                                     ReceptorRequest
                                     .builder()
+                                    .businessId(request.getSalesId())
                                     .typeEventFlow(FLOW_SALE_POST)
                                     .message(request)
                                     .build(),
