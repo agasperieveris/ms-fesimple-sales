@@ -27,6 +27,7 @@ import lombok.NoArgsConstructor;
 @Data
 @Builder
 public class ReceptorRequest {
+    private String businessId;
     private String typeEventFlow;
     private Object message;
 }
