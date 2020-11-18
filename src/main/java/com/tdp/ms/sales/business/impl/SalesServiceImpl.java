@@ -109,7 +109,7 @@ public class SalesServiceImpl implements SalesService {
         
         ZoneId zone = ZoneId.of("America/Lima");
         ZonedDateTime date = ZonedDateTime.now(zone);
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy'T'HH:mm:ss");
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy'T'HH:mm:ss");
 
         return existingSale
                 .switchIfEmpty(Mono.error(new NotFoundException("El salesId solicitado no se encuentra registrado.")))

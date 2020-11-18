@@ -79,7 +79,7 @@ public class SalesManagementServiceImpl implements SalesManagementService {
             // asignar fecha de creación
             ZoneId zone = ZoneId.of("America/Lima");
             ZonedDateTime date = ZonedDateTime.now(zone);
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy'T'HH:mm:ss");
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy'T'HH:mm:ss");
             request.setSaleCreationDate(date.format(formatter));
 
             return salesRepository.save(request)
