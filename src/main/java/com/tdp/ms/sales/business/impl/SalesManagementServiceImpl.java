@@ -3,6 +3,7 @@ package com.tdp.ms.sales.business.impl;
 import com.tdp.ms.sales.business.SalesManagementService;
 import com.tdp.ms.sales.client.WebClientBusinessParameters;
 import com.tdp.ms.sales.client.WebClientReceptor;
+import com.tdp.ms.sales.model.dto.KeyValueType;
 import com.tdp.ms.sales.model.entity.Sale;
 import com.tdp.ms.sales.model.request.ReceptorRequest;
 import com.tdp.ms.sales.model.response.BusinessParametersResponse;
@@ -11,6 +12,7 @@ import com.tdp.ms.sales.repository.SalesRepository;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.Map;
 import java.util.UUID;
 
@@ -82,6 +84,26 @@ public class SalesManagementServiceImpl implements SalesManagementService {
 
             return salesRepository.save(request)
                     .map(r -> {
+                        if(request.getAdditionalData()!=null) {
+                            request.getAdditionalData().add(
+                                    KeyValueType
+                                        .builder()
+                                        .key("initialProcessDate")
+                                        .value(date.format(formatter))
+                                        .build()
+                                );
+                        }
+                        else {
+                            request.setAdditionalData(new ArrayList<>());
+                            request.getAdditionalData().add(
+                                    KeyValueType
+                                        .builder()
+                                        .key("initialProcessDate")
+                                        .value(date.format(formatter))
+                                        .build()
+                                );
+                        }
+
                         // Llamada a receptor
                         webClientReceptor
                             .register(
