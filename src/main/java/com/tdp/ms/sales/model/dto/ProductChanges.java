@@ -29,7 +29,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Builder
 public class ProductChanges {
-    private String requestId;
+    private Boolean requestId;
     private List<ChangedSimpleProducts> changedSimpleProducts;
     private List<SuspendedContainedProducts> suspendedContainedProducts;
     private List<NewSimpleProducts> newSimpleProducts;
@@ -38,6 +38,6 @@ public class ProductChanges {
     private List<ChangedContainedProducts> changedContainedProducts;
     private List<RemovedAssignedBillingOffers> removedAssignedBillingOffers;
     private List<RemovedContainedProducts> removedContainedProducts;
-    private List<NewContainedProducts> newContainedProducts;
+    private List<NewContainedProducts> newContainedProducts;//Swagger nombre diferente
     private PortabilityDetails portabilityDetails;
 }

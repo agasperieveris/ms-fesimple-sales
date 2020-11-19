@@ -5,6 +5,7 @@ import com.tdp.ms.sales.business.SalesService;
 import com.tdp.ms.sales.model.entity.Sale;
 import com.tdp.ms.sales.model.request.GetSalesRequest;
 import com.tdp.ms.sales.model.response.SalesResponse;
+import com.tdp.ms.sales.utils.Commons;
 import io.swagger.annotations.ApiOperation;
 import java.util.HashMap;
 import java.util.Map;
@@ -97,7 +98,7 @@ public class SalesLeadController {
             @RequestHeader(HttpHeadersKey.UNICA_PID) String pid,
             @RequestHeader(HttpHeadersKey.UNICA_USER) String user) {
 
-        return salesService.post(request, fillHeaders(serviceId, application, pid, user));
+        return salesService.post(request, Commons.fillHeaders(serviceId, application, pid, user));
     }
 
     /**
@@ -117,7 +118,7 @@ public class SalesLeadController {
                                   @RequestHeader(HttpHeadersKey.UNICA_PID) String pid,
                                   @RequestHeader(HttpHeadersKey.UNICA_USER) String user) {
 
-        return salesService.put(salesId, request, fillHeaders(serviceId, application, pid, user));
+        return salesService.put(salesId, request, Commons.fillHeaders(serviceId, application, pid, user));
     }
 
     /**
@@ -136,7 +137,7 @@ public class SalesLeadController {
                                   @RequestHeader(HttpHeadersKey.UNICA_PID) String pid,
                                   @RequestHeader(HttpHeadersKey.UNICA_USER) String user) {
 
-        return salesService.putEvent(salesId, request, fillHeaders(serviceId, application, pid, user));
+        return salesService.putEvent(salesId, request, Commons.fillHeaders(serviceId, application, pid, user));
     }
 
     /**
@@ -181,16 +182,6 @@ public class SalesLeadController {
         return salesService.getSaleList(saleId, dealerId, idAgent, customerId, nationalID,
                 nationalIdType, status, channelId, storeId, orderId, startDateTime, endDateTime, size, pageCount, page,
                 maxResultCount);
-    }
-
-    private Map<String, String> fillHeaders(String serviceId, String application, String pid, String user) {
-        Map<String, String> headersMap = new HashMap();
-        headersMap.put(HttpHeadersKey.UNICA_SERVICE_ID, serviceId);
-        headersMap.put(HttpHeadersKey.UNICA_APPLICATION, application);
-        headersMap.put(HttpHeadersKey.UNICA_PID, pid);
-        headersMap.put(HttpHeadersKey.UNICA_USER, user);
-
-        return headersMap;
     }
 
 }

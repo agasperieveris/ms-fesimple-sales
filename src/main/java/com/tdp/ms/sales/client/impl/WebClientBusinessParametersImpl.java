@@ -2,8 +2,8 @@ package com.tdp.ms.sales.client.impl;
 
 import com.tdp.genesis.core.constants.HttpHeadersKey;
 import com.tdp.ms.sales.model.response.BusinessParametersResponse;
-import lombok.RequiredArgsConstructor;
 import java.util.Map;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;

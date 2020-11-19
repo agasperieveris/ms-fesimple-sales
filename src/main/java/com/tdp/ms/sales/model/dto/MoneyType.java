@@ -28,6 +28,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Builder
 public class MoneyType {
-    private Float amount;
+    private Number amount;
     private String units;
 }

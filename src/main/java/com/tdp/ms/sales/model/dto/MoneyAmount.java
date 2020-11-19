@@ -29,7 +29,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class MoneyAmount {
-    private float value;
+    private Number value;
     private String currency;
     @JsonProperty("tax_included")
     private Boolean taxIncluded;
