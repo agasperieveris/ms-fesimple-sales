@@ -2,6 +2,7 @@ package com.tdp.ms.sales.business.impl;
 
 import com.azure.cosmos.implementation.NotFoundException;
 import com.tdp.genesis.core.exception.GenesisException;
+import com.tdp.ms.commons.util.DateUtils;
 import com.tdp.ms.sales.business.SalesService;
 import com.tdp.ms.sales.client.WebClientBusinessParameters;
 import com.tdp.ms.sales.client.WebClientReceptor;
@@ -106,10 +107,6 @@ public class SalesServiceImpl implements SalesService {
     public Mono<Sale> put(String salesId, Sale request, Map<String, String> headersMap) {
         // buscar en la colección
         Mono<Sale> existingSale = salesRepository.findBySalesId(salesId);
-        
-        ZoneId zone = ZoneId.of("America/Lima");
-        ZonedDateTime date = ZonedDateTime.now(zone);
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy'T'HH:mm:ss");
 
         return existingSale
                 .switchIfEmpty(Mono.error(new NotFoundException("El salesId solicitado no se encuentra registrado.")))
@@ -121,7 +118,7 @@ public class SalesServiceImpl implements SalesService {
                                         KeyValueType
                                             .builder()
                                             .key("initialProcessDate")
-                                            .value(date.format(formatter))
+                                            .value(DateUtils.getDatetimeNowCosmosDbFormat())
                                             .build()
                                     );
                                 // Llamada a receptor

@@ -1,5 +1,6 @@
 package com.tdp.ms.sales.business.impl;
 
+import com.tdp.ms.commons.util.DateUtils;
 import com.tdp.ms.sales.business.SalesManagementService;
 import com.tdp.ms.sales.client.WebClientBusinessParameters;
 import com.tdp.ms.sales.client.WebClientReceptor;
@@ -89,7 +90,7 @@ public class SalesManagementServiceImpl implements SalesManagementService {
                                     KeyValueType
                                         .builder()
                                         .key("initialProcessDate")
-                                        .value(date.format(formatter))
+                                        .value(DateUtils.getDatetimeNowCosmosDbFormat())
                                         .build()
                                 );
                         }
@@ -99,7 +100,7 @@ public class SalesManagementServiceImpl implements SalesManagementService {
                                     KeyValueType
                                         .builder()
                                         .key("initialProcessDate")
-                                        .value(date.format(formatter))
+                                        .value(DateUtils.getDatetimeNowCosmosDbFormat())
                                         .build()
                                 );
                         }
