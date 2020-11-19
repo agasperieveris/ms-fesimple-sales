@@ -19,7 +19,6 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Date;
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -120,7 +119,6 @@ public class SalesServiceImpl implements SalesService {
 
     @Override
     public Mono<Sale> putEvent(String salesId, Sale request, Map<String, String> headersMap) {
-        Mono<Sale> existingSale = salesRepository.findBySalesId(salesId);
 
         return this.put(salesId, request, headersMap)
                 .map(r -> {

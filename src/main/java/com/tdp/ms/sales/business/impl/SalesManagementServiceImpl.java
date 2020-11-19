@@ -66,20 +66,20 @@ public class SalesManagementServiceImpl implements SalesManagementService {
     @Override
     public Mono<Sale> post(Sale request, Map<String, String> headersMap) {
         String uuid = UUID.randomUUID().toString();
-        while (salesRepository.existsById(uuid) == Mono.just(true)) {
-            uuid = UUID.randomUUID().toString();
-        }
+
         request.setId(uuid);
 
-        // Se obtiene el secuencial de businessParameters
-        Mono<BusinessParametersResponse> saleSequential = webClient.getNewSaleSequential(seqNumber, headersMap);
+        Mono<BusinessParametersResponse> saleSequential =
+                webClient.getNewSaleSequential(seqNumber, headersMap);
 
-        return saleSequential.flatMap(saleSequentialItem -> {
+        return saleSequential
+                .flatMap(saleSequentialItem -> {
             request.setSalesId(saleSequentialItem.getData().get(0).getValue());
 
-            // asignar fecha de creación
             ZoneId zone = ZoneId.of("America/Lima");
             ZonedDateTime date = ZonedDateTime.now(zone);
+
+
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy'T'HH:mm:ss");
             request.setSaleCreationDate(date.format(formatter));
 
