@@ -143,6 +143,33 @@
 			<artifactId>reactor-core</artifactId>
 		</dependency>
 
+		<!-- FLUJO DE EVENTOS INICIO -->
+		<dependency>
+			<groupId>com.microsoft.azure</groupId>
+			<artifactId>spring-cloud-azure-eventhubs-stream-binder</artifactId>
+			<version>1.2.8</version>
+
+			<exclusions>
+				<exclusion>
+					<groupId>io.reactivex</groupId>
+					<artifactId>rxjava</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-messaging</artifactId>
+			<version>5.2.8.RELEASE</version>
+		</dependency>
+		<!-- FLUJO DE EVENTOS FIN -->
+
+		<dependency>
+			<groupId>com.tdp.ms</groupId>
+			<artifactId>fr-fesimple-sharedlib</artifactId>
+			<version>1.0.6</version>
+		</dependency>
+
 		<dependency>
 			<groupId>io.projectreactor</groupId>
 			<artifactId>reactor-test</artifactId>
