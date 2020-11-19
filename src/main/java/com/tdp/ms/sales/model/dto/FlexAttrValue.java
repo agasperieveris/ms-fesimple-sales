@@ -32,5 +32,5 @@ public class FlexAttrValue {
     private float decimalValue;
     private int integerValue;
     private String stringValue;
-    private String valueType; // No se utiliza en Request
+    private String valueType;
 }

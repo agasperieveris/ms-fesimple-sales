@@ -1,5 +1,6 @@
 package com.tdp.ms.sales.model.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -25,7 +26,6 @@ import lombok.NoArgsConstructor;
  *         </ul>
  * @version 1.0
  */
-
 @AllArgsConstructor
 @NoArgsConstructor
 @Data

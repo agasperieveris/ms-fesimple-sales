@@ -4,15 +4,11 @@ import com.tdp.genesis.core.constants.HttpHeadersKey;
 import com.tdp.ms.sales.client.WebClientReceptor;
 import com.tdp.ms.sales.model.request.ReceptorRequest;
 import com.tdp.ms.sales.model.response.ReceptorResponse;
-
-import java.util.Map;
-
+import java.util.HashMap;
 import lombok.RequiredArgsConstructor;
-
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
-
 import reactor.core.publisher.Mono;
 
 /**
@@ -38,7 +34,7 @@ public class WebClientReceptorImpl implements WebClientReceptor {
     private final WebClient webClientInsecureReceptor;
 
     @Override
-    public Mono<ReceptorResponse> register(ReceptorRequest request, Map<String, String> headers) {
+    public Mono<ReceptorResponse> register(ReceptorRequest request, HashMap<String,String> headers) {
         WebClient.ResponseSpec response = webClientInsecureReceptor
                 .post()
                 .header(HttpHeadersKey.UNICA_SERVICE_ID, headers.get(HttpHeadersKey.UNICA_SERVICE_ID))
