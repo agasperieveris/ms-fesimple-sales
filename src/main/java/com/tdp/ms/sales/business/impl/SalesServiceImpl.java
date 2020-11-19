@@ -230,22 +230,24 @@ public class SalesServiceImpl implements SalesService {
     }
 
     public Boolean filterNationalId(Sale item, String nationalId) {
-        if (nationalId != null && !nationalId.isEmpty() && (item.getAgent() == null || item.getAgent().getNationalId() == null)) {
+        if (nationalId != null && !nationalId.isEmpty() && (item.getRelatedParty() == null
+                || item.getRelatedParty().get(0).getNationalId() == null)) {
             return false;
-        } else if (nationalId != null && !nationalId.isEmpty() && item.getAgent() != null && item.getAgent().getNationalId() != null
-                && !nationalId.isEmpty()) {
-            return item.getAgent().getNationalId().equalsIgnoreCase(nationalId);
+        } else if (nationalId != null && !nationalId.isEmpty() && item.getRelatedParty() != null
+                && item.getRelatedParty().get(0).getNationalId() != null && !nationalId.isEmpty()) {
+            return item.getRelatedParty().get(0).getNationalId().equalsIgnoreCase(nationalId);
         } else {
             return true;
         }
     }
 
     public Boolean filterNationalIdType(Sale item, String nationalIdType) {
-        if (nationalIdType != null && !nationalIdType.isEmpty() && (item.getAgent() == null || item.getAgent().getNationalIdType() == null)) {
+        if (nationalIdType != null && !nationalIdType.isEmpty() && (item.getRelatedParty() == null
+                || item.getRelatedParty().get(0).getNationalIdType() == null)) {
             return false;
-        } else if (nationalIdType != null && !nationalIdType.isEmpty() && item.getAgent() != null && item.getAgent().getNationalIdType() != null
-                && !nationalIdType.isEmpty()) {
-            return item.getAgent().getNationalIdType().equalsIgnoreCase(nationalIdType);
+        } else if (nationalIdType != null && !nationalIdType.isEmpty() && item.getRelatedParty() != null
+                && item.getRelatedParty().get(0).getNationalIdType() != null && !nationalIdType.isEmpty()) {
+            return item.getRelatedParty().get(0).getNationalIdType().equalsIgnoreCase(nationalIdType);
         } else {
             return true;
         }
@@ -253,7 +255,7 @@ public class SalesServiceImpl implements SalesService {
 
     public Boolean filterCustomerId(Sale item, String customerId) {
         if (customerId != null && !customerId.isEmpty() && item.getRelatedParty().get(0).getCustomerId() != null) {
-            return item.getRelatedParty().get(0).getCustomerId().equals(customerId);
+            return item.getRelatedParty().get(0).getCustomerId().equalsIgnoreCase(customerId);
         }
         // No se hace el filtro
         return true;
