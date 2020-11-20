@@ -6,6 +6,28 @@ server:
 spring:
   main:
     allow-bean-definition-overriding: true
+  cloud:
+    azure:
+      eventhub:
+        connection-string: Endpoint=sb://ehub-berserkers-dev.servicebus.windows.net/;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=GmZePbavyI2GpKSzrpGpcTRa5do9mGrO0BS6KJIgDv8=
+        checkpoint-storage-account: scberserkersdatadev
+        checkpoint-access-key: 5WqP4sjnoPLWEDgTkj1s56XRhbMijS0DWiwRaz14dFrnfRq5yUjYTGanUz5TaS80+KnLVDNlO9JMU2AZ1NP89A==
+        checkpoint-container: eventflow-orchestrator-checkpoint
+    stream:
+      bindings:
+        input:
+          destination: sales-update
+          group: $Default
+        output:
+          destination: orchestrator-response
+      eventhub:
+        bindings:
+          input:
+            consumer:
+              checkpoint-mode: MANUAL
+      default:
+        producer:
+          errorChannelEnabled: true
 
 azure:
   cosmosdb:

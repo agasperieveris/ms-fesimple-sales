@@ -19,6 +19,7 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -112,31 +113,38 @@ public class SalesServiceImpl implements SalesService {
                 .switchIfEmpty(Mono.error(new NotFoundException("El salesId solicitado no se encuentra registrado.")))
                 .flatMap(item -> {
                     request.setSalesId(item.getSalesId());
-                    return salesRepository.save(request)
-                            .map(r -> {
-                                request.getAdditionalData().add(
-                                        KeyValueType
-                                            .builder()
-                                            .key("initialProcessDate")
-                                            .value(DateUtils.getDatetimeNowCosmosDbFormat())
-                                            .build()
-                                    );
-                                // Llamada a receptor
-                                webClientReceptor
-                                    .register(
-                                            ReceptorRequest
-                                            .builder()
-                                            .businessId(request.getSalesId())
-                                            .typeEventFlow(FLOW_SALE_PUT)
-                                            .message(request)
-                                            .build(),
-                                            headersMap
-                                    )
-                                    .subscribe();
-                                return r;
-                            });
+                    return salesRepository.save(request);
                 });
 
+    }
+
+    @Override
+    public Mono<Sale> putEvent(String salesId, Sale request, Map<String, String> headersMap) {
+        Mono<Sale> existingSale = salesRepository.findBySalesId(salesId);
+
+        return this.put(salesId, request, headersMap)
+                .map(r -> {
+                        r.getAdditionalData().add(
+                                KeyValueType
+                                        .builder()
+                                        .key("initialProcessDate")
+                                        .value(DateUtils.getDatetimeNowCosmosDbFormat())
+                                        .build()
+                        );
+                        // Llamada a receptor
+                        webClientReceptor
+                                .register(
+                                        ReceptorRequest
+                                                .builder()
+                                                .businessId(r.getSalesId())
+                                                .typeEventFlow(FLOW_SALE_PUT)
+                                                .message(r)
+                                                .build(),
+                                        headersMap
+                                )
+                                .subscribe();
+                        return r;
+                    });
     }
 
     @Override
@@ -313,5 +321,48 @@ public class SalesServiceImpl implements SalesService {
         }
         // No se hace el filtro
         return true;
+    }
+
+    @Override
+    public String validateBeforeUpdate(String eventFlow, String stepFlow, List<KeyValueType> additionalData) {
+        if (eventFlow == null) {
+            return "eventFlow nullPointerException";
+        } else if (stepFlow == null) {
+            return "stepFlow NullPointerException";
+        } else if (additionalData == null) {
+            return "additionalData NullPointerException";
+        }
+
+        if (eventFlow.equals("01")) {
+            // flujo 1, pasos 2, 4, 6, 8
+            switch (stepFlow) {
+                case "02":
+                    return !existFieldInAdditionalData("createContractDate", additionalData)
+                            ? "No se ha añadido campo createContractDate" : "";
+                case "04":
+                    return !existFieldInAdditionalData("submitOrderDate", additionalData)
+                            ? "No se ha añadido campo submitOrderDate" : "";
+                case "06":
+                    return !existFieldInAdditionalData("tratamientoDatosDate", additionalData)
+                            ? "No se ha añadido campo createContractDate" : "";
+                case "08":
+                    return !existFieldInAdditionalData("afiliacionReciboDate", additionalData)
+                            ? "No se ha añadido campo createContractDate" : "";
+                default:
+                    return "Se ha obtenido un stepFlow que no corresponde. stepFlow: " + stepFlow;
+            }
+        } else if (eventFlow.equals("02") && stepFlow.equals("02")) {
+            // flujo 2, paso 2
+            return !existFieldInAdditionalData("custodiaDate", additionalData)
+                    ? "No se ha añadido campo custodiaDate" : "";
+        } else {
+            return "Se ha obtenido un eventFlow que no corresponde. eventFlow = " + eventFlow;
+        }
+    }
+
+    private Boolean existFieldInAdditionalData(String key, List<KeyValueType> additionalData) {
+        KeyValueType res = additionalData.stream()
+                .filter(item -> item.getKey().equalsIgnoreCase(key)).findFirst().orElse(null);
+        return res != null && res.getValue() != null && !res.getValue().isEmpty();
     }
 }

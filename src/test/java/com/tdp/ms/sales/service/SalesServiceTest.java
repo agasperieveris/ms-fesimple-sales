@@ -23,10 +23,9 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.*;
 
 import static org.mockito.ArgumentMatchers.any;
 
@@ -309,6 +308,29 @@ public class SalesServiceTest {
     }
 
     @Test
+    void putEventSaveSale() {
+        Map<String, String> headersMap = new HashMap<String, String>();
+        headersMap.put(HttpHeadersKey.UNICA_SERVICE_ID, "serviceId");
+        headersMap.put(HttpHeadersKey.UNICA_PID, "pid");
+        headersMap.put(HttpHeadersKey.UNICA_APPLICATION, "application");
+        headersMap.put(HttpHeadersKey.UNICA_USER, "user");
+
+        Mockito.when(salesRepository.findBySalesId(any()))
+                .thenReturn(Mono.just(sale2));
+
+        Mockito.when(salesRepository.save(any()))
+                .thenReturn(Mono.just(sale2));
+
+        Mono<Sale> result = salesService.putEvent("FE-000000001", sale, headersMap);
+
+        StepVerifier.create(result)
+                .assertNext(c -> {
+                    Assert.assertEquals(c.getId(), sale2.getId());
+                })
+                .verifyComplete();
+    }
+
+    @Test
     void getSaleListTest(){
         Mockito.when(salesRepository.findAll()).thenReturn(Flux.just(sale));
 
@@ -458,4 +480,80 @@ public class SalesServiceTest {
         salesServiceImpl.filterExistingOrderId(sale, "");
     }
 
+    @Test
+    void validateBeforeUpdate_Test() {
+        salesService.validateBeforeUpdate("01", "02", Arrays.asList(KeyValueType.builder().key("createContractDate").value("prueba").build(),
+                KeyValueType.builder().key("submitOrderDate").value("prueba submitOrderDate").build(),
+                KeyValueType.builder().key("tratamientoDatosDate").value("prueba tratamientoDatosDate").build(),
+                KeyValueType.builder().key("afiliacionReciboDate").value("prueba afiliacionReciboDate").build(),
+                KeyValueType.builder().key("custodiaDate").value("prueba custodiaDate").build()));
+
+        salesService.validateBeforeUpdate("01", "04", Arrays.asList(KeyValueType.builder().key("createContractDate").value("prueba").build(),
+                KeyValueType.builder().key("submitOrderDate").value("prueba submitOrderDate").build(),
+                KeyValueType.builder().key("tratamientoDatosDate").value("prueba tratamientoDatosDate").build(),
+                KeyValueType.builder().key("afiliacionReciboDate").value("prueba afiliacionReciboDate").build(),
+                KeyValueType.builder().key("custodiaDate").value("prueba custodiaDate").build()));
+
+        salesService.validateBeforeUpdate("01", "06", Arrays.asList(KeyValueType.builder().key("createContractDate").value("prueba").build(),
+                KeyValueType.builder().key("submitOrderDate").value("prueba submitOrderDate").build(),
+                KeyValueType.builder().key("tratamientoDatosDate").value("prueba tratamientoDatosDate").build(),
+                KeyValueType.builder().key("afiliacionReciboDate").value("prueba afiliacionReciboDate").build(),
+                KeyValueType.builder().key("custodiaDate").value("prueba custodiaDate").build()));
+
+        salesService.validateBeforeUpdate("01", "08", Arrays.asList(KeyValueType.builder().key("createContractDate").value("prueba").build(),
+                KeyValueType.builder().key("submitOrderDate").value("prueba submitOrderDate").build(),
+                KeyValueType.builder().key("tratamientoDatosDate").value("prueba tratamientoDatosDate").build(),
+                KeyValueType.builder().key("afiliacionReciboDate").value("prueba afiliacionReciboDate").build(),
+                KeyValueType.builder().key("custodiaDate").value("prueba custodiaDate").build()));
+
+        salesService.validateBeforeUpdate("01", "09", Arrays.asList(KeyValueType.builder().key("createContractDate").value("prueba").build(),
+                KeyValueType.builder().key("submitOrderDate").value("prueba submitOrderDate").build(),
+                KeyValueType.builder().key("tratamientoDatosDate").value("prueba tratamientoDatosDate").build(),
+                KeyValueType.builder().key("afiliacionReciboDate").value("prueba afiliacionReciboDate").build(),
+                KeyValueType.builder().key("custodiaDate").value("prueba custodiaDate").build()));
+
+        salesService.validateBeforeUpdate("02", "01", Arrays.asList(KeyValueType.builder().key("createContractDate").value("prueba").build(),
+                KeyValueType.builder().key("submitOrderDate").value("prueba submitOrderDate").build(),
+                KeyValueType.builder().key("tratamientoDatosDate").value("prueba tratamientoDatosDate").build(),
+                KeyValueType.builder().key("afiliacionReciboDate").value("prueba afiliacionReciboDate").build(),
+                KeyValueType.builder().key("custodiaDate").value("prueba custodiaDate").build()));
+
+        salesService.validateBeforeUpdate("02", "02", Arrays.asList(KeyValueType.builder().key("createContractDate").value("prueba").build(),
+                KeyValueType.builder().key("submitOrderDate").value("prueba submitOrderDate").build(),
+                KeyValueType.builder().key("tratamientoDatosDate").value("prueba tratamientoDatosDate").build(),
+                KeyValueType.builder().key("afiliacionReciboDate").value("prueba afiliacionReciboDate").build(),
+                KeyValueType.builder().key("custodiaDate").value("prueba custodiaDate").build()));
+
+        salesService.validateBeforeUpdate(null, "02", Arrays.asList(KeyValueType.builder().key("createContractDate").value("prueba").build(),
+                KeyValueType.builder().key("submitOrderDate").value("prueba submitOrderDate").build(),
+                KeyValueType.builder().key("tratamientoDatosDate").value("prueba tratamientoDatosDate").build(),
+                KeyValueType.builder().key("afiliacionReciboDate").value("prueba afiliacionReciboDate").build(),
+                KeyValueType.builder().key("custodiaDate").value("prueba custodiaDate").build()));
+
+        salesService.validateBeforeUpdate("02", null, Arrays.asList(KeyValueType.builder().key("createContractDate").value("prueba").build(),
+                KeyValueType.builder().key("submitOrderDate").value("prueba submitOrderDate").build(),
+                KeyValueType.builder().key("tratamientoDatosDate").value("prueba tratamientoDatosDate").build(),
+                KeyValueType.builder().key("afiliacionReciboDate").value("prueba afiliacionReciboDate").build(),
+                KeyValueType.builder().key("custodiaDate").value("prueba custodiaDate").build()));
+
+        salesService.validateBeforeUpdate("02", "02", null);
+    }
+
+    @Test
+    void existFieldInAdditionalData_Test() throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
+        Method method = SalesServiceImpl.class.getDeclaredMethod("existFieldInAdditionalData",
+                String.class, List.class);
+        method.setAccessible(true);
+        method.invoke(salesServiceImpl, "createContractDate",
+                Collections.singletonList(KeyValueType.builder().key("createContractDate").value("prueba").build()));
+    }
+
+    @Test
+    void existFieldInAdditionalData_Null_Test() throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
+        Method method = SalesServiceImpl.class.getDeclaredMethod("existFieldInAdditionalData",
+                String.class, List.class);
+        method.setAccessible(true);
+        method.invoke(salesServiceImpl, "afiliacionReciboDate",
+                Collections.singletonList(KeyValueType.builder().key("createContractDate").value("prueba").build()));
+    }
 }

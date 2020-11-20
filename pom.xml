@@ -167,7 +167,7 @@
 		<dependency>
 			<groupId>com.tdp.ms</groupId>
 			<artifactId>fr-fesimple-sharedlib</artifactId>
-			<version>1.0.6</version>
+			<version>1.0.7</version>
 		</dependency>
 
 		<dependency>
@@ -318,11 +318,6 @@
 			<artifactId>mockwebserver</artifactId>
 			<version>${okhttp3.version}</version>
 			<scope>test</scope>
-		</dependency>
-	 	<dependency>
-			<groupId>com.tdp.ms</groupId>
-			<artifactId>fr-fesimple-sharedlib</artifactId>
-			<version>1.0.7</version>
 		</dependency>
 	</dependencies>
 
@@ -480,6 +475,7 @@
                     <append>true</append>
                     <excludes>
                         <exclude>com/tdp/ms/*/model/thirdparty/**/*</exclude>
+						<exclude>com/tdp/ms/sales/eventflow/**/*</exclude>
                     </excludes>
 				</configuration>
 			</plugin>

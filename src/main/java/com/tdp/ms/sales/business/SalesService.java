@@ -1,7 +1,10 @@
 package com.tdp.ms.sales.business;
 
+import com.tdp.ms.sales.model.dto.KeyValueType;
 import com.tdp.ms.sales.model.entity.Sale;
 import com.tdp.ms.sales.model.request.GetSalesRequest;
+
+import java.util.List;
 import java.util.Map;
 
 import reactor.core.publisher.Flux;
@@ -55,6 +58,15 @@ public interface SalesService {
     Mono<Sale> put(String salesId, Sale request, Map<String, String> headersMap);
 
     /**
+     * Actualiza los datos de la venta en la BBDD - FLUJO EVENTOS.
+     *
+     * @author @srivasme
+     * @param request Datos de la venta actualizados
+     * @return SalesResponse, datos actualizados de la venta
+     */
+    Mono<Sale> putEvent(String salesId, Sale request, Map<String, String> headersMap);
+
+    /**
      * Se listan las ventas dependiendo de los parámetros que se le pasen.
      *
      * @author @srivasme
@@ -65,4 +77,15 @@ public interface SalesService {
                            String status, String channelId, String storeId, String orderId,
                            String startDateTime, String endDateTime, String size, String pageCount,
                            String page, String maxResultCount);
+
+    /**
+     * Valida que se hayan ingresado los nuevos keys en el flujo de eventos
+     *
+     * @author @srivasme
+     * @param eventFlow Numero de flujo de evento en el que se encuentra
+     * @param stepFlow Paso de flujo de eventos
+     * @param additionalData additionalData de objeto Sale
+     * @return String, null si está bien. Caso contrario, devuelve el log del error
+     */
+    String validateBeforeUpdate(String eventFlow, String stepFlow, List<KeyValueType> additionalData);
 }

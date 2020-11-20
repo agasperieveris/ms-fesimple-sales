@@ -36,8 +36,6 @@ public class DomainEventListener {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DomainEventListener.class);
 
-    //private final WebClient webClientInsecureSsl;
-
     @Autowired
     private DomainEventPublisher domainEventPublisher;
 
@@ -58,13 +56,22 @@ public class DomainEventListener {
         try {
             // TODO: quitar headers en duro cuando se actualice ms-sale con el filter de webclient
             Map<String, String> headersMap = new HashMap<>();
-            headersMap.put(HttpHeadersKey.UNICA_APPLICATION, "ms-fesimple-productorder");
-            headersMap.put(HttpHeadersKey.UNICA_PID, "550e8400-e29b-41d4-a716-446655440011");
-            headersMap.put(HttpHeadersKey.UNICA_SERVICE_ID, "550e8400-e29b-41d4-a716-446655440005");
-            headersMap.put(HttpHeadersKey.UNICA_USER, "EventFlowUser");
+            headersMap.put(HttpHeadersKey.UNICA_APPLICATION, "VISOR");
+            headersMap.put(HttpHeadersKey.UNICA_PID, "550e8400-e29b-41d4-a716-446655440000");
+            headersMap.put(HttpHeadersKey.UNICA_SERVICE_ID, "550e8400-e29b-41d4-a716-446655440001");
+            headersMap.put(HttpHeadersKey.UNICA_USER, "jreategui");
 
-            salesService.put(sale.getSalesId(), sale, headersMap);
-            orquestador.setCodStatus(EstadosOrquestador.PROCESADO_EXITO.getCodEstado());
+            // Validar que se haya agregado el nuevo campo en el participante anterior
+            String eventLog = salesService.validateBeforeUpdate(orquestador.getCodEventFlow(),
+                    orquestador.getCodStepFlow(), sale.getAdditionalData());
+            if (eventLog.isEmpty()) {
+                salesService.putEvent(sale.getSalesId(), sale, headersMap).block();
+                orquestador.setCodStatus(EstadosOrquestador.PROCESADO_EXITO.getCodEstado());
+            } else {
+                orquestador.setCodStatus(EstadosOrquestador.PROCESADO_ERROR.getCodEstado());
+                orquestador.setLog(eventLog);
+            }
+
         } catch (Exception e) {
             LOGGER.error("Listener Error: " + e);
             orquestador.setCodStatus(EstadosOrquestador.PROCESADO_ERROR.getCodEstado());

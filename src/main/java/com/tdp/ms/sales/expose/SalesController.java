@@ -2,7 +2,6 @@ package com.tdp.ms.sales.expose;
 
 import com.tdp.genesis.core.constants.HttpHeadersKey;
 import com.tdp.ms.sales.business.SalesManagementService;
-import com.tdp.ms.sales.business.SalesService;
 import com.tdp.ms.sales.model.entity.Sale;
 import java.util.HashMap;
 import java.util.Map;
