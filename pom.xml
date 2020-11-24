@@ -16,7 +16,7 @@
 
 	<groupId>com.tdp.ms</groupId>
 	<artifactId>sales</artifactId>
-	<version>1.2.11</version>
+	<version>1.2.13</version>
 	<name>${project.groupId}:${project.artifactId}</name>
 	<description>Template from Genesis Framework to build microservices</description>
 
@@ -141,6 +141,33 @@
 		<dependency>
 			<groupId>io.projectreactor</groupId>
 			<artifactId>reactor-core</artifactId>
+		</dependency>
+
+		<!-- FLUJO DE EVENTOS INICIO -->
+		<dependency>
+			<groupId>com.microsoft.azure</groupId>
+			<artifactId>spring-cloud-azure-eventhubs-stream-binder</artifactId>
+			<version>1.2.8</version>
+
+			<exclusions>
+				<exclusion>
+					<groupId>io.reactivex</groupId>
+					<artifactId>rxjava</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-messaging</artifactId>
+			<version>5.2.8.RELEASE</version>
+		</dependency>
+		<!-- FLUJO DE EVENTOS FIN -->
+
+		<dependency>
+			<groupId>com.tdp.ms</groupId>
+			<artifactId>fr-fesimple-sharedlib</artifactId>
+			<version>1.0.7</version>
 		</dependency>
 
 		<dependency>
@@ -291,11 +318,6 @@
 			<artifactId>mockwebserver</artifactId>
 			<version>${okhttp3.version}</version>
 			<scope>test</scope>
-		</dependency>
-	 	<dependency>
-			<groupId>com.tdp.ms</groupId>
-			<artifactId>fr-fesimple-sharedlib</artifactId>
-			<version>1.0.7</version>
 		</dependency>
 	</dependencies>
 
@@ -453,6 +475,7 @@
                     <append>true</append>
                     <excludes>
                         <exclude>com/tdp/ms/*/model/thirdparty/**/*</exclude>
+						<exclude>com/tdp/ms/sales/eventflow/**/*</exclude>
                     </excludes>
 				</configuration>
 			</plugin>
