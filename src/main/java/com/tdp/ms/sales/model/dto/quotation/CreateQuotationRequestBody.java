@@ -2,10 +2,13 @@ package com.tdp.ms.sales.model.dto.quotation;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 /**
  * Class: CreateQuotationRequestBody. <br/>
@@ -26,6 +29,7 @@ import lombok.NoArgsConstructor;
  */
 @Builder
 @Getter
+@Setter
 @AllArgsConstructor
 @NoArgsConstructor
 public class CreateQuotationRequestBody {
@@ -33,6 +37,8 @@ public class CreateQuotationRequestBody {
     private String accountId;
     private String billingAgreement;
     private String commercialAgreement;
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    private String serviceIdLobConcat = "";
     private Customer customer;
     private String operationType;
     private MoneyAmount totalAmount;

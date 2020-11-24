@@ -33,6 +33,7 @@ application:
       get_risk_domain_url: https://aks-berserkers-ingress-dev.eastus2.cloudapp.azure.com/bussinesparameters/v2/parameters/034/dataparams?value={domain}
       get_bonificacion_simcard: http://aks-berserkers-ingress-dev.eastus2.cloudapp.azure.com/bussinesparameters/v2/parameters/045/dataparams?key={channelId}
       get_parameters_simcard: http://aks-berserkers-ingress-dev.eastus2.cloudapp.azure.com/bussinesparameters/v2/parameters/051/dataparams
+      get_parameters_financiamiento_fija: http://aks-berserkers-ingress-dev.eastus2.cloudapp.azure.com/bussinesparameters/v2/parameters/054/dataparams?
     product_order:
       create_product_order_url: https://aks-berserkers-ingress-dev.eastus2.cloudapp.azure.com/fesimple/v1/orders/createproduct
     url:

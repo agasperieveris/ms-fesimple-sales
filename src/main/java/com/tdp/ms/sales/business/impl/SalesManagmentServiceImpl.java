@@ -4,6 +4,8 @@ import com.tdp.genesis.core.exception.GenesisException;
 import com.tdp.ms.sales.business.SalesManagmentService;
 import com.tdp.ms.sales.client.*;
 import com.tdp.ms.sales.model.dto.*;
+import com.tdp.ms.sales.model.dto.businessparameter.BusinessParameterFinanciamientoFijaData;
+import com.tdp.ms.sales.model.dto.businessparameter.BusinessParameterFinanciamientoFijaExt;
 import com.tdp.ms.sales.model.dto.productorder.CreateProductOrderGeneralRequest;
 import com.tdp.ms.sales.model.dto.productorder.FlexAttrType;
 import com.tdp.ms.sales.model.dto.productorder.FlexAttrValueType;
@@ -200,6 +202,10 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                 .getFinancingInstalments().get(0).getDescription()) && !saleRequest.getCommercialOperation().get(0)
                 .getDeviceOffering().get(0).getOffers().get(0).getBillingOfferings().get(0).getCommitmentPeriods()
                 .get(0).getFinancingInstalments().get(0).getDescription().equals("CONTADO");
+
+        // Building Create Quotation Request to use into Create Order Request
+        CreateQuotationRequest createQuotationFijaRequest = new CreateQuotationRequest();
+        if (flgFinanciamiento[0]) this.buildCreateQuotationFijaRequest(createQuotationFijaRequest, request);
 
         // Getting Main CommercialTypeOperation value
         String commercialOperationReason = saleRequest.getCommercialOperation().get(0).getReason();
@@ -535,7 +541,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
             FlexAttrValueType externalFinancialAttrValue =  FlexAttrValueType
                     .builder()
                     .stringValue(flgFinanciamiento[0]? "Y" : "N")
-                    .valueType("STRING") // Pendiente confirmar si no se enviará contenido
+                    .valueType("STRING")
                     .build();
             FlexAttrType externalFinancialAttr = FlexAttrType
                     .builder()
@@ -570,6 +576,61 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
             altaFijaOrderAttributesList.add(externalFinancialAttr);
             altaFijaOrderAttributesList.add(upFrontIndAttr);
             altaFijaOrderAttributesList.add(paymentMethodAttr);
+
+            // Order Attributes if is Financing
+            if (flgFinanciamiento[0]) {
+                FlexAttrValueType downPaymentAttrValue = FlexAttrValueType
+                        .builder()
+                        .stringValue(createQuotationFijaRequest.getBody().getDownPayment().getAmount())
+                        .valueType("STRING")
+                        .build();
+                FlexAttrType downPaymentAttr = FlexAttrType
+                        .builder()
+                        .attrName("DOWN_PAYMENT_AMOUNT")
+                        .flexAttrValue(downPaymentAttrValue)
+                        .build();
+                altaFijaOrderAttributesList.add(downPaymentAttr);
+
+                FlexAttrValueType financingAmountAttrValue = FlexAttrValueType
+                        .builder()
+                        .stringValue(createQuotationFijaRequest.getBody().getTotalAmount().getAmount())
+                        .valueType("STRING")
+                        .build();
+                FlexAttrType financingAmountAttr = FlexAttrType
+                        .builder()
+                        .attrName("FINANCING_AMOUNT")
+                        .flexAttrValue(financingAmountAttrValue)
+                        .build();
+                altaFijaOrderAttributesList.add(financingAmountAttr);
+
+                FlexAttrValueType financingPlanAttrValue = FlexAttrValueType
+                        .builder()
+                        .stringValue(createQuotationFijaRequest.getBody().getFinancialEntity())
+                        .valueType("STRING")
+                        .build();
+                FlexAttrType financingPlanAttr = FlexAttrType
+                        .builder()
+                        .attrName("FINANCING_PLAN")
+                        .flexAttrValue(financingPlanAttrValue)
+                        .build();
+                altaFijaOrderAttributesList.add(financingPlanAttr);
+            }
+
+            // Order Attributes if is Scheduling
+            if (!saleRequest.getCommercialOperation().get(0).getWorkOrDeliveryType().getScheduleDelivery()
+                                                                                .equalsIgnoreCase("SLA")) {
+                FlexAttrValueType downPaymentAttrValue = FlexAttrValueType
+                        .builder()
+                        .stringValue(createQuotationFijaRequest.getBody().getDownPayment().getAmount())
+                        .valueType("TC")
+                        .build();
+                FlexAttrType downPaymentAttr = FlexAttrType
+                        .builder()
+                        .attrName("DELIVERY_METHOD")
+                        .flexAttrValue(downPaymentAttrValue)
+                        .build();
+                altaFijaOrderAttributesList.add(downPaymentAttr);
+            }
 
             AltaFijaRequest altaFijaRequest = new AltaFijaRequest();
             altaFijaRequest.setNewProducts(newProductsAltaFijaList);
@@ -622,9 +683,33 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                         }
 
                         // FEMS-1514 Validación de creación Orden
-                        Mono<Sale> saleRequestUpdated = creationOrderValidation(saleRequest, mainRequestProductOrder, request.getHeadersMap());
+                        Mono<Sale> saleRequestUpdated = creationOrderValidation(saleRequest, mainRequestProductOrder,
+                                                                                            request.getHeadersMap());
                         return saleRequestUpdated.flatMap(saleItem -> {
-                            return salesRepository.save(saleItem);
+
+                            if (flgFinanciamiento[0]) {
+                                return businessParameterWebClient
+                                        .getParametersFinanciamientoFija(request.getHeadersMap())
+                                        .map(BusinessParametersFinanciamientoFijaResponse::getData)
+                                        .map(bpFinanciamientoFijaData -> bpFinanciamientoFijaData.get(0))
+                                        .map(BusinessParameterFinanciamientoFijaData::getExt)
+                                        .flatMap(parametersFinanciamientoFija -> {
+                                            
+                                            createQuotationFijaRequest.getBody()
+                                                    .setFinancialEntity(this.getStringValueFromBpExtListByParameterName(
+                                                            "financialEntity",
+                                                                                        parametersFinanciamientoFija));
+
+                                            return quotationWebClient.createQuotation(createQuotationFijaRequest,
+                                                    saleRequest)
+                                                    .flatMap(createQuotationResponse -> {
+
+                                                        return salesRepository.save(saleItem);
+                                                    });
+                                        });
+                            } else {
+                                return salesRepository.save(saleItem);
+                            }
                         });
                     });
         } else if (mainProductType.equalsIgnoreCase("WIRELESS")) {
@@ -806,6 +891,199 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         }
 
         return salesRepository.save(saleRequest);
+    }
+
+    private String getStringValueFromBpExtListByParameterName(String parameterName,
+                                                              List<BusinessParameterFinanciamientoFijaExt> ext) {
+        final String[] stringValue = {""};
+
+        if (!ext.isEmpty()) {
+            ext.stream().forEach(bpExt -> {
+                if (bpExt.getNomParameter().equals(parameterName)) {
+                    stringValue[0] = bpExt.getCodParameterValue();
+                }
+            });
+        }
+
+        return stringValue[0];
+    }
+    private void buildCreateQuotationFijaRequest(CreateQuotationRequest createQuotationRequest,
+                                             PostSalesRequest salesRequest) {
+        createQuotationRequest.setHeadersMap(salesRequest.getHeadersMap());
+
+        Sale sale = salesRequest.getSale();
+
+        TimePeriod validFor = TimePeriod
+                .builder()
+                .endDateTime(Commons.getDatetimeNow())
+                .startDateTime(Commons.getDatetimeNow())
+                .build();
+        com.tdp.ms.sales.model.dto.quotation.ContactMedium contactMedium1 = com.tdp.ms.sales.model.dto.quotation
+                .ContactMedium
+                .builder()
+                .type("email")
+                .name(sale.getProspectContact().get(0).getCharacteristic().getEmailAddress())
+                .preferred("true")
+                .isActive("true")
+                .validFor(validFor)
+                .build();
+        List<com.tdp.ms.sales.model.dto.quotation.ContactMedium> contactMediumList = new ArrayList<>();
+        contactMediumList.add(contactMedium1);
+
+        LegalId legalId = LegalId
+                .builder()
+                .country("PE")
+                .isPrimary("true")
+                .nationalId(sale.getRelatedParty().get(0).getNationalId())
+                .nationalIdType(sale.getRelatedParty().get(0).getNationalIdType())
+                .build();
+
+        Address address = Address
+                .builder()
+                .streetNr(sale.getCommercialOperation().get(0).getWorkOrDeliveryType().getPlace().get(0).getAddress()
+                        .getStreetNr())
+                .streetName(sale.getCommercialOperation().get(0).getWorkOrDeliveryType().getPlace().get(0).getAddress()
+                        .getStreetName())
+                .streetType(sale.getCommercialOperation().get(0).getWorkOrDeliveryType().getPlace().get(0).getAddress()
+                        .getStreetType())
+                .locality(this.getStringValueByKeyFromAdditionalDataList(sale.getCommercialOperation().get(0)
+                        .getWorkOrDeliveryType().getPlace().get(0).getAdditionalData(), "locality"))
+                .city(sale.getCommercialOperation().get(0).getWorkOrDeliveryType().getPlace().get(0).getAddress()
+                        .getCity())
+                .stateOrProvince(sale.getCommercialOperation().get(0).getWorkOrDeliveryType().getPlace().get(0)
+                        .getAddress().getStateOrProvince())
+                .region(sale.getCommercialOperation().get(0).getWorkOrDeliveryType().getPlace().get(0)
+                        .getAddress().getRegion())
+                .country(sale.getCommercialOperation().get(0).getWorkOrDeliveryType().getPlace().get(0)
+                        .getAddress().getCountry())
+                .build();
+
+        Customer customerQuotation = Customer
+                .builder()
+                .id(sale.getRelatedParty().get(0).getCustomerId())
+                .creditScore(sale.getRelatedParty().get(0).getScore().getScore())
+                .name(sale.getRelatedParty().get(0).getFirstName())
+                .surname(sale.getRelatedParty().get(0).getLastName())
+                .segment(this.getStringValueByKeyFromAdditionalDataList(sale.getAdditionalData(),
+                        "releatedPartySegment"))
+                .subsegment(this.getStringValueByKeyFromAdditionalDataList(sale.getAdditionalData(),
+                        "releatedPartySubSegment"))
+                .contactMedia(contactMediumList)
+                .legalId(legalId)
+                .address(address)
+                .creditLimit(sale.getRelatedParty().get(0).getScore().getFinancingCapacity())
+                .build();
+
+        Number amountTotalAmount = sale.getCommercialOperation().get(0).getDeviceOffering().get(0).getOffers().get(0)
+                .getBillingOfferings().get(0).getCommitmentPeriods().get(0).getFinancingInstalments().get(0)
+                .getInstalments().getTotalAmount().getValue().doubleValue() - sale.getCommercialOperation().get(0)
+                .getDeviceOffering().get(1).getSimSpecifications().get(0).getPrice().get(0).getValue().doubleValue();
+
+        MoneyAmount totalAmount = MoneyAmount
+                .builder()
+                .amount(amountTotalAmount.toString())
+                .units("")
+                .build();
+
+        MoneyAmount associatedPlanRecurrentCost = MoneyAmount
+                .builder()
+                .amount("0.00")
+                .units("PEN")
+                .build();
+
+        MoneyAmount totalCustomerRecurrentCost = MoneyAmount
+                .builder()
+                .amount(sale.getCommercialOperation().get(0).getProductOfferings().get(0).getProductOfferingPrice()
+                        .get(0).getMaxPrice().getAmount().toString())
+                .units("PEN")
+                .build();
+
+        MoneyAmount downPayment = MoneyAmount
+                .builder()
+                .amount(sale.getCommercialOperation().get(0).getDeviceOffering().get(0).getOffers().get(0)
+                        .getBillingOfferings().get(0).getCommitmentPeriods().get(0).getFinancingInstalments()
+                        .get(0).getInstalments().getOpeningQuota().getValue().toString())
+                .units("PEN")
+                .build();
+
+        Site site = Site
+                .builder()
+                .id(sale.getChannel().getStoreId())
+                .build();
+
+        Channel channel = Channel
+                .builder()
+                .name(sale.getChannel().getName())
+                .build();
+
+        MoneyAmount totalCost = MoneyAmount
+                .builder()
+                .amount(sale.getCommercialOperation().get(0).getDeviceOffering().get(0).getOffers().get(0)
+                        .getBillingOfferings().get(0).getCommitmentPeriods().get(0).getFinancingInstalments().get(0)
+                        .getInstalments().getTotalAmount().getValue().toString())
+                .units("")
+                .build();
+
+        MoneyAmount taxExcludedAmount = MoneyAmount
+                .builder()
+                .amount(sale.getCommercialOperation().get(0).getDeviceOffering().get(0).getOffers().get(0)
+                        .getBillingOfferings().get(0).getCommitmentPeriods().get(0).getFinancingInstalments().get(0)
+                        .getInstalments().getTotalAmount().getValue().toString())
+                .units("")
+                .build();
+
+        List<com.tdp.ms.sales.model.dto.quotation.Item> itemsList = new ArrayList<>();
+        com.tdp.ms.sales.model.dto.quotation.Item itemEquipment = com.tdp.ms.sales.model.dto.quotation.Item
+                .builder()
+                .offeringId("EQUIP_FE".concat(sale.getCommercialOperation().get(0).getProduct().getPublicId()))
+                .type("mobile phone")
+                .orderActionId(sale.getCommercialOperation().get(0).getOrder().getProductOrderReferenceNumber())
+                .totalCost(totalCost)
+                .taxExcludedAmount(taxExcludedAmount)
+                .build();
+        itemsList.add(itemEquipment);
+
+        // Attribute only to Fija
+        String commercialAgreement = "";
+
+        sale.getCommercialOperation().get(0).getProductOfferings().get(0).getProductSpecification().stream()
+                .forEach(productSpecification -> {
+                    String productSpecificationName = productSpecification.getName();
+                    if (productSpecificationName.equalsIgnoreCase("TV")) {
+                        commercialAgreement.concat("TV=").concat(productSpecification.getRefinedProduct()
+                                                            .getProductCharacteristics().get(0).getId()).concat(";");
+                    } else if (productSpecificationName.equalsIgnoreCase("Broadband")) {
+                        commercialAgreement.concat("INT=").concat(productSpecification.getRefinedProduct()
+                                                            .getProductCharacteristics().get(0).getId()).concat(";");
+                    } else if (productSpecificationName.equalsIgnoreCase("ShEq")) {
+                        commercialAgreement.concat("EQUP=").concat(productSpecification.getRefinedProduct()
+                                                                        .getProductCharacteristics().get(0).getId());
+                    }
+                });
+
+
+        CreateQuotationRequestBody body = CreateQuotationRequestBody
+                .builder()
+                .orderId(sale.getCommercialOperation().get(0).getOrder().getProductOrderId())
+                .accountId(sale.getRelatedParty().get(0).getAccountId())
+                .billingAgreement(sale.getRelatedParty().get(0).getBillingArragmentId())
+                .commercialAgreement("N")
+                .commercialAgreement(commercialAgreement)
+                .customer(customerQuotation)
+                .operationType(sale.getCommercialOperation().get(0).getReason()) // Pendiente confirmación para alta, reason = ALTA
+                .totalAmount(totalAmount)
+                .associatedPlanRecurrentCost(associatedPlanRecurrentCost)
+                .totalCustomerRecurrentCost(totalCustomerRecurrentCost)
+                .downPayment(downPayment)
+                .site(site)
+                .financialEntity(sale.getCommercialOperation().get(0).getDeviceOffering().get(0).getOffers().get(0)
+                        .getBillingOfferings().get(0).getCommitmentPeriods().get(0).getFinancingInstalments().get(0)
+                        .getCodigo())
+                .items(itemsList)
+                .channel(channel)
+                .build();
+
+        createQuotationRequest.setBody(body);
     }
 
     private Mono<Sale> creationOrderValidation(Sale saleRequest, CreateProductOrderGeneralRequest productOrderRequest,

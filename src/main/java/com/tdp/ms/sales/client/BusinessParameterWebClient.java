@@ -1,6 +1,7 @@
 package com.tdp.ms.sales.client;
 
 import com.tdp.ms.sales.model.request.GetSalesCharacteristicsRequest;
+import com.tdp.ms.sales.model.response.BusinessParametersFinanciamientoFijaResponse;
 import com.tdp.ms.sales.model.response.BusinessParametersResponse;
 import com.tdp.ms.sales.model.response.BusinessParametersResponseObjectExt;
 import com.tdp.ms.sales.model.response.GetSalesCharacteristicsResponse;
@@ -34,5 +35,8 @@ public interface BusinessParameterWebClient {
     Mono<BusinessParametersResponseObjectExt> getBonificacionSimcard(String channelId, HashMap<String, String> headersMap);
 
     Mono<BusinessParametersResponseObjectExt> getParametersSimcard(HashMap<String, String> headersMap);
+
+    Mono<BusinessParametersFinanciamientoFijaResponse> getParametersFinanciamientoFija(
+                                                                                    HashMap<String, String> headersMap);
 
 }
