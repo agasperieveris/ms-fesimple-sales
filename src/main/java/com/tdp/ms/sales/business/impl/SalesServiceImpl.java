@@ -19,6 +19,7 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -112,31 +113,38 @@ public class SalesServiceImpl implements SalesService {
                 .switchIfEmpty(Mono.error(new NotFoundException("El salesId solicitado no se encuentra registrado.")))
                 .flatMap(item -> {
                     request.setSalesId(item.getSalesId());
-                    return salesRepository.save(request)
-                            .map(r -> {
-                                request.getAdditionalData().add(
-                                        KeyValueType
-                                            .builder()
-                                            .key("initialProcessDate")
-                                            .value(DateUtils.getDatetimeNowCosmosDbFormat())
-                                            .build()
-                                    );
-                                // Llamada a receptor
-                                webClientReceptor
-                                    .register(
-                                            ReceptorRequest
-                                            .builder()
-                                            .businessId(request.getSalesId())
-                                            .typeEventFlow(FLOW_SALE_PUT)
-                                            .message(request)
-                                            .build(),
-                                            headersMap
-                                    )
-                                    .subscribe();
-                                return r;
-                            });
+                    return salesRepository.save(request);
                 });
 
+    }
+
+    @Override
+    public Mono<Sale> putEvent(String salesId, Sale request, Map<String, String> headersMap) {
+        Mono<Sale> existingSale = salesRepository.findBySalesId(salesId);
+
+        return this.put(salesId, request, headersMap)
+                .map(r -> {
+                        r.getAdditionalData().add(
+                                KeyValueType
+                                        .builder()
+                                        .key("initialProcessDate")
+                                        .value(DateUtils.getDatetimeNowCosmosDbFormat())
+                                        .build()
+                        );
+                        // Llamada a receptor
+                        webClientReceptor
+                                .register(
+                                        ReceptorRequest
+                                                .builder()
+                                                .businessId(r.getSalesId())
+                                                .typeEventFlow(FLOW_SALE_PUT)
+                                                .message(r)
+                                                .build(),
+                                        headersMap
+                                )
+                                .subscribe();
+                        return r;
+                    });
     }
 
     @Override
