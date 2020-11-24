@@ -24,7 +24,7 @@ spring:
         bindings:
           input:
             consumer:
-              checkpoint-mode: MANUAL
+              checkpoint-mode: PARTITION_COUNT
       default:
         producer:
           errorChannelEnabled: true
@@ -55,6 +55,7 @@ application:
     receptor:
       register_url: https://aks-berserkers-ingress-dev.eastus2.cloudapp.azure.com/fesimple/api/v1/receptor
     url:
+      put_sale: https://aks-berserkers-ingress-dev.eastus2.cloudapp.azure.com/fesimple/v1/saleslead/{id}
       business_parameters:
         seq_number: SEQ001
         sequential: https://aks-berserkers-ingress-dev.eastus2.cloudapp.azure.com/bussinesparameters/v2/parameters/{code}/dataparams?nomSeq={seq}

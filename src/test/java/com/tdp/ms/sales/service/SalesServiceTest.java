@@ -4,6 +4,7 @@ import com.tdp.genesis.core.constants.HttpHeadersKey;
 import com.tdp.ms.sales.business.SalesService;
 import com.tdp.ms.sales.business.impl.SalesServiceImpl;
 import com.tdp.ms.sales.client.WebClientBusinessParameters;
+import com.tdp.ms.sales.eventflow.client.SalesWebClient;
 import com.tdp.ms.sales.model.dto.*;
 import com.tdp.ms.sales.model.entity.Sale;
 import com.tdp.ms.sales.model.request.GetSalesRequest;
@@ -41,6 +42,9 @@ public class SalesServiceTest {
 
     @Autowired
     private SalesServiceImpl salesServiceImpl;
+
+    @Autowired
+    private SalesWebClient salesWebClient;
 
     @Autowired
     private SalesService salesService;
@@ -482,61 +486,61 @@ public class SalesServiceTest {
 
     @Test
     void validateBeforeUpdate_Test() {
-        salesService.validateBeforeUpdate("01", "02", Arrays.asList(KeyValueType.builder().key("createContractDate").value("prueba").build(),
+        salesWebClient.validateBeforeUpdate("01", "02", Arrays.asList(KeyValueType.builder().key("createContractDate").value("prueba").build(),
                 KeyValueType.builder().key("submitOrderDate").value("prueba submitOrderDate").build(),
                 KeyValueType.builder().key("tratamientoDatosDate").value("prueba tratamientoDatosDate").build(),
                 KeyValueType.builder().key("afiliacionReciboDate").value("prueba afiliacionReciboDate").build(),
                 KeyValueType.builder().key("custodiaDate").value("prueba custodiaDate").build()));
 
-        salesService.validateBeforeUpdate("01", "04", Arrays.asList(KeyValueType.builder().key("createContractDate").value("prueba").build(),
+        salesWebClient.validateBeforeUpdate("01", "04", Arrays.asList(KeyValueType.builder().key("createContractDate").value("prueba").build(),
                 KeyValueType.builder().key("submitOrderDate").value("prueba submitOrderDate").build(),
                 KeyValueType.builder().key("tratamientoDatosDate").value("prueba tratamientoDatosDate").build(),
                 KeyValueType.builder().key("afiliacionReciboDate").value("prueba afiliacionReciboDate").build(),
                 KeyValueType.builder().key("custodiaDate").value("prueba custodiaDate").build()));
 
-        salesService.validateBeforeUpdate("01", "06", Arrays.asList(KeyValueType.builder().key("createContractDate").value("prueba").build(),
+        salesWebClient.validateBeforeUpdate("01", "06", Arrays.asList(KeyValueType.builder().key("createContractDate").value("prueba").build(),
                 KeyValueType.builder().key("submitOrderDate").value("prueba submitOrderDate").build(),
                 KeyValueType.builder().key("tratamientoDatosDate").value("prueba tratamientoDatosDate").build(),
                 KeyValueType.builder().key("afiliacionReciboDate").value("prueba afiliacionReciboDate").build(),
                 KeyValueType.builder().key("custodiaDate").value("prueba custodiaDate").build()));
 
-        salesService.validateBeforeUpdate("01", "08", Arrays.asList(KeyValueType.builder().key("createContractDate").value("prueba").build(),
+        salesWebClient.validateBeforeUpdate("01", "08", Arrays.asList(KeyValueType.builder().key("createContractDate").value("prueba").build(),
                 KeyValueType.builder().key("submitOrderDate").value("prueba submitOrderDate").build(),
                 KeyValueType.builder().key("tratamientoDatosDate").value("prueba tratamientoDatosDate").build(),
                 KeyValueType.builder().key("afiliacionReciboDate").value("prueba afiliacionReciboDate").build(),
                 KeyValueType.builder().key("custodiaDate").value("prueba custodiaDate").build()));
 
-        salesService.validateBeforeUpdate("01", "09", Arrays.asList(KeyValueType.builder().key("createContractDate").value("prueba").build(),
+        salesWebClient.validateBeforeUpdate("01", "09", Arrays.asList(KeyValueType.builder().key("createContractDate").value("prueba").build(),
                 KeyValueType.builder().key("submitOrderDate").value("prueba submitOrderDate").build(),
                 KeyValueType.builder().key("tratamientoDatosDate").value("prueba tratamientoDatosDate").build(),
                 KeyValueType.builder().key("afiliacionReciboDate").value("prueba afiliacionReciboDate").build(),
                 KeyValueType.builder().key("custodiaDate").value("prueba custodiaDate").build()));
 
-        salesService.validateBeforeUpdate("02", "01", Arrays.asList(KeyValueType.builder().key("createContractDate").value("prueba").build(),
+        salesWebClient.validateBeforeUpdate("02", "01", Arrays.asList(KeyValueType.builder().key("createContractDate").value("prueba").build(),
                 KeyValueType.builder().key("submitOrderDate").value("prueba submitOrderDate").build(),
                 KeyValueType.builder().key("tratamientoDatosDate").value("prueba tratamientoDatosDate").build(),
                 KeyValueType.builder().key("afiliacionReciboDate").value("prueba afiliacionReciboDate").build(),
                 KeyValueType.builder().key("custodiaDate").value("prueba custodiaDate").build()));
 
-        salesService.validateBeforeUpdate("02", "02", Arrays.asList(KeyValueType.builder().key("createContractDate").value("prueba").build(),
+        salesWebClient.validateBeforeUpdate("02", "02", Arrays.asList(KeyValueType.builder().key("createContractDate").value("prueba").build(),
                 KeyValueType.builder().key("submitOrderDate").value("prueba submitOrderDate").build(),
                 KeyValueType.builder().key("tratamientoDatosDate").value("prueba tratamientoDatosDate").build(),
                 KeyValueType.builder().key("afiliacionReciboDate").value("prueba afiliacionReciboDate").build(),
                 KeyValueType.builder().key("custodiaDate").value("prueba custodiaDate").build()));
 
-        salesService.validateBeforeUpdate(null, "02", Arrays.asList(KeyValueType.builder().key("createContractDate").value("prueba").build(),
+        salesWebClient.validateBeforeUpdate(null, "02", Arrays.asList(KeyValueType.builder().key("createContractDate").value("prueba").build(),
                 KeyValueType.builder().key("submitOrderDate").value("prueba submitOrderDate").build(),
                 KeyValueType.builder().key("tratamientoDatosDate").value("prueba tratamientoDatosDate").build(),
                 KeyValueType.builder().key("afiliacionReciboDate").value("prueba afiliacionReciboDate").build(),
                 KeyValueType.builder().key("custodiaDate").value("prueba custodiaDate").build()));
 
-        salesService.validateBeforeUpdate("02", null, Arrays.asList(KeyValueType.builder().key("createContractDate").value("prueba").build(),
+        salesWebClient.validateBeforeUpdate("02", null, Arrays.asList(KeyValueType.builder().key("createContractDate").value("prueba").build(),
                 KeyValueType.builder().key("submitOrderDate").value("prueba submitOrderDate").build(),
                 KeyValueType.builder().key("tratamientoDatosDate").value("prueba tratamientoDatosDate").build(),
                 KeyValueType.builder().key("afiliacionReciboDate").value("prueba afiliacionReciboDate").build(),
                 KeyValueType.builder().key("custodiaDate").value("prueba custodiaDate").build()));
 
-        salesService.validateBeforeUpdate("02", "02", null);
+        salesWebClient.validateBeforeUpdate("02", "02", null);
     }
 
     @Test

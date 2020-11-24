@@ -55,6 +55,7 @@ application:
     receptor:
       register_url: https://localhost
     url:
+      put_sale: https://localhost
       business_parameters:
         seq_number: SEQ001
         sequential: https://localhost

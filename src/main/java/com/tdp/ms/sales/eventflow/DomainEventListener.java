@@ -5,6 +5,7 @@ import com.microsoft.azure.spring.integration.core.api.reactor.Checkpointer;
 import com.tdp.genesis.core.constants.HttpHeadersKey;
 import com.tdp.ms.commons.util.MapperUtils;
 import com.tdp.ms.sales.business.SalesService;
+import com.tdp.ms.sales.eventflow.client.SalesWebClient;
 import com.tdp.ms.sales.eventflow.model.EstadosOrquestador;
 import com.tdp.ms.sales.eventflow.model.Orquestador;
 import com.tdp.ms.sales.model.entity.Sale;
@@ -40,7 +41,7 @@ public class DomainEventListener {
     private DomainEventPublisher domainEventPublisher;
 
     @Autowired
-    private SalesService salesService;
+    private SalesWebClient salesWebClient;
 
     @StreamListener(Sink.INPUT)
     public void consumeMessage(@Payload Orquestador orquestador,
@@ -62,10 +63,10 @@ public class DomainEventListener {
             headersMap.put(HttpHeadersKey.UNICA_USER, "jreategui");
 
             // Validar que se haya agregado el nuevo campo en el participante anterior
-            String eventLog = salesService.validateBeforeUpdate(orquestador.getCodEventFlow(),
+            String eventLog = salesWebClient.validateBeforeUpdate(orquestador.getCodEventFlow(),
                     orquestador.getCodStepFlow(), sale.getAdditionalData());
             if (eventLog.isEmpty()) {
-                salesService.putEvent(sale.getSalesId(), sale, headersMap).block();
+                salesWebClient.putSale(sale.getSalesId(), sale, headersMap);
                 orquestador.setCodStatus(EstadosOrquestador.PROCESADO_EXITO.getCodEstado());
             } else {
                 orquestador.setCodStatus(EstadosOrquestador.PROCESADO_ERROR.getCodEstado());

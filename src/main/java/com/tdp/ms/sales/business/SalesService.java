@@ -77,15 +77,4 @@ public interface SalesService {
                            String status, String channelId, String storeId, String orderId,
                            String startDateTime, String endDateTime, String size, String pageCount,
                            String page, String maxResultCount);
-
-    /**
-     * Valida que se hayan ingresado los nuevos keys en el flujo de eventos
-     *
-     * @author @srivasme
-     * @param eventFlow Numero de flujo de evento en el que se encuentra
-     * @param stepFlow Paso de flujo de eventos
-     * @param additionalData additionalData de objeto Sale
-     * @return String, null si está bien. Caso contrario, devuelve el log del error
-     */
-    String validateBeforeUpdate(String eventFlow, String stepFlow, List<KeyValueType> additionalData);
 }
