@@ -45,8 +45,7 @@ public class DomainEventListener {
 
     @StreamListener(Sink.INPUT)
     public void consumeMessage(@Payload Orquestador orquestador,
-                               @Headers MessageHeaders headers,
-                               @Header(AzureHeaders.CHECKPOINTER) Checkpointer checkpointer) {
+                               @Headers MessageHeaders headers) {
         LOGGER.info("...............ORQUESTADOR_INBOX  Mensaje recibido: '{}'", orquestador);
 
         ZoneId zone = ZoneId.of("America/Lima");
@@ -82,25 +81,7 @@ public class DomainEventListener {
         orquestador.setFecFinProcessMsg(ZonedDateTime.now(zone).toLocalDateTime());
         domainEventPublisher.publish(headers, orquestador);
 
-        //Procesar esta parte cuando ya se consuma el mensaje para que no vuelva a consumir
-        checkpointer.success()
-                .doOnSuccess(s -> {
-                    LOGGER.info("->Mensaje '{}' comprobado checkpointed", orquestador);
-                })
-                .doOnError((msg) -> {
-                    LOGGER.error(String.valueOf(msg));
-                })
-                .subscribe();
-    }
 
-    @ServiceActivator(inputChannel = "productorder-submit.$Default.errors")
-    public void consumerError(Message<?> message) {
-        System.out.println("**** Al invocar el Listener ERROR: " + message);
-    }
-
-    @ServiceActivator(inputChannel = "orchestrator-response.errors")
-    public void producerError(Message<?> message) {
-        System.out.println("AL Invocar el Producer ERROR: " + message);
     }
 
 }
