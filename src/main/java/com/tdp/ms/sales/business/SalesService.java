@@ -1,7 +1,10 @@
 package com.tdp.ms.sales.business;
 
+import com.tdp.ms.sales.model.dto.KeyValueType;
 import com.tdp.ms.sales.model.entity.Sale;
 import com.tdp.ms.sales.model.request.GetSalesRequest;
+
+import java.util.List;
 import java.util.Map;
 
 import reactor.core.publisher.Flux;
@@ -53,6 +56,15 @@ public interface SalesService {
      * @return SalesResponse, datos actualizados de la venta
      */
     Mono<Sale> put(String salesId, Sale request, Map<String, String> headersMap);
+
+    /**
+     * Actualiza los datos de la venta en la BBDD - FLUJO EVENTOS.
+     *
+     * @author @srivasme
+     * @param request Datos de la venta actualizados
+     * @return SalesResponse, datos actualizados de la venta
+     */
+    Mono<Sale> putEvent(String salesId, Sale request, Map<String, String> headersMap);
 
     /**
      * Se listan las ventas dependiendo de los parámetros que se le pasen.
