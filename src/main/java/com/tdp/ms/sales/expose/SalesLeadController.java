@@ -121,6 +121,25 @@ public class SalesLeadController {
     }
 
     /**
+     * ACtualiza los datos de un Sale en la BBDD de la Web Convergente - FLUJO EVENTOS.
+     *
+     * @author @srivasme
+     * @param request Datos de la venta
+     * @return SalesResponse, datos de la venta actualizada en la BBDD de la Web
+     *         Convergente
+     */
+    @PutMapping("/{id}/event")
+    public Mono<Sale> updateSalesEvent(@PathVariable("id") String salesId,
+                                  @RequestBody Sale request,
+                                  @RequestHeader(HttpHeadersKey.UNICA_SERVICE_ID) String serviceId,
+                                  @RequestHeader(HttpHeadersKey.UNICA_APPLICATION) String application,
+                                  @RequestHeader(HttpHeadersKey.UNICA_PID) String pid,
+                                  @RequestHeader(HttpHeadersKey.UNICA_USER) String user) {
+
+        return salesService.putEvent(salesId, request, fillHeaders(serviceId, application, pid, user));
+    }
+
+    /**
      * se listan las ventas que cumplan con los campos solicitados.
      *
      * @return
