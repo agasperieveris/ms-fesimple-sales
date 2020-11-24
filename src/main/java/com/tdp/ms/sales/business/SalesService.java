@@ -1,10 +1,7 @@
 package com.tdp.ms.sales.business;
 
-import com.tdp.ms.sales.model.dto.KeyValueType;
 import com.tdp.ms.sales.model.entity.Sale;
 import com.tdp.ms.sales.model.request.GetSalesRequest;
-
-import java.util.List;
 import java.util.Map;
 
 import reactor.core.publisher.Flux;
