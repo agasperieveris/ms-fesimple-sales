@@ -1,10 +1,7 @@
 package com.tdp.ms.sales.eventflow;
 
-import com.microsoft.azure.spring.integration.core.AzureHeaders;
-import com.microsoft.azure.spring.integration.core.api.reactor.Checkpointer;
 import com.tdp.genesis.core.constants.HttpHeadersKey;
 import com.tdp.ms.commons.util.MapperUtils;
-import com.tdp.ms.sales.business.SalesService;
 import com.tdp.ms.sales.eventflow.client.SalesWebClient;
 import com.tdp.ms.sales.eventflow.model.EstadosOrquestador;
 import com.tdp.ms.sales.eventflow.model.Orquestador;
@@ -17,10 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.stream.annotation.EnableBinding;
 import org.springframework.cloud.stream.annotation.StreamListener;
 import org.springframework.cloud.stream.messaging.Sink;
-import org.springframework.integration.annotation.ServiceActivator;
-import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageHeaders;
-import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.messaging.handler.annotation.Headers;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Component;
@@ -46,6 +40,7 @@ public class DomainEventListener {
     @StreamListener(Sink.INPUT)
     public void consumeMessage(@Payload Orquestador orquestador,
                                @Headers MessageHeaders headers) {
+
         LOGGER.info("...............ORQUESTADOR_INBOX  Mensaje recibido: '{}'", orquestador);
 
         ZoneId zone = ZoneId.of("America/Lima");
@@ -80,7 +75,6 @@ public class DomainEventListener {
 
         orquestador.setFecFinProcessMsg(ZonedDateTime.now(zone).toLocalDateTime());
         domainEventPublisher.publish(headers, orquestador);
-
 
     }
 
