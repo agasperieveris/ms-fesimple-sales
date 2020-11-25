@@ -183,7 +183,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                                 .builder()
                                 .businessId(request.getSale().getSalesId())
                                 .typeEventFlow(FLOW_SALE_POST)
-                                .message(request)
+                                .message(request.getSale())
                                 .build(),
                         request.getHeadersMap()
                 )
