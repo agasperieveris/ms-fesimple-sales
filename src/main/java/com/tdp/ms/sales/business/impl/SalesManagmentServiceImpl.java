@@ -64,6 +64,8 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
+
+import com.tdp.ms.sales.utils.Constants;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -74,7 +76,7 @@ import reactor.core.publisher.Mono;
 
 /**
  * Class: SalesManagmentServiceImpl. <br/>
- * <b>Copyright</b>: &copy; 2019 Telef&oacute;nica del Per&uacute;<br/>
+ * <b>Copyright</b>: &copy; 2020 Telef&oacute;nica del Per&uacute;<br/>
  * <b>Company</b>: Telef&oacute;nica del Per&uacute;<br/>
  *
  * @author Telef&oacute;nica del Per&uacute; (TDP) <br/>
@@ -129,7 +131,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
     public String retrieveDomain(List<ContactMedium> prospectContact) {
         // Get domain from email
         String email = prospectContact.stream()
-                .filter(p -> p.getMediumType().equalsIgnoreCase("email"))
+                .filter(p -> p.getMediumType().equalsIgnoreCase(Constants.EMAIL))
                 .map(p -> p.getCharacteristic().getEmailAddress())
                 .collect(Collectors.joining());
 
@@ -195,7 +197,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         FlexAttrValueType externalFinancialAttrValue =  FlexAttrValueType
                 .builder()
                 .stringValue(flgFinanciamiento? "Y" : "N")
-                .valueType("STRING")
+                .valueType(Constants.STRING)
                 .build();
         FlexAttrType externalFinancialAttr = FlexAttrType
                 .builder()
@@ -207,7 +209,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                 .builder()
                 .stringValue(saleRequest.getCommercialOperation().get(0).getProductOfferings().get(0)
                         .getUpFront().getIndicator())
-                .valueType("STRING")
+                .valueType(Constants.STRING)
                 .build();
         FlexAttrType upFrontIndAttr = FlexAttrType
                 .builder()
@@ -218,7 +220,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         FlexAttrValueType paymentMethodAttrValue =  FlexAttrValueType
                 .builder()
                 .stringValue("EX")
-                .valueType("STRING")
+                .valueType(Constants.STRING)
                 .build();
         FlexAttrType paymentMethodAttr = FlexAttrType
                 .builder()
@@ -235,7 +237,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
             FlexAttrValueType downPaymentAttrValue = FlexAttrValueType
                     .builder()
                     .stringValue(createQuotationFijaRequest.getBody().getDownPayment().getAmount())
-                    .valueType("STRING")
+                    .valueType(Constants.STRING)
                     .build();
             FlexAttrType downPaymentAttr = FlexAttrType
                     .builder()
@@ -247,7 +249,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
             FlexAttrValueType financingAmountAttrValue = FlexAttrValueType
                     .builder()
                     .stringValue(createQuotationFijaRequest.getBody().getTotalAmount().getAmount())
-                    .valueType("STRING")
+                    .valueType(Constants.STRING)
                     .build();
             FlexAttrType financingAmountAttr = FlexAttrType
                     .builder()
@@ -259,7 +261,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
             FlexAttrValueType financingPlanAttrValue = FlexAttrValueType
                     .builder()
                     .stringValue(createQuotationFijaRequest.getBody().getFinancialEntity())
-                    .valueType("STRING")
+                    .valueType(Constants.STRING)
                     .build();
             FlexAttrType financingPlanAttr = FlexAttrType
                     .builder()
@@ -398,14 +400,14 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         if (StringUtils.isEmpty(saleRequest.getId())) {
             return Mono.error(GenesisException
                     .builder()
-                    .exceptionId("SVC1000")
+                    .exceptionId(Constants.BAD_REQUEST_EXCEPTION_ID)
                     .wildcards(new String[]{"id is mandatory."})
                     .build());
         }
         if (StringUtils.isEmpty(saleRequest.getSalesId())) {
             return Mono.error(GenesisException
                     .builder()
-                    .exceptionId("SVC1000")
+                    .exceptionId(Constants.BAD_REQUEST_EXCEPTION_ID)
                     .wildcards(new String[]{"salesId is mandatory."})
                     .build());
         }
@@ -420,7 +422,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         if (tokenMcss == null || tokenMcss.equals("")) {
             return Mono.error(GenesisException
                     .builder()
-                    .exceptionId("SVC1000")
+                    .exceptionId(Constants.BAD_REQUEST_EXCEPTION_ID)
                     .wildcards(new String[]{"Token MCSS is mandatory. Must be sent into Additional Data Property "
                             + "with 'ufxauthorization' key value."})
                     .build());
@@ -436,7 +438,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                     "MOVILE_IMEI"))) {
                 return Mono.error(GenesisException
                         .builder()
-                        .exceptionId("SVC1000")
+                        .exceptionId(Constants.BAD_REQUEST_EXCEPTION_ID)
                         .wildcards(new String[]{"MOVILE_IMEI is mandatory. Must be sent into Additional Data Property "
                                 + "with 'MOVILE_IMEI' key value."})
                         .build());
@@ -444,7 +446,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                     "SIM_ICCID"))) {
                 return Mono.error(GenesisException
                         .builder()
-                        .exceptionId("SVC1000")
+                        .exceptionId(Constants.BAD_REQUEST_EXCEPTION_ID)
                         .wildcards(new String[]{"SIM_ICCID is mandatory. Must be sent into Additional Data Property "
                                 + "with 'SIM_ICCID' key value."})
                         .build());
@@ -452,7 +454,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                     "NUMERO_CAJA"))) {
                 return Mono.error(GenesisException
                         .builder()
-                        .exceptionId("SVC1000")
+                        .exceptionId(Constants.BAD_REQUEST_EXCEPTION_ID)
                         .wildcards(new String[]{"NUMERO_CAJA is mandatory. Must be sent into Additional Data Property "
                                 + "with 'NUMERO_CAJA' key value."})
                         .build());
@@ -460,7 +462,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                     "NUMERO_TICKET"))) {
                 return Mono.error(GenesisException
                         .builder()
-                        .exceptionId("SVC1000")
+                        .exceptionId(Constants.BAD_REQUEST_EXCEPTION_ID)
                         .wildcards(new String[]{"NUMERO_TICKET is mandatory. Must be sent into Additional Data Property "
                                 + "with 'NUMERO_TICKET' key value."})
                         .build());
@@ -525,9 +527,9 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
 
                 if (productTypeSva.equalsIgnoreCase("sva")) {
 
-                    if (productTypeComponent.equalsIgnoreCase("cableTv")
-                            || productTypeComponent.equalsIgnoreCase("broadband")
-                            || productTypeComponent.equalsIgnoreCase("landline")) {
+                    if (productTypeComponent.equalsIgnoreCase(Constants.PRODUCT_TYPE_CABLE_TV)
+                            || productTypeComponent.equalsIgnoreCase(Constants.PRODUCT_TYPE_BROADBAND)
+                            || productTypeComponent.equalsIgnoreCase(Constants.PRODUCT_TYPE_LANDLINE)) {
 
                         NewAssignedBillingOffers newAssignedBillingOffers = NewAssignedBillingOffers
                                 .builder()
@@ -535,9 +537,9 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                                 .parentProductCatalogId(this.getStringValueByKeyFromAdditionalDataList(productOfferings
                                         .get(i).getAdditionalData(), "parentProductCatalogID"))
                                 .build();
-                        if (productTypeComponent.equalsIgnoreCase("cableTv")) newAssignedBillingOffersCableTvList.add(newAssignedBillingOffers);
-                        if (productTypeComponent.equalsIgnoreCase("broadband")) newAssignedBillingOffersBroadbandList.add(newAssignedBillingOffers);
-                        if (productTypeComponent.equalsIgnoreCase("landline")) newAssignedBillingOffersLandlineList.add(newAssignedBillingOffers);
+                        if (productTypeComponent.equalsIgnoreCase(Constants.PRODUCT_TYPE_CABLE_TV)) newAssignedBillingOffersCableTvList.add(newAssignedBillingOffers);
+                        if (productTypeComponent.equalsIgnoreCase(Constants.PRODUCT_TYPE_BROADBAND)) newAssignedBillingOffersBroadbandList.add(newAssignedBillingOffers);
+                        if (productTypeComponent.equalsIgnoreCase(Constants.PRODUCT_TYPE_LANDLINE)) newAssignedBillingOffersLandlineList.add(newAssignedBillingOffers);
                     }
                 }
             }
@@ -551,7 +553,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                     .forEach(productSpecification -> {
 
                         String productType = productSpecification.getProductType();
-                        if (productType.equalsIgnoreCase("landline")) {
+                        if (productType.equalsIgnoreCase(Constants.PRODUCT_TYPE_LANDLINE)) {
 
                             NewProductAltaFija newProductAltaFijaLandline = NewProductAltaFija
                                     .builder()
@@ -631,7 +633,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                                     .build();
                             newProductsAltaFijaList.add(newProductAltaFijaBroadband);
 
-                        } else if (productType.equalsIgnoreCase("cableTv")) {
+                        } else if (productType.equalsIgnoreCase(Constants.PRODUCT_TYPE_CABLE_TV)) {
 
                             NewProductAltaFija newProductAltaFijaCableTv = NewProductAltaFija
                                     .builder()
@@ -776,7 +778,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
 
                         if (validateNegotiation(saleRequest.getAdditionalData(),
                                 saleRequest.getIdentityValidations())) {
-                            saleRequest.setStatus("NEGOCIACION");
+                            saleRequest.setStatus(Constants.NEGOCIACION);
                         } else if (!StringUtils.isEmpty(createOrderResponse.getCreateProductOrderResponse()
                                 .getProductOrderId())) {
                             // When All is OK
@@ -824,7 +826,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                             }
                         });
                     });
-        } else if (mainProductType.equalsIgnoreCase("WIRELESS")) {
+        } else if (mainProductType.equalsIgnoreCase(Constants.WIRELESS)) {
             // Mobile Commercial Operations
 
             if (StringUtils.isEmpty(saleRequest.getCommercialOperation().get(0).getOrder().getProductOrderId())
@@ -920,7 +922,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
 
                                         if (validateNegotiation(saleRequest.getAdditionalData(),
                                                 saleRequest.getIdentityValidations())) {
-                                            saleRequest.setStatus("NEGOCIACION");
+                                            saleRequest.setStatus(Constants.NEGOCIACION);
                                         } else if (!StringUtils.isEmpty(createOrderResponse.getCreateProductOrderResponse()
                                                 .getProductOrderId())) {
                                             saleRequest.setStatus("NUEVO");
@@ -1038,7 +1040,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         com.tdp.ms.sales.model.dto.quotation.ContactMedium contactMedium1 = com.tdp.ms.sales.model.dto.quotation
                 .ContactMedium
                 .builder()
-                .type("email")
+                .type(Constants.EMAIL)
                 .name(sale.getProspectContact().get(0).getCharacteristic().getEmailAddress())
                 .preferred("true")
                 .isActive("true")
@@ -1168,7 +1170,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                     if (productSpecificationName.equalsIgnoreCase("TV")) {
                         commercialAgreement[0] = commercialAgreement[0].concat("TV=").concat(productSpecification
                                         .getRefinedProduct().getProductCharacteristics().get(0).getId()).concat(";");
-                    } else if (productSpecificationName.equalsIgnoreCase("Broadband")) {
+                    } else if (productSpecificationName.equalsIgnoreCase(Constants.PRODUCT_TYPE_BROADBAND)) {
                         commercialAgreement[0] = commercialAgreement[0].concat("INT=").concat(productSpecification
                                         .getRefinedProduct().getProductCharacteristics().get(0).getId()).concat(";");
                     } else if (productSpecificationName.equalsIgnoreCase("ShEq")) {
@@ -1213,7 +1215,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                 saleRequest.getCommercialOperation().get(0).getReason().equals("ALTA") ? "Provide" : "Change";
 
         if (keyValueType.getValue().equalsIgnoreCase("Retail")
-                && saleRequest.getStatus().equalsIgnoreCase("NEGOCIACION")) {
+                && saleRequest.getStatus().equalsIgnoreCase(Constants.NEGOCIACION)) {
 
             DeviceOffering saleDeviceOffering = saleRequest.getCommercialOperation().get(0).getDeviceOffering().get(0);
 
@@ -1262,12 +1264,12 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
             return Mono.zip(getSku, productOrderResponse).map(tuple -> {
                 // añadir respuesta a sale.additionalData y hacer validación de la orden
                 saleRequest.getAdditionalData().add(KeyValueType.builder()
-                        .key("DEVICE_SKU")
+                        .key(Constants.DEVICE_SKU)
                         .value(tuple.getT1().get(0).getDeviceType().equals("mobile_phone")
                                 ? tuple.getT1().get(0).getSku() : tuple.getT1().get(1).getSku())
                         .build());
                 saleRequest.getAdditionalData().add(KeyValueType.builder()
-                        .key("SIM_SKU")
+                        .key(Constants.SIM_SKU)
                         .value(tuple.getT1().get(0).getDeviceType().equals("sim")
                                 ? tuple.getT1().get(0).getSku() : tuple.getT1().get(1).getSku())
                         .build());
@@ -1382,7 +1384,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                 .preferred("true")
                 .name(sale.getProspectContact().get(0).getCharacteristic().getEmailAddress())
                 .isActive("true")
-                .type("email")
+                .type(Constants.EMAIL)
                 .build();
         List<com.tdp.ms.sales.model.dto.quotation.ContactMedium> contactMediumList = new ArrayList<>();
         contactMediumList.add(contactMedium1);
@@ -1635,9 +1637,8 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                     cont[0]++;
                 }
             } catch (ParseException ex) {
-                System.out.println(ex);
+                LOG.error("Post Sales Validate Negotiation Exception: " + ex);
             }
-
         });
 
         // validate validationType
@@ -1758,7 +1759,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         NewProductAltaMobile newProductAlta1 = new NewProductAltaMobile();
         newProductAlta1.setProductCatalogId(saleRequest.getCommercialOperation().get(0)
                     .getProductOfferings().get(0).getProductOfferingProductSpecId());
-        newProductAlta1.setTemporaryId("temp1");
+        newProductAlta1.setTemporaryId(Constants.TEMP1);
         newProductAlta1.setBaId(saleRequest.getRelatedParty().get(0).getBillingArragmentId());
         newProductAlta1.setAccountId(saleRequest.getRelatedParty().get(0).getAccountId());
         newProductAlta1.setInvoiceCompany("TEF");
@@ -1781,7 +1782,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
             FlexAttrValueType paymentRegisterAttrValue =  FlexAttrValueType
                     .builder()
                     .stringValue(paymentNumber)
-                    .valueType("STRING")
+                    .valueType(Constants.STRING)
                     .build();
             FlexAttrType paymentRegisterAttr = FlexAttrType
                     .builder()
@@ -1791,31 +1792,31 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
 
             //  RETAIL DEVICE SKU ATTRIBUTE
             String deviceSku = this.getStringValueByKeyFromAdditionalDataList(saleRequest.getAdditionalData(),
-                    "DEVICE_SKU");
+                    Constants.DEVICE_SKU);
 
             FlexAttrValueType deviceSkuAttrValue =  FlexAttrValueType
                     .builder()
                     .stringValue(deviceSku)
-                    .valueType("STRING")
+                    .valueType(Constants.STRING)
                     .build();
             FlexAttrType deviceSkuAttr = FlexAttrType
                     .builder()
-                    .attrName("DEVICE_SKU")
+                    .attrName(Constants.DEVICE_SKU)
                     .flexAttrValue(deviceSkuAttrValue)
                     .build();
 
             //  RETAIL SIM SKU ATTRIBUTE
             String simSku = this.getStringValueByKeyFromAdditionalDataList(saleRequest.getAdditionalData(),
-                                                                                                        "SIM_SKU");
+                                                                                                        Constants.SIM_SKU);
 
             FlexAttrValueType simSkuAttrValue =  FlexAttrValueType
                     .builder()
                     .stringValue(simSku)
-                    .valueType("STRING")
+                    .valueType(Constants.STRING)
                     .build();
             FlexAttrType simSkuAttr = FlexAttrType
                     .builder()
-                    .attrName("SIM_SKU")
+                    .attrName(Constants.SIM_SKU)
                     .flexAttrValue(simSkuAttrValue)
                     .build();
 
@@ -1826,11 +1827,11 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
             FlexAttrValueType cashierRegisterAttrValue =  FlexAttrValueType
                     .builder()
                     .stringValue(cashierRegisterNumber)
-                    .valueType("STRING")
+                    .valueType(Constants.STRING)
                     .build();
             FlexAttrType cashierRegisterAttr = FlexAttrType
                     .builder()
-                    .attrName("SIM_SKU")
+                    .attrName(Constants.SIM_SKU)
                     .flexAttrValue(cashierRegisterAttrValue)
                     .build();
 
@@ -1882,7 +1883,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         List<RemovedAssignedBillingOffers> caplBoRemovedList = new ArrayList<>();
         if (flgOnlyCapl) {
             // Recognizing Capl Mobile or Fija
-            if (saleRequest.getProductType().equalsIgnoreCase("WIRELESS")) {
+            if (saleRequest.getProductType().equalsIgnoreCase(Constants.WIRELESS)) {
                 caplRequestProductOrder.setActionType("CW");
             } else {
                 caplRequestProductOrder.setActionType("CH"); // landline, cableTv, broadband, bundle
@@ -1987,7 +1988,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         // Building request for CAEQ CommercialTypeOperation
 
         // Refactored Code from CAEQ
-        List<ChangedContainedProduct> changedContainedProductList = this.changedContainedCaeqList(saleRequest, "temp1");
+        List<ChangedContainedProduct> changedContainedProductList = this.changedContainedCaeqList(saleRequest, Constants.TEMP1);
 
         ProductChangeCaeq productChangeCaeq = ProductChangeCaeq
                 .builder()
@@ -2054,7 +2055,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         List<RemovedAssignedBillingOffers> caeqCaplBoRemovedList = new ArrayList<>();
         if (flgOnlyCapl) {
             // Recognizing Capl Fija
-            if (saleRequest.getProductType().equalsIgnoreCase("WIRELESS")) {
+            if (saleRequest.getProductType().equalsIgnoreCase(Constants.WIRELESS)) {
                 caeqCaplRequestProductOrder.setActionType("CW");
             } else {
                 caeqCaplRequestProductOrder.setActionType("CH"); // landline, cableTv, broadband, bundle
@@ -2091,7 +2092,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         }
 
         // Refactored Code from CAEQ
-        List<ChangedContainedProduct> changedContainedProductList = this.changedContainedCaeqList(saleRequest, "temp1");
+        List<ChangedContainedProduct> changedContainedProductList = this.changedContainedCaeqList(saleRequest, Constants.TEMP1);
 
         caeqCaplProductChanges.setChangedContainedProducts(changedContainedProductList);
         newProductCaeqCapl1.setProductChanges(caeqCaplProductChanges);
@@ -2142,7 +2143,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         FlexAttrValueType deliveryAttrValue =  FlexAttrValueType
                 .builder()
                 .stringValue(deliveryCode)
-                .valueType("STRING")
+                .valueType(Constants.STRING)
                 .build();
         FlexAttrType deliveryAttr = FlexAttrType
                 .builder()
@@ -2156,7 +2157,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
             FlexAttrValueType paymentAttrValue =  FlexAttrValueType
                     .builder()
                     .stringValue(saleRequest.getPaymenType().getPaymentType())
-                    .valueType("STRING")
+                    .valueType(Constants.STRING)
                     .build();
             FlexAttrType paymentAttr = FlexAttrType
                     .builder()
@@ -2183,7 +2184,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         FlexAttrValueType deliveryAttrValue =  FlexAttrValueType
                 .builder()
                 .stringValue(documentTypeValue)
-                .valueType("STRING")
+                .valueType(Constants.STRING)
                 .build();
         FlexAttrType documentTypeAttr = FlexAttrType
                 .builder()
@@ -2198,7 +2199,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         FlexAttrValueType paymentAttrValue =  FlexAttrValueType
                 .builder()
                 .stringValue(customerRuc)
-                .valueType("STRING")
+                .valueType(Constants.STRING)
                 .build();
         FlexAttrType customerRucAttr = FlexAttrType
                 .builder()
