@@ -9,22 +9,22 @@ spring:
   cloud:
     azure:
       eventhub:
-        connection-string: Endpoint=sb://ehub-berserkers-dev.servicebus.windows.net/;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=GmZePbavyI2GpKSzrpGpcTRa5do9mGrO0BS6KJIgDv8=
-        checkpoint-storage-account: scberserkersdatadev
-        checkpoint-access-key: 5WqP4sjnoPLWEDgTkj1s56XRhbMijS0DWiwRaz14dFrnfRq5yUjYTGanUz5TaS80+KnLVDNlO9JMU2AZ1NP89A==
-        checkpoint-container: eventflow-orchestrator-checkpoint
+        connection-string: Endpoint=sb://ehub.servicebus.windows.net/;SharedAccessKeyName=test;SharedAccessKey=test
+        checkpoint-storage-account: test
+        checkpoint-access-key: test
+        checkpoint-container: test
     stream:
       bindings:
         input:
-          destination: sales-update
-          group: $Default
+          destination: test
+          group: test
         output:
-          destination: orchestrator-response
+          destination: test
       eventhub:
         bindings:
           input:
             consumer:
-              checkpoint-mode: MANUAL
+              checkpoint-mode: PARTITION_COUNT
       default:
         producer:
           errorChannelEnabled: true
@@ -48,8 +48,14 @@ application:
       type: copyright
       url: https://www.telefonica.com.pe
   endpoints:
+    sku:
+      create_sku: https://localhost
     business_parameters:
       get_sales_characteristics_url: https://localhost
+      get_risk_domain_url: https://localhost
+      get_bonificacion_simcard: https://localhost
+      get_parameters_simcard: https://localhost
+      get_parameters_financiamiento_fija: https://localhost
     product_order:
       create_product_order_url: https://localhost
     receptor:
@@ -59,5 +65,11 @@ application:
       business_parameters:
         seq_number: SEQ001
         sequential: https://localhost
+    stock:
+      reserve_stock_url: https://localhost
+    payment:
+      generate_cip_payment_identifier: https://localhost
+    quotation:
+      create_quotation: https://localhost
   catalog-error:
-    url: http://localhost
+    url: https://aks-berserkers-ingress-dev.eastus2.cloudapp.azure.com

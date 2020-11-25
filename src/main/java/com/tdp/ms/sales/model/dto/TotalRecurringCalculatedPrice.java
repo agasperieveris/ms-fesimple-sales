@@ -27,7 +27,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Data
 public class TotalRecurringCalculatedPrice {
-    private double originalAmount;
+    private double originalAmountInfo;
     private double originalTaxAmount;
     private double proratedAmount;
     private double proratedDiscountAmount;

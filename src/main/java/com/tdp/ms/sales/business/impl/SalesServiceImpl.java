@@ -12,18 +12,15 @@ import com.tdp.ms.sales.model.request.GetSalesRequest;
 import com.tdp.ms.sales.model.request.ReceptorRequest;
 import com.tdp.ms.sales.model.response.BusinessParametersResponse;
 import com.tdp.ms.sales.repository.SalesRepository;
-
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Date;
-import java.util.Map;
+import java.util.HashMap;
 import java.util.UUID;
-
 import lombok.RequiredArgsConstructor;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -79,7 +76,7 @@ public class SalesServiceImpl implements SalesService {
     }
 
     @Override
-    public Mono<Sale> post(Sale request, Map<String, String> headersMap) {
+    public Mono<Sale> post(Sale request, HashMap<String, String> headersMap) {
 
         String uuid = UUID.randomUUID().toString();
         while (salesRepository.existsById(uuid) == Mono.just(true)) {
@@ -104,7 +101,7 @@ public class SalesServiceImpl implements SalesService {
     }
 
     @Override
-    public Mono<Sale> put(String salesId, Sale request, Map<String, String> headersMap) {
+    public Mono<Sale> put(String salesId, Sale request, HashMap<String, String> headersMap) {
         // buscar en la colección
         Mono<Sale> existingSale = salesRepository.findBySalesId(salesId);
 
@@ -118,7 +115,7 @@ public class SalesServiceImpl implements SalesService {
     }
 
     @Override
-    public Mono<Sale> putEvent(String salesId, Sale request, Map<String, String> headersMap) {
+    public Mono<Sale> putEvent(String salesId, Sale request, HashMap<String, String> headersMap) {
 
         return this.put(salesId, request, headersMap)
                 .map(r -> {

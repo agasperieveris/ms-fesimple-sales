@@ -257,7 +257,7 @@ public class SalesServiceTest {
 
     @Test
     void postSaveSale() {
-        Map<String, String> headersMap = new HashMap<String, String>();
+        HashMap<String, String> headersMap = new HashMap<String, String>();
         headersMap.put(HttpHeadersKey.UNICA_SERVICE_ID, "serviceId");
         headersMap.put(HttpHeadersKey.UNICA_PID, "pid");
         headersMap.put(HttpHeadersKey.UNICA_APPLICATION, "application");
@@ -268,11 +268,11 @@ public class SalesServiceTest {
         Mockito.when(salesRepository.save(any()))
                 .thenReturn(Mono.just(sale));
 
-        BusinessParametersData businessParametersData = BusinessParametersData
+        BusinessParameterData businessParametersData = BusinessParameterData
                 .builder()
                 .value("FE-000000001")
                 .build();
-        List<BusinessParametersData> businessParametersDataList = new ArrayList<>();
+        List<BusinessParameterData> businessParametersDataList = new ArrayList<>();
         businessParametersDataList.add(businessParametersData);
 
         Mockito.when(webClientToken.getNewSaleSequential(any(), any()))
@@ -294,7 +294,7 @@ public class SalesServiceTest {
 
     @Test
     void putSaveSale() {
-        Map<String, String> headersMap = new HashMap<String, String>();
+        HashMap<String, String> headersMap = new HashMap<String, String>();
         headersMap.put(HttpHeadersKey.UNICA_SERVICE_ID, "serviceId");
         headersMap.put(HttpHeadersKey.UNICA_PID, "pid");
         headersMap.put(HttpHeadersKey.UNICA_APPLICATION, "application");
@@ -317,7 +317,7 @@ public class SalesServiceTest {
 
     @Test
     void putEventSaveSale() {
-        Map<String, String> headersMap = new HashMap<String, String>();
+        HashMap<String, String> headersMap = new HashMap<String, String>();
         headersMap.put(HttpHeadersKey.UNICA_SERVICE_ID, "serviceId");
         headersMap.put(HttpHeadersKey.UNICA_PID, "pid");
         headersMap.put(HttpHeadersKey.UNICA_APPLICATION, "application");

@@ -1,5 +1,6 @@
 package com.tdp.ms.sales.model.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -22,13 +23,13 @@ import lombok.NoArgsConstructor;
  *         </ul>
  * @version 1.0
  */
-
 @AllArgsConstructor
 @NoArgsConstructor
 @Data
 @Builder
 public class ProductDisplayType {
     private String temporaryId;
+    @JsonProperty("productID")
     private String productId;
     private String businessType;
     private String productCatalogId;

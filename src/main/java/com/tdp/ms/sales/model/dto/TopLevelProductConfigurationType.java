@@ -1,8 +1,7 @@
 package com.tdp.ms.sales.model.dto;
 
-import java.util.List;
-
 import com.fasterxml.jackson.annotation.JsonProperty;
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -36,7 +35,10 @@ public class TopLevelProductConfigurationType {
     private String productId;
     private String serviceId;
     private String lineOfBusinessType;
+    private List<RuleExecutionMessageType> messages;
     private ProductOfferingType productOffering;
+    private TotalRecurringCalculatedPrice totalRecurringCalculatedPrice;
+    private TotalRecurringCalculatedPrice totalOneTimeCalculatedPrice;
     private List<ProductDisplayType> displayableItems;
     private ProductSpecification productSpecification;
 }

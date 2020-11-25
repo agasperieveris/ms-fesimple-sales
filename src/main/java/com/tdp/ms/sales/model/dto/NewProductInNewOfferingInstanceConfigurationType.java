@@ -34,16 +34,16 @@ public class NewProductInNewOfferingInstanceConfigurationType {
     private String productId;
     private String bundleCatalogId;
     @JsonProperty("productOfferingInstanceID")
-    private String productOfferingInstanceId;//Swagger diferente nombre
+    private String productOfferingInstanceId;
     @JsonProperty("subscriptionGroupID")
-    private String subscriptionGroupId;//Swagger diferente nombre
+    private String subscriptionGroupId;
     private String baId;
     private String accountId;
     private String invoicingCompany;
     private String installationAddressId;
     private String productOrderItemReferenceNumber;
     @JsonProperty("productOrderItemID")
-    private String productOrderItemId;//Swagger diferente nombre
+    private String productOrderItemId;
     private String productOrderItemType;
     private TopLevelProductConfigurationType productConfiguration;
 }
