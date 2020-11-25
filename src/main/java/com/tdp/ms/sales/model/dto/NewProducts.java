@@ -33,7 +33,7 @@ public class NewProducts {
     private String productID;
     private String baId;
     @JsonProperty("AccountId")
-    private Long accountId;
+    private Number accountId;
     private String invoiceCompany;
     private ProductChanges productChanges;
 }

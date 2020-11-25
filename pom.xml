@@ -5,7 +5,7 @@
 	<parent>
 		<groupId>com.tdp.genesis.dependencies</groupId>
 		<artifactId>genesis-dependencies-generic</artifactId>
-		<version>1.3.10</version>
+		<version>1.3.11</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 
@@ -16,7 +16,7 @@
 
 	<groupId>com.tdp.ms</groupId>
 	<artifactId>sales</artifactId>
-	<version>1.2.15</version>
+	<version>1.2.16</version>
 	<name>${project.groupId}:${project.artifactId}</name>
 	<description>Template from Genesis Framework to build microservices</description>
 
@@ -331,6 +331,36 @@
 			<artifactId>commons-lang3</artifactId>
 			<version>3.8.1</version>
 		</dependency>
+		
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-core</artifactId>
+			<version>5.2.1.RELEASE</version>
+		</dependency>
+
+		<dependency>
+			<groupId>com.google.code.gson</groupId>
+			<artifactId>gson</artifactId>
+			<version>2.8.6</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.springframework.integration</groupId>
+			<artifactId>spring-integration-core</artifactId>
+			<version>5.2.1.RELEASE</version>
+		</dependency>
+		<dependency>
+			<groupId>com.microsoft.azure</groupId>
+			<artifactId>spring-integration-azure-core</artifactId>
+			<version>1.2.8</version>
+			<exclusions>
+				<exclusion>
+					<groupId>io.reactivex</groupId>
+					<artifactId>rxjava</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+
 
 	</dependencies>
 
@@ -402,6 +432,10 @@
 								<ignoredUnusedDeclaredDependency>com.google.guava:guava:jar::</ignoredUnusedDeclaredDependency>
 								<ignoredUnusedDeclaredDependency>com.azure:azure-cosmos:jar::</ignoredUnusedDeclaredDependency>
 								<ignoredUnusedDeclaredDependency>com.microsoft.azure:spring-cloud-azure-eventhubs-stream-binder:jar::</ignoredUnusedDeclaredDependency>
+								<ignoredUnusedDeclaredDependency>io.projectreactor:reactor-test:jar::</ignoredUnusedDeclaredDependency>
+								<ignoredUnusedDeclaredDependency>junit:junit:jar::</ignoredUnusedDeclaredDependency>
+								<ignoredUnusedDeclaredDependency>org.springframework.integration:spring-integration-core:jar::</ignoredUnusedDeclaredDependency>
+								<ignoredUnusedDeclaredDependency>com.microsoft.azure:spring-integration-azure-core:jar::</ignoredUnusedDeclaredDependency>
 							</ignoredUnusedDeclaredDependencies>
 						</configuration>
 					</execution>
@@ -488,7 +522,8 @@
                     <append>true</append>
                     <excludes>
                         <exclude>com/tdp/ms/*/model/thirdparty/**/*</exclude>
-						<exclude>com/tdp/ms/sales/eventflow/**/*</exclude>
+						<exclude>com/tdp/ms/*/business/**/*</exclude>
+						<exclude>com/tdp/ms/*/eventflow/**/*</exclude>
                     </excludes>
 				</configuration>
 			</plugin>

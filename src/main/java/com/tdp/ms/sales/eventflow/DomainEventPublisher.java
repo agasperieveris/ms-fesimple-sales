@@ -1,13 +1,12 @@
 package com.tdp.ms.sales.eventflow;
 
 import com.tdp.ms.sales.eventflow.model.Orquestador;
+import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.stream.annotation.EnableBinding;
 import org.springframework.cloud.stream.messaging.Source;
 import org.springframework.messaging.support.GenericMessage;
 import org.springframework.stereotype.Component;
-
-import java.util.Map;
 
 @EnableBinding(Source.class)
 @Component

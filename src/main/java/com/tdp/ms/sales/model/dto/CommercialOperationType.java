@@ -1,5 +1,6 @@
 package com.tdp.ms.sales.model.dto;
 
+import java.util.ArrayList;
 import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -37,7 +38,7 @@ public class CommercialOperationType {
     private PortabilityType portability;
     private WorkOrDeliveryType workOrDeliveryType;
     private ProductInstanceType product;
-    private List<OfferingType> productOfferings;
-    private List<DeviceOffering> deviceOffering;
-    private List<KeyValueType> additionalData;
+    private List<OfferingType> productOfferings = new ArrayList<>();
+    private List<DeviceOffering> deviceOffering = new ArrayList<>();
+    private List<KeyValueType> additionalData = new ArrayList<>();
 }
