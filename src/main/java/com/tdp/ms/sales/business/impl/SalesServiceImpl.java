@@ -274,14 +274,8 @@ public class SalesServiceImpl implements SalesService {
 
             try {
                 Date startDate = new SimpleDateFormat("dd/MM/yyyy'T'HH:mm:ss").parse(startDateTime);
-                System.out.print("startDate: ");
-                System.out.print(startDate + " - ");
-                System.out.println(startDateTime);
                 Date endDate = new SimpleDateFormat("dd/MM/yyyy'T'HH:mm:ss").parse(endDateTime);
                 Date requestDate = new SimpleDateFormat("dd/MM/yyyy'T'HH:mm:ss").parse(item.getSaleCreationDate());
-                System.out.print("requestDate: ");
-                System.out.print(requestDate + " - ");
-                System.out.println(item.getSaleCreationDate());
                 return requestDate.after(startDate) && requestDate.before(endDate);
             } catch (ParseException e) {
                 return false;
