@@ -6,6 +6,7 @@ import com.tdp.ms.sales.business.impl.SalesManagmentServiceImpl;
 import com.tdp.ms.sales.client.BusinessParameterWebClient;
 import com.tdp.ms.sales.client.ProductOrderWebClient;
 import com.tdp.ms.sales.model.dto.*;
+import com.tdp.ms.sales.model.dto.businessparameter.BusinessParameterDataSeq;
 import com.tdp.ms.sales.model.dto.productorder.CreateProductOrderGeneralRequest;
 import com.tdp.ms.sales.model.dto.productorder.FlexAttrType;
 import com.tdp.ms.sales.model.dto.productorder.caeq.ChangedContainedProduct;
@@ -120,14 +121,14 @@ public class SalesManagmentServiceTest {
                 .builder()
                 .ext(extList)
                 .build();
-        BusinessParameterData businessParameterData2 = BusinessParameterData
+        BusinessParameterDataSeq businessParameterData2 = BusinessParameterDataSeq
                 .builder()
                 .active(false)
                 .build();
         List<BusinessParameterData> dataList = new ArrayList<>();
         dataList.add(businessParameterData1);
 
-        List<BusinessParameterData> dataList2 = new ArrayList<>();
+        List<BusinessParameterDataSeq> dataList2 = new ArrayList<>();
         dataList2.add(businessParameterData2);
 
         GetSalesCharacteristicsResponse businessParametersResponse = GetSalesCharacteristicsResponse
