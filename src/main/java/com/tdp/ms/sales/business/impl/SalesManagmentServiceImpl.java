@@ -1452,8 +1452,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                 .build();
 
         MoneyAmount totalCustomerRecurrentCost = MoneyAmount.builder()
-                .units("PEN")
-                .amount(sale.getCommercialOperation().get(0).getProductOfferings().get(0).getProductOfferingPrice()
+                .units("PEN").amount(sale.getCommercialOperation().get(0).getProductOfferings().get(0).getProductOfferingPrice()
                                                                         .get(0).getMaxPrice().getAmount().toString())
                 .build();
 
@@ -1470,18 +1469,13 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                 .id(sale.getChannel().getStoreId())
                 .build();
 
-        Channel channel = Channel
-                .builder()
-                .name(sale.getChannel().getName())
-                .build();
+        Channel channel = Channel.builder().name(sale.getChannel().getName()).build();
 
         MoneyAmount totalCost = MoneyAmount
-                .builder()
-                .units("")
+                .builder().units("")
                 .amount(sale.getCommercialOperation().get(0).getDeviceOffering().get(0).getOffers().get(0)
                         .getBillingOfferings().get(0).getCommitmentPeriods().get(0).getFinancingInstalments().get(0)
-                        .getInstalments().getTotalAmount().getValue().toString())
-                .build();
+                        .getInstalments().getTotalAmount().getValue().toString()).build();
 
         MoneyAmount taxExcludedAmount = MoneyAmount.builder()
                 .amount(sale.getCommercialOperation().get(0).getDeviceOffering().get(0).getOffers().get(0)
@@ -2305,11 +2299,11 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
             acquisitionType = "Private";
         } else if (saleChannelId.equalsIgnoreCase("CC") && deliveryType.equalsIgnoreCase("SP")
                 || saleChannelId.equalsIgnoreCase("CEC")
-                || (saleChannelId.equalsIgnoreCase("ST") && deliveryType.equalsIgnoreCase("SP"))
+                || saleChannelId.equalsIgnoreCase("ST") && deliveryType.equalsIgnoreCase("SP")
                 || saleChannelId.equalsIgnoreCase("DLS")
         ) {
             acquisitionType = "ConsessionPurchased";
-        } else if ((saleChannelId.equalsIgnoreCase("ST") && deliveryType.equalsIgnoreCase("IS"))
+        } else if (saleChannelId.equalsIgnoreCase("ST") && deliveryType.equalsIgnoreCase("IS")
                 || saleChannelId.equalsIgnoreCase("DLV")
         ) {
             acquisitionType = "Sale";

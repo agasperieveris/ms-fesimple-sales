@@ -7,6 +7,7 @@ import com.tdp.ms.sales.client.WebClientBusinessParameters;
 import com.tdp.ms.sales.eventflow.client.SalesWebClient;
 import com.tdp.ms.sales.eventflow.client.impl.SalesWebClientImpl;
 import com.tdp.ms.sales.model.dto.*;
+import com.tdp.ms.sales.model.dto.businessparameter.BusinessParameterDataSeq;
 import com.tdp.ms.sales.model.entity.Sale;
 import com.tdp.ms.sales.model.request.GetSalesRequest;
 import com.tdp.ms.sales.model.request.SalesRequest;
@@ -268,12 +269,12 @@ public class SalesServiceTest {
         Mockito.when(salesRepository.save(any()))
                 .thenReturn(Mono.just(sale));
 
-        BusinessParameterData businessParametersData = BusinessParameterData
+        BusinessParameterDataSeq businessParametersDataSeq = BusinessParameterDataSeq
                 .builder()
                 .value("FE-000000001")
                 .build();
-        List<BusinessParameterData> businessParametersDataList = new ArrayList<>();
-        businessParametersDataList.add(businessParametersData);
+        List<BusinessParameterDataSeq> businessParametersDataList = new ArrayList<>();
+        businessParametersDataList.add(businessParametersDataSeq);
 
         Mockito.when(webClientToken.getNewSaleSequential(any(), any()))
                 .thenReturn(Mono.just(BusinessParametersResponse
