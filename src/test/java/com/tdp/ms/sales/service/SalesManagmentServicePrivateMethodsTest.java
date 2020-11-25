@@ -5,10 +5,13 @@ import com.tdp.ms.sales.business.impl.SalesManagmentServiceImpl;
 import com.tdp.ms.sales.client.GetSkuWebClient;
 import com.tdp.ms.sales.client.ProductOrderWebClient;
 import com.tdp.ms.sales.model.dto.*;
+import com.tdp.ms.sales.model.dto.businessparameter.BusinessParameterFinanciamientoFijaExt;
 import com.tdp.ms.sales.model.dto.productorder.CreateProductOrderGeneralRequest;
 import com.tdp.ms.sales.model.dto.productorder.Customer;
+import com.tdp.ms.sales.model.dto.productorder.FlexAttrType;
 import com.tdp.ms.sales.model.dto.productorder.altafija.AltaFijaRequest;
 import com.tdp.ms.sales.model.dto.productorder.altafija.ProductOrderAltaFijaRequest;
+import com.tdp.ms.sales.model.dto.productorder.altafija.ServiceabilityOfferType;
 import com.tdp.ms.sales.model.dto.productorder.altamobile.AltaMobileRequest;
 import com.tdp.ms.sales.model.dto.productorder.altamobile.ProductOrderAltaMobileRequest;
 import com.tdp.ms.sales.model.dto.productorder.caeq.CaeqRequest;
@@ -17,6 +20,7 @@ import com.tdp.ms.sales.model.dto.productorder.caeqcapl.CaeqCaplRequest;
 import com.tdp.ms.sales.model.dto.productorder.caeqcapl.ProductOrderCaeqCaplRequest;
 import com.tdp.ms.sales.model.dto.productorder.capl.CaplRequest;
 import com.tdp.ms.sales.model.dto.productorder.capl.ProductOrderCaplRequest;
+import com.tdp.ms.sales.model.dto.quotation.CreateQuotationRequestBody;
 import com.tdp.ms.sales.model.dto.reservestock.StockItem;
 import com.tdp.ms.sales.model.entity.Sale;
 import com.tdp.ms.sales.model.request.CreateQuotationRequest;
@@ -424,4 +428,130 @@ public class SalesManagmentServicePrivateMethodsTest {
 
         method.invoke(salesManagmentServiceImpl, saleRequest, createProductOrderGeneralRequest, headersMap);
     }
+
+    @Test
+    void buildCreateQuotationFijaRequestTest() throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
+
+        Method method = SalesManagmentServiceImpl.class.getDeclaredMethod("buildCreateQuotationFijaRequest",
+                CreateQuotationRequest.class, PostSalesRequest .class);
+        method.setAccessible(true);
+
+        Sale sale = CommonsMocks.createSaleMock();
+
+        ComposingProductType composingProductType1 = new ComposingProductType();
+        composingProductType1.setId("test");
+        composingProductType1.setName("TV");
+        List<ComposingProductType> productSpecificationList = new ArrayList<>();
+        productSpecificationList.add(composingProductType1);
+
+        sale.getCommercialOperation().get(0).getProductOfferings().get(0).setProductSpecification(productSpecificationList);
+
+        RefinedProductType refinedProduct = new RefinedProductType();
+        ProductSpecCharacteristicType productSpecCharacteristicType1 = new ProductSpecCharacteristicType();
+        productSpecCharacteristicType1.setId("test");
+        List<ProductSpecCharacteristicType> productCharacteristicsList = new ArrayList<>();
+        productCharacteristicsList.add(productSpecCharacteristicType1);
+        refinedProduct.setProductCharacteristics(productCharacteristicsList);
+
+        sale.getCommercialOperation().get(0).getProductOfferings().get(0).getProductSpecification().get(0).setRefinedProduct(refinedProduct);
+
+        CreateQuotationRequest createQuotationRequest = new CreateQuotationRequest();
+        PostSalesRequest postSalesRequest = new PostSalesRequest();
+        postSalesRequest.setHeadersMap(headersMap);
+        postSalesRequest.setSale(sale);
+
+        method.invoke(salesManagmentServiceImpl,createQuotationRequest, postSalesRequest);
+    }
+
+    @Test
+    void getStringValueFromBpExtListByParameterNameTest() throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
+        Method method = SalesManagmentServiceImpl.class.getDeclaredMethod("getStringValueFromBpExtListByParameterName",
+                String.class, List.class);
+
+        method.setAccessible(true);
+
+        BusinessParameterFinanciamientoFijaExt ext1 = new BusinessParameterFinanciamientoFijaExt();
+        ext1.setNomParameter("financialEntity");
+        ext1.setCodParameterValue("FE001");
+        List<BusinessParameterFinanciamientoFijaExt> extList = new ArrayList<>();
+        extList.add(ext1);
+
+        String extValue = (String) method.invoke(salesManagmentServiceImpl, "financialEntity", extList);
+
+        Assert.assertEquals(extValue, "FE001");
+    }
+
+    @Test
+    void retrieveCharacteristicsTest() throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
+        Method method = SalesManagmentServiceImpl.class.getDeclaredMethod("retrieveCharacteristics",
+                GetSalesCharacteristicsResponse.class);
+
+        method.setAccessible(true);
+
+        BusinessParameterExt ext1 = new BusinessParameterExt();
+        List<BusinessParameterExt> extList = new ArrayList<>();
+        extList.add(ext1);
+
+        BusinessParameterData data1 = new BusinessParameterData();
+        data1.setExt(extList);
+
+        List<BusinessParameterData> dataList = new ArrayList<>();
+        dataList.add(data1);
+        GetSalesCharacteristicsResponse salesCharacteristicsResponse = new GetSalesCharacteristicsResponse();
+        salesCharacteristicsResponse.setData(dataList);
+
+        method.invoke(salesManagmentServiceImpl, salesCharacteristicsResponse);
+    }
+
+    @Test
+    void buildOrderAttributesListAltaFijaTest() throws NoSuchMethodException, InvocationTargetException,
+                                                                                            IllegalAccessException {
+        Method method = SalesManagmentServiceImpl.class.getDeclaredMethod("buildOrderAttributesListAltaFija",
+                List.class, Sale.class, CreateQuotationRequest.class, Boolean.class);
+
+        method.setAccessible(true);
+
+        List<FlexAttrType> altaFijaOrderAttributesList = new ArrayList<>();
+
+        Sale sale = CommonsMocks.createSaleMock();
+        UpFrontType upFront = new UpFrontType();
+        upFront.setIndicator("Y");
+        sale.getCommercialOperation().get(0).getProductOfferings().get(0).setUpFront(upFront);
+
+        sale.getCommercialOperation().get(0).getWorkOrDeliveryType().setScheduleDelivery("SSD");
+
+        CreateQuotationRequestBody body = new CreateQuotationRequestBody();
+        com.tdp.ms.sales.model.dto.quotation.MoneyAmount downPayment = com.tdp.ms.sales.model.dto.quotation.MoneyAmount
+                .builder()
+                .amount("120")
+                .build();
+        com.tdp.ms.sales.model.dto.quotation.MoneyAmount totalAmount = com.tdp.ms.sales.model.dto.quotation.MoneyAmount
+                .builder()
+                .amount("120")
+                .build();
+        body.setDownPayment(downPayment);
+        body.setTotalAmount(totalAmount);
+        body.setFinancialEntity("FE001");
+
+        CreateQuotationRequest createQuotationRequest = new CreateQuotationRequest();
+        createQuotationRequest.setBody(body);
+
+
+        method.invoke(salesManagmentServiceImpl, altaFijaOrderAttributesList, sale, createQuotationRequest, true);
+    }
+
+    @Test
+    void buildServiceAvailabilityAltaFijaTest() throws NoSuchMethodException, InvocationTargetException,
+            IllegalAccessException {
+        Method method = SalesManagmentServiceImpl.class.getDeclaredMethod("buildServiceAvailabilityAltaFija",
+                Sale.class, List.class);
+
+        method.setAccessible(true);
+
+        List<ServiceabilityOfferType> serviceabilityOffersList = new ArrayList<>();
+        Sale sale = CommonsMocks.createSaleMock();
+
+        method.invoke(salesManagmentServiceImpl,sale, serviceabilityOffersList);
+    }
+
 }

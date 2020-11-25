@@ -122,8 +122,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
 
     private static final Logger LOG = LoggerFactory.getLogger(SalesManagmentServiceImpl.class);
 
-    public List<BusinessParameterExt> retrieveCharacteristics(GetSalesCharacteristicsResponse response) {
-        System.out.println("retrieveCharacteristics: " + response.getData().get(0).getExt());
+    private List<BusinessParameterExt> retrieveCharacteristics(GetSalesCharacteristicsResponse response) {
         return response.getData().get(0).getExt();
     }
 
@@ -189,6 +188,207 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                 .subscribe();
     }
 
+    private void buildOrderAttributesListAltaFija(List<FlexAttrType> altaFijaOrderAttributesList, Sale saleRequest,
+                                                  CreateQuotationRequest createQuotationFijaRequest,
+                                                  Boolean flgFinanciamiento) {
+
+        FlexAttrValueType externalFinancialAttrValue =  FlexAttrValueType
+                .builder()
+                .stringValue(flgFinanciamiento? "Y" : "N")
+                .valueType("STRING")
+                .build();
+        FlexAttrType externalFinancialAttr = FlexAttrType
+                .builder()
+                .attrName("IS_EXTERNAL_FINANCING")
+                .flexAttrValue(externalFinancialAttrValue)
+                .build();
+
+        FlexAttrValueType upFrontIndAttrValue =  FlexAttrValueType
+                .builder()
+                .stringValue(saleRequest.getCommercialOperation().get(0).getProductOfferings().get(0)
+                        .getUpFront().getIndicator())
+                .valueType("STRING")
+                .build();
+        FlexAttrType upFrontIndAttr = FlexAttrType
+                .builder()
+                .attrName("UPFRONT_IND")
+                .flexAttrValue(upFrontIndAttrValue)
+                .build();
+
+        FlexAttrValueType paymentMethodAttrValue =  FlexAttrValueType
+                .builder()
+                .stringValue("EX")
+                .valueType("STRING")
+                .build();
+        FlexAttrType paymentMethodAttr = FlexAttrType
+                .builder()
+                .attrName("PAYMENT_METHOD")
+                .flexAttrValue(paymentMethodAttrValue)
+                .build();
+
+        altaFijaOrderAttributesList.add(externalFinancialAttr);
+        altaFijaOrderAttributesList.add(upFrontIndAttr);
+        altaFijaOrderAttributesList.add(paymentMethodAttr);
+
+        // Order Attributes if is Financing
+        if (flgFinanciamiento) {
+            FlexAttrValueType downPaymentAttrValue = FlexAttrValueType
+                    .builder()
+                    .stringValue(createQuotationFijaRequest.getBody().getDownPayment().getAmount())
+                    .valueType("STRING")
+                    .build();
+            FlexAttrType downPaymentAttr = FlexAttrType
+                    .builder()
+                    .attrName("DOWN_PAYMENT_AMOUNT")
+                    .flexAttrValue(downPaymentAttrValue)
+                    .build();
+            altaFijaOrderAttributesList.add(downPaymentAttr);
+
+            FlexAttrValueType financingAmountAttrValue = FlexAttrValueType
+                    .builder()
+                    .stringValue(createQuotationFijaRequest.getBody().getTotalAmount().getAmount())
+                    .valueType("STRING")
+                    .build();
+            FlexAttrType financingAmountAttr = FlexAttrType
+                    .builder()
+                    .attrName("FINANCING_AMOUNT")
+                    .flexAttrValue(financingAmountAttrValue)
+                    .build();
+            altaFijaOrderAttributesList.add(financingAmountAttr);
+
+            FlexAttrValueType financingPlanAttrValue = FlexAttrValueType
+                    .builder()
+                    .stringValue(createQuotationFijaRequest.getBody().getFinancialEntity())
+                    .valueType("STRING")
+                    .build();
+            FlexAttrType financingPlanAttr = FlexAttrType
+                    .builder()
+                    .attrName("FINANCING_PLAN")
+                    .flexAttrValue(financingPlanAttrValue)
+                    .build();
+            altaFijaOrderAttributesList.add(financingPlanAttr);
+        }
+
+        // Order Attributes if is Scheduling
+        if (!saleRequest.getCommercialOperation().get(0).getWorkOrDeliveryType().getScheduleDelivery()
+                .equalsIgnoreCase("SLA")) {
+            FlexAttrValueType downPaymentAttrValue = FlexAttrValueType
+                    .builder()
+                    .stringValue(createQuotationFijaRequest.getBody().getDownPayment().getAmount())
+                    .valueType("TC")
+                    .build();
+            FlexAttrType downPaymentAttr = FlexAttrType
+                    .builder()
+                    .attrName("DELIVERY_METHOD")
+                    .flexAttrValue(downPaymentAttrValue)
+                    .build();
+            altaFijaOrderAttributesList.add(downPaymentAttr);
+        }
+    }
+
+    private void buildServiceAvailabilityAltaFija(Sale saleRequest,
+                                                  List<ServiceabilityOfferType> serviceabilityOffersList) {
+        saleRequest.getCommercialOperation().get(0).getServiceAvailability().getOffers().stream()
+                .forEach(availabilityOffer -> {
+                    String serviceAbilityType = availabilityOffer.getServices().get(0).getType();
+
+                    if (serviceAbilityType.equalsIgnoreCase("VOICE")) {
+
+                        // Serviceability Landline
+                        CharacteristicOfferType describeByLandline1 =  CharacteristicOfferType
+                                .builder()
+                                .characteristicName("ALLOCATION_ID")
+                                .characteristicValue(availabilityOffer.getServices().get(0).getAllocationId())
+                                .build();
+
+                        List<CharacteristicOfferType> describeByLandlineList = new ArrayList<>();
+                        describeByLandlineList.add(describeByLandline1);
+
+                        ProductLineType productOfferLandline1 = ProductLineType
+                                .builder()
+                                .type(serviceAbilityType)
+                                .description("Servicio de Voz")
+                                .networkTechnology(this.getStringValueByKeyFromAdditionalDataList(saleRequest.
+                                        getCommercialOperation().get(0).getServiceAvailability()
+                                        .getAdditionalData(),"networkAccessTechnologyLandline"))
+                                .serviceTechnology(this.getStringValueByKeyFromAdditionalDataList(saleRequest.
+                                        getCommercialOperation().get(0).getServiceAvailability()
+                                        .getAdditionalData(),"serviceTechnologyLandline"))
+                                .describeByList(describeByLandlineList)
+                                .build();
+                        List<ProductLineType> productOfferLandlineList = new ArrayList<>();
+                        productOfferLandlineList.add(productOfferLandline1);
+
+                        ServiceabilityOfferType serviceabilityOfferLandline = ServiceabilityOfferType
+                                .builder()
+                                .idOfferPriority(availabilityOffer.getPriority().toString())
+                                .productOffer(productOfferLandlineList)
+                                .build();
+                        serviceabilityOffersList.add(serviceabilityOfferLandline);
+
+                    } else if (serviceAbilityType.equalsIgnoreCase("BB")) {
+
+                        // Serviceability Broadband
+                        CharacteristicOfferType describeByBroadband1 =  CharacteristicOfferType
+                                .builder()
+                                .characteristicName("MaxTheoricalSpeed")
+                                .characteristicValue(this.getStringValueByKeyFromAdditionalDataList(saleRequest
+                                        .getCommercialOperation().get(0).getServiceAvailability()
+                                        .getAdditionalData(), "maxSpeed"))
+                                .build();
+
+                        List<CharacteristicOfferType> describeByBroadbandList = new ArrayList<>();
+                        describeByBroadbandList.add(describeByBroadband1);
+
+                        ProductLineType productOfferBroadband1 = ProductLineType
+                                .builder()
+                                .type(serviceAbilityType)
+                                .description("Servicio de banda ancha")
+                                .networkTechnology(this.getStringValueByKeyFromAdditionalDataList(saleRequest.
+                                        getCommercialOperation().get(0).getServiceAvailability()
+                                        .getAdditionalData(),"networkAccessTechnologyBroadband"))
+                                .serviceTechnology(this.getStringValueByKeyFromAdditionalDataList(saleRequest.
+                                        getCommercialOperation().get(0).getServiceAvailability()
+                                        .getAdditionalData(),"serviceTechnologyBroadband"))
+                                .describeByList(describeByBroadbandList)
+                                .build();
+                        List<ProductLineType> productOfferBroadbandList = new ArrayList<>();
+                        productOfferBroadbandList.add(productOfferBroadband1);
+
+                        ServiceabilityOfferType serviceabilityOfferBroadband = ServiceabilityOfferType
+                                .builder()
+                                .idOfferPriority(availabilityOffer.getPriority().toString())
+                                .productOffer(productOfferBroadbandList)
+                                .build();
+                        serviceabilityOffersList.add(serviceabilityOfferBroadband);
+
+                    } else if (serviceAbilityType.equalsIgnoreCase("TV")) {
+
+                        // Serviceability CableTv
+                        ProductLineType productOfferCableTv1 = ProductLineType
+                                .builder()
+                                .type(serviceAbilityType)
+                                .description("Servicio de Television")
+                                .networkTechnology(this.getStringValueByKeyFromAdditionalDataList(saleRequest.
+                                        getCommercialOperation().get(0).getServiceAvailability()
+                                        .getAdditionalData(),"networkAccessTechnologyTv"))
+                                .serviceTechnology(this.getStringValueByKeyFromAdditionalDataList(saleRequest.
+                                        getCommercialOperation().get(0).getServiceAvailability()
+                                        .getAdditionalData(),"serviceTechnologyTv"))
+                                .build();
+                        List<ProductLineType> productOfferCableTvList = new ArrayList<>();
+                        productOfferCableTvList.add(productOfferCableTv1);
+
+                        ServiceabilityOfferType serviceabilityOfferCableTv = ServiceabilityOfferType
+                                .builder()
+                                .idOfferPriority(availabilityOffer.getPriority().toString())
+                                .productOffer(productOfferCableTvList)
+                                .build();
+                        serviceabilityOffersList.add(serviceabilityOfferCableTv);
+                    }
+                });
+    }
+
     @Override
     public Mono<Sale> post(PostSalesRequest request) {
 
@@ -214,11 +414,9 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         String tokenMcss = "";
         for (KeyValueType kv : saleRequest.getAdditionalData()) {
             if (kv.getKey().equals("ufxauthorization")) {
-                System.out.println("ufxauthorization VALUE: " + kv.getValue());
                 tokenMcss = kv.getValue();
             }
         }
-        System.out.println("TOKEEEN: " + tokenMcss);
         if (tokenMcss == null || tokenMcss.equals("")) {
             return Mono.error(GenesisException
                     .builder()
@@ -302,7 +500,6 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         // Getting Main CommercialTypeOperation value
         String commercialOperationReason = saleRequest.getCommercialOperation().get(0).getReason();
         String mainProductType = saleRequest.getProductType();
-        System.out.println("MAIN COMMERCIAL OPERATION TYPE: " + commercialOperationReason);
 
         // ALTA FIJA
         if (commercialOperationReason.equalsIgnoreCase("ALTA")
@@ -517,105 +714,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
 
             // ServiceAvailability Offers
             List<ServiceabilityOfferType> serviceabilityOffersList = new ArrayList<>();
-            saleRequest.getCommercialOperation().get(0).getServiceAvailability().getOffers().stream()
-                    .forEach(availabilityOffer -> {
-                        String serviceAbilityType = availabilityOffer.getServices().get(0).getType();
-
-                        if (serviceAbilityType.equalsIgnoreCase("VOICE")) {
-
-                            // Serviceability Landline
-                            CharacteristicOfferType describeByLandline1 =  CharacteristicOfferType
-                                    .builder()
-                                    .characteristicName("ALLOCATION_ID")
-                                    .characteristicValue(availabilityOffer.getServices().get(0).getAllocationId())
-                                    .build();
-
-                            List<CharacteristicOfferType> describeByLandlineList = new ArrayList<>();
-                            describeByLandlineList.add(describeByLandline1);
-
-                            ProductLineType productOfferLandline1 = ProductLineType
-                                    .builder()
-                                    .type(serviceAbilityType)
-                                    .description("Servicio de Voz")
-                                    .networkTechnology(this.getStringValueByKeyFromAdditionalDataList(saleRequest.
-                                            getCommercialOperation().get(0).getServiceAvailability()
-                                            .getAdditionalData(),"networkAccessTechnologyLandline"))
-                                    .serviceTechnology(this.getStringValueByKeyFromAdditionalDataList(saleRequest.
-                                            getCommercialOperation().get(0).getServiceAvailability()
-                                            .getAdditionalData(),"serviceTechnologyLandline"))
-                                    .describeByList(describeByLandlineList)
-                                    .build();
-                            List<ProductLineType> productOfferLandlineList = new ArrayList<>();
-                            productOfferLandlineList.add(productOfferLandline1);
-
-                            ServiceabilityOfferType serviceabilityOfferLandline = ServiceabilityOfferType
-                                    .builder()
-                                    .idOfferPriority(availabilityOffer.getPriority().toString())
-                                    .productOffer(productOfferLandlineList)
-                                    .build();
-                            serviceabilityOffersList.add(serviceabilityOfferLandline);
-
-                        } else if (serviceAbilityType.equalsIgnoreCase("BB")) {
-
-                            // Serviceability Broadband
-                            CharacteristicOfferType describeByBroadband1 =  CharacteristicOfferType
-                                    .builder()
-                                    .characteristicName("MaxTheoricalSpeed")
-                                    .characteristicValue(this.getStringValueByKeyFromAdditionalDataList(saleRequest
-                                            .getCommercialOperation().get(0).getServiceAvailability()
-                                            .getAdditionalData(), "maxSpeed"))
-                                    .build();
-
-                            List<CharacteristicOfferType> describeByBroadbandList = new ArrayList<>();
-                            describeByBroadbandList.add(describeByBroadband1);
-
-                            ProductLineType productOfferBroadband1 = ProductLineType
-                                    .builder()
-                                    .type(serviceAbilityType)
-                                    .description("Servicio de banda ancha")
-                                    .networkTechnology(this.getStringValueByKeyFromAdditionalDataList(saleRequest.
-                                            getCommercialOperation().get(0).getServiceAvailability()
-                                            .getAdditionalData(),"networkAccessTechnologyBroadband"))
-                                    .serviceTechnology(this.getStringValueByKeyFromAdditionalDataList(saleRequest.
-                                            getCommercialOperation().get(0).getServiceAvailability()
-                                            .getAdditionalData(),"serviceTechnologyBroadband"))
-                                    .describeByList(describeByBroadbandList)
-                                    .build();
-                            List<ProductLineType> productOfferBroadbandList = new ArrayList<>();
-                            productOfferBroadbandList.add(productOfferBroadband1);
-
-                            ServiceabilityOfferType serviceabilityOfferBroadband = ServiceabilityOfferType
-                                    .builder()
-                                    .idOfferPriority(availabilityOffer.getPriority().toString())
-                                    .productOffer(productOfferBroadbandList)
-                                    .build();
-                            serviceabilityOffersList.add(serviceabilityOfferBroadband);
-
-                        } else if (serviceAbilityType.equalsIgnoreCase("TV")) {
-
-                            // Serviceability CableTv
-                            ProductLineType productOfferCableTv1 = ProductLineType
-                                    .builder()
-                                    .type(serviceAbilityType)
-                                    .description("Servicio de Television")
-                                    .networkTechnology(this.getStringValueByKeyFromAdditionalDataList(saleRequest.
-                                            getCommercialOperation().get(0).getServiceAvailability()
-                                            .getAdditionalData(),"networkAccessTechnologyTv"))
-                                    .serviceTechnology(this.getStringValueByKeyFromAdditionalDataList(saleRequest.
-                                            getCommercialOperation().get(0).getServiceAvailability()
-                                            .getAdditionalData(),"serviceTechnologyTv"))
-                                    .build();
-                            List<ProductLineType> productOfferCableTvList = new ArrayList<>();
-                            productOfferCableTvList.add(productOfferCableTv1);
-
-                            ServiceabilityOfferType serviceabilityOfferCableTv = ServiceabilityOfferType
-                                    .builder()
-                                    .idOfferPriority(availabilityOffer.getPriority().toString())
-                                    .productOffer(productOfferCableTvList)
-                                    .build();
-                            serviceabilityOffersList.add(serviceabilityOfferCableTv);
-                        }
-                    });
+            this.buildServiceAvailabilityAltaFija(saleRequest, serviceabilityOffersList);
 
             // CommercialZoneType
             CommercialZoneType commercialZone = CommercialZoneType
@@ -634,99 +733,9 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                     .build();
 
             // Order Attributes Alta Fija
-            FlexAttrValueType externalFinancialAttrValue =  FlexAttrValueType
-                    .builder()
-                    .stringValue(flgFinanciamiento[0]? "Y" : "N")
-                    .valueType("STRING")
-                    .build();
-            FlexAttrType externalFinancialAttr = FlexAttrType
-                    .builder()
-                    .attrName("IS_EXTERNAL_FINANCING")
-                    .flexAttrValue(externalFinancialAttrValue)
-                    .build();
-
-            FlexAttrValueType upFrontIndAttrValue =  FlexAttrValueType
-                    .builder()
-                    .stringValue(saleRequest.getCommercialOperation().get(0).getProductOfferings().get(0)
-                                                                                        .getUpFront().getIndicator())
-                    .valueType("STRING")
-                    .build();
-            FlexAttrType upFrontIndAttr = FlexAttrType
-                    .builder()
-                    .attrName("UPFRONT_IND")
-                    .flexAttrValue(upFrontIndAttrValue)
-                    .build();
-
-            FlexAttrValueType paymentMethodAttrValue =  FlexAttrValueType
-                    .builder()
-                    .stringValue("EX")
-                    .valueType("STRING")
-                    .build();
-            FlexAttrType paymentMethodAttr = FlexAttrType
-                    .builder()
-                    .attrName("PAYMENT_METHOD")
-                    .flexAttrValue(paymentMethodAttrValue)
-                    .build();
-
             List<FlexAttrType> altaFijaOrderAttributesList = new ArrayList<>();
-            altaFijaOrderAttributesList.add(externalFinancialAttr);
-            altaFijaOrderAttributesList.add(upFrontIndAttr);
-            altaFijaOrderAttributesList.add(paymentMethodAttr);
-
-            // Order Attributes if is Financing
-            if (flgFinanciamiento[0]) {
-                FlexAttrValueType downPaymentAttrValue = FlexAttrValueType
-                        .builder()
-                        .stringValue(createQuotationFijaRequest.getBody().getDownPayment().getAmount())
-                        .valueType("STRING")
-                        .build();
-                FlexAttrType downPaymentAttr = FlexAttrType
-                        .builder()
-                        .attrName("DOWN_PAYMENT_AMOUNT")
-                        .flexAttrValue(downPaymentAttrValue)
-                        .build();
-                altaFijaOrderAttributesList.add(downPaymentAttr);
-
-                FlexAttrValueType financingAmountAttrValue = FlexAttrValueType
-                        .builder()
-                        .stringValue(createQuotationFijaRequest.getBody().getTotalAmount().getAmount())
-                        .valueType("STRING")
-                        .build();
-                FlexAttrType financingAmountAttr = FlexAttrType
-                        .builder()
-                        .attrName("FINANCING_AMOUNT")
-                        .flexAttrValue(financingAmountAttrValue)
-                        .build();
-                altaFijaOrderAttributesList.add(financingAmountAttr);
-
-                FlexAttrValueType financingPlanAttrValue = FlexAttrValueType
-                        .builder()
-                        .stringValue(createQuotationFijaRequest.getBody().getFinancialEntity())
-                        .valueType("STRING")
-                        .build();
-                FlexAttrType financingPlanAttr = FlexAttrType
-                        .builder()
-                        .attrName("FINANCING_PLAN")
-                        .flexAttrValue(financingPlanAttrValue)
-                        .build();
-                altaFijaOrderAttributesList.add(financingPlanAttr);
-            }
-
-            // Order Attributes if is Scheduling
-            if (!saleRequest.getCommercialOperation().get(0).getWorkOrDeliveryType().getScheduleDelivery()
-                                                                                .equalsIgnoreCase("SLA")) {
-                FlexAttrValueType downPaymentAttrValue = FlexAttrValueType
-                        .builder()
-                        .stringValue(createQuotationFijaRequest.getBody().getDownPayment().getAmount())
-                        .valueType("TC")
-                        .build();
-                FlexAttrType downPaymentAttr = FlexAttrType
-                        .builder()
-                        .attrName("DELIVERY_METHOD")
-                        .flexAttrValue(downPaymentAttrValue)
-                        .build();
-                altaFijaOrderAttributesList.add(downPaymentAttr);
-            }
+            this.buildOrderAttributesListAltaFija(altaFijaOrderAttributesList, saleRequest, createQuotationFijaRequest,
+                                                                                                flgFinanciamiento[0]);
 
             AltaFijaRequest altaFijaRequest = new AltaFijaRequest();
             altaFijaRequest.setNewProducts(newProductsAltaFijaList);
@@ -761,7 +770,6 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
             return productOrderWebClient.createProductOrder(mainRequestProductOrder, request.getHeadersMap(),
                     saleRequest)
                     .flatMap(createOrderResponse -> {
-                        System.out.println("CREATE PRODUCT ORDER RESPONSE: " + createOrderResponse);
                         // Adding Order info to sales
                         saleRequest.getCommercialOperation().get(0)
                                 .setOrder(createOrderResponse.getCreateProductOrderResponse());
@@ -853,8 +861,6 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
 
                 return Mono.zip(getRiskDomain, salesCharsByCOT, getBonificacionSim, getParametersSimCard)
                         .flatMap(tuple -> {
-                            System.out.println("RESPONSEEEE T1: " + tuple.getT1());
-                            System.out.println("RESPONSEEEE T2: " + tuple.getT2());
                             if (!tuple.getT1().getData().isEmpty()
                                     && tuple.getT1().getData().get(0).getActive()
                             ) {
@@ -904,11 +910,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                                         channelIdRequest, customerIdRequest, productOfferingIdRequest, cipCode,
                                         tuple.getT3(), sapidSimcard[0]);
                             }
-                            System.out.println("BOOLEAN flgCapl: " + flgCapl[0]);
-                            System.out.println("BOOLEAN flgCaeq: " + flgCaeq[0]);
-                            System.out.println("BOOLEAN flgCasi: " + flgCasi[0]);
 
-                            System.out.println("REQUESTTT PRODUCT ORDER: " + mainRequestProductOrder);
                             CreateProductOrderGeneralRequest finalMainRequestProductOrder = mainRequestProductOrder;
                             return productOrderWebClient.createProductOrder(mainRequestProductOrder, request.getHeadersMap(),
                                     saleRequest)
@@ -936,7 +938,6 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                                         // FEMS-1514 Validación de creación Orden
                                         Mono<Sale> saleRequestUpdated = creationOrderValidation(saleRequest, finalMainRequestProductOrder, request.getHeadersMap());
                                         return saleRequestUpdated.flatMap(saleItem -> {
-                                            System.out.println("BOOLEAN CAEQ: " + flgCaeq[0]);
                                             // Call to Reserve Stock Service When Commercial Operation include CAEQ
                                             if (flgCaeq[0] || flgAlta[0]) {
 
