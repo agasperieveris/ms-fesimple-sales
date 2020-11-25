@@ -171,6 +171,41 @@ public class CommonsMocks {
         WorkOrDeliveryType workOrDeliveryType = WorkOrDeliveryType.builder()
                 .contact(mediumCharacteristic).place(places).additionalData(additionalDatas).build();
 
+        ServiceType serviceType1 = new ServiceType();
+        serviceType1.setType("VOICE");
+        serviceType1.setAllocationId("test");
+        List<ServiceType> servicesList1 = new ArrayList<>();
+        servicesList1.add(serviceType1);
+        AvailableOffersType availableOffersType1 = new AvailableOffersType();
+        availableOffersType1.setServices(servicesList1);
+        availableOffersType1.setPriority(1);
+
+        ServiceType serviceType2 = new ServiceType();
+        serviceType2.setType("BB");
+        serviceType2.setAllocationId("test");
+        List<ServiceType> servicesList2 = new ArrayList<>();
+        servicesList2.add(serviceType2);
+        AvailableOffersType availableOffersType2 = new AvailableOffersType();
+        availableOffersType2.setServices(servicesList2);
+        availableOffersType2.setPriority(1);
+
+        ServiceType serviceType3 = new ServiceType();
+        serviceType3.setType("TV");
+        serviceType3.setAllocationId("test");
+        List<ServiceType> servicesList3 = new ArrayList<>();
+        servicesList3.add(serviceType3);
+        AvailableOffersType availableOffersType3 = new AvailableOffersType();
+        availableOffersType3.setServices(servicesList3);
+        availableOffersType3.setPriority(1);
+
+        List<AvailableOffersType> offersServicesList = new ArrayList<>();
+        offersServicesList.add(availableOffersType1);
+        offersServicesList.add(availableOffersType2);
+        offersServicesList.add(availableOffersType3);
+        ServiceAvailabilityReportType serviceAvailability = new ServiceAvailabilityReportType();
+        serviceAvailability.setOffers(offersServicesList);
+        serviceAvailability.setAdditionalData(additionalDatas);
+
         product.setAdditionalData(additionalDatas);
         List<CommercialOperationType> comercialOperationTypes = new ArrayList<>();
         CommercialOperationType comercialOperationType = new CommercialOperationType();
@@ -184,6 +219,7 @@ public class CommonsMocks {
         comercialOperationType.setOrder(order);
         comercialOperationType.setProductOfferings(productOfferings);
         comercialOperationType.setWorkOrDeliveryType(workOrDeliveryType);
+        comercialOperationType.setServiceAvailability(serviceAvailability);
         comercialOperationTypes.add(comercialOperationType);
 
         Money estimatedRevenue = new Money();
@@ -263,7 +299,7 @@ public class CommonsMocks {
                 .priority("x")
                 .channel(channel)
                 .agent(agent)
-                .productType("landline")
+                .productType("WIRELESS")
                 .commercialOperation(comercialOperationTypes)
                 .estimatedRevenue(estimatedRevenue)
                 .prospectContact(prospectContacts)

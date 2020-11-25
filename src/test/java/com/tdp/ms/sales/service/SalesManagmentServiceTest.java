@@ -160,6 +160,38 @@ public class SalesManagmentServiceTest {
     }
 
     @Test
+    void postSalesIdNotFoundErrorTest() {
+        Sale saleTest = CommonsMocks.createSaleMock();
+        saleTest.setId("");
+
+        PostSalesRequest salesRequest = PostSalesRequest
+                .builder()
+                .sale(saleTest)
+                .headersMap(headersMap)
+                .build();
+
+        Mono<Sale> result = salesManagmentService.post(salesRequest);
+
+        StepVerifier.create(result).verifyError();
+    }
+
+    @Test
+    void postSalesSalesIdNotFoundErrorTest() {
+        Sale saleTest = CommonsMocks.createSaleMock();
+        saleTest.setSalesId("");
+
+        PostSalesRequest salesRequest = PostSalesRequest
+                .builder()
+                .sale(saleTest)
+                .headersMap(headersMap)
+                .build();
+
+        Mono<Sale> result = salesManagmentService.post(salesRequest);
+
+        StepVerifier.create(result).verifyError();
+    }
+
+    @Test
     void postSalesTokenMcssNotFoundErrorTest() {
         List<KeyValueType> additionalDatas = new ArrayList<>();
         KeyValueType additionalData1 = new KeyValueType();
@@ -171,6 +203,100 @@ public class SalesManagmentServiceTest {
         saleTest.getCommercialOperation().get(0).getOrder().setProductOrderId("");
         saleTest.setId("S001");
         saleTest.setAdditionalData(additionalDatas);
+
+        PostSalesRequest salesRequest = PostSalesRequest
+                .builder()
+                .sale(saleTest)
+                .headersMap(headersMap)
+                .build();
+
+        Mono<Sale> result = salesManagmentService.post(salesRequest);
+
+        StepVerifier.create(result).verifyError();
+    }
+
+    @Test
+    void postSalesRetailMovilImeiNotFoundErrorTest() {
+        Sale saleTest = CommonsMocks.createSaleMock();
+        saleTest.getChannel().setId("DLC");
+
+        PostSalesRequest salesRequest = PostSalesRequest
+                .builder()
+                .sale(saleTest)
+                .headersMap(headersMap)
+                .build();
+
+        Mono<Sale> result = salesManagmentService.post(salesRequest);
+
+        StepVerifier.create(result).verifyError();
+    }
+
+    @Test
+    void postSalesRetailsSimIccidNotFoundErrorTest() {
+        Sale saleTest = CommonsMocks.createSaleMock();
+        saleTest.getChannel().setId("DLC");
+
+        KeyValueType additionalData1 = new KeyValueType();
+        additionalData1.setKey("MOVILE_IMEI");
+        additionalData1.setValue("test");
+        saleTest.getAdditionalData().add(additionalData1);
+
+        PostSalesRequest salesRequest = PostSalesRequest
+                .builder()
+                .sale(saleTest)
+                .headersMap(headersMap)
+                .build();
+
+        Mono<Sale> result = salesManagmentService.post(salesRequest);
+
+        StepVerifier.create(result).verifyError();
+    }
+
+    @Test
+    void postSalesRetailsNumeroCajaNotFoundErrorTest() {
+        Sale saleTest = CommonsMocks.createSaleMock();
+        saleTest.getChannel().setId("DLC");
+
+        KeyValueType additionalData1 = new KeyValueType();
+        additionalData1.setKey("MOVILE_IMEI");
+        additionalData1.setValue("test");
+        saleTest.getAdditionalData().add(additionalData1);
+
+        KeyValueType additionalData2 = new KeyValueType();
+        additionalData2.setKey("SIM_ICCID");
+        additionalData2.setValue("test");
+        saleTest.getAdditionalData().add(additionalData2);
+
+        PostSalesRequest salesRequest = PostSalesRequest
+                .builder()
+                .sale(saleTest)
+                .headersMap(headersMap)
+                .build();
+
+        Mono<Sale> result = salesManagmentService.post(salesRequest);
+
+        StepVerifier.create(result).verifyError();
+    }
+
+    @Test
+    void postSalesRetailsNumeroTicketNotFoundErrorTest() {
+        Sale saleTest = CommonsMocks.createSaleMock();
+        saleTest.getChannel().setId("DLC");
+
+        KeyValueType additionalData1 = new KeyValueType();
+        additionalData1.setKey("MOVILE_IMEI");
+        additionalData1.setValue("test");
+        saleTest.getAdditionalData().add(additionalData1);
+
+        KeyValueType additionalData2 = new KeyValueType();
+        additionalData2.setKey("SIM_ICCID");
+        additionalData2.setValue("test");
+        saleTest.getAdditionalData().add(additionalData2);
+
+        KeyValueType additionalData3 = new KeyValueType();
+        additionalData3.setKey("NUMERO_CAJA");
+        additionalData3.setValue("test");
+        saleTest.getAdditionalData().add(additionalData3);
 
         PostSalesRequest salesRequest = PostSalesRequest
                 .builder()
