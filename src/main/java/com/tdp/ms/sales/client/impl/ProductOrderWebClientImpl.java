@@ -54,8 +54,6 @@ public class ProductOrderWebClientImpl implements ProductOrderWebClient {
     @Override
     public Mono<ProductorderResponse> createProductOrder(CreateProductOrderGeneralRequest request,
                                                          HashMap<String,String> headersMap, Sale sale) {
-        System.out.println("TOKEN MCSS: " + headersMap.get(Constants.UFX_AUTHORIZATION));
-        System.out.println("CREATE PRODUCT ORDER URL: " + createProductOrderUrl);
         return webClientInsecure
                 .post()
                 .uri(createProductOrderUrl)
@@ -99,7 +97,6 @@ public class ProductOrderWebClientImpl implements ProductOrderWebClient {
                         .wildcards(wildcardsException)
                         .build());
             } else if (statusException.equals(HttpStatus.NOT_FOUND)) {
-                System.out.println("ENTROOOOO NOT FOUND");
                 // Throw 404 status code
                 return Mono.error(builder
                         .exceptionId("SVC1006")

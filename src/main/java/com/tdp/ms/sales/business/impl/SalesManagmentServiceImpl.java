@@ -1637,9 +1637,8 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                     cont[0]++;
                 }
             } catch (ParseException ex) {
-                System.out.println(ex);
+                LOG.error("Post Sales Validate Negotiation Exception: " + ex);
             }
-
         });
 
         // validate validationType
