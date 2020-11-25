@@ -10,6 +10,8 @@ import com.tdp.ms.sales.model.entity.Sale;
 import com.tdp.ms.sales.model.response.ProductorderResponse;
 import com.tdp.ms.sales.repository.SalesRepository;
 import java.util.HashMap;
+
+import com.tdp.ms.sales.utils.Constants;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -52,7 +54,7 @@ public class ProductOrderWebClientImpl implements ProductOrderWebClient {
     @Override
     public Mono<ProductorderResponse> createProductOrder(CreateProductOrderGeneralRequest request,
                                                          HashMap<String,String> headersMap, Sale sale) {
-        System.out.println("TOKEN MCSS: " + headersMap.get("ufxauthorization"));
+        System.out.println("TOKEN MCSS: " + headersMap.get(Constants.UFX_AUTHORIZATION));
         System.out.println("CREATE PRODUCT ORDER URL: " + createProductOrderUrl);
         return webClientInsecure
                 .post()
@@ -61,7 +63,7 @@ public class ProductOrderWebClientImpl implements ProductOrderWebClient {
                 .header(HttpHeadersKey.UNICA_APPLICATION, headersMap.get(HttpHeadersKey.UNICA_APPLICATION))
                 .header(HttpHeadersKey.UNICA_PID, headersMap.get(HttpHeadersKey.UNICA_PID))
                 .header(HttpHeadersKey.UNICA_USER, headersMap.get(HttpHeadersKey.UNICA_USER))
-                .header("ufxauthorization", headersMap.get("ufxauthorization"))
+                .header(Constants.UFX_AUTHORIZATION, headersMap.get(Constants.UFX_AUTHORIZATION))
                 .bodyValue(request)
                 .accept(MediaType.APPLICATION_JSON)
                 .retrieve()
