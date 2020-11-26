@@ -319,10 +319,10 @@ public class CommonsMocks {
 
     public static HashMap<String,String> createHeadersMock() {
         HashMap<String,String> headersMap = new HashMap();
-        headersMap.put(HttpHeadersKey.UNICA_SERVICE_ID, Constants.RH_UNICA_SERVICE_ID);
-        headersMap.put(HttpHeadersKey.UNICA_APPLICATION, Constants.RH_UNICA_APPLICATION);
-        headersMap.put(HttpHeadersKey.UNICA_PID, Constants.RH_UNICA_PID);
-        headersMap.put(HttpHeadersKey.UNICA_USER, Constants.RH_UNICA_USER);
+        headersMap.put(HttpHeadersKey.UNICA_SERVICE_ID, ConstantsTest.RH_UNICA_SERVICE_ID);
+        headersMap.put(HttpHeadersKey.UNICA_APPLICATION, ConstantsTest.RH_UNICA_APPLICATION);
+        headersMap.put(HttpHeadersKey.UNICA_PID, ConstantsTest.RH_UNICA_PID);
+        headersMap.put(HttpHeadersKey.UNICA_USER, ConstantsTest.RH_UNICA_USER);
         return headersMap;
     }
 

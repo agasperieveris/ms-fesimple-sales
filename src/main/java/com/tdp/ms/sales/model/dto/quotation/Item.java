@@ -34,6 +34,8 @@ public class Item {
     private String publicId;
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private String orderActionId;
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private String itemChargeCode;
     private MoneyAmount totalCost;
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private MoneyAmount taxExcludedAmount;
