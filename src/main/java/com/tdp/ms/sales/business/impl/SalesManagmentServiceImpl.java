@@ -59,13 +59,12 @@ import com.tdp.ms.sales.model.request.ReserveStockRequest;
 import com.tdp.ms.sales.model.response.*;
 import com.tdp.ms.sales.repository.SalesRepository;
 import com.tdp.ms.sales.utils.Commons;
+import com.tdp.ms.sales.utils.Constants;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
-
-import com.tdp.ms.sales.utils.Constants;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -157,7 +156,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
     }
 
     private void postSalesEventFlow(PostSalesRequest request) {
-        if(request.getSale().getAdditionalData()!=null) {
+        if (request.getSale().getAdditionalData() != null) {
             request.getSale().getAdditionalData().add(
                     KeyValueType
                             .builder()
@@ -196,7 +195,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
 
         FlexAttrValueType externalFinancialAttrValue =  FlexAttrValueType
                 .builder()
-                .stringValue(flgFinanciamiento? "Y" : "N")
+                .stringValue(flgFinanciamiento ? "Y" : "N")
                 .valueType(Constants.STRING)
                 .build();
         FlexAttrType externalFinancialAttr = FlexAttrType
@@ -310,11 +309,11 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                                 .builder()
                                 .type(serviceAbilityType)
                                 .description("Servicio de Voz")
-                                .networkTechnology(this.getStringValueByKeyFromAdditionalDataList(saleRequest.
-                                        getCommercialOperation().get(0).getServiceAvailability()
+                                .networkTechnology(this.getStringValueByKeyFromAdditionalDataList(saleRequest
+                                        .getCommercialOperation().get(0).getServiceAvailability()
                                         .getAdditionalData(),"networkAccessTechnologyLandline"))
-                                .serviceTechnology(this.getStringValueByKeyFromAdditionalDataList(saleRequest.
-                                        getCommercialOperation().get(0).getServiceAvailability()
+                                .serviceTechnology(this.getStringValueByKeyFromAdditionalDataList(saleRequest
+                                        .getCommercialOperation().get(0).getServiceAvailability()
                                         .getAdditionalData(),"serviceTechnologyLandline"))
                                 .describeByList(describeByLandlineList)
                                 .build();
@@ -346,11 +345,11 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                                 .builder()
                                 .type(serviceAbilityType)
                                 .description("Servicio de banda ancha")
-                                .networkTechnology(this.getStringValueByKeyFromAdditionalDataList(saleRequest.
-                                        getCommercialOperation().get(0).getServiceAvailability()
+                                .networkTechnology(this.getStringValueByKeyFromAdditionalDataList(saleRequest
+                                        .getCommercialOperation().get(0).getServiceAvailability()
                                         .getAdditionalData(),"networkAccessTechnologyBroadband"))
-                                .serviceTechnology(this.getStringValueByKeyFromAdditionalDataList(saleRequest.
-                                        getCommercialOperation().get(0).getServiceAvailability()
+                                .serviceTechnology(this.getStringValueByKeyFromAdditionalDataList(saleRequest
+                                        .getCommercialOperation().get(0).getServiceAvailability()
                                         .getAdditionalData(),"serviceTechnologyBroadband"))
                                 .describeByList(describeByBroadbandList)
                                 .build();
@@ -371,11 +370,11 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                                 .builder()
                                 .type(serviceAbilityType)
                                 .description("Servicio de Television")
-                                .networkTechnology(this.getStringValueByKeyFromAdditionalDataList(saleRequest.
-                                        getCommercialOperation().get(0).getServiceAvailability()
+                                .networkTechnology(this.getStringValueByKeyFromAdditionalDataList(saleRequest
+                                        .getCommercialOperation().get(0).getServiceAvailability()
                                         .getAdditionalData(),"networkAccessTechnologyTv"))
-                                .serviceTechnology(this.getStringValueByKeyFromAdditionalDataList(saleRequest.
-                                        getCommercialOperation().get(0).getServiceAvailability()
+                                .serviceTechnology(this.getStringValueByKeyFromAdditionalDataList(saleRequest
+                                        .getCommercialOperation().get(0).getServiceAvailability()
                                         .getAdditionalData(),"serviceTechnologyTv"))
                                 .build();
                         List<ProductLineType> productOfferCableTvList = new ArrayList<>();
@@ -442,29 +441,29 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                         .wildcards(new String[]{"MOVILE_IMEI is mandatory. Must be sent into Additional Data Property "
                                 + "with 'MOVILE_IMEI' key value."})
                         .build());
-            } else if (StringUtils.isEmpty(this.getStringValueByKeyFromAdditionalDataList(saleRequest.getAdditionalData(),
-                    "SIM_ICCID"))) {
+            } else if (StringUtils.isEmpty(this.getStringValueByKeyFromAdditionalDataList(saleRequest
+                            .getAdditionalData(),"SIM_ICCID"))) {
                 return Mono.error(GenesisException
                         .builder()
                         .exceptionId(Constants.BAD_REQUEST_EXCEPTION_ID)
                         .wildcards(new String[]{"SIM_ICCID is mandatory. Must be sent into Additional Data Property "
                                 + "with 'SIM_ICCID' key value."})
                         .build());
-            } else if (StringUtils.isEmpty(this.getStringValueByKeyFromAdditionalDataList(saleRequest.getAdditionalData(),
-                    "NUMERO_CAJA"))) {
+            } else if (StringUtils.isEmpty(this.getStringValueByKeyFromAdditionalDataList(saleRequest
+                            .getAdditionalData(),"NUMERO_CAJA"))) {
                 return Mono.error(GenesisException
                         .builder()
                         .exceptionId(Constants.BAD_REQUEST_EXCEPTION_ID)
                         .wildcards(new String[]{"NUMERO_CAJA is mandatory. Must be sent into Additional Data Property "
                                 + "with 'NUMERO_CAJA' key value."})
                         .build());
-            } else if (StringUtils.isEmpty(this.getStringValueByKeyFromAdditionalDataList(saleRequest.getAdditionalData(),
-                    "NUMERO_TICKET"))) {
+            } else if (StringUtils.isEmpty(this.getStringValueByKeyFromAdditionalDataList(saleRequest
+                            .getAdditionalData(),"NUMERO_TICKET"))) {
                 return Mono.error(GenesisException
                         .builder()
                         .exceptionId(Constants.BAD_REQUEST_EXCEPTION_ID)
-                        .wildcards(new String[]{"NUMERO_TICKET is mandatory. Must be sent into Additional Data Property "
-                                + "with 'NUMERO_TICKET' key value."})
+                        .wildcards(new String[]{"NUMERO_TICKET is mandatory. Must be sent into Additional Data Property"
+                                + " with 'NUMERO_TICKET' key value."})
                         .build());
             }
         }
@@ -519,19 +518,23 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
 
                     // Building Create Quotation Request to use into Create Order Request
                     CreateQuotationRequest createQuotationFijaRequest = new CreateQuotationRequest();
-                    if (flgFinanciamiento[0]) this.buildCreateQuotationFijaRequest(createQuotationFijaRequest, request,
-                            parametersFinanciamientoFija);
+                    if (flgFinanciamiento[0]) {
+                        this.buildCreateQuotationFijaRequest(createQuotationFijaRequest, request,
+                                parametersFinanciamientoFija);
+                    }
 
                     // Identifying New Assigned Billing Offers SVAs
                     List<NewAssignedBillingOffers> newAssignedBillingOffersCableTvList = new ArrayList<>();
                     List<NewAssignedBillingOffers> newAssignedBillingOffersBroadbandList = new ArrayList<>();
                     List<NewAssignedBillingOffers> newAssignedBillingOffersLandlineList = new ArrayList<>();
 
-                    List<OfferingType> productOfferings = saleRequest.getCommercialOperation().get(0).getProductOfferings();
+                    List<OfferingType> productOfferings = saleRequest.getCommercialOperation().get(0)
+                                                                                                .getProductOfferings();
                     for (int i = 1; i < productOfferings.size(); i++) {
-                        String productTypeSva = productOfferings.get(i).getProductSpecification().get(0).getProductType();
-                        String productTypeComponent = this.getStringValueByKeyFromAdditionalDataList(productOfferings.get(i)
-                                .getAdditionalData(), "productType"); // Pendiente confirmación de la ruta de referencia del Additional Data
+                        String productTypeSva = productOfferings.get(i).getProductSpecification().get(0)
+                                                                                                    .getProductType();
+                        String productTypeComponent = this.getStringValueByKeyFromAdditionalDataList(
+                                productOfferings.get(i).getAdditionalData(), "productType"); // Pendiente confirmación de la ruta de referencia del Additional Data
 
                         if (productTypeSva.equalsIgnoreCase("sva")) {
 
@@ -542,15 +545,19 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                                 NewAssignedBillingOffers newAssignedBillingOffers = NewAssignedBillingOffers
                                         .builder()
                                         .productSpecPricingId(productOfferings.get(i).getId())
-                                        .parentProductCatalogId(this.getStringValueByKeyFromAdditionalDataList(productOfferings
-                                                .get(i).getAdditionalData(), "parentProductCatalogID"))
+                                        .parentProductCatalogId(this.getStringValueByKeyFromAdditionalDataList(
+                                                productOfferings.get(i).getAdditionalData(),
+                                                "parentProductCatalogID"))
                                         .build();
-                                if (productTypeComponent.equalsIgnoreCase(Constants.PRODUCT_TYPE_CABLE_TV))
+                                if (productTypeComponent.equalsIgnoreCase(Constants.PRODUCT_TYPE_CABLE_TV)) {
                                     newAssignedBillingOffersCableTvList.add(newAssignedBillingOffers);
-                                if (productTypeComponent.equalsIgnoreCase(Constants.PRODUCT_TYPE_BROADBAND))
+                                }
+                                if (productTypeComponent.equalsIgnoreCase(Constants.PRODUCT_TYPE_BROADBAND)) {
                                     newAssignedBillingOffersBroadbandList.add(newAssignedBillingOffers);
-                                if (productTypeComponent.equalsIgnoreCase(Constants.PRODUCT_TYPE_LANDLINE))
+                                }
+                                if (productTypeComponent.equalsIgnoreCase(Constants.PRODUCT_TYPE_LANDLINE)) {
                                     newAssignedBillingOffersLandlineList.add(newAssignedBillingOffers);
+                                }
                             }
                         }
                     }
@@ -560,7 +567,8 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                     String baId = saleRequest.getRelatedParty().get(0).getBillingArragmentId();
                     String accountId = saleRequest.getRelatedParty().get(0).getAccountId();
 
-                    saleRequest.getCommercialOperation().get(0).getProductOfferings().get(0).getProductSpecification().stream()
+                    saleRequest.getCommercialOperation().get(0).getProductOfferings().get(0).getProductSpecification()
+                            .stream()
                             .forEach(productSpecification -> {
 
                                 String productType = productSpecification.getProductType();
@@ -620,7 +628,8 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                                             .productId("") // Empty when is alta fija
                                             .build();
 
-                                    List<ChangedContainedProduct> changedContainedProductsBroadbandList = new ArrayList<>();
+                                    List<ChangedContainedProduct> changedContainedProductsBroadbandList =
+                                                                                                    new ArrayList<>();
                                     changedContainedProductsBroadbandList.add(changedContainedProductBroadband1);
 
                                     ProductChangeAltaFija productChangesBroadband = ProductChangeAltaFija
@@ -629,7 +638,8 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                                             .build();
                                     //Adding Broadband SVAs
                                     if (!newAssignedBillingOffersBroadbandList.isEmpty()) {
-                                        productChangesBroadband.setNewAssignedBillingOffers(newAssignedBillingOffersBroadbandList);
+                                        productChangesBroadband.setNewAssignedBillingOffers(
+                                                                                newAssignedBillingOffersBroadbandList);
                                     }
 
                                     NewProductAltaFija newProductAltaFijaBroadband = NewProductAltaFija
@@ -689,7 +699,8 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                                             .characteristicValue("34203411")
                                             .build();
 
-                                    List<ChangedCharacteristic> changedCharacteristicsAccesoriesList = new ArrayList<>();
+                                    List<ChangedCharacteristic> changedCharacteristicsAccesoriesList =
+                                                                                                    new ArrayList<>();
                                     changedCharacteristicsAccesoriesList.add(changedCharacteristicAccesories1);
 
                                     ChangedContainedProduct changedContainedProductAccesories1 = ChangedContainedProduct
@@ -700,7 +711,8 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                                             .productId("") // Empty when is alta fija
                                             .build();
 
-                                    List<ChangedContainedProduct> changedContainedProductsAccesoriesList = new ArrayList<>();
+                                    List<ChangedContainedProduct> changedContainedProductsAccesoriesList =
+                                                                                                    new ArrayList<>();
                                     changedContainedProductsAccesoriesList.add(changedContainedProductAccesories1);
 
                                     ProductChangeAltaFija productChangesAccesories = ProductChangeAltaFija
@@ -740,15 +752,16 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
 
                     ServiceabilityInfoType serviceabilityInfo = ServiceabilityInfoType
                             .builder()
-                            .serviceabilityId(saleRequest.getCommercialOperation().get(0).getServiceAvailability().getId())
+                            .serviceabilityId(saleRequest.getCommercialOperation().get(0)
+                                                                                    .getServiceAvailability().getId())
                             .offers(serviceabilityOffersList)
                             .commercialZone(commercialZone)
                             .build();
 
                     // Order Attributes Alta Fija
                     List<FlexAttrType> altaFijaOrderAttributesList = new ArrayList<>();
-                    this.buildOrderAttributesListAltaFija(altaFijaOrderAttributesList, saleRequest, createQuotationFijaRequest,
-                            flgFinanciamiento[0]);
+                    this.buildOrderAttributesListAltaFija(altaFijaOrderAttributesList, saleRequest,
+                            createQuotationFijaRequest, flgFinanciamiento[0]);
 
                     AltaFijaRequest altaFijaRequest = new AltaFijaRequest();
                     altaFijaRequest.setNewProducts(newProductsAltaFijaList);
@@ -770,7 +783,8 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                             .salesChannel(saleRequest.getChannel().getId())
                             .request(altaFijaRequest)
                             .customerId(saleRequest.getRelatedParty().get(0).getCustomerId())
-                            .productOfferingId(saleRequest.getCommercialOperation().get(0).getProductOfferings().get(0).getId())
+                            .productOfferingId(saleRequest.getCommercialOperation().get(0)
+                                                                                .getProductOfferings().get(0).getId())
                             .onlyValidationIndicator(false)
                             .actionType("PR")
                             .build();
@@ -800,8 +814,8 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                                 }
 
                                 // FEMS-1514 Validación de creación Orden
-                                Mono<Sale> saleRequestUpdated = creationOrderValidation(saleRequest, mainRequestProductOrder,
-                                        request.getHeadersMap());
+                                Mono<Sale> saleRequestUpdated = creationOrderValidation(saleRequest,
+                                        mainRequestProductOrder, request.getHeadersMap());
                                 return saleRequestUpdated.flatMap(saleItem -> {
 
                                     if (flgFinanciamiento[0]) {
@@ -840,7 +854,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                         .get(0).getProductOfferings().get(0).getId();
 
                 // Getting Characteristics By Main Commercial Operation - Check if is used it to remove
-                Mono<List<BusinessParameterExt>> salesCharsByCOT = businessParameterWebClient
+                Mono<List<BusinessParameterExt>> salesCharsByCot = businessParameterWebClient
                         .getSalesCharacteristicsByCommercialOperationType(
                                 GetSalesCharacteristicsRequest
                                         .builder()
@@ -857,7 +871,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                 Mono<BusinessParametersResponseObjectExt> getParametersSimCard = businessParameterWebClient
                         .getParametersSimcard(request.getHeadersMap());
 
-                return Mono.zip(getRiskDomain, salesCharsByCOT, getBonificacionSim, getParametersSimCard)
+                return Mono.zip(getRiskDomain, salesCharsByCot, getBonificacionSim, getParametersSimCard)
                         .flatMap(tuple -> {
                             if (!tuple.getT1().getData().isEmpty()
                                     && tuple.getT1().getData().get(0).getActive()
@@ -886,32 +900,36 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                             }
 
                             // Building Main Request to send to Create Product Order Service
-                            CreateProductOrderGeneralRequest mainRequestProductOrder = new CreateProductOrderGeneralRequest();
+                            CreateProductOrderGeneralRequest mainRequestProductOrder =
+                                                                                new CreateProductOrderGeneralRequest();
 
                             // Recognizing CAPL Commercial Operation Type
                             if (flgCapl[0] && !flgCaeq[0] && !flgCasi[0] && !flgAlta[0]) {
 
-                                mainRequestProductOrder = this.caplCommercialOperation(saleRequest, mainRequestProductOrder,
-                                        channelIdRequest, customerIdRequest, productOfferingIdRequest, cipCode);
+                                mainRequestProductOrder = this.caplCommercialOperation(saleRequest,
+                                        mainRequestProductOrder, channelIdRequest, customerIdRequest,
+                                        productOfferingIdRequest, cipCode);
 
                             } else if (!flgCapl[0] && flgCaeq[0] && !flgCasi[0] && !flgAlta[0]) { // Recognizing CAEQ Commercial Operation Type
 
-                                mainRequestProductOrder = this.caeqCommercialOperation(saleRequest, mainRequestProductOrder,
-                                        channelIdRequest, customerIdRequest, productOfferingIdRequest, cipCode);
+                                mainRequestProductOrder = this.caeqCommercialOperation(saleRequest,
+                                        mainRequestProductOrder, channelIdRequest, customerIdRequest,
+                                        productOfferingIdRequest, cipCode);
 
                             } else if (flgCapl[0] && flgCaeq[0] && !flgCasi[0] && !flgAlta[0]) { // Recognizing CAEQ+CAPL Commercial Operation Type
 
-                                mainRequestProductOrder = this.caeqCaplCommercialOperation(saleRequest, mainRequestProductOrder,
-                                        channelIdRequest, customerIdRequest, productOfferingIdRequest, cipCode);
+                                mainRequestProductOrder = this.caeqCaplCommercialOperation(saleRequest,
+                                        mainRequestProductOrder, channelIdRequest, customerIdRequest,
+                                        productOfferingIdRequest, cipCode);
                             } else if (!flgCapl[0] && !flgCaeq[0] && !flgCasi[0] && flgAlta[0]) {
-                                mainRequestProductOrder = this.altaCommercialOperation(saleRequest, mainRequestProductOrder,
-                                        channelIdRequest, customerIdRequest, productOfferingIdRequest, cipCode,
-                                        tuple.getT3(), sapidSimcard[0]);
+                                mainRequestProductOrder = this.altaCommercialOperation(saleRequest,
+                                        mainRequestProductOrder, channelIdRequest, customerIdRequest,
+                                        productOfferingIdRequest, cipCode, tuple.getT3(), sapidSimcard[0]);
                             }
 
                             CreateProductOrderGeneralRequest finalMainRequestProductOrder = mainRequestProductOrder;
-                            return productOrderWebClient.createProductOrder(mainRequestProductOrder, request.getHeadersMap(),
-                                    saleRequest)
+                            return productOrderWebClient.createProductOrder(mainRequestProductOrder,
+                                    request.getHeadersMap(), saleRequest)
                                     .flatMap(createOrderResponse -> {
                                         saleRequest.getCommercialOperation().get(0)
                                                 .setOrder(createOrderResponse.getCreateProductOrderResponse());
@@ -919,8 +937,8 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                                         if (validateNegotiation(saleRequest.getAdditionalData(),
                                                 saleRequest.getIdentityValidations())) {
                                             saleRequest.setStatus(Constants.NEGOCIACION);
-                                        } else if (!StringUtils.isEmpty(createOrderResponse.getCreateProductOrderResponse()
-                                                .getProductOrderId())) {
+                                        } else if (!StringUtils.isEmpty(createOrderResponse
+                                                                .getCreateProductOrderResponse().getProductOrderId())) {
                                             saleRequest.setStatus("NUEVO");
                                         } else {
                                             saleRequest.setStatus("PENDIENTE");
@@ -934,13 +952,14 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                                         }
 
                                         // FEMS-1514 Validación de creación Orden
-                                        Mono<Sale> saleRequestUpdated = creationOrderValidation(saleRequest, finalMainRequestProductOrder, request.getHeadersMap());
+                                        Mono<Sale> saleRequestUpdated = creationOrderValidation(saleRequest,
+                                                                finalMainRequestProductOrder, request.getHeadersMap());
                                         return saleRequestUpdated.flatMap(saleItem -> {
                                             // Call to Reserve Stock Service When Commercial Operation include CAEQ
                                             if (flgCaeq[0] || flgAlta[0]) {
 
-                                                return this.callToReserveStockAndCreateQuotation(request, saleItem, flgCasi[0], flgFinanciamiento[0],
-                                                        sapidSimcard[0]);
+                                                return this.callToReserveStockAndCreateQuotation(request, saleItem,
+                                                                    flgCasi[0], flgFinanciamiento[0], sapidSimcard[0]);
                                             } else {
                                                 if (flgCasi[0]) {
                                                     // Call to Create Quotation Service When CommercialOperation Contains CASI
@@ -968,8 +987,8 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                 // Call to Reserve Stock Service When Commercial Operation include CAEQ
                 if (flgCaeq[0] || flgAlta[0]) {
 
-                    return this.callToReserveStockAndCreateQuotation(request, saleRequest, flgCasi[0], flgFinanciamiento[0],
-                            sapidSimcard[0]);
+                    return this.callToReserveStockAndCreateQuotation(request, saleRequest, flgCasi[0],
+                            flgFinanciamiento[0], sapidSimcard[0]);
                 } else {
                     if (flgCasi[0]) {
 
@@ -1479,8 +1498,8 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                 .build();
 
         MoneyAmount totalCustomerRecurrentCost = MoneyAmount.builder()
-                .units("PEN").amount(sale.getCommercialOperation().get(0).getProductOfferings().get(0).getProductOfferingPrice()
-                                                                        .get(0).getMaxPrice().getAmount().toString())
+                .units("PEN").amount(sale.getCommercialOperation().get(0).getProductOfferings().get(0)
+                                                .getProductOfferingPrice().get(0).getMaxPrice().getAmount().toString())
                 .build();
 
         MoneyAmount downPayment = MoneyAmount
@@ -1593,7 +1612,8 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         if (saleRequest.getCommercialOperation() != null && !saleRequest.getCommercialOperation().isEmpty()
                 && saleRequest.getCommercialOperation().get(0).getWorkOrDeliveryType().getPlace() != null
                 && !saleRequest.getCommercialOperation().get(0).getWorkOrDeliveryType().getPlace().isEmpty()
-                && saleRequest.getCommercialOperation().get(0).getWorkOrDeliveryType().getPlace().get(0).getAddress().getRegion().equalsIgnoreCase("LIMA")) {
+                && saleRequest.getCommercialOperation().get(0).getWorkOrDeliveryType().getPlace().get(0).getAddress()
+                                                                    .getRegion().equalsIgnoreCase("LIMA")) {
             // case when is Lima
             shippingLocality = KeyValueType.builder()
                     .key(SHIPPING_LOCALITY).value("PUEBLO LIBRE").build();
@@ -1606,7 +1626,8 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                 && saleRequest.getCommercialOperation().get(0).getWorkOrDeliveryType().getPlace() != null
                 && !saleRequest.getCommercialOperation().isEmpty()
                 && !saleRequest.getCommercialOperation().get(0).getWorkOrDeliveryType().getPlace().isEmpty()
-                && saleRequest.getCommercialOperation().get(0).getWorkOrDeliveryType().getPlace().get(0).getAddress().getRegion().equalsIgnoreCase("CALLAO")) {
+                && saleRequest.getCommercialOperation().get(0).getWorkOrDeliveryType().getPlace().get(0).getAddress()
+                                                                .getRegion().equalsIgnoreCase("CALLAO")) {
             // case when is Callao
             shippingLocality = KeyValueType.builder()
                     .key(SHIPPING_LOCALITY).value("PUEBLO LIBRE").build();
@@ -1828,7 +1849,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
 
             //  RETAIL SIM SKU ATTRIBUTE
             String simSku = this.getStringValueByKeyFromAdditionalDataList(saleRequest.getAdditionalData(),
-                                                                                                        Constants.SIM_SKU);
+                                                                                                    Constants.SIM_SKU);
 
             FlexAttrValueType simSkuAttrValue =  FlexAttrValueType
                     .builder()
@@ -1998,7 +2019,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                     if (item.getKey().equalsIgnoreCase("stateOrProvinceCode")) {
                         shipmentDetailsType.setProvinceOfShippingAddress(item.getValue());
                     }
-        });
+                });
 
         return shipmentDetailsType;
     }
@@ -2035,7 +2056,9 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                 .orderAttributes(caeqOrderAttributes)
                 .shipmentDetails(createShipmentDetail(saleRequest))
                 .build();
-        if (!StringUtils.isEmpty(cipCode)) caeqRequest.setCip(cipCode);
+        if (!StringUtils.isEmpty(cipCode)) {
+            caeqRequest.setCip(cipCode);
+        }
 
         ProductOrderCaeqRequest caeqProductOrderRequest = new ProductOrderCaeqRequest();
         caeqProductOrderRequest.setSalesChannel(channelIdRequest);
@@ -2113,7 +2136,8 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         }
 
         // Refactored Code from CAEQ
-        List<ChangedContainedProduct> changedContainedProductList = this.changedContainedCaeqList(saleRequest, Constants.TEMP1);
+        List<ChangedContainedProduct> changedContainedProductList = this.changedContainedCaeqList(saleRequest,
+                                                                                                    Constants.TEMP1);
 
         caeqCaplProductChanges.setChangedContainedProducts(changedContainedProductList);
         newProductCaeqCapl1.setProductChanges(caeqCaplProductChanges);
@@ -2214,8 +2238,8 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                 .build();
 
         String customerRuc = saleRequest.getRelatedParty().size() < 2
-                                        || StringUtils.isEmpty(saleRequest.getRelatedParty().get(1).getNationalId())? ""
-                                        : saleRequest.getRelatedParty().get(1).getNationalId();
+                                    || StringUtils.isEmpty(saleRequest.getRelatedParty().get(1).getNationalId()) ? ""
+                                                                : saleRequest.getRelatedParty().get(1).getNationalId();
 
         FlexAttrValueType paymentAttrValue =  FlexAttrValueType
                 .builder()

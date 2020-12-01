@@ -28,6 +28,10 @@ import java.util.HashMap;
  */
 public class Commons {
 
+    /**
+     * Method to get Datetime now with CosmosDb Business Format.
+     * @return String datetime
+     */
     public static String getDatetimeNow() {
         String fechaActualSistema = "";
         ZoneId zone = ZoneId.of("America/Lima");
@@ -39,6 +43,11 @@ public class Commons {
         return fechaActualSistema;
     }
 
+    /**
+     * Method to get Time now in Milliseconds.
+     * @return String milliseconds value
+     * @throws ParseException
+     */
     public static String getTimeNowInMillis() throws ParseException {
         String dateFormat = "yyyy/MM/dd HH:mm:ss";
         String fechaActualSistema = "";
@@ -55,6 +64,14 @@ public class Commons {
         return String.valueOf(timeInMillis);
     }
 
+    /**
+     * Method to insert into a HashMap request headers values.
+     * @param serviceId String request parameter
+     * @param application String request parameter
+     * @param pid String request parameter
+     * @param user String request parameter
+     * @return Key (header name) - value (header value) HashMap
+     */
     public static HashMap<String,String> fillHeaders(String serviceId, String application, String pid, String user) {
         HashMap<String, String> headersMap = new HashMap<>();
         headersMap.put(HttpHeadersKey.UNICA_SERVICE_ID, serviceId);

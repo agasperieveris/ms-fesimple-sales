@@ -3,6 +3,66 @@ server:
   servlet:
     context-path: /custom-path
 
+logging:
+  level:
+    com:
+      tdp:
+        ms:
+          sales: DEBUG
+
+azure:
+  cosmosdb:
+    uri: https://cosmosdbconvergentedev.documents.azure.com:443/
+    key: Dqormfg8aZmhUQ9UHAfOkD6BZkxF2t3smniH9Sxjfi0R1xP8eBU9pFN9mbz86lLIAUKDjbZ6rxjRPwGNoygaYA==
+    database: dbconvergentedev
+
 spring:
   main:
     allow-bean-definition-overriding: true
+  cloud:
+    azure:
+      eventhub:
+        connection-string: Endpoint=sb://ehub-berserkers-dev.servicebus.windows.net/;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=GmZePbavyI2GpKSzrpGpcTRa5do9mGrO0BS6KJIgDv8=
+        checkpoint-storage-account: scberserkersdatadev
+        checkpoint-access-key: 5WqP4sjnoPLWEDgTkj1s56XRhbMijS0DWiwRaz14dFrnfRq5yUjYTGanUz5TaS80+KnLVDNlO9JMU2AZ1NP89A==
+        checkpoint-container: eventflow-orchestrator-checkpoint
+    stream:
+      bindings:
+        input:
+          destination: sales-update
+          group: $Default
+        output:
+          destination: orchestrator-response
+      eventhub:
+        bindings:
+          input:
+            consumer:
+              checkpoint-mode: PARTITION_COUNT
+
+application:
+  endpoints:
+    sku:
+      create_sku: https://aks-berserkers-ingress-dev.eastus2.cloudapp.azure.com/fesimple/v1/devices/skus?chanel.id={channelId}&planGroup={planGroup}&simSapId={simSapId}&simPrice={simPrice}&operationType={operationType}&customer.segment={customerSegment}&store.id={storeId}&subscriberType={subscriberType}&dealer.id={dealerId}&deviceSapId={deviceSapId}&devicePrice={devicePrice}
+    business_parameters:
+      get_sales_characteristics_url: https://aks-berserkers-ingress-dev.eastus2.cloudapp.azure.com/bussinesparameters/v2/parameters/033/dataparams?codComercialOperationType={commercialOperationType}
+      get_risk_domain_url: https://aks-berserkers-ingress-dev.eastus2.cloudapp.azure.com/bussinesparameters/v2/parameters/034/dataparams?value={domain}
+      get_bonificacion_simcard: http://aks-berserkers-ingress-dev.eastus2.cloudapp.azure.com/bussinesparameters/v2/parameters/045/dataparams?key={channelId}
+      get_parameters_simcard: http://aks-berserkers-ingress-dev.eastus2.cloudapp.azure.com/bussinesparameters/v2/parameters/051/dataparams
+      get_parameters_financiamiento_fija: http://aks-berserkers-ingress-dev.eastus2.cloudapp.azure.com/bussinesparameters/v2/parameters/054/dataparams?
+    product_order:
+      create_product_order_url: https://aks-berserkers-ingress-dev.eastus2.cloudapp.azure.com/fesimple/v1/orders/createproduct
+    receptor:
+      register_url: https://aks-berserkers-ingress-dev.eastus2.cloudapp.azure.com/fesimple/api/v1/receptor
+    url:
+      put_sale: https://aks-berserkers-ingress-dev.eastus2.cloudapp.azure.com/fesimple/v1/saleslead/{id}
+      business_parameters:
+        seq_number: SEQ001
+        sequential: https://aks-berserkers-ingress-dev.eastus2.cloudapp.azure.com/bussinesparameters/v2/parameters/{code}/dataparams?nomSeq={seq}
+    stock:
+      reserve_stock_url: https://aks-berserkers-ingress-dev.eastus2.cloudapp.azure.com/fesimple/v1/stocks/reserveStock
+    payment:
+      generate_cip_payment_identifier: https://aks-berserkers-ingress-dev.eastus2.cloudapp.azure.com/fesimple/api/v1/payment/paymentIdentifier/createPaymentIdentifier
+    quotation:
+      create_quotation: https://aks-berserkers-ingress-dev.eastus2.cloudapp.azure.com/fesimple/api/v1/quotations
+  catalog-error:
+    url: http://ms-fesimple-catalogerror-svc.berserkers.svc.cluster.local:4041
