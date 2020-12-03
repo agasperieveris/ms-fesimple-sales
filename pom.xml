@@ -14,15 +14,17 @@
 		<maven-project-info-reports-plugin.version>3.0.0</maven-project-info-reports-plugin.version>
 		<sonar.exclusions>
 			/src/main/java/com/tdp/ms/*/eventflow/**/*
+			/src/main/java/com/tdp/ms/*/utils/**/*
 		</sonar.exclusions>
 		<sonar.coverage.exclusions>
 			/src/main/java/com/tdp/ms/*/eventflow/**/*
+			/src/main/java/com/tdp/ms/*/utils/**/*
 		</sonar.coverage.exclusions>
 	</properties>
 
 	<groupId>com.tdp.ms</groupId>
 	<artifactId>sales</artifactId>
-	<version>1.2.21</version>
+	<version>1.2.22</version>
 	<name>${project.groupId}:${project.artifactId}</name>
 	<description>Template from Genesis Framework to build microservices</description>
 
