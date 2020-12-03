@@ -12,8 +12,8 @@
 	<properties>
 		<maven-pmd-plugin.version>3.12.0</maven-pmd-plugin.version>
 		<maven-project-info-reports-plugin.version>3.0.0</maven-project-info-reports-plugin.version>
-		<sonar.exclusions>**com/tdp/ms/sales/../**</sonar.exclusions>
-		<sonar.coverage.exclusions>**com/tdp/ms/sales/../**</sonar.coverage.exclusions>
+		<sonar.exclusions>com/tdp/ms/sales/**/*</sonar.exclusions>
+		<sonar.coverage.exclusions>com/tdp/ms/sales/**/*</sonar.coverage.exclusions>
 	</properties>
 
 	<groupId>com.tdp.ms</groupId>
