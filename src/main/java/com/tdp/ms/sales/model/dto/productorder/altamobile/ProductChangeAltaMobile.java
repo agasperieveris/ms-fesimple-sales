@@ -1,7 +1,9 @@
 package com.tdp.ms.sales.model.dto.productorder.altamobile;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.tdp.ms.sales.model.dto.productorder.caeq.ChangedContainedProduct;
 import com.tdp.ms.sales.model.dto.productorder.capl.NewAssignedBillingOffers;
+import com.tdp.ms.sales.model.dto.productorder.portability.PortabilityDetailsType;
 import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -32,4 +34,6 @@ import lombok.NoArgsConstructor;
 public class ProductChangeAltaMobile {
     private List<NewAssignedBillingOffers> newAssignedBillingOffers;
     private List<ChangedContainedProduct> changedContainedProducts;
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private PortabilityDetailsType portabilityDetails; // Only to Mobile Portability case
 }

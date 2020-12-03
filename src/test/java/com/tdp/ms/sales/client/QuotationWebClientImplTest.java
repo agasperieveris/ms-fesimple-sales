@@ -7,7 +7,7 @@ import com.tdp.ms.sales.model.dto.quotation.CreateQuotationRequestBody;
 import com.tdp.ms.sales.model.request.CreateQuotationRequest;
 import com.tdp.ms.sales.model.response.CreateQuotationResponse;
 import com.tdp.ms.sales.utils.CommonsMocks;
-import com.tdp.ms.sales.utils.Constants;
+import com.tdp.ms.sales.utils.ConstantsTest;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import org.junit.jupiter.api.AfterAll;
@@ -69,10 +69,10 @@ public class QuotationWebClientImplTest {
         mockBackEnd.enqueue(new MockResponse()
                 .setBody(MAPPER.writeValueAsString(createQuotationResponse))
                 .addHeader("Content-Type", "application/json")
-                .addHeader(HttpHeadersKey.UNICA_SERVICE_ID, Constants.RH_UNICA_SERVICE_ID)
-                .addHeader(HttpHeadersKey.UNICA_APPLICATION, Constants.RH_UNICA_APPLICATION)
-                .addHeader(HttpHeadersKey.UNICA_PID, Constants.RH_UNICA_PID)
-                .addHeader(HttpHeadersKey.UNICA_USER, Constants.RH_UNICA_USER));
+                .addHeader(HttpHeadersKey.UNICA_SERVICE_ID, ConstantsTest.RH_UNICA_SERVICE_ID)
+                .addHeader(HttpHeadersKey.UNICA_APPLICATION, ConstantsTest.RH_UNICA_APPLICATION)
+                .addHeader(HttpHeadersKey.UNICA_PID, ConstantsTest.RH_UNICA_PID)
+                .addHeader(HttpHeadersKey.UNICA_USER, ConstantsTest.RH_UNICA_USER));
 
         quotationWebClient.createQuotation(createQuotationRequest, CommonsMocks.createSaleMock());
     }

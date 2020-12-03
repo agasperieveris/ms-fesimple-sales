@@ -27,7 +27,7 @@ import com.tdp.ms.sales.model.request.CreateQuotationRequest;
 import com.tdp.ms.sales.model.request.PostSalesRequest;
 import com.tdp.ms.sales.model.response.*;
 import com.tdp.ms.sales.utils.CommonsMocks;
-import com.tdp.ms.sales.utils.Constants;
+import com.tdp.ms.sales.utils.ConstantsTest;
 import org.junit.Assert;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -48,7 +48,6 @@ import java.util.HashMap;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyInt;
 
 @ExtendWith(SpringExtension.class)
 @SpringBootTest
@@ -69,10 +68,10 @@ public class SalesManagmentServicePrivateMethodsTest {
     @BeforeAll
     static void setup() {
         // Setting request headers
-        headersMap.put(HttpHeadersKey.UNICA_SERVICE_ID, Constants.RH_UNICA_SERVICE_ID);
-        headersMap.put(HttpHeadersKey.UNICA_APPLICATION, Constants.RH_UNICA_APPLICATION);
-        headersMap.put(HttpHeadersKey.UNICA_PID, Constants.RH_UNICA_PID);
-        headersMap.put(HttpHeadersKey.UNICA_USER, Constants.RH_UNICA_USER);
+        headersMap.put(HttpHeadersKey.UNICA_SERVICE_ID, ConstantsTest.RH_UNICA_SERVICE_ID);
+        headersMap.put(HttpHeadersKey.UNICA_APPLICATION, ConstantsTest.RH_UNICA_APPLICATION);
+        headersMap.put(HttpHeadersKey.UNICA_PID, ConstantsTest.RH_UNICA_PID);
+        headersMap.put(HttpHeadersKey.UNICA_USER, ConstantsTest.RH_UNICA_USER);
 
         sale = CommonsMocks.createSaleMock();
 
@@ -207,7 +206,7 @@ public class SalesManagmentServicePrivateMethodsTest {
     void altaCommercialOperationTest() throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
         Method method = SalesManagmentServiceImpl.class.getDeclaredMethod("altaCommercialOperation", Sale.class,
                 CreateProductOrderGeneralRequest.class, String.class, String.class, String.class, String.class,
-                BusinessParametersResponseObjectExt.class, String.class);
+                BusinessParametersResponseObjectExt.class, String.class, Boolean.class);
 
         method.setAccessible(true);
 
@@ -226,7 +225,7 @@ public class SalesManagmentServicePrivateMethodsTest {
         Sale sale = CommonsMocks.createSaleMock();
 
         method.invoke(salesManagmentServiceImpl,sale, altaRequest, "CC", "C0001", "OF0001", "CIP0001",
-                businessParametersResponseObjectExt, "SAPID0001");
+                businessParametersResponseObjectExt, "SAPID0001", false);
     }
 
     @Test
@@ -433,7 +432,7 @@ public class SalesManagmentServicePrivateMethodsTest {
     void buildCreateQuotationFijaRequestTest() throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
 
         Method method = SalesManagmentServiceImpl.class.getDeclaredMethod("buildCreateQuotationFijaRequest",
-                CreateQuotationRequest.class, PostSalesRequest .class);
+                CreateQuotationRequest.class, PostSalesRequest.class, List.class);
         method.setAccessible(true);
 
         Sale sale = CommonsMocks.createSaleMock();
@@ -460,7 +459,17 @@ public class SalesManagmentServicePrivateMethodsTest {
         postSalesRequest.setHeadersMap(headersMap);
         postSalesRequest.setSale(sale);
 
-        method.invoke(salesManagmentServiceImpl,createQuotationRequest, postSalesRequest);
+        BusinessParameterFinanciamientoFijaExt ext1 = new BusinessParameterFinanciamientoFijaExt();
+        ext1.setNomParameter("financialEntity");
+        ext1.setCodParameterValue("TEST0001");
+        List<BusinessParameterFinanciamientoFijaExt> bpFinanciamiento = new ArrayList<>();
+
+
+        UpFrontType upFront = new UpFrontType();
+        upFront.setIndicator("N");
+        sale.getCommercialOperation().get(0).getProductOfferings().get(0).setUpFront(upFront);
+
+        method.invoke(salesManagmentServiceImpl,createQuotationRequest, postSalesRequest, bpFinanciamiento);
     }
 
     @Test
@@ -552,6 +561,19 @@ public class SalesManagmentServicePrivateMethodsTest {
         Sale sale = CommonsMocks.createSaleMock();
 
         method.invoke(salesManagmentServiceImpl,sale, serviceabilityOffersList);
+    }
+
+    @Test
+    void buildMobilePortabilityTypeTest() throws NoSuchMethodException, InvocationTargetException,
+                                                                                                IllegalAccessException {
+        Method method = SalesManagmentServiceImpl.class.getDeclaredMethod("buildMobilePortabilityType",
+                                                                                                            Sale.class);
+
+        method.setAccessible(true);
+
+        Sale sale = CommonsMocks.createSaleMock();
+
+        method.invoke(salesManagmentServiceImpl,sale);
     }
 
 }
