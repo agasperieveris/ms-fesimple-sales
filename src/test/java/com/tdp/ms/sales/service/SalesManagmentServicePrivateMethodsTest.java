@@ -206,7 +206,7 @@ public class SalesManagmentServicePrivateMethodsTest {
     void altaCommercialOperationTest() throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
         Method method = SalesManagmentServiceImpl.class.getDeclaredMethod("altaCommercialOperation", Sale.class,
                 CreateProductOrderGeneralRequest.class, String.class, String.class, String.class, String.class,
-                BusinessParametersResponseObjectExt.class, String.class);
+                BusinessParametersResponseObjectExt.class, String.class, Boolean.class);
 
         method.setAccessible(true);
 
@@ -225,7 +225,7 @@ public class SalesManagmentServicePrivateMethodsTest {
         Sale sale = CommonsMocks.createSaleMock();
 
         method.invoke(salesManagmentServiceImpl,sale, altaRequest, "CC", "C0001", "OF0001", "CIP0001",
-                businessParametersResponseObjectExt, "SAPID0001");
+                businessParametersResponseObjectExt, "SAPID0001", false);
     }
 
     @Test
@@ -561,6 +561,19 @@ public class SalesManagmentServicePrivateMethodsTest {
         Sale sale = CommonsMocks.createSaleMock();
 
         method.invoke(salesManagmentServiceImpl,sale, serviceabilityOffersList);
+    }
+
+    @Test
+    void buildMobilePortabilityTypeTest() throws NoSuchMethodException, InvocationTargetException,
+                                                                                                IllegalAccessException {
+        Method method = SalesManagmentServiceImpl.class.getDeclaredMethod("buildMobilePortabilityType",
+                                                                                                            Sale.class);
+
+        method.setAccessible(true);
+
+        Sale sale = CommonsMocks.createSaleMock();
+
+        method.invoke(salesManagmentServiceImpl,sale);
     }
 
 }

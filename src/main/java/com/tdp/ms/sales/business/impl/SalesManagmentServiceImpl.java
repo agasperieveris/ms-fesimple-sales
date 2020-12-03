@@ -39,6 +39,7 @@ import com.tdp.ms.sales.model.dto.productorder.capl.NewProductCapl;
 import com.tdp.ms.sales.model.dto.productorder.capl.ProductChangeCapl;
 import com.tdp.ms.sales.model.dto.productorder.capl.ProductOrderCaplRequest;
 import com.tdp.ms.sales.model.dto.productorder.capl.RemovedAssignedBillingOffers;
+import com.tdp.ms.sales.model.dto.productorder.portability.PortabilityDetailsType;
 import com.tdp.ms.sales.model.dto.quotation.Address;
 import com.tdp.ms.sales.model.dto.quotation.Channel;
 import com.tdp.ms.sales.model.dto.quotation.CreateQuotationRequestBody;
@@ -903,6 +904,10 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                             CreateProductOrderGeneralRequest mainRequestProductOrder =
                                                                                 new CreateProductOrderGeneralRequest();
 
+                            // Recognizing Mobile Portability
+                            Boolean isMobilePortability = commercialOperationReason
+                                                                                .equalsIgnoreCase("PORTA");
+
                             // Recognizing CAPL Commercial Operation Type
                             if (flgCapl[0] && !flgCaeq[0] && !flgCasi[0] && !flgAlta[0]) {
 
@@ -921,10 +926,12 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                                 mainRequestProductOrder = this.caeqCaplCommercialOperation(saleRequest,
                                         mainRequestProductOrder, channelIdRequest, customerIdRequest,
                                         productOfferingIdRequest, cipCode);
-                            } else if (!flgCapl[0] && !flgCaeq[0] && !flgCasi[0] && flgAlta[0]) {
+                            } else if ((!flgCapl[0] && !flgCaeq[0] && !flgCasi[0] && flgAlta[0])
+                                    || isMobilePortability) {
                                 mainRequestProductOrder = this.altaCommercialOperation(saleRequest,
                                         mainRequestProductOrder, channelIdRequest, customerIdRequest,
-                                        productOfferingIdRequest, cipCode, tuple.getT3(), sapidSimcard[0]);
+                                        productOfferingIdRequest, cipCode, tuple.getT3(), sapidSimcard[0],
+                                                                                                isMobilePortability);
                             }
 
                             CreateProductOrderGeneralRequest finalMainRequestProductOrder = mainRequestProductOrder;
@@ -1708,10 +1715,37 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         return stringValue[0];
     }
 
+    private PortabilityDetailsType buildMobilePortabilityType(Sale saleRequest) {
+        PortabilityDetailsType portabilityDetailsType =  new PortabilityDetailsType();
+
+        // Throw 400 status for mandatory parameters
+        PortabilityType portabilityType = saleRequest.getCommercialOperation().get(0).getPortability();
+        portabilityDetailsType.setSourceOperator(portabilityType.getReceipt());
+        portabilityDetailsType.setServiceType(portabilityType.getProductType());
+        portabilityDetailsType.setPlanType(portabilityType.getPlanType());
+        portabilityDetailsType.setActivationDate(portabilityType.getDonorActivationDate());
+        portabilityDetailsType.setEquipmentCommitmentEndDate(portabilityType.getDonorEquipmentContractEndDate());
+        portabilityDetailsType.setSalesDepartment("15");
+        portabilityDetailsType.setConsultationId(portabilityType.getIdProcess());
+        portabilityDetailsType.setConsultationGroup(portabilityType.getIdProcessGroup());
+        portabilityDetailsType.setDocumentType(saleRequest.getRelatedParty().get(0).getNationalIdType());
+        portabilityDetailsType.setDocumentNumber(saleRequest.getRelatedParty().get(0).getNationalId());
+        portabilityDetailsType.setCustomerName(saleRequest.getRelatedParty().get(0).getFullName());
+
+        String customerEmail = StringUtils.isEmpty(saleRequest.getProspectContact().get(0).getCharacteristic()
+                .getEmailAddress()) ? "" : saleRequest.getProspectContact().get(0).getCharacteristic()
+                .getEmailAddress();
+        portabilityDetailsType.setCustomerEmail(customerEmail);
+        portabilityDetailsType.setCustomerContactPhone(portabilityType.getCustomerContactPhone());
+
+        return portabilityDetailsType;
+    }
+
     private CreateProductOrderGeneralRequest altaCommercialOperation(Sale saleRequest,
                                     CreateProductOrderGeneralRequest mainRequestProductOrder, String channelIdRequest,
                                     String customerIdRequest, String productOfferingIdRequest, String cipCode,
-                             BusinessParametersResponseObjectExt bonificacionSimcardResponse, String sapidSimcardBp) {
+                                    BusinessParametersResponseObjectExt bonificacionSimcardResponse,
+                                    String sapidSimcardBp, Boolean isMobilePortability) {
 
         // Building request for ALTA CommercialTypeOperation
         ProductOrderAltaMobileRequest altaRequestProductOrder = new ProductOrderAltaMobileRequest();
@@ -1796,6 +1830,12 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         altaChangedContainedProductList.add(changedContainedProduct2);
 
         altaProductChanges.setChangedContainedProducts(altaChangedContainedProductList);
+
+        if (isMobilePortability) {
+            PortabilityDetailsType portabilityDetailsType = this.buildMobilePortabilityType(saleRequest);
+
+            altaProductChanges.setPortabilityDetails(portabilityDetailsType);
+        }
 
 
         NewProductAltaMobile newProductAlta1 = new NewProductAltaMobile();

@@ -206,6 +206,16 @@ public class CommonsMocks {
         serviceAvailability.setOffers(offersServicesList);
         serviceAvailability.setAdditionalData(additionalDatas);
 
+        PortabilityType portability =  new PortabilityType();
+        portability.setReceipt("test");
+        portability.setProductType("test");
+        portability.setPlanType("test");
+        portability.setDonorActivationDate("test");
+        portability.setDonorEquipmentContractEndDate("test");
+        portability.setIdProcess("test");
+        portability.setIdProcessGroup("test");
+        portability.setCustomerContactPhone("test");
+
         product.setAdditionalData(additionalDatas);
         List<CommercialOperationType> comercialOperationTypes = new ArrayList<>();
         CommercialOperationType comercialOperationType = new CommercialOperationType();
@@ -220,6 +230,7 @@ public class CommonsMocks {
         comercialOperationType.setProductOfferings(productOfferings);
         comercialOperationType.setWorkOrDeliveryType(workOrDeliveryType);
         comercialOperationType.setServiceAvailability(serviceAvailability);
+        comercialOperationType.setPortability(portability);
         comercialOperationTypes.add(comercialOperationType);
 
         Money estimatedRevenue = new Money();
@@ -229,7 +240,11 @@ public class CommonsMocks {
 
         ContactMedium prospectContact = new ContactMedium();
         MediumCharacteristic mediumChar = MediumCharacteristic.builder().emailAddress("everis@everis.com").build();
-        contactMedium = ContactMedium.builder().mediumType("email").characteristic(mediumChar).build();
+        contactMedium = ContactMedium
+                .builder()
+                .mediumType("email")
+                .characteristic(mediumChar)
+                .build();
 
         MediumCharacteristic characteristic = new MediumCharacteristic();
         characteristic.setBaseType("s");

@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.tdp.genesis.core.constants.HttpHeadersKey;
 import com.tdp.ms.sales.client.impl.BusinessParameterWebClientImpl;
 import com.tdp.ms.sales.model.request.GetSalesCharacteristicsRequest;
+import com.tdp.ms.sales.model.response.BusinessParametersFinanciamientoFijaResponse;
 import com.tdp.ms.sales.model.response.BusinessParametersResponse;
 import com.tdp.ms.sales.model.response.BusinessParametersResponseObjectExt;
 import com.tdp.ms.sales.model.response.GetSalesCharacteristicsResponse;
@@ -138,6 +139,24 @@ public class BussinessParametersWebClientImplTest {
                 .addHeader(HttpHeadersKey.UNICA_USER, ConstantsTest.RH_UNICA_USER));
 
         businessParameterWebClientImpl.getParametersSimcard(headersMap);
+    }
+
+    @Test
+    void getParametersFinanciamientoFija_Test() throws JsonProcessingException {
+        BusinessParametersFinanciamientoFijaResponse businessParametersFinanciamientoFijaResponse =
+                BusinessParametersFinanciamientoFijaResponse
+                        .builder()
+                        .build();
+
+        mockBackEnd.enqueue(new MockResponse()
+                .setBody(MAPPER.writeValueAsString(businessParametersFinanciamientoFijaResponse))
+                .addHeader("Content-Type", "application/json")
+                .addHeader(HttpHeadersKey.UNICA_SERVICE_ID, ConstantsTest.RH_UNICA_SERVICE_ID)
+                .addHeader(HttpHeadersKey.UNICA_APPLICATION, ConstantsTest.RH_UNICA_APPLICATION)
+                .addHeader(HttpHeadersKey.UNICA_PID, ConstantsTest.RH_UNICA_PID)
+                .addHeader(HttpHeadersKey.UNICA_USER, ConstantsTest.RH_UNICA_USER));
+
+        businessParameterWebClientImpl.getParametersFinanciamientoFija(headersMap);
     }
 
     private static HashMap<String,String> mappingHeaders() {
