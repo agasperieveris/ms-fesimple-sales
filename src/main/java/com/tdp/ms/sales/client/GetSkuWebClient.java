@@ -24,5 +24,6 @@ import reactor.core.publisher.Flux;
 public interface GetSkuWebClient {
     Flux<GetSkuResponse> createSku(String channelId, String planGroup, String simSapId, double simPrice,
                                    String operationType, String customerSegment, String storeId, String subscriberType,
-                                   String dealerId, String deviceSapId, String devicePrice, Map<String, String> headersMap);
+                                   String dealerId, String deviceSapId, String devicePrice, Map<String,
+                                                                                                    String> headersMap);
 }

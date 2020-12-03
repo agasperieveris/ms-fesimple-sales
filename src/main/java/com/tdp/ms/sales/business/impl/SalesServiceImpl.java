@@ -119,27 +119,27 @@ public class SalesServiceImpl implements SalesService {
 
         return this.put(salesId, request, headersMap)
                 .map(r -> {
-                        r.getAdditionalData().add(
-                                KeyValueType
-                                        .builder()
-                                        .key("initialProcessDate")
-                                        .value(DateUtils.getDatetimeNowCosmosDbFormat())
-                                        .build()
-                        );
-                        // Llamada a receptor
-                        webClientReceptor
-                                .register(
-                                        ReceptorRequest
-                                                .builder()
-                                                .businessId(r.getSalesId())
-                                                .typeEventFlow(FLOW_SALE_PUT)
-                                                .message(r)
-                                                .build(),
-                                        headersMap
-                                )
-                                .subscribe();
-                        return r;
-                    });
+                    r.getAdditionalData().add(
+                            KeyValueType
+                                    .builder()
+                                    .key("initialProcessDate")
+                                    .value(DateUtils.getDatetimeNowCosmosDbFormat())
+                                    .build()
+                    );
+                    // Llamada a receptor
+                    webClientReceptor
+                            .register(
+                                    ReceptorRequest
+                                            .builder()
+                                            .businessId(r.getSalesId())
+                                            .typeEventFlow(FLOW_SALE_PUT)
+                                            .message(r)
+                                            .build(),
+                                    headersMap
+                            )
+                            .subscribe();
+                    return r;
+                });
     }
 
     @Override
@@ -156,8 +156,8 @@ public class SalesServiceImpl implements SalesService {
 
     public Boolean filterSalesWithParams(Sale item, String saleId, String dealerId,
                                          String agentId, String customerId, String nationalId, String nationalIdType,
-                                         String status, String channelId, String storeId, String orderId, String startDateTime,
-                                         String endDateTime) {
+                                         String status, String channelId, String storeId, String orderId,
+                                         String startDateTime, String endDateTime) {
 
         Boolean channelIdBool = filterChannelId(item, channelId);
         Boolean dealerIdBool = filterDealerId(item, dealerId);
