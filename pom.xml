@@ -13,12 +13,12 @@
 		<maven-pmd-plugin.version>3.12.0</maven-pmd-plugin.version>
 		<maven-project-info-reports-plugin.version>3.0.0</maven-project-info-reports-plugin.version>
 		<sonar.exclusions>
-			/src/main/java/com/tdp/ms/*/eventflow/**/*
-			/src/main/java/com/tdp/ms/*/utils/**/*
+			**/eventflow/**/*,
+			**/utils/**/*
 		</sonar.exclusions>
 		<sonar.coverage.exclusions>
-			/src/main/java/com/tdp/ms/*/eventflow/**/*
-			/src/main/java/com/tdp/ms/*/utils/**/*
+			**/eventflow/**/*,
+			**/utils/**/*
 		</sonar.coverage.exclusions>
 	</properties>
 
