@@ -62,7 +62,7 @@ public class QuotationWebClientImpl implements QuotationWebClient {
                 .onErrorResume(throwable -> throwExceptionCreateQuotation(sale));
     }
 
-    // TODO: Definir al método throwExceptionCreateQuotation como privado, por tema de los test con Mockito no funcionaba
+    // TODO: Definir al método throwExceptionCreateQuotation como privado, por tema de los test con Mockito no funciona
     @Override
     public Mono<CreateQuotationResponse> throwExceptionCreateQuotation(Sale sale) throws GenesisException {
         sale.setStatus("NEGOCIACION");

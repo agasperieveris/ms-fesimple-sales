@@ -2,7 +2,6 @@ package com.tdp.ms.sales.eventflow.client;
 
 import com.tdp.ms.sales.model.dto.KeyValueType;
 import com.tdp.ms.sales.model.entity.Sale;
-
 import java.util.List;
 import java.util.Map;
 
@@ -27,7 +26,7 @@ public interface SalesWebClient {
     void putSale(String salesId, Sale request, Map<String, String> headersMap);
 
     /**
-     * Valida que se hayan ingresado los nuevos keys en el flujo de eventos
+     * Valida que se hayan ingresado los nuevos keys en el flujo de eventos.
      *
      * @author @srivasme
      * @param eventFlow Numero de flujo de evento en el que se encuentra

@@ -2,7 +2,6 @@ package com.tdp.ms.sales.client;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.tdp.genesis.core.constants.HttpHeadersKey;
-import com.tdp.genesis.core.utils.PropertyUtils;
 import com.tdp.ms.sales.client.impl.StockWebClientImpl;
 import com.tdp.ms.sales.model.dto.*;
 import com.tdp.ms.sales.model.dto.reservestock.Destination;
@@ -12,7 +11,7 @@ import com.tdp.ms.sales.model.dto.reservestock.StockItem;
 import com.tdp.ms.sales.model.entity.Sale;
 import com.tdp.ms.sales.model.request.ReserveStockRequest;
 import com.tdp.ms.sales.model.response.ReserveStockResponse;
-import com.tdp.ms.sales.utils.Constants;
+import com.tdp.ms.sales.utils.ConstantsTest;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -23,7 +22,6 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.core.env.PropertyResolver;
 import org.springframework.web.reactive.function.client.WebClient;
 import static org.mockito.Mockito.mock;
 
@@ -341,20 +339,20 @@ public class StockWebClientImplTest {
         mockBackEnd.enqueue(new MockResponse()
                 .setBody(MAPPER.writeValueAsString(reserveStockResponse))
                 .addHeader("Content-Type", "application/json")
-                .addHeader(HttpHeadersKey.UNICA_SERVICE_ID, Constants.RH_UNICA_SERVICE_ID)
-                .addHeader(HttpHeadersKey.UNICA_APPLICATION, Constants.RH_UNICA_APPLICATION)
-                .addHeader(HttpHeadersKey.UNICA_PID, Constants.RH_UNICA_PID)
-                .addHeader(HttpHeadersKey.UNICA_USER, Constants.RH_UNICA_USER));
+                .addHeader(HttpHeadersKey.UNICA_SERVICE_ID, ConstantsTest.RH_UNICA_SERVICE_ID)
+                .addHeader(HttpHeadersKey.UNICA_APPLICATION, ConstantsTest.RH_UNICA_APPLICATION)
+                .addHeader(HttpHeadersKey.UNICA_PID, ConstantsTest.RH_UNICA_PID)
+                .addHeader(HttpHeadersKey.UNICA_USER, ConstantsTest.RH_UNICA_USER));
 
         stockWebClientImpl.reserveStock(reserveStockRequest, headersMap, sale);
     }
 
     private static HashMap<String,String> mappingHeaders() {
         HashMap<String,String> headersMap = new HashMap();
-        headersMap.put(HttpHeadersKey.UNICA_SERVICE_ID, Constants.RH_UNICA_SERVICE_ID);
-        headersMap.put(HttpHeadersKey.UNICA_APPLICATION, Constants.RH_UNICA_APPLICATION);
-        headersMap.put(HttpHeadersKey.UNICA_PID, Constants.RH_UNICA_PID);
-        headersMap.put(HttpHeadersKey.UNICA_USER, Constants.RH_UNICA_USER);
+        headersMap.put(HttpHeadersKey.UNICA_SERVICE_ID, ConstantsTest.RH_UNICA_SERVICE_ID);
+        headersMap.put(HttpHeadersKey.UNICA_APPLICATION, ConstantsTest.RH_UNICA_APPLICATION);
+        headersMap.put(HttpHeadersKey.UNICA_PID, ConstantsTest.RH_UNICA_PID);
+        headersMap.put(HttpHeadersKey.UNICA_USER, ConstantsTest.RH_UNICA_USER);
         return headersMap;
     }
 

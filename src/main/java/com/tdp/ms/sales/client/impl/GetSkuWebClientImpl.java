@@ -40,8 +40,8 @@ public class GetSkuWebClientImpl implements GetSkuWebClient {
     @Override
     public Flux<GetSkuResponse> createSku(String channelId, String planGroup, String simSapId, double simPrice,
                                           String operationType, String customerSegment, String storeId,
-                                          String subscriberType, String dealerId, String deviceSapId, String devicePrice,
-                                          Map<String, String> headersMap) {
+                                          String subscriberType, String dealerId, String deviceSapId,
+                                          String devicePrice, Map<String, String> headersMap) {
         return webClientInsecure
                 .get()
                 .uri(urlCreateSku, channelId, planGroup, simSapId, simPrice, operationType, customerSegment,
