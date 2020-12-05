@@ -10,6 +10,7 @@ import com.tdp.ms.sales.model.dto.productorder.CreateProductOrderGeneralRequest;
 import com.tdp.ms.sales.model.dto.productorder.Customer;
 import com.tdp.ms.sales.model.dto.productorder.FlexAttrType;
 import com.tdp.ms.sales.model.dto.productorder.altafija.AltaFijaRequest;
+import com.tdp.ms.sales.model.dto.productorder.altafija.NewProductAltaFija;
 import com.tdp.ms.sales.model.dto.productorder.altafija.ProductOrderAltaFijaRequest;
 import com.tdp.ms.sales.model.dto.productorder.altafija.ServiceabilityOfferType;
 import com.tdp.ms.sales.model.dto.productorder.altamobile.AltaMobileRequest;
@@ -19,6 +20,7 @@ import com.tdp.ms.sales.model.dto.productorder.caeq.ProductOrderCaeqRequest;
 import com.tdp.ms.sales.model.dto.productorder.caeqcapl.CaeqCaplRequest;
 import com.tdp.ms.sales.model.dto.productorder.caeqcapl.ProductOrderCaeqCaplRequest;
 import com.tdp.ms.sales.model.dto.productorder.capl.CaplRequest;
+import com.tdp.ms.sales.model.dto.productorder.capl.NewAssignedBillingOffers;
 import com.tdp.ms.sales.model.dto.productorder.capl.ProductOrderCaplRequest;
 import com.tdp.ms.sales.model.dto.quotation.CreateQuotationRequestBody;
 import com.tdp.ms.sales.model.dto.reservestock.StockItem;
@@ -223,6 +225,35 @@ public class SalesManagmentServicePrivateMethodsTest {
                 .data(dataList)
                 .build();
         Sale sale = CommonsMocks.createSaleMock();
+        sale.getChannel().setId("CC");
+
+        method.invoke(salesManagmentServiceImpl,sale, altaRequest, "CC", "C0001", "OF0001", "CIP0001",
+                businessParametersResponseObjectExt, "SAPID0001", false);
+    }
+
+    @Test
+    void altaCommercialOperation_whenChannelIdIsRetail_Test() throws NoSuchMethodException, InvocationTargetException,
+                                                                                                IllegalAccessException {
+        Method method = SalesManagmentServiceImpl.class.getDeclaredMethod("altaCommercialOperation", Sale.class,
+                CreateProductOrderGeneralRequest.class, String.class, String.class, String.class, String.class,
+                BusinessParametersResponseObjectExt.class, String.class, Boolean.class);
+
+        method.setAccessible(true);
+
+        CreateProductOrderGeneralRequest altaRequest = new CreateProductOrderGeneralRequest();
+        List<BusinessParameterDataObjectExt> dataList = new ArrayList<>();
+        BusinessParameterDataObjectExt data1 = BusinessParameterDataObjectExt
+                .builder()
+                .value("34572615")
+                .ext("7431")
+                .build();
+        dataList.add(data1);
+        BusinessParametersResponseObjectExt businessParametersResponseObjectExt = BusinessParametersResponseObjectExt
+                .builder()
+                .data(dataList)
+                .build();
+        Sale sale = CommonsMocks.createSaleMock();
+        sale.getChannel().setId("DLC");
 
         method.invoke(salesManagmentServiceImpl,sale, altaRequest, "CC", "C0001", "OF0001", "CIP0001",
                 businessParametersResponseObjectExt, "SAPID0001", false);
@@ -271,7 +302,7 @@ public class SalesManagmentServicePrivateMethodsTest {
         CreateProductOrderGeneralRequest createProductOrderGeneralRequest = CreateProductOrderGeneralRequest
                 .builder().createProductOrderRequest(ProductOrderCaplRequest.builder()
                         .actionType("string").customer(Customer.builder().customerId("string").build()).customerId("string")
-                        .onlyValidationIndicator(false).productOfferingId("string").request(CaplRequest.builder().build())
+                        .onlyValidationIndicator("false").productOfferingId("string").request(CaplRequest.builder().build())
                         .salesChannel("string")
                         .build()).build();
 
@@ -306,7 +337,7 @@ public class SalesManagmentServicePrivateMethodsTest {
 
         CreateProductOrderGeneralRequest createProductOrderGeneralRequest = CreateProductOrderGeneralRequest
                 .builder().createProductOrderRequest(ProductOrderCaeqRequest.builder()
-                        .actionType("string").customerId("string").onlyValidationIndicator(false)
+                        .actionType("string").customerId("string").onlyValidationIndicator("false")
                         .productOfferingId("string").salesChannel("string")
                         .request(CaeqRequest.builder().build()).build()).build();
 
@@ -341,7 +372,7 @@ public class SalesManagmentServicePrivateMethodsTest {
 
         CreateProductOrderGeneralRequest createProductOrderGeneralRequest = CreateProductOrderGeneralRequest
                 .builder().createProductOrderRequest(ProductOrderCaeqCaplRequest.builder()
-                        .actionType("string").customerId("string").onlyValidationIndicator(false)
+                        .actionType("string").customerId("string").onlyValidationIndicator("false")
                         .productOfferingId("string").salesChannel("string").request(CaeqCaplRequest.builder().build()).build()).build();
 
         Sale saleRequest = Sale.builder()
@@ -375,7 +406,7 @@ public class SalesManagmentServicePrivateMethodsTest {
 
         CreateProductOrderGeneralRequest createProductOrderGeneralRequest = CreateProductOrderGeneralRequest
                 .builder().createProductOrderRequest(ProductOrderAltaFijaRequest.builder()
-                        .actionType("string").customerId("string").onlyValidationIndicator(false)
+                        .actionType("string").customerId("string").onlyValidationIndicator("false")
                         .productOfferingId("string").salesChannel("string").request(new AltaFijaRequest()).build()).build();
 
         Sale saleRequest = Sale.builder()
@@ -407,9 +438,10 @@ public class SalesManagmentServicePrivateMethodsTest {
         Mockito.when(productOrderWebClient.createProductOrder(any(), any(), any()))
                 .thenReturn(Mono.just(ProductorderResponse.builder().build()));
 
+        Customer customer = Customer.builder().customerId("C0001").build();
         CreateProductOrderGeneralRequest createProductOrderGeneralRequest = CreateProductOrderGeneralRequest
                 .builder().createProductOrderRequest(ProductOrderAltaMobileRequest.builder()
-                        .actionType("string").customerId("string").onlyValidationIndicator(false)
+                        .actionType("string").customer(customer).onlyValidationIndicator("false")
                         .productOfferingId("string").salesChannel("string").request(new AltaMobileRequest()).build()).build();
 
         Sale saleRequest = Sale.builder()
@@ -574,6 +606,54 @@ public class SalesManagmentServicePrivateMethodsTest {
         Sale sale = CommonsMocks.createSaleMock();
 
         method.invoke(salesManagmentServiceImpl,sale);
+    }
+
+    @Test
+    void getAcquisitionTypeValueTest() throws NoSuchMethodException, InvocationTargetException,
+            IllegalAccessException {
+        Method method = SalesManagmentServiceImpl.class.getDeclaredMethod("getAcquisitionTypeValue",
+                Sale.class);
+
+        method.setAccessible(true);
+
+        Sale sale = CommonsMocks.createSaleMock();
+        sale.getChannel().setId("ST");
+        KeyValueType keyValueTypeDelivery = KeyValueType
+                .builder()
+                .key("deliveryMethod")
+                .value("IS")
+                .build();
+        sale.getAdditionalData().add(keyValueTypeDelivery);
+        KeyValueType keyValueTypeAlta = KeyValueType
+                .builder()
+                .key("ALTA")
+                .value("true")
+                .build();
+        sale.getCommercialOperation().get(0).getAdditionalData().add(keyValueTypeAlta);
+
+        String acquisitionTypeValue = (String) method.invoke(salesManagmentServiceImpl, sale);
+
+        Assert.assertEquals(acquisitionTypeValue, "Sale");
+    }
+
+    @Test
+    void buildNewProductsAltaFijaListTest() throws NoSuchMethodException, InvocationTargetException,
+            IllegalAccessException {
+        Method method = SalesManagmentServiceImpl.class.getDeclaredMethod("buildNewProductsAltaFijaList",
+                Sale.class, List.class, List.class, List.class);
+
+        method.setAccessible(true);
+
+        Sale sale = CommonsMocks.createSaleMock();
+        List<NewAssignedBillingOffers> newAssignedBillingOffersLandlineList = new ArrayList<>();
+        List<NewAssignedBillingOffers> newAssignedBillingOffersBroadbandList = new ArrayList<>();
+        List<NewAssignedBillingOffers> newAssignedBillingOffersCableTvList = new ArrayList<>();
+
+        List<NewProductAltaFija> newProductsAltaFijaList = (List) method.invoke(salesManagmentServiceImpl, sale,
+                newAssignedBillingOffersLandlineList, newAssignedBillingOffersBroadbandList,
+                newAssignedBillingOffersCableTvList);
+
+        //Assert.assertEquals(newProductsAltaFijaList, "Sale");
     }
 
 }

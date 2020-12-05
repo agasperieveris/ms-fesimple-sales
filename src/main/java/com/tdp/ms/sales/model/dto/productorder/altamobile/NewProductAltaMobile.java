@@ -2,6 +2,7 @@ package com.tdp.ms.sales.model.dto.productorder.altamobile;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.gson.annotations.SerializedName;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -33,6 +34,7 @@ public class NewProductAltaMobile {
     private String productCatalogId;
     private String temporaryId;
     private String baId;
+    @SerializedName("AccountId")
     @JsonProperty("AccountId")
     private String accountId;
     private String invoiceCompany;

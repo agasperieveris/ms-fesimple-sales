@@ -31,7 +31,7 @@ import lombok.NoArgsConstructor;
 public class ProductOrderRequest {
     private String salesChannel;
     private String productOfferingID;
-    private boolean onlyValidationIndicator;
+    private String onlyValidationIndicator;
     private String productOrderItemID;
     private Number customerId;
     private String actionType;
