@@ -1,6 +1,7 @@
 package com.tdp.ms.sales.model.dto.productorder.capl;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.gson.annotations.SerializedName;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -28,8 +29,10 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class NewAssignedBillingOffers {
+    @SerializedName("productSpecPricingID")
     @JsonProperty("productSpecPricingID")
     private String productSpecPricingId;
+    @SerializedName("parentProductCatalogID")
     @JsonProperty("parentProductCatalogID")
     private String parentProductCatalogId;
 }

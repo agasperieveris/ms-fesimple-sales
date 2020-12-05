@@ -150,13 +150,58 @@ public class CommonsMocks {
                 .builder()
                 .amount(150.0)
                 .build();
+
+        BenefitType benefitType1 = new BenefitType();
+        benefitType1.setDownloadSpeed("1000Mbps");
+
+        List<BenefitType> benefitsList = new ArrayList<>();
+        benefitsList.add(benefitType1);
+        offeringType1.setBenefits(benefitsList);
+
         ComponentProdOfferPriceType componentProdOfferPriceType1 = ComponentProdOfferPriceType
                 .builder()
                 .maxPrice(maxPrice)
+                .benefits(benefitsList)
                 .build();
         List<ComponentProdOfferPriceType> productOfferingPricesList = new ArrayList<>();
         productOfferingPricesList.add(componentProdOfferPriceType1);
         offeringType1.setProductOfferingPrice(productOfferingPricesList);
+
+        ProductSpecCharacteristicType productCharacteristics1 =  new ProductSpecCharacteristicType();
+        productCharacteristics1.setId("test");
+        List<ProductSpecCharacteristicType> productCharacteristicsList = new ArrayList<>();
+        productCharacteristicsList.add(productCharacteristics1);
+        RefinedProductType refinedProduct = new RefinedProductType();
+        refinedProduct.setProductCharacteristics(productCharacteristicsList);
+
+        ComposingProductType productSpecification1 = new ComposingProductType();
+        productSpecification1.setProductType("landline");
+        productSpecification1.setRefinedProduct(refinedProduct);
+
+        ComposingProductType productSpecification2 = new ComposingProductType();
+        productSpecification2.setProductType("broadband");
+        productSpecification2.setRefinedProduct(refinedProduct);
+
+        ComposingProductType productSpecification3 = new ComposingProductType();
+        productSpecification3.setProductType("cableTv");
+        productSpecification3.setRefinedProduct(refinedProduct);
+
+        ComposingProductType productSpecification4 = new ComposingProductType();
+        productSpecification4.setProductType("ShEq");
+        productSpecification4.setRefinedProduct(refinedProduct);
+
+        ComposingProductType productSpecification5 = new ComposingProductType();
+        productSpecification5.setProductType("Accesories");
+        productSpecification5.setRefinedProduct(refinedProduct);
+
+        List<ComposingProductType> productSpecificationList = new ArrayList<>();
+        productSpecificationList.add(productSpecification1);
+        productSpecificationList.add(productSpecification2);
+        productSpecificationList.add(productSpecification3);
+        productSpecificationList.add(productSpecification4);
+        productSpecificationList.add(productSpecification5);
+        offeringType1.setProductSpecification(productSpecificationList);
+
         List<OfferingType> productOfferings = new ArrayList<>();
         productOfferings.add(offeringType1);
 

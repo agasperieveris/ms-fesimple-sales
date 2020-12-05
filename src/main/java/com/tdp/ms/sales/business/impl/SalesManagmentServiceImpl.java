@@ -118,9 +118,9 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
 
     private static final String FLOW_SALE_POST = "01";
 
-    private final static String SHIPPING_LOCALITY = "shippingLocality";
-    private final static String PROVINCE_OF_SHIPPING_ADDRESS = "provinceOfShippingAddress";
-    private final static String SHOP_ADDRESS = "shopAddress";
+    private static final String SHIPPING_LOCALITY = "shippingLocality";
+    private static final String PROVINCE_OF_SHIPPING_ADDRESS = "provinceOfShippingAddress";
+    private static final String SHOP_ADDRESS = "shopAddress";
 
     private static final Logger LOG = LoggerFactory.getLogger(SalesManagmentServiceImpl.class);
 
@@ -391,6 +391,185 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                 });
     }
 
+    private List<NewProductAltaFija> buildNewProductsAltaFijaList(Sale saleRequest,
+                                                  List<NewAssignedBillingOffers> newAssignedBillingOffersLandlineList,
+                                                  List<NewAssignedBillingOffers> newAssignedBillingOffersBroadbandList,
+                                                  List<NewAssignedBillingOffers> newAssignedBillingOffersCableTvList) {
+        List<NewProductAltaFija> newProductsAltaFijaList = new ArrayList<>();
+
+        String baId = saleRequest.getRelatedParty().get(0).getBillingArragmentId();
+        String accountId = saleRequest.getRelatedParty().get(0).getAccountId();
+
+        saleRequest.getCommercialOperation().get(0).getProductOfferings().get(0).getProductSpecification()
+                .stream()
+                .forEach(productSpecification -> {
+
+                    String productType = productSpecification.getProductType();
+                    if (productType.equalsIgnoreCase(Constants.PRODUCT_TYPE_LANDLINE)) {
+
+                        NewProductAltaFija newProductAltaFijaLandline = NewProductAltaFija
+                                .builder()
+                                .productCatalogId(productSpecification.getRefinedProduct()
+                                        .getProductCharacteristics().get(0).getId())
+                                .temporaryId("temp")
+                                .baId(baId)
+                                .accountId(accountId)
+                                .invoiceCompany("TDP")
+                                .build();
+
+                        //Adding Landline SVAs
+                        if (!newAssignedBillingOffersLandlineList.isEmpty()) {
+
+                            ProductChangeAltaFija productChangesLandline = ProductChangeAltaFija
+                                    .builder()
+                                    .newAssignedBillingOffers(newAssignedBillingOffersLandlineList)
+                                    .build();
+                            newProductAltaFijaLandline.setProductChanges(productChangesLandline);
+                        }
+
+                        newProductsAltaFijaList.add(newProductAltaFijaLandline);
+
+                    } else if (productType.equalsIgnoreCase("broadband")) {
+
+                        List<ChangedCharacteristic> changedCharacteristicsBroadbandList = new ArrayList<>();
+
+                        ChangedCharacteristic changedCharacteristicBroadband1 = ChangedCharacteristic
+                                .builder()
+                                .characteristicId("3241482")
+                                .characteristicValue(saleRequest.getCommercialOperation().get(0)
+                                        .getProductOfferings().get(0).getProductOfferingPrice().get(0)
+                                        .getBenefits().get(0).getDownloadSpeed())
+                                .build();
+                        changedCharacteristicsBroadbandList.add(changedCharacteristicBroadband1);
+
+                        try {
+                            ChangedCharacteristic changedCharacteristicBroadband2 = ChangedCharacteristic
+                                    .builder()
+                                    .characteristicId("3241532")
+                                    .characteristicValue(Commons.getTimeNowInMillis())
+                                    .build();
+                            changedCharacteristicsBroadbandList.add(changedCharacteristicBroadband2);
+                        } catch (ParseException e) {
+                            LOG.error("Post Sales Exception Getting Time at Now in Milliseconds");
+                        }
+
+                        ChangedContainedProduct changedContainedProductBroadband1 = ChangedContainedProduct
+                                .builder()
+                                .temporaryId("temp")
+                                .productCatalogId("3241312")
+                                .changedCharacteristics(changedCharacteristicsBroadbandList)
+                                .productId("") // Empty when is alta fija
+                                .build();
+
+                        List<ChangedContainedProduct> changedContainedProductsBroadbandList =
+                                new ArrayList<>();
+                        changedContainedProductsBroadbandList.add(changedContainedProductBroadband1);
+
+                        ProductChangeAltaFija productChangesBroadband = ProductChangeAltaFija
+                                .builder()
+                                .changedContainedProducts(changedContainedProductsBroadbandList)
+                                .build();
+                        //Adding Broadband SVAs
+                        if (!newAssignedBillingOffersBroadbandList.isEmpty()) {
+                            productChangesBroadband.setNewAssignedBillingOffers(
+                                    newAssignedBillingOffersBroadbandList);
+                        }
+
+                        NewProductAltaFija newProductAltaFijaBroadband = NewProductAltaFija
+                                .builder()
+                                .productCatalogId(productSpecification.getRefinedProduct()
+                                        .getProductCharacteristics().get(0).getId())
+                                .temporaryId("temp")
+                                .baId(baId)
+                                .accountId(accountId)
+                                .invoiceCompany("TDP")
+                                .productChanges(productChangesBroadband)
+                                .build();
+                        newProductsAltaFijaList.add(newProductAltaFijaBroadband);
+
+                    } else if (productType.equalsIgnoreCase(Constants.PRODUCT_TYPE_CABLE_TV)) {
+
+                        NewProductAltaFija newProductAltaFijaCableTv = NewProductAltaFija
+                                .builder()
+                                .productCatalogId(productSpecification.getRefinedProduct()
+                                        .getProductCharacteristics().get(0).getId())
+                                .temporaryId("temp")
+                                .baId(baId)
+                                .accountId(accountId)
+                                .invoiceCompany("TDP")
+                                .build();
+
+                        //Adding CableTv SVAs
+                        if (!newAssignedBillingOffersCableTvList.isEmpty()) {
+
+                            ProductChangeAltaFija productChangesCableTv = ProductChangeAltaFija
+                                    .builder()
+                                    .newAssignedBillingOffers(newAssignedBillingOffersCableTvList)
+                                    .build();
+                            newProductAltaFijaCableTv.setProductChanges(productChangesCableTv);
+                        }
+
+                        newProductsAltaFijaList.add(newProductAltaFijaCableTv);
+
+                    } else if (productType.equalsIgnoreCase("ShEq")) {
+
+                        NewProductAltaFija newProductAltaFijaShareEquipment = NewProductAltaFija
+                                .builder()
+                                .productCatalogId(productSpecification.getRefinedProduct()
+                                        .getProductCharacteristics().get(0).getId())
+                                .temporaryId("temp")
+                                .baId(baId)
+                                .accountId(accountId)
+                                .invoiceCompany("TDP")
+                                .build();
+                        newProductsAltaFijaList.add(newProductAltaFijaShareEquipment);
+
+                    } else if (productType.equalsIgnoreCase("Accesories")) {
+
+                        ChangedCharacteristic changedCharacteristicAccesories1 = ChangedCharacteristic
+                                .builder()
+                                .characteristicId("15734")
+                                .characteristicValue("34203411")
+                                .build();
+
+                        List<ChangedCharacteristic> changedCharacteristicsAccesoriesList =
+                                new ArrayList<>();
+                        changedCharacteristicsAccesoriesList.add(changedCharacteristicAccesories1);
+
+                        ChangedContainedProduct changedContainedProductAccesories1 = ChangedContainedProduct
+                                .builder()
+                                .temporaryId("temp")
+                                .productCatalogId("34134811")
+                                .changedCharacteristics(changedCharacteristicsAccesoriesList)
+                                .productId("") // Empty when is alta fija
+                                .build();
+
+                        List<ChangedContainedProduct> changedContainedProductsAccesoriesList =
+                                new ArrayList<>();
+                        changedContainedProductsAccesoriesList.add(changedContainedProductAccesories1);
+
+                        ProductChangeAltaFija productChangesAccesories = ProductChangeAltaFija
+                                .builder()
+                                .changedContainedProducts(changedContainedProductsAccesoriesList)
+                                .build();
+
+                        NewProductAltaFija newProductAltaFijaAccesories = NewProductAltaFija
+                                .builder()
+                                .productCatalogId(productSpecification.getRefinedProduct()
+                                        .getProductCharacteristics().get(0).getId())
+                                .temporaryId("temp")
+                                .baId(baId)
+                                .accountId(accountId)
+                                .invoiceCompany("TDP")
+                                .productChanges(productChangesAccesories)
+                                .build();
+                        newProductsAltaFijaList.add(newProductAltaFijaAccesories);
+                    }
+                });
+
+        return newProductsAltaFijaList;
+    }
+
     @Override
     public Mono<Sale> post(PostSalesRequest request) {
 
@@ -564,177 +743,10 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                     }
 
                     // New Products Alta Fija
-                    List<NewProductAltaFija> newProductsAltaFijaList = new ArrayList<>();
-                    String baId = saleRequest.getRelatedParty().get(0).getBillingArragmentId();
-                    String accountId = saleRequest.getRelatedParty().get(0).getAccountId();
-
-                    saleRequest.getCommercialOperation().get(0).getProductOfferings().get(0).getProductSpecification()
-                            .stream()
-                            .forEach(productSpecification -> {
-
-                                String productType = productSpecification.getProductType();
-                                if (productType.equalsIgnoreCase(Constants.PRODUCT_TYPE_LANDLINE)) {
-
-                                    NewProductAltaFija newProductAltaFijaLandline = NewProductAltaFija
-                                            .builder()
-                                            .productCatalogId(productSpecification.getRefinedProduct()
-                                                    .getProductCharacteristics().get(0).getId())
-                                            .temporaryId("temp")
-                                            .baId(baId)
-                                            .accountId(accountId)
-                                            .invoiceCompany("TDP")
-                                            .build();
-
-                                    //Adding Landline SVAs
-                                    if (!newAssignedBillingOffersLandlineList.isEmpty()) {
-
-                                        ProductChangeAltaFija productChangesLandline = ProductChangeAltaFija
-                                                .builder()
-                                                .newAssignedBillingOffers(newAssignedBillingOffersLandlineList)
-                                                .build();
-                                        newProductAltaFijaLandline.setProductChanges(productChangesLandline);
-                                    }
-
-                                    newProductsAltaFijaList.add(newProductAltaFijaLandline);
-
-                                } else if (productType.equalsIgnoreCase("broadband")) {
-
-                                    List<ChangedCharacteristic> changedCharacteristicsBroadbandList = new ArrayList<>();
-
-                                    ChangedCharacteristic changedCharacteristicBroadband1 = ChangedCharacteristic
-                                            .builder()
-                                            .characteristicId("3241482")
-                                            .characteristicValue(saleRequest.getCommercialOperation().get(0)
-                                                    .getProductOfferings().get(0).getProductOfferingPrice().get(0)
-                                                    .getBenefits().get(0).getDownloadSpeed())
-                                            .build();
-                                    changedCharacteristicsBroadbandList.add(changedCharacteristicBroadband1);
-
-                                    try {
-                                        ChangedCharacteristic changedCharacteristicBroadband2 = ChangedCharacteristic
-                                                .builder()
-                                                .characteristicId("3241532")
-                                                .characteristicValue(Commons.getTimeNowInMillis())
-                                                .build();
-                                        changedCharacteristicsBroadbandList.add(changedCharacteristicBroadband2);
-                                    } catch (ParseException e) {
-                                        LOG.error("Post Sales Exception Getting Time at Now in Milliseconds");
-                                    }
-
-                                    ChangedContainedProduct changedContainedProductBroadband1 = ChangedContainedProduct
-                                            .builder()
-                                            .temporaryId("temp")
-                                            .productCatalogId("3241312")
-                                            .changedCharacteristics(changedCharacteristicsBroadbandList)
-                                            .productId("") // Empty when is alta fija
-                                            .build();
-
-                                    List<ChangedContainedProduct> changedContainedProductsBroadbandList =
-                                                                                                    new ArrayList<>();
-                                    changedContainedProductsBroadbandList.add(changedContainedProductBroadband1);
-
-                                    ProductChangeAltaFija productChangesBroadband = ProductChangeAltaFija
-                                            .builder()
-                                            .changedContainedProducts(changedContainedProductsBroadbandList)
-                                            .build();
-                                    //Adding Broadband SVAs
-                                    if (!newAssignedBillingOffersBroadbandList.isEmpty()) {
-                                        productChangesBroadband.setNewAssignedBillingOffers(
-                                                                                newAssignedBillingOffersBroadbandList);
-                                    }
-
-                                    NewProductAltaFija newProductAltaFijaBroadband = NewProductAltaFija
-                                            .builder()
-                                            .productCatalogId(productSpecification.getRefinedProduct()
-                                                    .getProductCharacteristics().get(0).getId())
-                                            .temporaryId("temp")
-                                            .baId(baId)
-                                            .accountId(accountId)
-                                            .invoiceCompany("TDP")
-                                            .productChanges(productChangesBroadband)
-                                            .build();
-                                    newProductsAltaFijaList.add(newProductAltaFijaBroadband);
-
-                                } else if (productType.equalsIgnoreCase(Constants.PRODUCT_TYPE_CABLE_TV)) {
-
-                                    NewProductAltaFija newProductAltaFijaCableTv = NewProductAltaFija
-                                            .builder()
-                                            .productCatalogId(productSpecification.getRefinedProduct()
-                                                    .getProductCharacteristics().get(0).getId())
-                                            .temporaryId("temp")
-                                            .baId(baId)
-                                            .accountId(accountId)
-                                            .invoiceCompany("TDP")
-                                            .build();
-
-                                    //Adding CableTv SVAs
-                                    if (!newAssignedBillingOffersCableTvList.isEmpty()) {
-
-                                        ProductChangeAltaFija productChangesCableTv = ProductChangeAltaFija
-                                                .builder()
-                                                .newAssignedBillingOffers(newAssignedBillingOffersCableTvList)
-                                                .build();
-                                        newProductAltaFijaCableTv.setProductChanges(productChangesCableTv);
-                                    }
-
-                                    newProductsAltaFijaList.add(newProductAltaFijaCableTv);
-
-                                } else if (productType.equalsIgnoreCase("ShEq")) {
-
-                                    NewProductAltaFija newProductAltaFijaShareEquipment = NewProductAltaFija
-                                            .builder()
-                                            .productCatalogId(productSpecification.getRefinedProduct()
-                                                    .getProductCharacteristics().get(0).getId())
-                                            .temporaryId("temp")
-                                            .baId(baId)
-                                            .accountId(accountId)
-                                            .invoiceCompany("TDP")
-                                            .build();
-                                    newProductsAltaFijaList.add(newProductAltaFijaShareEquipment);
-
-                                } else if (productType.equalsIgnoreCase("Accesories")) {
-
-                                    ChangedCharacteristic changedCharacteristicAccesories1 = ChangedCharacteristic
-                                            .builder()
-                                            .characteristicId("15734")
-                                            .characteristicValue("34203411")
-                                            .build();
-
-                                    List<ChangedCharacteristic> changedCharacteristicsAccesoriesList =
-                                                                                                    new ArrayList<>();
-                                    changedCharacteristicsAccesoriesList.add(changedCharacteristicAccesories1);
-
-                                    ChangedContainedProduct changedContainedProductAccesories1 = ChangedContainedProduct
-                                            .builder()
-                                            .temporaryId("temp")
-                                            .productCatalogId("34134811")
-                                            .changedCharacteristics(changedCharacteristicsAccesoriesList)
-                                            .productId("") // Empty when is alta fija
-                                            .build();
-
-                                    List<ChangedContainedProduct> changedContainedProductsAccesoriesList =
-                                                                                                    new ArrayList<>();
-                                    changedContainedProductsAccesoriesList.add(changedContainedProductAccesories1);
-
-                                    ProductChangeAltaFija productChangesAccesories = ProductChangeAltaFija
-                                            .builder()
-                                            .changedContainedProducts(changedContainedProductsAccesoriesList)
-                                            .build();
-
-                                    NewProductAltaFija newProductAltaFijaAccesories = NewProductAltaFija
-                                            .builder()
-                                            .productCatalogId(productSpecification.getRefinedProduct()
-                                                    .getProductCharacteristics().get(0).getId())
-                                            .temporaryId("temp")
-                                            .baId(baId)
-                                            .accountId(accountId)
-                                            .invoiceCompany("TDP")
-                                            .productChanges(productChangesAccesories)
-                                            .build();
-                                    newProductsAltaFijaList.add(newProductAltaFijaAccesories);
-                                }
-
-                            });
+                    List<NewProductAltaFija> newProductsAltaFijaList = this.buildNewProductsAltaFijaList(saleRequest,
+                            newAssignedBillingOffersLandlineList,
+                            newAssignedBillingOffersBroadbandList,
+                            newAssignedBillingOffersCableTvList);
 
                     // Building ServiceAvailability
 
@@ -786,7 +798,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                             .customerId(saleRequest.getRelatedParty().get(0).getCustomerId())
                             .productOfferingId(saleRequest.getCommercialOperation().get(0)
                                                                                 .getProductOfferings().get(0).getId())
-                            .onlyValidationIndicator(false)
+                            .onlyValidationIndicator("false")
                             .actionType("PR")
                             .build();
 
@@ -928,6 +940,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                                         productOfferingIdRequest, cipCode);
                             } else if ((!flgCapl[0] && !flgCaeq[0] && !flgCasi[0] && flgAlta[0])
                                     || isMobilePortability) {
+
                                 mainRequestProductOrder = this.altaCommercialOperation(saleRequest,
                                         mainRequestProductOrder, channelIdRequest, customerIdRequest,
                                         productOfferingIdRequest, cipCode, tuple.getT3(), sapidSimcard[0],
@@ -1286,27 +1299,27 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
             if (classObjectName.equalsIgnoreCase("ProductOrderCaplRequest")) {
                 ProductOrderCaplRequest productOrderCaplRequest =
                         (ProductOrderCaplRequest) productOrderRequest.getCreateProductOrderRequest();
-                productOrderCaplRequest.setOnlyValidationIndicator(true);
+                productOrderCaplRequest.setOnlyValidationIndicator("true");
                 productOrderRequest.setCreateProductOrderRequest(productOrderCaplRequest);
             } else if (classObjectName.equalsIgnoreCase("ProductOrderCaeqRequest")) {
                 ProductOrderCaeqRequest productOrderCaeqRequest =
                         (ProductOrderCaeqRequest) productOrderRequest.getCreateProductOrderRequest();
-                productOrderCaeqRequest.setOnlyValidationIndicator(true);
+                productOrderCaeqRequest.setOnlyValidationIndicator("true");
                 productOrderRequest.setCreateProductOrderRequest(productOrderCaeqRequest);
             } else if (classObjectName.equalsIgnoreCase("ProductOrderCaeqCaplRequest")) {
                 ProductOrderCaeqCaplRequest productOrderCaeqCaplRequest =
                         (ProductOrderCaeqCaplRequest) productOrderRequest.getCreateProductOrderRequest();
-                productOrderCaeqCaplRequest.setOnlyValidationIndicator(true);
+                productOrderCaeqCaplRequest.setOnlyValidationIndicator("true");
                 productOrderRequest.setCreateProductOrderRequest(productOrderCaeqCaplRequest);
             } else if (classObjectName.equalsIgnoreCase("ProductOrderAltaFijaRequest")) {
                 ProductOrderAltaFijaRequest productOrderAltaFijaRequest =
                         (ProductOrderAltaFijaRequest) productOrderRequest.getCreateProductOrderRequest();
-                productOrderAltaFijaRequest.setOnlyValidationIndicator(true);
+                productOrderAltaFijaRequest.setOnlyValidationIndicator("true");
                 productOrderRequest.setCreateProductOrderRequest(productOrderAltaFijaRequest);
             } else if (classObjectName.equalsIgnoreCase("ProductOrderAltaMobileRequest")) {
                 ProductOrderAltaMobileRequest productOrderAltaMobileRequest =
                         (ProductOrderAltaMobileRequest) productOrderRequest.getCreateProductOrderRequest();
-                productOrderAltaMobileRequest.setOnlyValidationIndicator(true);
+                productOrderAltaMobileRequest.setOnlyValidationIndicator("true");
                 productOrderRequest.setCreateProductOrderRequest(productOrderAltaMobileRequest);
             }
 
@@ -1750,9 +1763,13 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         // Building request for ALTA CommercialTypeOperation
         ProductOrderAltaMobileRequest altaRequestProductOrder = new ProductOrderAltaMobileRequest();
         altaRequestProductOrder.setSalesChannel(channelIdRequest);
-        altaRequestProductOrder.setCustomerId(customerIdRequest);
+        com.tdp.ms.sales.model.dto.productorder.Customer customer = com.tdp.ms.sales.model.dto.productorder.Customer
+                .builder()
+                .customerId(customerIdRequest)
+                .build();
+        altaRequestProductOrder.setCustomer(customer);
         altaRequestProductOrder.setProductOfferingId(productOfferingIdRequest);
-        altaRequestProductOrder.setOnlyValidationIndicator(false);
+        altaRequestProductOrder.setOnlyValidationIndicator("false");
         altaRequestProductOrder.setActionType("PR");
 
         // Identifying if is Alta Only Simcard or Alta Combo (Equipment + Simcard)
@@ -1812,10 +1829,10 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         changedCharacteristicList.add(changedCharacteristic1);
         // ICCID Characteristic
         String iccidSim = this.getStringValueByKeyFromAdditionalDataList(saleRequest.getAdditionalData(),
-                                                                                                    "SIM_ICCID ");
+                                                                                                    "SIM_ICCID");
         ChangedCharacteristic changedCharacteristic2 = ChangedCharacteristic
                 .builder()
-                .characteristicId("799244")
+                .characteristicId("7992 44")
                 .characteristicValue(iccidSim) // 8958080008100067567
                 .build();
         changedCharacteristicList.add(changedCharacteristic2);
@@ -1959,7 +1976,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         caplRequestProductOrder.setSalesChannel(channelIdRequest);
         caplRequestProductOrder.getCustomer().setCustomerId(customerIdRequest);
         caplRequestProductOrder.setProductOfferingId(productOfferingIdRequest);
-        caplRequestProductOrder.setOnlyValidationIndicator(false);
+        caplRequestProductOrder.setOnlyValidationIndicator("false");
 
         RemovedAssignedBillingOffers caplBoRemoved1 = new RemovedAssignedBillingOffers();
         List<RemovedAssignedBillingOffers> caplBoRemovedList = new ArrayList<>();
@@ -2104,7 +2121,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         caeqProductOrderRequest.setSalesChannel(channelIdRequest);
         caeqProductOrderRequest.setCustomerId(customerIdRequest);
         caeqProductOrderRequest.setProductOfferingId(productOfferingIdRequest);
-        caeqProductOrderRequest.setOnlyValidationIndicator(false);
+        caeqProductOrderRequest.setOnlyValidationIndicator("false");
         caeqProductOrderRequest.setActionType("CW");
         caeqProductOrderRequest.setRequest(caeqRequest);
 
@@ -2133,7 +2150,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         caeqCaplRequestProductOrder.setSalesChannel(channelIdRequest);
         caeqCaplRequestProductOrder.setCustomerId(customerIdRequest);
         caeqCaplRequestProductOrder.setProductOfferingId(productOfferingIdRequest);
-        caeqCaplRequestProductOrder.setOnlyValidationIndicator(false);
+        caeqCaplRequestProductOrder.setOnlyValidationIndicator("false");
 
         RemovedAssignedBillingOffers caeqCaplBoRemoved1 = new RemovedAssignedBillingOffers();
         List<RemovedAssignedBillingOffers> caeqCaplBoRemovedList = new ArrayList<>();
@@ -2360,7 +2377,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         return changedContainedProductList;
     }
 
-    public String getAcquisitionTypeValue(Sale saleRequest) {
+    private String getAcquisitionTypeValue(Sale saleRequest) {
         String acquisitionType = "";
         String saleChannelId = "";
         String deliveryType = "";
@@ -2377,13 +2394,14 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
 
         // Getting Commercial Operation Types from Additional Data
         final Boolean[] flgAlta = {false};
-        for (KeyValueType kv : saleRequest.getCommercialOperation().get(0).getAdditionalData()) {
-            String stringKey = kv.getKey();
-            Boolean booleanValue = kv.getValue().equalsIgnoreCase("true");
-            if (stringKey.equalsIgnoreCase("ALTA")) {
-                flgAlta[0] = booleanValue;
-            }
-        }
+        saleRequest.getCommercialOperation().get(0).getAdditionalData().stream()
+                .forEach(additionalData -> {
+                    String stringKey = additionalData.getKey();
+                    Boolean booleanValue = additionalData.getValue().equalsIgnoreCase("true");
+                    if (stringKey.equalsIgnoreCase("ALTA")) {
+                        flgAlta[0] = booleanValue;
+                    }
+                });
 
         // Logic for Set Acquisition Type Value
         if (flgAlta[0] && saleRequest.getCommercialOperation().get(0).getDeviceOffering().size() == 1) { // Identifying if is Alta only Sim
@@ -2407,7 +2425,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         return acquisitionType;
     }
 
-    public ReserveStockRequest buildReserveStockRequest(ReserveStockRequest request, Sale sale,
+    private ReserveStockRequest buildReserveStockRequest(ReserveStockRequest request, Sale sale,
                                                         CreateProductOrderResponseType createOrderResponse,
                                                         String sapidSimcardBp) {
         request.setReason("PRAEL");

@@ -1,6 +1,8 @@
 package com.tdp.ms.sales.model.dto.productorder.altamobile;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.gson.annotations.SerializedName;
+import com.tdp.ms.sales.model.dto.productorder.Customer;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -30,9 +32,10 @@ import lombok.NoArgsConstructor;
 public class ProductOrderAltaMobileRequest {
     private String salesChannel;
     private AltaMobileRequest request;
-    private String customerId;
+    private Customer customer;
+    @SerializedName("productOfferingID")
     @JsonProperty("productOfferingID")
     private String productOfferingId;
-    private Boolean onlyValidationIndicator;
+    private String onlyValidationIndicator;
     private String actionType;
 }
