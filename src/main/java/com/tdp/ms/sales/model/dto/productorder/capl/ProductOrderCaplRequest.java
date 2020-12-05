@@ -37,6 +37,6 @@ public class ProductOrderCaplRequest {
     private Customer customer = new Customer();
     @JsonProperty("productOfferingID")
     private String productOfferingId;
-    private Boolean onlyValidationIndicator;
+    private String onlyValidationIndicator;
     private String actionType;
 }

@@ -5,18 +5,28 @@ import com.tdp.ms.sales.business.SalesManagmentService;
 import com.tdp.ms.sales.business.impl.SalesManagmentServiceImpl;
 import com.tdp.ms.sales.client.BusinessParameterWebClient;
 import com.tdp.ms.sales.client.ProductOrderWebClient;
+import com.tdp.ms.sales.client.QuotationWebClient;
+import com.tdp.ms.sales.client.StockWebClient;
+import com.tdp.ms.sales.client.WebClientReceptor;
 import com.tdp.ms.sales.model.dto.*;
 import com.tdp.ms.sales.model.dto.businessparameter.BusinessParameterDataSeq;
 import com.tdp.ms.sales.model.dto.productorder.CreateProductOrderGeneralRequest;
 import com.tdp.ms.sales.model.dto.productorder.FlexAttrType;
 import com.tdp.ms.sales.model.dto.productorder.caeq.ChangedContainedProduct;
 import com.tdp.ms.sales.model.entity.Sale;
+import com.tdp.ms.sales.model.request.CreateQuotationRequest;
 import com.tdp.ms.sales.model.request.PostSalesRequest;
 import com.tdp.ms.sales.model.request.ReserveStockRequest;
 import com.tdp.ms.sales.model.response.BusinessParametersResponse;
+import com.tdp.ms.sales.model.response.CreateQuotationResponse;
 import com.tdp.ms.sales.model.response.GetSalesCharacteristicsResponse;
 import com.tdp.ms.sales.model.response.ProductorderResponse;
+import com.tdp.ms.sales.model.response.ReceptorResponse;
+import com.tdp.ms.sales.model.response.ReserveStockResponse;
 import com.tdp.ms.sales.repository.SalesRepository;
+
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -48,6 +58,15 @@ public class SalesManagmentServiceTest {
 
     @MockBean
     private ProductOrderWebClient productOrderWebClient;
+
+    @MockBean
+    private StockWebClient stockWebClient;
+
+    @MockBean
+    private QuotationWebClient quotationWebClient;
+
+    @MockBean
+    private WebClientReceptor webClientReceptor;
 
     @Autowired
     private SalesManagmentService salesManagmentService;
@@ -420,7 +439,14 @@ public class SalesManagmentServiceTest {
     }
 
     @Test
-    void buildReserveStockRequestTest() {
+    void buildReserveStockRequestTest()  throws NoSuchMethodException, InvocationTargetException,
+                                                                                                IllegalAccessException {
+        Method method = SalesManagmentServiceImpl.class.getDeclaredMethod("buildReserveStockRequest",
+                ReserveStockRequest.class, Sale.class, CreateProductOrderResponseType.class, String.class);
+
+        method.setAccessible(true);
+
+        Sale sale = CommonsMocks.createSaleMock();
         ReserveStockRequest reserveStockRequest = new ReserveStockRequest();
         CreateProductOrderResponseType createProductOrderResponse = CreateProductOrderResponseType
                 .builder()
@@ -428,13 +454,127 @@ public class SalesManagmentServiceTest {
                 .productOrderId("930686A")
                 .build();
 
-        ReserveStockRequest result = salesManagmentServiceImpl.buildReserveStockRequest(reserveStockRequest,
-                sale, createProductOrderResponse, "");
-
+        method.invoke(salesManagmentServiceImpl,reserveStockRequest, sale, createProductOrderResponse, "");
     }
 
     @Test
     void createShipmentDetailTest() {
         salesManagmentServiceImpl.createShipmentDetail(sale);
     }
+
+    @Test
+    void postSalesEventFlowTest() throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
+        Method method = SalesManagmentServiceImpl.class.getDeclaredMethod("postSalesEventFlow",
+                PostSalesRequest.class);
+
+        method.setAccessible(true);
+
+        Sale sale = CommonsMocks.createSaleMock();
+        PostSalesRequest postSalesRequest = PostSalesRequest
+                .builder()
+                .sale(sale)
+                .headersMap(headersMap)
+                .build();
+
+        ReceptorResponse receptorResponse =  new ReceptorResponse();
+        Mockito.when(webClientReceptor.register(any(), any())).thenReturn(Mono.just(receptorResponse));
+
+        method.invoke(salesManagmentServiceImpl,postSalesRequest);
+    }
+
+    @Test
+    void postSalesEventFlow_when_AdditionalDataIsNull_Test() throws NoSuchMethodException, InvocationTargetException,
+                                                                                                IllegalAccessException {
+        Method method = SalesManagmentServiceImpl.class.getDeclaredMethod("postSalesEventFlow",
+                PostSalesRequest.class);
+
+        method.setAccessible(true);
+
+        Sale sale = new Sale();
+
+        PostSalesRequest postSalesRequest = PostSalesRequest
+                .builder()
+                .sale(sale)
+                .headersMap(headersMap)
+                .build();
+
+        ReceptorResponse receptorResponse =  new ReceptorResponse();
+        Mockito.when(webClientReceptor.register(any(), any())).thenReturn(Mono.just(receptorResponse));
+
+        method.invoke(salesManagmentServiceImpl, postSalesRequest);
+    }
+
+    @Test
+    void callToReserveStockAndCreateQuotationTest() throws NoSuchMethodException, InvocationTargetException,
+            IllegalAccessException {
+        Method method = SalesManagmentServiceImpl.class.getDeclaredMethod("callToReserveStockAndCreateQuotation",
+                PostSalesRequest.class, Sale.class, Boolean.class, Boolean.class, String.class);
+
+        method.setAccessible(true);
+
+        Sale sale = CommonsMocks.createSaleMock();
+
+        CreateProductOrderResponseType createProductOrderResponse = CreateProductOrderResponseType
+                .builder()
+                .productOrderReferenceNumber("761787835447")
+                .productOrderId("930686A")
+                .build();
+        sale.getCommercialOperation().get(0).setOrder(createProductOrderResponse);
+
+        PostSalesRequest postSalesRequest = PostSalesRequest
+                .builder()
+                .sale(sale)
+                .headersMap(headersMap)
+                .build();
+
+        ReserveStockResponse reserveStockResponse =  new ReserveStockResponse();
+        Mockito.when(stockWebClient.reserveStock(any(), any(), any())).thenReturn(Mono.just(reserveStockResponse));
+
+        method.invoke(salesManagmentServiceImpl, postSalesRequest, sale, false, false, "");
+    }
+
+    @Test
+    void callToCreateQuotation_when_FlgFinanciamientoIsTrue_Test() throws NoSuchMethodException,
+                                                                    InvocationTargetException, IllegalAccessException {
+        Method method = SalesManagmentServiceImpl.class.getDeclaredMethod("callToCreateQuotation",
+                PostSalesRequest.class, Sale.class, Boolean.class, Boolean.class);
+
+        method.setAccessible(true);
+
+        Sale sale = CommonsMocks.createSaleMock();
+
+        PostSalesRequest postSalesRequest = PostSalesRequest
+                .builder()
+                .sale(sale)
+                .headersMap(headersMap)
+                .build();
+
+        CreateQuotationResponse createQuotationResponse =  new CreateQuotationResponse();
+        Mockito.when(quotationWebClient.createQuotation(any(), any())).thenReturn(Mono.just(createQuotationResponse));
+
+        method.invoke(salesManagmentServiceImpl, postSalesRequest, sale, false, true);
+    }
+
+    @Test
+    void callToCreateQuotation_when_FlgFinanciamientoIsFalse_Test() throws NoSuchMethodException,
+            InvocationTargetException, IllegalAccessException {
+        Method method = SalesManagmentServiceImpl.class.getDeclaredMethod("callToCreateQuotation",
+                PostSalesRequest.class, Sale.class, Boolean.class, Boolean.class);
+
+        method.setAccessible(true);
+
+        Sale sale = CommonsMocks.createSaleMock();
+
+        PostSalesRequest postSalesRequest = PostSalesRequest
+                .builder()
+                .sale(sale)
+                .headersMap(headersMap)
+                .build();
+
+        CreateQuotationResponse createQuotationResponse =  new CreateQuotationResponse();
+        Mockito.when(salesRepository.save(any())).thenReturn(Mono.just(sale));
+
+        method.invoke(salesManagmentServiceImpl, postSalesRequest, sale, false, false);
+    }
+
 }

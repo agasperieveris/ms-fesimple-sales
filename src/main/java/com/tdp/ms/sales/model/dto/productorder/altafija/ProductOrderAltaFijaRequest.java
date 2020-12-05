@@ -35,6 +35,6 @@ public class ProductOrderAltaFijaRequest {
     private String customerId;
     @JsonProperty("productOfferingID")
     private String productOfferingId;
-    private Boolean onlyValidationIndicator;
+    private String onlyValidationIndicator;
     private String actionType;
 }
