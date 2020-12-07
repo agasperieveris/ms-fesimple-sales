@@ -18,11 +18,11 @@
 
 	<groupId>com.tdp.ms</groupId>
 	<artifactId>sales</artifactId>
-	<version>1.2.24</version>
+	<version>1.2.25</version>
 	<name>${project.groupId}:${project.artifactId}</name>
 	<description>Template from Genesis Framework to build microservices</description>
 
-	<inceptionYear>2019</inceptionYear>
+	<inceptionYear>2020</inceptionYear>
 
 	<organization>
 		<name>Telefonica del Peru</name>
