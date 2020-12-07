@@ -461,7 +461,6 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                                 .temporaryId("temp")
                                 .productCatalogId("3241312")
                                 .changedCharacteristics(changedCharacteristicsBroadbandList)
-                                .productId("") // Empty when is alta fija
                                 .build();
 
                         List<ChangedContainedProduct> changedContainedProductsBroadbandList =
@@ -544,7 +543,6 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                                 .temporaryId("temp")
                                 .productCatalogId("34134811")
                                 .changedCharacteristics(changedCharacteristicsAccesoriesList)
-                                .productId("") // Empty when is alta fija
                                 .build();
 
                         List<ChangedContainedProduct> changedContainedProductsAccesoriesList =
@@ -623,7 +621,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                             + "with 'ufxauthorization' key value."})
                     .build());
         }
-        request.getHeadersMap().put("ufxauthorization", tokenMcss);
+        request.getHeadersMap().put("ufxauthorization", "");
 
         // Validation if is retail
         String channelId = saleRequest.getChannel().getId();
@@ -1835,7 +1833,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         if (altaCombo) {
             // ChangeContainedProduct Equipment
             altaChangedContainedProductList = this.changedContainedCaeqList(saleRequest, "temp2");
-            altaChangedContainedProductList.get(0).setProductId(""); // Doesnt sent it in Alta
+            //altaChangedContainedProductList.get(0).setProductId(""); // Doesnt sent it in Alta
         }
 
         // ChangeContainedProduct SIM
@@ -1853,14 +1851,13 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                                                                                                     "SIM_ICCID");
         ChangedCharacteristic changedCharacteristic2 = ChangedCharacteristic
                 .builder()
-                .characteristicId("7992 44")
+                .characteristicId("799244")
                 .characteristicValue(iccidSim) // 8958080008100067567
                 .build();
         changedCharacteristicList.add(changedCharacteristic2);
 
         ChangedContainedProduct changedContainedProduct2 = ChangedContainedProduct
                 .builder()
-                .productId("")
                 .temporaryId("temp3")
                 .productCatalogId("7431")
                 .changedCharacteristics(changedCharacteristicList)
@@ -2386,11 +2383,14 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
 
         ChangedContainedProduct changedContainedProduct1 = ChangedContainedProduct
                 .builder()
-                .productId(saleRequest.getCommercialOperation().get(0).getProduct().getId()) // Consultar porque hay 2 product ids
                 .temporaryId(tempNum)
                 .productCatalogId("7411")
                 .changedCharacteristics(changedCharacteristicList)
                 .build();
+
+        if (!saleRequest.getCommercialOperation().get(0).getReason().equalsIgnoreCase("PORTA")) {
+            changedContainedProduct1.setProductId(saleRequest.getCommercialOperation().get(0).getProduct().getId()); // Consultar porque hay 2 product ids
+        }
 
         List<ChangedContainedProduct> changedContainedProductList = new ArrayList<>();
         changedContainedProductList.add(changedContainedProduct1);

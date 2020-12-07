@@ -33,7 +33,7 @@ import lombok.NoArgsConstructor;
 public class ChangedContainedProduct {
     @SerializedName("productID")
     @JsonProperty("productID")
-    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     private String productId;
     private String temporaryId;
     private String productCatalogId;

@@ -1,6 +1,5 @@
 package com.tdp.ms.sales.client.impl;
 
-import com.google.gson.Gson;
 import com.tdp.genesis.core.constants.HttpHeadersKey;
 import com.tdp.genesis.core.exception.GenesisException;
 import com.tdp.genesis.core.exception.GenesisExceptionBuilder;
@@ -62,6 +61,7 @@ public class ProductOrderWebClientImpl implements ProductOrderWebClient {
                 .header(HttpHeadersKey.UNICA_PID, headersMap.get(HttpHeadersKey.UNICA_PID))
                 .header(HttpHeadersKey.UNICA_USER, headersMap.get(HttpHeadersKey.UNICA_USER))
                 .header(Constants.UFX_AUTHORIZATION, headersMap.get(Constants.UFX_AUTHORIZATION))
+                .header("Content-Type", "application/json")
                 .bodyValue(request)
                 .accept(MediaType.APPLICATION_JSON)
                 .retrieve()
