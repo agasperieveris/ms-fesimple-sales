@@ -32,7 +32,7 @@ import org.springframework.stereotype.Component;
  *         <u>Service Provider</u>: Everis Per&uacute; SAC (EVE) <br/>
  *         <u>Developed by</u>: <br/>
  *         <ul>
- *         <li>Cesar Gomez</li>
+ *         <li>Sergio Rivas</li>
  *         </ul>
  *         <u>Changes</u>:<br/>
  *         <ul>
