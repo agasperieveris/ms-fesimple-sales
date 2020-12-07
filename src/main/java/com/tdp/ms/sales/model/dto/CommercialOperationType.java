@@ -38,7 +38,7 @@ public class CommercialOperationType {
     private PortabilityType portability;
     private WorkOrDeliveryType workOrDeliveryType;
     private ProductInstanceType product;
-    private List<OfferingType> productOfferings = new ArrayList<>();
-    private List<DeviceOffering> deviceOffering = new ArrayList<>();
-    private List<KeyValueType> additionalData = new ArrayList<>();
+    private List<OfferingType> productOfferings;
+    private List<DeviceOffering> deviceOffering;
+    private List<KeyValueType> additionalData;
 }
