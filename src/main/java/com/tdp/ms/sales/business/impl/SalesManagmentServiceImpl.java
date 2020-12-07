@@ -272,8 +272,11 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         }
 
         // Order Attributes if is Scheduling
-        if (!saleRequest.getCommercialOperation().get(0).getWorkOrDeliveryType().getScheduleDelivery()
+        if (saleRequest.getCommercialOperation() != null
+                && saleRequest.getCommercialOperation().get(0).getWorkOrDeliveryType() != null
+                && !saleRequest.getCommercialOperation().get(0).getWorkOrDeliveryType().getScheduleDelivery()
                 .equalsIgnoreCase("SLA")) {
+
             FlexAttrValueType downPaymentAttrValue = FlexAttrValueType
                     .builder()
                     .stringValue(createQuotationFijaRequest.getBody().getDownPayment().getAmount())
@@ -570,11 +573,25 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         return newProductsAltaFijaList;
     }
 
+    private void commercialOperationInputValidations(Sale saleRequest) {
+        CommercialOperationType commercialOperationType = saleRequest.getCommercialOperation().get(0);
+        if (commercialOperationType.getProductOfferings() == null) {
+            commercialOperationType.setProductOfferings(new ArrayList<>());
+        }
+        if (commercialOperationType.getDeviceOffering() == null) {
+            commercialOperationType.setDeviceOffering(new ArrayList<>());
+        }
+        if (commercialOperationType.getAdditionalData() == null) {
+            commercialOperationType.setAdditionalData(new ArrayList<>());
+        }
+    }
+
     @Override
     public Mono<Sale> post(PostSalesRequest request) {
 
         // Getting Sale object
         Sale saleRequest = request.getSale();
+        commercialOperationInputValidations(saleRequest);
 
         if (StringUtils.isEmpty(saleRequest.getId())) {
             return Mono.error(GenesisException
@@ -690,165 +707,13 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
             // Fija Commercial Operations
 
             return businessParameterWebClient
-                .getParametersFinanciamientoFija(request.getHeadersMap())
-                .map(BusinessParametersFinanciamientoFijaResponse::getData)
-                .map(bpFinanciamientoFijaData -> bpFinanciamientoFijaData.get(0))
-                .map(BusinessParameterFinanciamientoFijaData::getExt)
-                .flatMap(parametersFinanciamientoFija -> {
+                    .getParametersFinanciamientoFija(request.getHeadersMap())
+                    .map(BusinessParametersFinanciamientoFijaResponse::getData)
+                    .map(bpFinanciamientoFijaData -> bpFinanciamientoFijaData.get(0))
+                    .map(BusinessParameterFinanciamientoFijaData::getExt)
+                    .flatMap(parametersFinanciamientoFija -> processFija(parametersFinanciamientoFija, saleRequest,
+                            request, flgFinanciamiento));
 
-                    // Building Create Quotation Request to use into Create Order Request
-                    CreateQuotationRequest createQuotationFijaRequest = new CreateQuotationRequest();
-                    if (flgFinanciamiento[0]) {
-                        this.buildCreateQuotationFijaRequest(createQuotationFijaRequest, request,
-                                parametersFinanciamientoFija);
-                    }
-
-                    // Identifying New Assigned Billing Offers SVAs
-                    List<NewAssignedBillingOffers> newAssignedBillingOffersCableTvList = new ArrayList<>();
-                    List<NewAssignedBillingOffers> newAssignedBillingOffersBroadbandList = new ArrayList<>();
-                    List<NewAssignedBillingOffers> newAssignedBillingOffersLandlineList = new ArrayList<>();
-
-                    List<OfferingType> productOfferings = saleRequest.getCommercialOperation().get(0)
-                                                                                                .getProductOfferings();
-                    for (int i = 1; i < productOfferings.size(); i++) {
-                        String productTypeSva = productOfferings.get(i).getProductSpecification().get(0)
-                                                                                                    .getProductType();
-                        String productTypeComponent = this.getStringValueByKeyFromAdditionalDataList(
-                                productOfferings.get(i).getAdditionalData(), "productType"); // Pendiente confirmación de la ruta de referencia del Additional Data
-
-                        if (productTypeSva.equalsIgnoreCase("sva")) {
-
-                            if (productTypeComponent.equalsIgnoreCase(Constants.PRODUCT_TYPE_CABLE_TV)
-                                    || productTypeComponent.equalsIgnoreCase(Constants.PRODUCT_TYPE_BROADBAND)
-                                    || productTypeComponent.equalsIgnoreCase(Constants.PRODUCT_TYPE_LANDLINE)) {
-
-                                NewAssignedBillingOffers newAssignedBillingOffers = NewAssignedBillingOffers
-                                        .builder()
-                                        .productSpecPricingId(productOfferings.get(i).getId())
-                                        .parentProductCatalogId(this.getStringValueByKeyFromAdditionalDataList(
-                                                productOfferings.get(i).getAdditionalData(),
-                                                "parentProductCatalogID"))
-                                        .build();
-                                if (productTypeComponent.equalsIgnoreCase(Constants.PRODUCT_TYPE_CABLE_TV)) {
-                                    newAssignedBillingOffersCableTvList.add(newAssignedBillingOffers);
-                                }
-                                if (productTypeComponent.equalsIgnoreCase(Constants.PRODUCT_TYPE_BROADBAND)) {
-                                    newAssignedBillingOffersBroadbandList.add(newAssignedBillingOffers);
-                                }
-                                if (productTypeComponent.equalsIgnoreCase(Constants.PRODUCT_TYPE_LANDLINE)) {
-                                    newAssignedBillingOffersLandlineList.add(newAssignedBillingOffers);
-                                }
-                            }
-                        }
-                    }
-
-                    // New Products Alta Fija
-                    List<NewProductAltaFija> newProductsAltaFijaList = this.buildNewProductsAltaFijaList(saleRequest,
-                            newAssignedBillingOffersLandlineList,
-                            newAssignedBillingOffersBroadbandList,
-                            newAssignedBillingOffersCableTvList);
-
-                    // Building ServiceAvailability
-
-                    // ServiceAvailability Offers
-                    List<ServiceabilityOfferType> serviceabilityOffersList = new ArrayList<>();
-                    this.buildServiceAvailabilityAltaFija(saleRequest, serviceabilityOffersList);
-
-                    // CommercialZoneType
-                    CommercialZoneType commercialZone = CommercialZoneType
-                            .builder()
-                            .commercialZoneId(saleRequest.getCommercialOperation().get(0).getServiceAvailability()
-                                    .getCommercialAreaId())
-                            .commercialZoneName(saleRequest.getCommercialOperation().get(0).getServiceAvailability()
-                                    .getCommercialAreaDescription())
-                            .build();
-
-                    ServiceabilityInfoType serviceabilityInfo = ServiceabilityInfoType
-                            .builder()
-                            .serviceabilityId(saleRequest.getCommercialOperation().get(0)
-                                                                                    .getServiceAvailability().getId())
-                            .offers(serviceabilityOffersList)
-                            .commercialZone(commercialZone)
-                            .build();
-
-                    // Order Attributes Alta Fija
-                    List<FlexAttrType> altaFijaOrderAttributesList = new ArrayList<>();
-                    this.buildOrderAttributesListAltaFija(altaFijaOrderAttributesList, saleRequest,
-                            createQuotationFijaRequest, flgFinanciamiento[0]);
-
-                    AltaFijaRequest altaFijaRequest = new AltaFijaRequest();
-                    altaFijaRequest.setNewProducts(newProductsAltaFijaList);
-                    altaFijaRequest.setAppointmentId(saleRequest.getCommercialOperation().get(0).getWorkOrDeliveryType()
-                            .getWorkOrder().getWorkForceTeams().get(0).getId());
-                    altaFijaRequest.setAppointmentNumber(saleRequest.getSalesId());
-                    altaFijaRequest.setServiceabilityInfo(serviceabilityInfo);
-                    altaFijaRequest.setSourceApp(saleRequest.getSalesId());
-                    altaFijaRequest.setOrderAttributes(altaFijaOrderAttributesList);
-                    if (!StringUtils.isEmpty(saleRequest.getPaymenType().getCid())) {
-                        altaFijaRequest.setCip(saleRequest.getPaymenType().getCid());
-                    }
-                    altaFijaRequest.setUpfrontIndicator(saleRequest.getCommercialOperation().get(0)
-                            .getProductOfferings().get(0).getUpFront().getIndicator());
-
-                    // Alta Fija Customize Request
-                    ProductOrderAltaFijaRequest productOrderAltaFijaRequest = ProductOrderAltaFijaRequest
-                            .builder()
-                            .salesChannel(saleRequest.getChannel().getId())
-                            .request(altaFijaRequest)
-                            .customerId(saleRequest.getRelatedParty().get(0).getCustomerId())
-                            .productOfferingId(saleRequest.getCommercialOperation().get(0)
-                                                                                .getProductOfferings().get(0).getId())
-                            .onlyValidationIndicator("false")
-                            .actionType("PR")
-                            .build();
-
-                    // Building Main Request to send to Create Product Order Service
-                    CreateProductOrderGeneralRequest mainRequestProductOrder = new CreateProductOrderGeneralRequest();
-                    mainRequestProductOrder.setCreateProductOrderRequest(productOrderAltaFijaRequest);
-
-                    // Call de Create Alta Fija Order
-                    return productOrderWebClient.createProductOrder(mainRequestProductOrder, request.getHeadersMap(),
-                            saleRequest)
-                            .flatMap(createOrderResponse -> {
-                                // Adding Order info to sales
-                                saleRequest.getCommercialOperation().get(0)
-                                        .setOrder(createOrderResponse.getCreateProductOrderResponse());
-
-                                if (validateNegotiation(saleRequest.getAdditionalData(),
-                                        saleRequest.getIdentityValidations())) {
-                                    saleRequest.setStatus(Constants.NEGOCIACION);
-                                } else if (!StringUtils.isEmpty(createOrderResponse.getCreateProductOrderResponse()
-                                        .getProductOrderId())) {
-                                    // When All is OK
-                                    saleRequest.setStatus("NUEVO");
-                                } else {
-                                    // When Create Product Order Service fail or doesnt respond with an Order Id
-                                    saleRequest.setStatus("PENDIENTE");
-                                }
-
-                                // FEMS-1514 Validación de creación Orden
-                                Mono<Sale> saleRequestUpdated = creationOrderValidation(saleRequest,
-                                        mainRequestProductOrder, request.getHeadersMap());
-                                return saleRequestUpdated.flatMap(saleItem -> {
-
-                                    if (flgFinanciamiento[0]) {
-                                        return quotationWebClient.createQuotation(createQuotationFijaRequest,
-                                                saleRequest)
-                                                .flatMap(createQuotationResponse -> salesRepository.save(saleItem)
-                                                        .map(r -> {
-                                                            this.postSalesEventFlow(request);
-                                                            return r;
-                                                        }));
-                                    } else {
-                                        return salesRepository.save(saleItem)
-                                                .map(r -> {
-                                                    this.postSalesEventFlow(request);
-                                                    return r;
-                                                });
-                                    }
-                                });
-                            });
-                });
         } else if (mainProductType.equalsIgnoreCase(Constants.WIRELESS)) {
             // Mobile Commercial Operations
 
@@ -1044,6 +909,162 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                 .map(r -> {
                     this.postSalesEventFlow(request);
                     return r;
+                });
+    }
+
+    private Mono<Sale> processFija(List<BusinessParameterFinanciamientoFijaExt> parametersFinanciamientoFija,
+                                   Sale saleRequest, PostSalesRequest request, final Boolean[] flgFinanciamiento) {
+        // Building Create Quotation Request to use into Create Order Request
+        CreateQuotationRequest createQuotationFijaRequest = new CreateQuotationRequest();
+        if (flgFinanciamiento[0]) {
+            this.buildCreateQuotationFijaRequest(createQuotationFijaRequest, request,
+                    parametersFinanciamientoFija);
+        }
+
+        // Identifying New Assigned Billing Offers SVAs
+        List<NewAssignedBillingOffers> newAssignedBillingOffersCableTvList = new ArrayList<>();
+        List<NewAssignedBillingOffers> newAssignedBillingOffersBroadbandList = new ArrayList<>();
+        List<NewAssignedBillingOffers> newAssignedBillingOffersLandlineList = new ArrayList<>();
+
+        List<OfferingType> productOfferings = saleRequest.getCommercialOperation().get(0)
+                .getProductOfferings();
+        for (int i = 1; i < productOfferings.size(); i++) {
+            String productTypeSva = productOfferings.get(i).getProductSpecification().get(0)
+                    .getProductType();
+            String productTypeComponent = this.getStringValueByKeyFromAdditionalDataList(
+                    productOfferings.get(i).getAdditionalData(), "productType"); // Pendiente confirmación de la ruta de referencia del Additional Data
+
+            if (productTypeSva.equalsIgnoreCase("sva")) {
+
+                if (productTypeComponent.equalsIgnoreCase(Constants.PRODUCT_TYPE_CABLE_TV)
+                        || productTypeComponent.equalsIgnoreCase(Constants.PRODUCT_TYPE_BROADBAND)
+                        || productTypeComponent.equalsIgnoreCase(Constants.PRODUCT_TYPE_LANDLINE)) {
+
+                    NewAssignedBillingOffers newAssignedBillingOffers = NewAssignedBillingOffers
+                            .builder()
+                            .productSpecPricingId(productOfferings.get(i).getId())
+                            .parentProductCatalogId(this.getStringValueByKeyFromAdditionalDataList(
+                                    productOfferings.get(i).getAdditionalData(),
+                                    "parentProductCatalogID"))
+                            .build();
+                    if (productTypeComponent.equalsIgnoreCase(Constants.PRODUCT_TYPE_CABLE_TV)) {
+                        newAssignedBillingOffersCableTvList.add(newAssignedBillingOffers);
+                    }
+                    if (productTypeComponent.equalsIgnoreCase(Constants.PRODUCT_TYPE_BROADBAND)) {
+                        newAssignedBillingOffersBroadbandList.add(newAssignedBillingOffers);
+                    }
+                    if (productTypeComponent.equalsIgnoreCase(Constants.PRODUCT_TYPE_LANDLINE)) {
+                        newAssignedBillingOffersLandlineList.add(newAssignedBillingOffers);
+                    }
+                }
+            }
+        }
+
+        // New Products Alta Fija
+        List<NewProductAltaFija> newProductsAltaFijaList = this.buildNewProductsAltaFijaList(saleRequest,
+                newAssignedBillingOffersLandlineList,
+                newAssignedBillingOffersBroadbandList,
+                newAssignedBillingOffersCableTvList);
+
+        // Building ServiceAvailability
+
+        // ServiceAvailability Offers
+        List<ServiceabilityOfferType> serviceabilityOffersList = new ArrayList<>();
+        this.buildServiceAvailabilityAltaFija(saleRequest, serviceabilityOffersList);
+
+        // CommercialZoneType
+        CommercialZoneType commercialZone = CommercialZoneType
+                .builder()
+                .commercialZoneId(saleRequest.getCommercialOperation().get(0).getServiceAvailability()
+                        .getCommercialAreaId())
+                .commercialZoneName(saleRequest.getCommercialOperation().get(0).getServiceAvailability()
+                        .getCommercialAreaDescription())
+                .build();
+
+        ServiceabilityInfoType serviceabilityInfo = ServiceabilityInfoType
+                .builder()
+                .serviceabilityId(saleRequest.getCommercialOperation().get(0)
+                        .getServiceAvailability().getId())
+                .offers(serviceabilityOffersList)
+                .commercialZone(commercialZone)
+                .build();
+
+        // Order Attributes Alta Fija
+        List<FlexAttrType> altaFijaOrderAttributesList = new ArrayList<>();
+        this.buildOrderAttributesListAltaFija(altaFijaOrderAttributesList, saleRequest,
+                createQuotationFijaRequest, flgFinanciamiento[0]);
+
+        AltaFijaRequest altaFijaRequest = new AltaFijaRequest();
+        altaFijaRequest.setNewProducts(newProductsAltaFijaList);
+        altaFijaRequest.setAppointmentId(saleRequest.getCommercialOperation().get(0).getWorkOrDeliveryType()
+                .getWorkOrder().getWorkForceTeams().get(0).getId());
+        altaFijaRequest.setAppointmentNumber(saleRequest.getSalesId());
+        altaFijaRequest.setServiceabilityInfo(serviceabilityInfo);
+        altaFijaRequest.setSourceApp(saleRequest.getSalesId());
+        altaFijaRequest.setOrderAttributes(altaFijaOrderAttributesList);
+        if (!StringUtils.isEmpty(saleRequest.getPaymenType().getCid())) {
+            altaFijaRequest.setCip(saleRequest.getPaymenType().getCid());
+        }
+        altaFijaRequest.setUpfrontIndicator(saleRequest.getCommercialOperation().get(0)
+                .getProductOfferings().get(0).getUpFront().getIndicator());
+
+        // Alta Fija Customize Request
+        ProductOrderAltaFijaRequest productOrderAltaFijaRequest = ProductOrderAltaFijaRequest
+                .builder()
+                .salesChannel(saleRequest.getChannel().getId())
+                .request(altaFijaRequest)
+                .customerId(saleRequest.getRelatedParty().get(0).getCustomerId())
+                .productOfferingId(saleRequest.getCommercialOperation().get(0)
+                        .getProductOfferings().get(0).getId())
+                .onlyValidationIndicator("false")
+                .actionType("PR")
+                .build();
+
+        // Building Main Request to send to Create Product Order Service
+        CreateProductOrderGeneralRequest mainRequestProductOrder = new CreateProductOrderGeneralRequest();
+        mainRequestProductOrder.setCreateProductOrderRequest(productOrderAltaFijaRequest);
+
+        // Call de Create Alta Fija Order
+        return productOrderWebClient.createProductOrder(mainRequestProductOrder, request.getHeadersMap(),
+                saleRequest)
+                .flatMap(createOrderResponse -> {
+                    // Adding Order info to sales
+                    saleRequest.getCommercialOperation().get(0)
+                            .setOrder(createOrderResponse.getCreateProductOrderResponse());
+
+                    if (validateNegotiation(saleRequest.getAdditionalData(),
+                            saleRequest.getIdentityValidations())) {
+                        saleRequest.setStatus(Constants.NEGOCIACION);
+                    } else if (!StringUtils.isEmpty(createOrderResponse.getCreateProductOrderResponse()
+                            .getProductOrderId())) {
+                        // When All is OK
+                        saleRequest.setStatus("NUEVO");
+                    } else {
+                        // When Create Product Order Service fail or doesnt respond with an Order Id
+                        saleRequest.setStatus("PENDIENTE");
+                    }
+
+                    // FEMS-1514 Validación de creación Orden
+                    Mono<Sale> saleRequestUpdated = creationOrderValidation(saleRequest,
+                            mainRequestProductOrder, request.getHeadersMap());
+                    return saleRequestUpdated.flatMap(saleItem -> {
+
+                        if (flgFinanciamiento[0]) {
+                            return quotationWebClient.createQuotation(createQuotationFijaRequest,
+                                    saleRequest)
+                                    .flatMap(createQuotationResponse -> salesRepository.save(saleItem)
+                                            .map(r -> {
+                                                this.postSalesEventFlow(request);
+                                                return r;
+                                            }));
+                        } else {
+                            return salesRepository.save(saleItem)
+                                    .map(r -> {
+                                        this.postSalesEventFlow(request);
+                                        return r;
+                                    });
+                        }
+                    });
                 });
     }
 

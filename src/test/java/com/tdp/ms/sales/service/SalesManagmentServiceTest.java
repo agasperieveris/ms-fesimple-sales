@@ -10,6 +10,8 @@ import com.tdp.ms.sales.client.StockWebClient;
 import com.tdp.ms.sales.client.WebClientReceptor;
 import com.tdp.ms.sales.model.dto.*;
 import com.tdp.ms.sales.model.dto.businessparameter.BusinessParameterDataSeq;
+import com.tdp.ms.sales.model.dto.businessparameter.BusinessParameterFinanciamientoFijaData;
+import com.tdp.ms.sales.model.dto.businessparameter.BusinessParameterFinanciamientoFijaExt;
 import com.tdp.ms.sales.model.dto.productorder.CreateProductOrderGeneralRequest;
 import com.tdp.ms.sales.model.dto.productorder.FlexAttrType;
 import com.tdp.ms.sales.model.dto.productorder.caeq.ChangedContainedProduct;
@@ -17,19 +19,12 @@ import com.tdp.ms.sales.model.entity.Sale;
 import com.tdp.ms.sales.model.request.CreateQuotationRequest;
 import com.tdp.ms.sales.model.request.PostSalesRequest;
 import com.tdp.ms.sales.model.request.ReserveStockRequest;
-import com.tdp.ms.sales.model.response.BusinessParametersResponse;
-import com.tdp.ms.sales.model.response.CreateQuotationResponse;
-import com.tdp.ms.sales.model.response.GetSalesCharacteristicsResponse;
-import com.tdp.ms.sales.model.response.ProductorderResponse;
-import com.tdp.ms.sales.model.response.ReceptorResponse;
-import com.tdp.ms.sales.model.response.ReserveStockResponse;
+import com.tdp.ms.sales.model.response.*;
 import com.tdp.ms.sales.repository.SalesRepository;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 
 import com.tdp.ms.sales.utils.CommonsMocks;
 import org.junit.Assert;
@@ -116,8 +111,8 @@ public class SalesManagmentServiceTest {
     }
 
     @Test
-    void postSalesTest() {
-        Sale sale = CommonsMocks.createSaleMock();
+    void postSalesTest() throws InvocationTargetException, IllegalAccessException, NoSuchMethodException {
+        Sale sale = CommonsMocks.createSaleMock2();
         sale.getCommercialOperation().get(0).getOrder().setProductOrderId("");
 
         PostSalesRequest salesRequest = PostSalesRequest
@@ -159,11 +154,50 @@ public class SalesManagmentServiceTest {
                 .data(dataList2)
                 .build();
 
+        BusinessParametersFinanciamientoFijaResponse bpFijaResponse = BusinessParametersFinanciamientoFijaResponse.builder()
+                .data(Arrays.asList(BusinessParameterFinanciamientoFijaData.builder()
+                        .ext(Arrays.asList(BusinessParameterFinanciamientoFijaExt.builder()
+                                        .id(1)
+                                        .nomProductType("Landline")
+                                        .nomParameter("financialEntity")
+                                        .desParameterTitle("Código de financiamiento fija")
+                                        .codParameterValue("FVFIR00006")
+                                        .build(),
+                                BusinessParameterFinanciamientoFijaExt.builder()
+                                        .id(2)
+                                        .nomProductType("Landline")
+                                        .nomParameter("chargeCodeInstallation")
+                                        .desParameterTitle("Código de financiamiento asociado a la instalación")
+                                        .codParameterValue("FRVTSE_001")
+                                        .build(),
+                                BusinessParameterFinanciamientoFijaExt.builder()
+                                        .id(3)
+                                        .nomProductType("Landline")
+                                        .nomParameter("chargeCodeDevicePremium")
+                                        .desParameterTitle("Código de financiamiento asociado a Upgrade a Modem Premium")
+                                        .codParameterValue("FRIOEQ_002")
+                                        .build(),
+                                BusinessParameterFinanciamientoFijaExt.builder()
+                                        .id(4)
+                                        .nomProductType("Landline")
+                                        .nomParameter("chargeCodeUltraWifi")
+                                        .desParameterTitle("Código de financiamiento asociado a Ultra Wifi")
+                                        .codParameterValue("FRIOEQ_007")
+                                        .build()))
+                        .build()))
+                .build();
+
+        List<BusinessParametersFinanciamientoFijaResponse> bpFinanciamientoFijaResponseList = new ArrayList<>();
+        bpFinanciamientoFijaResponseList.add(bpFijaResponse);
+
         Mockito.when(businessParameterWebClient.getSalesCharacteristicsByCommercialOperationType(any()))
                 .thenReturn(Mono.just(businessParametersResponse));
 
         Mockito.when(businessParameterWebClient.getRiskDomain(any(), any()))
                 .thenReturn(Mono.just(expectBusinessParametersResponse));
+
+        Mockito.when(businessParameterWebClient.getParametersFinanciamientoFija(any()))
+                .thenReturn(Mono.just(bpFijaResponse));
 
         ProductorderResponse productorderResponse = new ProductorderResponse();
         CreateProductOrderResponseType createProductOrderResponseType =  new CreateProductOrderResponseType();
@@ -175,7 +209,16 @@ public class SalesManagmentServiceTest {
         Mockito.when(salesRepository.save(any())).thenReturn(Mono.just(sale));
 
 
-        Mono<Sale> result = salesManagmentService.post(salesRequest);
+        salesManagmentService.post(salesRequest);
+
+        salesRequest.getSale().setProductType("WIRELESS");
+        salesManagmentService.post(salesRequest);
+
+        Method method = SalesManagmentServiceImpl.class.getDeclaredMethod("processFija", List.class, Sale.class,
+                PostSalesRequest.class, Boolean[].class);
+        method.setAccessible(true);
+        final Boolean[] flgFinanciamiento = {false};
+        method.invoke(salesManagmentServiceImpl, bpFinanciamientoFijaResponseList, salesRequest.getSale(), salesRequest, flgFinanciamiento);
 
     }
 
@@ -577,4 +620,16 @@ public class SalesManagmentServiceTest {
         method.invoke(salesManagmentServiceImpl, postSalesRequest, sale, false, false);
     }
 
+    @Test
+    void commercialOperationInputValidations_Test() throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
+        Method method = SalesManagmentServiceImpl.class.getDeclaredMethod("commercialOperationInputValidations", Sale.class);
+        method.setAccessible(true);
+        method.invoke(salesManagmentServiceImpl, Sale.builder()
+                .commercialOperation(Collections.singletonList(CommercialOperationType.builder()
+                        .productOfferings(null)
+                        .deviceOffering(null)
+                        .additionalData(null)
+                        .build()))
+                .build());
+    }
 }
