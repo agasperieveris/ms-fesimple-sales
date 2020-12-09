@@ -71,5 +71,9 @@ application:
       generate_cip_payment_identifier: https://localhost
     quotation:
       create_quotation: https://localhost
+  timeout:
+    get_order_timeout: 180000
+    get_order_timeout_read: 180000
+    get_order_timeout_write: 180000
   catalog-error:
     url: https://aks-berserkers-ingress-dev.eastus2.cloudapp.azure.com
