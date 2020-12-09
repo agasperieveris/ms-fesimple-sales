@@ -3,8 +3,25 @@ package com.tdp.ms.sales.business.impl;
 import com.tdp.genesis.core.exception.GenesisException;
 import com.tdp.ms.commons.util.DateUtils;
 import com.tdp.ms.sales.business.SalesManagmentService;
-import com.tdp.ms.sales.client.*;
-import com.tdp.ms.sales.model.dto.*;
+import com.tdp.ms.sales.client.BusinessParameterWebClient;
+import com.tdp.ms.sales.client.GetSkuWebClient;
+import com.tdp.ms.sales.client.ProductOrderWebClient;
+import com.tdp.ms.sales.client.QuotationWebClient;
+import com.tdp.ms.sales.client.StockWebClient;
+import com.tdp.ms.sales.client.WebClientReceptor;
+import com.tdp.ms.sales.model.dto.BusinessParameterDataObjectExt;
+import com.tdp.ms.sales.model.dto.BusinessParameterExt;
+import com.tdp.ms.sales.model.dto.CommercialOperationType;
+import com.tdp.ms.sales.model.dto.ContactMedium;
+import com.tdp.ms.sales.model.dto.CreateProductOrderResponseType;
+import com.tdp.ms.sales.model.dto.DeviceOffering;
+import com.tdp.ms.sales.model.dto.IdentityValidationType;
+import com.tdp.ms.sales.model.dto.KeyValueType;
+import com.tdp.ms.sales.model.dto.OfferingType;
+import com.tdp.ms.sales.model.dto.PortabilityType;
+import com.tdp.ms.sales.model.dto.ShipmentDetailsType;
+import com.tdp.ms.sales.model.dto.SiteRefType;
+import com.tdp.ms.sales.model.dto.TimePeriod;
 import com.tdp.ms.sales.model.dto.businessparameter.BusinessParameterFinanciamientoFijaData;
 import com.tdp.ms.sales.model.dto.businessparameter.BusinessParameterFinanciamientoFijaExt;
 import com.tdp.ms.sales.model.dto.productorder.CreateProductOrderGeneralRequest;
@@ -57,14 +74,24 @@ import com.tdp.ms.sales.model.request.GetSalesCharacteristicsRequest;
 import com.tdp.ms.sales.model.request.PostSalesRequest;
 import com.tdp.ms.sales.model.request.ReceptorRequest;
 import com.tdp.ms.sales.model.request.ReserveStockRequest;
-import com.tdp.ms.sales.model.response.*;
+import com.tdp.ms.sales.model.response.BusinessParametersFinanciamientoFijaResponse;
+import com.tdp.ms.sales.model.response.BusinessParametersResponse;
+import com.tdp.ms.sales.model.response.BusinessParametersResponseObjectExt;
+import com.tdp.ms.sales.model.response.CreateQuotationResponse;
+import com.tdp.ms.sales.model.response.GetSalesCharacteristicsResponse;
+import com.tdp.ms.sales.model.response.GetSkuResponse;
+import com.tdp.ms.sales.model.response.ProductorderResponse;
+import com.tdp.ms.sales.model.response.ReserveStockResponse;
 import com.tdp.ms.sales.repository.SalesRepository;
 import com.tdp.ms.sales.utils.Commons;
 import com.tdp.ms.sales.utils.Constants;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -84,6 +111,7 @@ import reactor.core.publisher.Mono;
  *         <u>Developed by</u>: <br/>
  *         <ul>
  *         <li>Cesar Gomez</li>
+ *         <li>Sergio Rivas</li>
  *         </ul>
  *         <u>Changes</u>:<br/>
  *         <ul>
@@ -621,7 +649,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                             + "with 'ufxauthorization' key value."})
                     .build());
         }
-        request.getHeadersMap().put("ufxauthorization", "");
+        request.getHeadersMap().put("ufxauthorization", tokenMcss);
 
         // Validation if is retail
         String channelId = saleRequest.getChannel().getId();
@@ -687,7 +715,8 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
             }
         }
 
-        flgFinanciamiento[0] = !StringUtils.isEmpty(saleRequest.getCommercialOperation().get(0).getDeviceOffering()
+        flgFinanciamiento[0] = saleRequest.getCommercialOperation().get(0).getDeviceOffering() != null ? false :
+                !StringUtils.isEmpty(saleRequest.getCommercialOperation().get(0).getDeviceOffering()
                 .get(0).getOffers().get(0).getBillingOfferings().get(0).getCommitmentPeriods().get(0)
                 .getFinancingInstalments().get(0).getDescription()) && !saleRequest.getCommercialOperation().get(0)
                 .getDeviceOffering().get(0).getOffers().get(0).getBillingOfferings().get(0).getCommitmentPeriods()
@@ -714,10 +743,11 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
 
         } else if (mainProductType.equalsIgnoreCase(Constants.WIRELESS)) {
             // Mobile Commercial Operations
+            Boolean deviceOfferingIsNullOrEmpty = deviceOfferingIsNullOrEmpty(saleRequest);
 
-            if (StringUtils.isEmpty(saleRequest.getCommercialOperation().get(0).getOrder().getProductOrderId())
-                    && StringUtils.isEmpty(saleRequest.getCommercialOperation().get(0).getDeviceOffering().get(0)
-                    .getStock().getReservationId())) {
+            if ((saleRequest.getCommercialOperation().get(0).getOrder() == null ||
+                    StringUtils.isEmpty(saleRequest.getCommercialOperation().get(0).getOrder().getProductOrderId()))
+                    && deviceOfferingIsNullOrEmpty) {
 
                 // Get mail Validation, dominio de riesgo - SERGIO
                 Mono<BusinessParametersResponse> getRiskDomain = businessParameterWebClient
@@ -748,121 +778,13 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                         .getParametersSimcard(request.getHeadersMap());
 
                 return Mono.zip(getRiskDomain, salesCharsByCot, getBonificacionSim, getParametersSimCard)
-                        .flatMap(tuple -> {
-                            if (!tuple.getT1().getData().isEmpty()
-                                    && tuple.getT1().getData().get(0).getActive()
-                            ) {
-                                // if it is a risk domain, cancel operation
-                                return Mono.error(GenesisException
-                                        .builder()
-                                        .exceptionId("SVR1000")
-                                        .wildcards(new String[]{"Dominio de riesgo, se canceló la operación"})
-                                        .build());
-                            }
-
-                            // Getting simcard sapid from bussiness parameter
-                            sapidSimcard[0] = getStringValueFromBusinessParameterDataListByKeyAndActiveTrue(
-                                    tuple.getT4().getData(), "sapid");
-
-                            // Getting CIP Code
-                            String cipCode = "";
-                            if (saleRequest.getCommercialOperation().get(0).getWorkOrDeliveryType().getMediumDelivery()
-                                    .equalsIgnoreCase("DELIVERY")
-                                    && saleRequest.getPaymenType().getPaymentType().equalsIgnoreCase("EX")
-                                    && this.getStringValueByKeyFromAdditionalDataList(saleRequest.getAdditionalData(),
-                                    "paymentTypeLabel").equals("PAGO EFECTIVO")
-                            ) {
-                                cipCode = saleRequest.getPaymenType().getCid(); // Validate if cipCode is empty
-                            }
-
-                            // Building Main Request to send to Create Product Order Service
-                            CreateProductOrderGeneralRequest mainRequestProductOrder =
-                                                                                new CreateProductOrderGeneralRequest();
-
-                            // Recognizing Mobile Portability
-                            Boolean isMobilePortability = commercialOperationReason
-                                                                                .equalsIgnoreCase("PORTA");
-
-                            // Recognizing CAPL Commercial Operation Type
-                            if (flgCapl[0] && !flgCaeq[0] && !flgCasi[0] && !flgAlta[0]) {
-
-                                mainRequestProductOrder = this.caplCommercialOperation(saleRequest,
-                                        mainRequestProductOrder, channelIdRequest, customerIdRequest,
-                                        productOfferingIdRequest, cipCode);
-
-                            } else if (!flgCapl[0] && flgCaeq[0] && !flgCasi[0] && !flgAlta[0]) { // Recognizing CAEQ Commercial Operation Type
-
-                                mainRequestProductOrder = this.caeqCommercialOperation(saleRequest,
-                                        mainRequestProductOrder, channelIdRequest, customerIdRequest,
-                                        productOfferingIdRequest, cipCode);
-
-                            } else if (flgCapl[0] && flgCaeq[0] && !flgCasi[0] && !flgAlta[0]) { // Recognizing CAEQ+CAPL Commercial Operation Type
-
-                                mainRequestProductOrder = this.caeqCaplCommercialOperation(saleRequest,
-                                        mainRequestProductOrder, channelIdRequest, customerIdRequest,
-                                        productOfferingIdRequest, cipCode);
-                            } else if ((!flgCapl[0] && !flgCaeq[0] && !flgCasi[0] && flgAlta[0])
-                                    || isMobilePortability) {
-
-                                mainRequestProductOrder = this.altaCommercialOperation(saleRequest,
-                                        mainRequestProductOrder, channelIdRequest, customerIdRequest,
-                                        productOfferingIdRequest, cipCode, tuple.getT3(), sapidSimcard[0],
-                                                                                                isMobilePortability);
-                            }
-
-                            CreateProductOrderGeneralRequest finalMainRequestProductOrder = mainRequestProductOrder;
-                            return productOrderWebClient.createProductOrder(mainRequestProductOrder,
-                                    request.getHeadersMap(), saleRequest)
-                                    .flatMap(createOrderResponse -> {
-                                        saleRequest.getCommercialOperation().get(0)
-                                                .setOrder(createOrderResponse.getCreateProductOrderResponse());
-
-                                        if (validateNegotiation(saleRequest.getAdditionalData(),
-                                                saleRequest.getIdentityValidations())) {
-                                            saleRequest.setStatus(Constants.NEGOCIACION);
-                                        } else if (!StringUtils.isEmpty(createOrderResponse
-                                                                .getCreateProductOrderResponse().getProductOrderId())) {
-                                            saleRequest.setStatus("NUEVO");
-                                        } else {
-                                            saleRequest.setStatus("PENDIENTE");
-                                        }
-
-                                        // Ship Delivery logic (tambo) - SERGIO
-                                        if (saleRequest.getCommercialOperation().get(0).getWorkOrDeliveryType()
-                                                .getMediumDelivery().equalsIgnoreCase("Tienda")) {
-                                            saleRequest.setAdditionalData(additionalDataAssigments(saleRequest
-                                                    .getAdditionalData(), saleRequest));
-                                        }
-
-                                        // FEMS-1514 Validación de creación Orden
-                                        Mono<Sale> saleRequestUpdated = creationOrderValidation(saleRequest,
-                                                                finalMainRequestProductOrder, request.getHeadersMap());
-                                        return saleRequestUpdated.flatMap(saleItem -> {
-                                            // Call to Reserve Stock Service When Commercial Operation include CAEQ
-                                            if (flgCaeq[0] || flgAlta[0]) {
-
-                                                return this.callToReserveStockAndCreateQuotation(request, saleItem,
-                                                                    flgCasi[0], flgFinanciamiento[0], sapidSimcard[0]);
-                                            } else {
-                                                if (flgCasi[0]) {
-                                                    // Call to Create Quotation Service When CommercialOperation Contains CASI
-                                                    return this.callToCreateQuotation(request, saleItem, flgCasi[0],
-                                                            flgFinanciamiento[0]);
-                                                } else {
-                                                    // Case when is Only CAPL
-                                                    return salesRepository.save(saleItem)
-                                                            .map(r -> {
-                                                                this.postSalesEventFlow(request);
-                                                                return r;
-                                                            });
-                                                }
-                                            }
-                                        });
-                                    });
-                        });
+                        .flatMap(tuple -> validationsAndBuildings(tuple.getT1(), tuple.getT2(), tuple.getT3(),
+                                tuple.getT4(), saleRequest, request, sapidSimcard, commercialOperationReason, flgCapl,
+                                flgCaeq, flgCasi, flgAlta, flgFinanciamiento, channelIdRequest, customerIdRequest,
+                                productOfferingIdRequest));
 
             } else if (!StringUtils.isEmpty(saleRequest.getCommercialOperation().get(0).getOrder().getProductOrderId())
-                    && StringUtils.isEmpty(saleRequest.getCommercialOperation().get(0).getDeviceOffering().get(0)
+                    && !StringUtils.isEmpty(saleRequest.getCommercialOperation().get(0).getDeviceOffering().get(0)
                     .getStock())
                     && StringUtils.isEmpty(saleRequest.getCommercialOperation().get(0).getDeviceOffering().get(0)
                     .getStock().getReservationId())) { // Retry from Reservation
@@ -907,6 +829,138 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                 .map(r -> {
                     this.postSalesEventFlow(request);
                     return r;
+                });
+    }
+
+    private Boolean deviceOfferingIsNullOrEmpty(Sale saleRequest) {
+        if (saleRequest.getCommercialOperation().get(0).getDeviceOffering() == null
+                || saleRequest.getCommercialOperation().get(0).getDeviceOffering().isEmpty()){
+            return true;
+        } else if (saleRequest.getCommercialOperation().get(0).getDeviceOffering().get(0)
+                .getStock() == null) {
+            return true;
+        } else if (StringUtils.isEmpty(saleRequest.getCommercialOperation().get(0).getDeviceOffering().get(0)
+                .getStock().getReservationId())) {
+            return true;
+        }
+        return false;
+    }
+
+    private Mono<Sale> validationsAndBuildings(BusinessParametersResponse getRiskDomain,
+                                               List<BusinessParameterExt> salesCharsByCot,
+                                               BusinessParametersResponseObjectExt getBonificacionSim,
+                                               BusinessParametersResponseObjectExt getParametersSimCard,
+                                               Sale saleRequest,
+                                               PostSalesRequest request, final String[] sapidSimcard,
+                                               String commercialOperationReason, final Boolean[] flgCapl,
+                                               final Boolean[] flgCaeq, final Boolean[] flgCasi,
+                                               final Boolean[] flgAlta, final Boolean[] flgFinanciamiento,
+                                               String channelIdRequest, String customerIdRequest,
+                                               String productOfferingIdRequest) {
+
+        if (!getRiskDomain.getData().isEmpty() && getRiskDomain.getData().get(0).getActive()) {
+            // if it is a risk domain, cancel operation
+            return Mono.error(GenesisException
+                    .builder()
+                    .exceptionId("SVR1000")
+                    .wildcards(new String[]{"Dominio de riesgo, se canceló la operación"})
+                    .build());
+        }
+
+        // Getting simcard sapid from bussiness parameter
+        sapidSimcard[0] = getStringValueFromBusinessParameterDataListByKeyAndActiveTrue(getParametersSimCard.getData(),
+                "sapid");
+
+        // Getting CIP Code
+        String cipCode = "";
+        if (saleRequest.getCommercialOperation().get(0).getWorkOrDeliveryType() != null
+                && saleRequest.getCommercialOperation().get(0).getWorkOrDeliveryType().getMediumDelivery()
+                .equalsIgnoreCase("DELIVERY")
+                && saleRequest.getPaymenType().getPaymentType().equalsIgnoreCase("EX")
+                && this.getStringValueByKeyFromAdditionalDataList(saleRequest.getAdditionalData(),
+                "paymentTypeLabel").equals("PAGO EFECTIVO")) {
+
+            cipCode = saleRequest.getPaymenType().getCid(); // Validate if cipCode is empty
+        }
+
+        // Building Main Request to send to Create Product Order Service
+        CreateProductOrderGeneralRequest mainRequestProductOrder = new CreateProductOrderGeneralRequest();
+
+        // Recognizing Mobile Portability
+        Boolean isMobilePortability = commercialOperationReason.equalsIgnoreCase("PORTA");
+
+        // Recognizing CAPL Commercial Operation Type
+        if (flgCapl[0] && !flgCaeq[0] && !flgCasi[0] && !flgAlta[0]) {
+
+            mainRequestProductOrder = this.caplCommercialOperation(saleRequest, mainRequestProductOrder,
+                    channelIdRequest, customerIdRequest, productOfferingIdRequest, cipCode);
+
+        } else if (!flgCapl[0] && flgCaeq[0] && !flgCasi[0] && !flgAlta[0]) { // Recognizing CAEQ Commercial Operation Type
+
+            mainRequestProductOrder = this.caeqCommercialOperation(saleRequest, mainRequestProductOrder,
+                    channelIdRequest, customerIdRequest, productOfferingIdRequest, cipCode);
+
+        } else if (flgCapl[0] && flgCaeq[0] && !flgCasi[0] && !flgAlta[0]) { // Recognizing CAEQ+CAPL Commercial Operation Type
+
+            mainRequestProductOrder = this.caeqCaplCommercialOperation(saleRequest, mainRequestProductOrder,
+                    channelIdRequest, customerIdRequest, productOfferingIdRequest, cipCode);
+        } else if ((!flgCapl[0] && !flgCaeq[0] && !flgCasi[0] && flgAlta[0])
+                || isMobilePortability) {
+
+            mainRequestProductOrder = this.altaCommercialOperation(saleRequest, mainRequestProductOrder,
+                    channelIdRequest, customerIdRequest, productOfferingIdRequest, cipCode, getBonificacionSim,
+                    sapidSimcard[0], isMobilePortability);
+        }
+
+        CreateProductOrderGeneralRequest finalMainRequestProductOrder = mainRequestProductOrder;
+        return productOrderWebClient.createProductOrder(mainRequestProductOrder,
+                request.getHeadersMap(), saleRequest)
+                .flatMap(createOrderResponse -> {
+                    saleRequest.getCommercialOperation().get(0).setOrder(createOrderResponse
+                            .getCreateProductOrderResponse());
+
+                    if (validateNegotiation(saleRequest.getAdditionalData(),
+                            saleRequest.getIdentityValidations())) {
+                        saleRequest.setStatus(Constants.NEGOCIACION);
+                    } else if (!StringUtils.isEmpty(createOrderResponse
+                            .getCreateProductOrderResponse().getProductOrderId())) {
+                        saleRequest.setStatus("NUEVO");
+                    } else {
+                        saleRequest.setStatus("PENDIENTE");
+                    }
+
+                    // Ship Delivery logic (tambo) - SERGIO
+                    if (saleRequest.getCommercialOperation().get(0).getWorkOrDeliveryType() != null
+                            && saleRequest.getCommercialOperation().get(0).getWorkOrDeliveryType()
+                            .getMediumDelivery().equalsIgnoreCase("Tienda")) {
+                        saleRequest.setAdditionalData(additionalDataAssigments(saleRequest
+                                .getAdditionalData(), saleRequest));
+                    }
+
+                    // FEMS-1514 Validación de creación Orden
+                    Mono<Sale> saleRequestUpdated = creationOrderValidation(saleRequest, finalMainRequestProductOrder,
+                            request.getHeadersMap());
+                    return saleRequestUpdated.flatMap(saleItem -> {
+                        // Call to Reserve Stock Service When Commercial Operation include CAEQ
+                        if (flgCaeq[0] || flgAlta[0]) {
+
+                            return this.callToReserveStockAndCreateQuotation(request, saleItem,
+                                    flgCasi[0], flgFinanciamiento[0], sapidSimcard[0]);
+                        } else {
+                            if (flgCasi[0]) {
+                                // Call to Create Quotation Service When CommercialOperation Contains CASI
+                                return this.callToCreateQuotation(request, saleItem, flgCasi[0],
+                                        flgFinanciamiento[0]);
+                            } else {
+                                // Case when is Only CAPL
+                                return salesRepository.save(saleItem)
+                                        .map(r -> {
+                                            this.postSalesEventFlow(request);
+                                            return r;
+                                        });
+                            }
+                        }
+                    });
                 });
     }
 
@@ -994,8 +1048,9 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
 
         AltaFijaRequest altaFijaRequest = new AltaFijaRequest();
         altaFijaRequest.setNewProducts(newProductsAltaFijaList);
-        altaFijaRequest.setAppointmentId(saleRequest.getCommercialOperation().get(0).getWorkOrDeliveryType()
-                .getWorkOrder().getWorkForceTeams().get(0).getId());
+        altaFijaRequest.setAppointmentId(saleRequest.getCommercialOperation().get(0).getWorkOrDeliveryType() != null
+                ? saleRequest.getCommercialOperation().get(0).getWorkOrDeliveryType().getWorkOrder().getWorkForceTeams()
+                .get(0).getId() : null);
         altaFijaRequest.setAppointmentNumber(saleRequest.getSalesId());
         altaFijaRequest.setServiceabilityInfo(serviceabilityInfo);
         altaFijaRequest.setSourceApp(saleRequest.getSalesId());
@@ -1964,7 +2019,8 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                 .newProducts(altaNewProductsList)
                 .sourceApp("FE")
                 .orderAttributes(altaOrderAttributesList)
-                .shipmentDetails(createShipmentDetail(saleRequest))
+                .shipmentDetails(saleRequest.getCommercialOperation().get(0).getWorkOrDeliveryType() != null
+                        ? createShipmentDetail(saleRequest): null)
                 .build();
         //if (!StringUtils.isEmpty(cipCode)) altaRequest.setCip(cipCode);
 
@@ -2048,7 +2104,8 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                 .newProducts(caplNewProductsList)
                 .sourceApp("FE")
                 .orderAttributes(caplOrderAttributes)
-                .shipmentDetails(createShipmentDetail(saleRequest))
+                .shipmentDetails(saleRequest.getCommercialOperation().get(0).getWorkOrDeliveryType() != null
+                        ? createShipmentDetail(saleRequest): null)
                 .build();
         //if (!StringUtils.isEmpty(cipCode)) caplRequest.setCip(cipCode);
 
@@ -2129,7 +2186,8 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                 .sourceApp("FE")
                 .newProducts(newProductCaeqList)
                 .orderAttributes(caeqOrderAttributes)
-                .shipmentDetails(createShipmentDetail(saleRequest))
+                .shipmentDetails(saleRequest.getCommercialOperation().get(0).getWorkOrDeliveryType() != null
+                        ? createShipmentDetail(saleRequest): null)
                 .build();
         if (!StringUtils.isEmpty(cipCode)) {
             caeqRequest.setCip(cipCode);
@@ -2230,7 +2288,8 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                 .newProducts(caeqCaplNewProductList)
                 .sourceApp("FE")
                 .orderAttributes(caeqCaplOrderAttributes)
-                .shipmentDetails(createShipmentDetail(saleRequest))
+                .shipmentDetails(saleRequest.getCommercialOperation().get(0).getWorkOrDeliveryType() != null
+                        ? createShipmentDetail(saleRequest): null)
                 .build();
         //if (!StringUtils.isEmpty(cipCode)) caeqCaplRequest.setCip(cipCode);
 
@@ -2260,17 +2319,19 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         if (flgRetailChannel) {
             deliveryCode = "IS";
         }
-        FlexAttrValueType deliveryAttrValue =  FlexAttrValueType
-                .builder()
-                .stringValue(deliveryCode)
-                .valueType(Constants.STRING)
-                .build();
-        FlexAttrType deliveryAttr = FlexAttrType
-                .builder()
-                .attrName("DELIVERY_METHOD")
-                .flexAttrValue(deliveryAttrValue)
-                .build();
-        commonOrderAttributes.add(deliveryAttr);
+        if (!StringUtils.isEmpty(deliveryCode)) {
+            FlexAttrValueType deliveryAttrValue =  FlexAttrValueType
+                    .builder()
+                    .stringValue(deliveryCode)
+                    .valueType(Constants.STRING)
+                    .build();
+            FlexAttrType deliveryAttr = FlexAttrType
+                    .builder()
+                    .attrName("DELIVERY_METHOD")
+                    .flexAttrValue(deliveryAttrValue)
+                    .build();
+            commonOrderAttributes.add(deliveryAttr);
+        }
 
         // Payment Method Attribute - Conditional
         if (!flgRetailChannel) {
