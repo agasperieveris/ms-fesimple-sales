@@ -1,6 +1,5 @@
 package com.tdp.ms.sales.client.impl;
 
-import com.google.gson.Gson;
 import com.tdp.genesis.core.constants.HttpHeadersKey;
 import com.tdp.genesis.core.exception.GenesisException;
 import com.tdp.genesis.core.exception.GenesisExceptionBuilder;
