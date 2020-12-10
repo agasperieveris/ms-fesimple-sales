@@ -1,5 +1,6 @@
 package com.tdp.ms.sales.client.impl;
 
+import com.google.gson.Gson;
 import com.tdp.genesis.core.constants.HttpHeadersKey;
 import com.tdp.genesis.core.exception.GenesisException;
 import com.tdp.genesis.core.exception.GenesisExceptionBuilder;
@@ -108,8 +109,7 @@ public class ProductOrderWebClientImpl implements ProductOrderWebClient {
                 return Mono.error(builder
                         .exceptionId("SVR1000")
                         .userMessage("There was a problem from Create Product Order FE+Simple Service")
-                        .wildcards(wildcardsException)
-                        //.wildcards(new String[]{"Reserve Stock FE+Simple Service: "})
+                        //.wildcards(wildcardsException)
                         .build());
             } else {
                 return Mono.error(responseException);
