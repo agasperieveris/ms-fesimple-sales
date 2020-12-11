@@ -1,15 +1,15 @@
 package com.tdp.ms.sales.model.response;
 
-import com.tdp.ms.sales.model.dto.BusinessParametersData;
+import com.tdp.ms.sales.model.dto.businessparameter.BusinessParameterDataSeq;
+import java.util.ArrayList;
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.List;
-
 /**
- * Class: AudioPermissionResponse. <br/>
+ * Class: BusinessParametersResponse. <br/>
  * <b>Copyright</b>: &copy; 2019 Telef&oacute;nica del Per&uacute;<br/>
  * <b>Company</b>: Telef&oacute;nica del Per&uacute;<br/>
  *
@@ -31,5 +31,5 @@ import java.util.List;
 @Data
 @Builder
 public class BusinessParametersResponse {
-    private List<BusinessParametersData> data;
+    private List<BusinessParameterDataSeq> data = new ArrayList<>();
 }

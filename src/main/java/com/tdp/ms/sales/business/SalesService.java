@@ -2,8 +2,7 @@ package com.tdp.ms.sales.business;
 
 import com.tdp.ms.sales.model.entity.Sale;
 import com.tdp.ms.sales.model.request.GetSalesRequest;
-import java.util.Map;
-
+import java.util.HashMap;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -43,7 +42,7 @@ public interface SalesService {
      * @param request Datos de la nueva venta
      * @return SalesResponse, datos de la nueva venta registrada en la BBDD de la Web Convergente
      */
-    Mono<Sale> post(Sale request, Map<String, String> headersMap);
+    Mono<Sale> post(Sale request, HashMap<String, String> headersMap);
 
     /**
      * Actualiza los datos de la venta en la BBDD.
@@ -52,7 +51,16 @@ public interface SalesService {
      * @param request Datos de la venta actualizados
      * @return SalesResponse, datos actualizados de la venta
      */
-    Mono<Sale> put(String salesId, Sale request);
+    Mono<Sale> put(String salesId, Sale request, HashMap<String, String> headersMap);
+
+    /**
+     * Actualiza los datos de la venta en la BBDD - FLUJO EVENTOS.
+     *
+     * @author @srivasme
+     * @param request Datos de la venta actualizados
+     * @return SalesResponse, datos actualizados de la venta
+     */
+    Mono<Sale> putEvent(String salesId, Sale request, HashMap<String, String> headersMap);
 
     /**
      * Se listan las ventas dependiendo de los parámetros que se le pasen.

@@ -4,7 +4,10 @@ import com.tdp.genesis.core.constants.HttpHeadersKey;
 import com.tdp.ms.sales.business.SalesService;
 import com.tdp.ms.sales.business.impl.SalesServiceImpl;
 import com.tdp.ms.sales.client.WebClientBusinessParameters;
+import com.tdp.ms.sales.eventflow.client.SalesWebClient;
+import com.tdp.ms.sales.eventflow.client.impl.SalesWebClientImpl;
 import com.tdp.ms.sales.model.dto.*;
+import com.tdp.ms.sales.model.dto.businessparameter.BusinessParameterDataSeq;
 import com.tdp.ms.sales.model.entity.Sale;
 import com.tdp.ms.sales.model.request.GetSalesRequest;
 import com.tdp.ms.sales.model.request.SalesRequest;
@@ -23,10 +26,9 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.*;
 
 import static org.mockito.ArgumentMatchers.any;
 
@@ -42,6 +44,12 @@ public class SalesServiceTest {
 
     @Autowired
     private SalesServiceImpl salesServiceImpl;
+
+    @Autowired
+    private SalesWebClient salesWebClient;
+
+    @Autowired
+    private SalesWebClientImpl salesWebClientImpl;
 
     @Autowired
     private SalesService salesService;
@@ -250,7 +258,7 @@ public class SalesServiceTest {
 
     @Test
     void postSaveSale() {
-        Map<String, String> headersMap = new HashMap<String, String>();
+        HashMap<String, String> headersMap = new HashMap<String, String>();
         headersMap.put(HttpHeadersKey.UNICA_SERVICE_ID, "serviceId");
         headersMap.put(HttpHeadersKey.UNICA_PID, "pid");
         headersMap.put(HttpHeadersKey.UNICA_APPLICATION, "application");
@@ -261,12 +269,12 @@ public class SalesServiceTest {
         Mockito.when(salesRepository.save(any()))
                 .thenReturn(Mono.just(sale));
 
-        BusinessParametersData businessParametersData = BusinessParametersData
+        BusinessParameterDataSeq businessParametersDataSeq = BusinessParameterDataSeq
                 .builder()
                 .value("FE-000000001")
                 .build();
-        List<BusinessParametersData> businessParametersDataList = new ArrayList<>();
-        businessParametersDataList.add(businessParametersData);
+        List<BusinessParameterDataSeq> businessParametersDataList = new ArrayList<>();
+        businessParametersDataList.add(businessParametersDataSeq);
 
         Mockito.when(webClientToken.getNewSaleSequential(any(), any()))
                 .thenReturn(Mono.just(BusinessParametersResponse
@@ -287,19 +295,42 @@ public class SalesServiceTest {
 
     @Test
     void putSaveSale() {
+        HashMap<String, String> headersMap = new HashMap<String, String>();
+        headersMap.put(HttpHeadersKey.UNICA_SERVICE_ID, "serviceId");
+        headersMap.put(HttpHeadersKey.UNICA_PID, "pid");
+        headersMap.put(HttpHeadersKey.UNICA_APPLICATION, "application");
+        headersMap.put(HttpHeadersKey.UNICA_USER, "user");
+        
         Mockito.when(salesRepository.findBySalesId(any()))
                 .thenReturn(Mono.just(sale2));
 
         Mockito.when(salesRepository.save(any()))
                 .thenReturn(Mono.just(sale2));
 
-        Mono<Sale> result = salesService.put("FE-000000001", sale);
+        Mono<Sale> result = salesService.put("FE-000000001", sale, headersMap);
 
         StepVerifier.create(result)
                 .assertNext(c -> {
                     Assert.assertEquals(c.getId(), sale2.getId());
                 })
                 .verifyComplete();
+    }
+
+    @Test
+    void putEventSaveSale() {
+        HashMap<String, String> headersMap = new HashMap<String, String>();
+        headersMap.put(HttpHeadersKey.UNICA_SERVICE_ID, "serviceId");
+        headersMap.put(HttpHeadersKey.UNICA_PID, "pid");
+        headersMap.put(HttpHeadersKey.UNICA_APPLICATION, "application");
+        headersMap.put(HttpHeadersKey.UNICA_USER, "user");
+
+        Mockito.when(salesRepository.findBySalesId(any()))
+                .thenReturn(Mono.just(sale2));
+
+        Mockito.when(salesRepository.save(any()))
+                .thenReturn(Mono.just(sale2));
+
+        Mono<Sale> result = salesService.putEvent("FE-000000001", sale, headersMap);
     }
 
     @Test
@@ -452,4 +483,80 @@ public class SalesServiceTest {
         salesServiceImpl.filterExistingOrderId(sale, "");
     }
 
+    @Test
+    void validateBeforeUpdate_Test() {
+        salesWebClient.validateBeforeUpdate("01", "02", Arrays.asList(KeyValueType.builder().key("createContractDate").value("prueba").build(),
+                KeyValueType.builder().key("submitOrderDate").value("prueba submitOrderDate").build(),
+                KeyValueType.builder().key("tratamientoDatosDate").value("prueba tratamientoDatosDate").build(),
+                KeyValueType.builder().key("afiliacionReciboDate").value("prueba afiliacionReciboDate").build(),
+                KeyValueType.builder().key("custodiaDate").value("prueba custodiaDate").build()));
+
+        salesWebClient.validateBeforeUpdate("01", "04", Arrays.asList(KeyValueType.builder().key("createContractDate").value("prueba").build(),
+                KeyValueType.builder().key("submitOrderDate").value("prueba submitOrderDate").build(),
+                KeyValueType.builder().key("tratamientoDatosDate").value("prueba tratamientoDatosDate").build(),
+                KeyValueType.builder().key("afiliacionReciboDate").value("prueba afiliacionReciboDate").build(),
+                KeyValueType.builder().key("custodiaDate").value("prueba custodiaDate").build()));
+
+        salesWebClient.validateBeforeUpdate("01", "06", Arrays.asList(KeyValueType.builder().key("createContractDate").value("prueba").build(),
+                KeyValueType.builder().key("submitOrderDate").value("prueba submitOrderDate").build(),
+                KeyValueType.builder().key("tratamientoDatosDate").value("prueba tratamientoDatosDate").build(),
+                KeyValueType.builder().key("afiliacionReciboDate").value("prueba afiliacionReciboDate").build(),
+                KeyValueType.builder().key("custodiaDate").value("prueba custodiaDate").build()));
+
+        salesWebClient.validateBeforeUpdate("01", "08", Arrays.asList(KeyValueType.builder().key("createContractDate").value("prueba").build(),
+                KeyValueType.builder().key("submitOrderDate").value("prueba submitOrderDate").build(),
+                KeyValueType.builder().key("tratamientoDatosDate").value("prueba tratamientoDatosDate").build(),
+                KeyValueType.builder().key("afiliacionReciboDate").value("prueba afiliacionReciboDate").build(),
+                KeyValueType.builder().key("custodiaDate").value("prueba custodiaDate").build()));
+
+        salesWebClient.validateBeforeUpdate("01", "09", Arrays.asList(KeyValueType.builder().key("createContractDate").value("prueba").build(),
+                KeyValueType.builder().key("submitOrderDate").value("prueba submitOrderDate").build(),
+                KeyValueType.builder().key("tratamientoDatosDate").value("prueba tratamientoDatosDate").build(),
+                KeyValueType.builder().key("afiliacionReciboDate").value("prueba afiliacionReciboDate").build(),
+                KeyValueType.builder().key("custodiaDate").value("prueba custodiaDate").build()));
+
+        salesWebClient.validateBeforeUpdate("02", "01", Arrays.asList(KeyValueType.builder().key("createContractDate").value("prueba").build(),
+                KeyValueType.builder().key("submitOrderDate").value("prueba submitOrderDate").build(),
+                KeyValueType.builder().key("tratamientoDatosDate").value("prueba tratamientoDatosDate").build(),
+                KeyValueType.builder().key("afiliacionReciboDate").value("prueba afiliacionReciboDate").build(),
+                KeyValueType.builder().key("custodiaDate").value("prueba custodiaDate").build()));
+
+        salesWebClient.validateBeforeUpdate("02", "02", Arrays.asList(KeyValueType.builder().key("createContractDate").value("prueba").build(),
+                KeyValueType.builder().key("submitOrderDate").value("prueba submitOrderDate").build(),
+                KeyValueType.builder().key("tratamientoDatosDate").value("prueba tratamientoDatosDate").build(),
+                KeyValueType.builder().key("afiliacionReciboDate").value("prueba afiliacionReciboDate").build(),
+                KeyValueType.builder().key("custodiaDate").value("prueba custodiaDate").build()));
+
+        salesWebClient.validateBeforeUpdate(null, "02", Arrays.asList(KeyValueType.builder().key("createContractDate").value("prueba").build(),
+                KeyValueType.builder().key("submitOrderDate").value("prueba submitOrderDate").build(),
+                KeyValueType.builder().key("tratamientoDatosDate").value("prueba tratamientoDatosDate").build(),
+                KeyValueType.builder().key("afiliacionReciboDate").value("prueba afiliacionReciboDate").build(),
+                KeyValueType.builder().key("custodiaDate").value("prueba custodiaDate").build()));
+
+        salesWebClient.validateBeforeUpdate("02", null, Arrays.asList(KeyValueType.builder().key("createContractDate").value("prueba").build(),
+                KeyValueType.builder().key("submitOrderDate").value("prueba submitOrderDate").build(),
+                KeyValueType.builder().key("tratamientoDatosDate").value("prueba tratamientoDatosDate").build(),
+                KeyValueType.builder().key("afiliacionReciboDate").value("prueba afiliacionReciboDate").build(),
+                KeyValueType.builder().key("custodiaDate").value("prueba custodiaDate").build()));
+
+        salesWebClient.validateBeforeUpdate("02", "02", null);
+    }
+
+    @Test
+    void existFieldInAdditionalData_Test() throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
+        Method method = SalesWebClientImpl.class.getDeclaredMethod("existFieldInAdditionalData",
+                String.class, List.class);
+        method.setAccessible(true);
+        method.invoke(salesWebClientImpl, "createContractDate",
+                Collections.singletonList(KeyValueType.builder().key("createContractDate").value("prueba").build()));
+    }
+
+    @Test
+    void existFieldInAdditionalData_Null_Test() throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
+        Method method = SalesWebClientImpl.class.getDeclaredMethod("existFieldInAdditionalData",
+                String.class, List.class);
+        method.setAccessible(true);
+        method.invoke(salesWebClientImpl, "afiliacionReciboDate",
+                Collections.singletonList(KeyValueType.builder().key("createContractDate").value("prueba").build()));
+    }
 }

@@ -3,11 +3,11 @@ package com.tdp.ms.sales.model.entity;
 import com.microsoft.azure.spring.data.cosmosdb.core.mapping.Document;
 import com.tdp.ms.sales.model.dto.ChannelRef;
 import com.tdp.ms.sales.model.dto.CommercialOperationType;
-import com.tdp.ms.sales.model.dto.Money;
+import com.tdp.ms.sales.model.dto.ContactMedium;
 import com.tdp.ms.sales.model.dto.IdentityValidationType;
 import com.tdp.ms.sales.model.dto.KeyValueType;
+import com.tdp.ms.sales.model.dto.Money;
 import com.tdp.ms.sales.model.dto.PaymentType;
-import com.tdp.ms.sales.model.dto.ContactMedium;
 import com.tdp.ms.sales.model.dto.RelatedParty;
 import com.tdp.ms.sales.model.dto.TimePeriod;
 import java.util.List;
@@ -17,6 +17,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
+
 import org.springframework.data.annotation.Id;
 
 /**
@@ -42,6 +44,7 @@ import org.springframework.data.annotation.Id;
 @Data
 @Builder
 @EqualsAndHashCode
+@ToString
 @Document(collection = "Sale")
 public class Sale {
     @Id

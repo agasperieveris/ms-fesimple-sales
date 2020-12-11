@@ -1,10 +1,15 @@
 package com.tdp.ms.sales.config;
 
+import com.tdp.genesis.core.starter.reactive.webclient.filters.LogWebClientFilters;
+import io.netty.channel.ChannelOption;
 import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.SslContextBuilder;
 import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
 import javax.net.ssl.SSLException;
 
+import io.netty.handler.timeout.ReadTimeoutHandler;
+import io.netty.handler.timeout.WriteTimeoutHandler;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
@@ -33,6 +38,15 @@ public class WebClientConfig {
 
     //@Value("${application.security.token.url}")
     private static String tokenUrl = "";
+    @Value("${application.endpoints.receptor.register_url}")
+    private String urlReceptorRegister;
+
+    @Value("${application.timeout.get_order_timeout}")
+    private int timeout;
+    @Value("${application.timeout.get_order_timeout_read}")
+    private int readTimeout;
+    @Value("${application.timeout.get_order_timeout_write}")
+    private int writeTimeout;
 
     /**
      * Bean to config Webclient.
@@ -41,7 +55,11 @@ public class WebClientConfig {
      */
     @Bean
     public WebClient webClient() {
-        return WebClient.builder().build();
+        return WebClient.builder()
+                .filter(LogWebClientFilters.logResponse())
+                .filter(LogWebClientFilters.logRequest())
+                .filter(LogWebClientFilters.mdcFilter)
+                .build();
     }
 
     /**
@@ -60,6 +78,9 @@ public class WebClientConfig {
         HttpClient httpClient = HttpClient.create().secure(t -> t.sslContext(sslContext));
         return WebClient
                 .builder()
+                .filter(LogWebClientFilters.logResponse())
+                .filter(LogWebClientFilters.logRequest())
+                .filter(LogWebClientFilters.mdcFilter)
                 .baseUrl(tokenUrl)
                 .clientConnector(new ReactorClientHttpConnector(httpClient))
                 .build();
@@ -74,9 +95,17 @@ public class WebClientConfig {
     public WebClient webClientInsecure() throws SSLException {
         SslContext sslContext = SslContextBuilder.forClient().trustManager(InsecureTrustManagerFactory.INSTANCE)
                 .build();
-        HttpClient httpClient = HttpClient.create().secure(t -> t.sslContext(sslContext));
+        HttpClient httpClient = HttpClient.create()
+                .secure(t -> t.sslContext(sslContext))
+                .tcpConfiguration(client ->
+                        client.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, timeout)
+                                .doOnConnected(conn -> conn
+                                        .addHandlerLast(new ReadTimeoutHandler(readTimeout / 1000))
+                                        .addHandlerLast(new WriteTimeoutHandler(writeTimeout / 1000))));
         return WebClient.builder()
-                // .baseUrl(tokenUrl)
+                .filter(LogWebClientFilters.logResponse())
+                .filter(LogWebClientFilters.logRequest())
+                .filter(LogWebClientFilters.mdcFilter)
                 .clientConnector(new ReactorClientHttpConnector(httpClient)).build();
 
 
@@ -89,8 +118,37 @@ public class WebClientConfig {
      */
     @Bean
     public WebClient webClientSecure() {
-        return WebClient.builder().build();
+        return WebClient.builder()
+                .filter(LogWebClientFilters.logResponse())
+                .filter(LogWebClientFilters.logRequest())
+                .filter(LogWebClientFilters.mdcFilter)
+                .build();
     }
-
+    
+    /**
+     * Bean para configurar la conexión contra el receptor de colas.
+     * 
+     * @return WebClient.
+     * @throws SSLException SSLException.
+     */
+    @Bean
+    public WebClient webClientInsecureReceptor() throws SSLException {
+        SslContext sslContext = SslContextBuilder
+                .forClient()
+                .trustManager(InsecureTrustManagerFactory.INSTANCE)
+                .build();
+        
+        HttpClient httpClient = HttpClient
+                .create().secure(t -> t.sslContext(sslContext));
+        
+        return WebClient
+                .builder()
+                .filter(LogWebClientFilters.logResponse())
+                .filter(LogWebClientFilters.logRequest())
+                .filter(LogWebClientFilters.mdcFilter)
+                .baseUrl(urlReceptorRegister)
+                .clientConnector(new ReactorClientHttpConnector(httpClient))
+                .build();
+    }
 }
 
