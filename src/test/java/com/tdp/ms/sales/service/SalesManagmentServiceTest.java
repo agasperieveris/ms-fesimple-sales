@@ -287,30 +287,6 @@ public class SalesManagmentServiceTest {
     }
 
     @Test
-    void postSalesTokenMcssNotFoundErrorTest() {
-        List<KeyValueType> additionalDatas = new ArrayList<>();
-        KeyValueType additionalData1 = new KeyValueType();
-        additionalData1.setKey("s");
-        additionalData1.setValue("d");
-        additionalDatas.add(additionalData1);
-
-        Sale saleTest = CommonsMocks.createSaleMock();
-        saleTest.getCommercialOperation().get(0).getOrder().setProductOrderId("");
-        saleTest.setId("S001");
-        saleTest.setAdditionalData(additionalDatas);
-
-        PostSalesRequest salesRequest = PostSalesRequest
-                .builder()
-                .sale(saleTest)
-                .headersMap(headersMap)
-                .build();
-
-        Mono<Sale> result = salesManagmentService.post(salesRequest);
-
-        StepVerifier.create(result).verifyError();
-    }
-
-    @Test
     void postSalesRetailMovilImeiNotFoundErrorTest() {
         Sale saleTest = CommonsMocks.createSaleMock();
         saleTest.getChannel().setId("DLC");

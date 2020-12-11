@@ -164,7 +164,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                 .collect(Collectors.joining());
 
         if (email != null && !email.isEmpty()) {
-            int pos = email.indexOf("@");
+            int pos = email.indexOf('@');
             return email.substring(++pos);
         }
         return null;
@@ -642,14 +642,10 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
             }
         }
         if (tokenMcss == null || tokenMcss.equals("")) {
-            return Mono.error(GenesisException
-                    .builder()
-                    .exceptionId(Constants.BAD_REQUEST_EXCEPTION_ID)
-                    .wildcards(new String[]{"Token MCSS is mandatory. Must be sent into Additional Data Property "
-                            + "with 'ufxauthorization' key value."})
-                    .build());
+            request.getHeadersMap().put("ufxauthorization", "");
+        } else {
+            request.getHeadersMap().put("ufxauthorization", tokenMcss);
         }
-        request.getHeadersMap().put("ufxauthorization", tokenMcss);
 
         // Validation if is retail
         String channelId = saleRequest.getChannel().getId();
@@ -904,7 +900,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
 
             mainRequestProductOrder = this.caeqCaplCommercialOperation(saleRequest, mainRequestProductOrder,
                     channelIdRequest, customerIdRequest, productOfferingIdRequest, cipCode);
-        } else if ((!flgCapl[0] && !flgCaeq[0] && !flgCasi[0] && flgAlta[0])
+        } else if (!flgCapl[0] && !flgCaeq[0] && !flgCasi[0] && flgAlta[0]
                 || isMobilePortability) {
 
             mainRequestProductOrder = this.altaCommercialOperation(saleRequest, mainRequestProductOrder,
