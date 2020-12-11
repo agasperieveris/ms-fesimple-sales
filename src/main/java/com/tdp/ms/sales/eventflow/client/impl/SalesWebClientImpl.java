@@ -83,6 +83,18 @@ public class SalesWebClientImpl implements SalesWebClient {
             // flujo 2, paso 2
             return !existFieldInAdditionalData("custodiaDate", additionalData)
                     ? "No se ha añadido campo custodiaDate" : "";
+        } else if (eventFlow.equals("99") && stepFlow.equals("01")) {
+
+            String errorMsg = "";
+            if(!existFieldInAdditionalData("motivoCancelacionEventos", additionalData)){
+                errorMsg = "No se ha añadido campo motivoCancelacionEventos";
+            }
+            if(!existFieldInAdditionalData("fechaCancelacionEventos", additionalData)){
+                errorMsg = "No se ha añadido campo fechaCancelacionEventos";
+            }
+
+            return errorMsg;
+
         } else {
             return "Se ha obtenido un eventFlow que no corresponde. eventFlow = " + eventFlow;
         }
