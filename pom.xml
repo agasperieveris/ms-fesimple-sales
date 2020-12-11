@@ -18,7 +18,7 @@
 
 	<groupId>com.tdp.ms</groupId>
 	<artifactId>sales</artifactId>
-	<version>1.2.25</version>
+	<version>1.2.29</version>
 	<name>${project.groupId}:${project.artifactId}</name>
 	<description>Template from Genesis Framework to build microservices</description>
 
@@ -48,6 +48,11 @@
 	</developers>
 
 	<dependencies>
+		<dependency>
+			<groupId>io.netty</groupId>
+			<artifactId>netty-transport</artifactId>
+			<version>4.1.43.Final</version>
+		</dependency>
 
 		<dependency>
 			<groupId>org.mockito</groupId>
@@ -438,6 +443,7 @@
 								<ignoredUnusedDeclaredDependency>junit:junit:jar::</ignoredUnusedDeclaredDependency>
 								<ignoredUnusedDeclaredDependency>org.springframework.integration:spring-integration-core:jar::</ignoredUnusedDeclaredDependency>
 								<ignoredUnusedDeclaredDependency>com.microsoft.azure:spring-integration-azure-core:jar::</ignoredUnusedDeclaredDependency>
+								<ignoredUnusedDeclaredDependency>io.netty:netty-transport:jar::</ignoredUnusedDeclaredDependency>
 							</ignoredUnusedDeclaredDependencies>
 						</configuration>
 					</execution>

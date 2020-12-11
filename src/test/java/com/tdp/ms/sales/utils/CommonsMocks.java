@@ -215,7 +215,7 @@ public class CommonsMocks {
         MediumCharacteristic mediumCharacteristic = MediumCharacteristic.builder()
                 .phoneNumber("976598623").emailAddress("ezample@everis.com").build();
         WorkOrDeliveryType workOrDeliveryType = WorkOrDeliveryType.builder()
-                .contact(mediumCharacteristic).place(places).additionalData(additionalDatas).build();
+                .contact(mediumCharacteristic).mediumDelivery("DELIVERY").place(places).additionalData(additionalDatas).build();
 
         ServiceType serviceType1 = new ServiceType();
         serviceType1.setType("VOICE");
@@ -344,6 +344,7 @@ public class CommonsMocks {
         PaymentType paymentType = PaymentType
                 .builder()
                 .paymentType("EX")
+                .cid("string")
                 .build();
 
         IdentityValidationType identityValidationType = IdentityValidationType.builder()
@@ -415,6 +416,11 @@ public class CommonsMocks {
         additionalDatas.add(additionalData3);
         additionalDatas.add(additionalDataFlowSale);
 
+        KeyValueType additionalData4= new KeyValueType();
+        additionalData4.setKey("paymentTypeLabel");
+        additionalData4.setValue("PAGO EFECTIVO");
+        additionalDatas.add(additionalData4);
+
         EntityRefType entityRefType = new EntityRefType();
         entityRefType.setHref("s");
         entityRefType.setId("s");
@@ -442,6 +448,16 @@ public class CommonsMocks {
         deviceOffering.setAdditionalData(additionalDatas);
         deviceOffering.setId("s");
         deviceOffering.setSapid("SAD123PID");
+        deviceOffering.setOffers(Arrays.asList(Offer.builder().billingOfferings(Arrays.asList(BillingOffering.builder()
+                .commitmentPeriods(Arrays.asList(CommitmentPeriod.builder()
+                        .financingInstalments(Arrays.asList(FinancingInstalment.builder()
+                                .instalments(Instalments.builder()
+                                        .openingQuota(MoneyAmount.builder().value(1).build())
+                                        .totalAmount(MoneyAmount.builder().value(1).build())
+                                        .build())
+                                .build()))
+                        .build()))
+                .build())).build()));
 
         StockType stockType = StockType
                 .builder()
@@ -483,7 +499,7 @@ public class CommonsMocks {
                 .build();
         List<Offer> offersList = new ArrayList<>();
         offersList.add(offer1);
-        deviceOffering.setOffers(offersList);
+        //deviceOffering.setOffers(offersList);
 
         List<MoneyAmount> pricesList = new ArrayList<>();
         pricesList.add(moneyAmount1);
@@ -515,7 +531,8 @@ public class CommonsMocks {
         offeringType1.setId("s");
         offeringType1.setProductOfferingProductSpecId("s");
         offeringType1.setProductOfferingPrice(Arrays.asList(ComponentProdOfferPriceType.builder()
-                .pricePlanSpecContainmentId("string").productSpecContainmentId("string").build()));
+                .pricePlanSpecContainmentId("string").productSpecContainmentId("string")
+                .maxPrice(MoneyType.builder().amount(1).build()).build()));
 
         ComposingProductType productSpecification = ComposingProductType.builder()
                 .productType("landline")
@@ -541,7 +558,10 @@ public class CommonsMocks {
         productOfferings.add(offeringType1);
 
 
-        List<KeyValueType> additionalDataCommercialOperation = new ArrayList<>();
+        List<KeyValueType> additionalDataCommercialOperation = Arrays.asList(KeyValueType.builder().key("CAPL").value("true").build(),
+                KeyValueType.builder().key("CAEQ").value("true").build(), KeyValueType.builder().key("CASI").value("true").build(),
+                KeyValueType.builder().key("ALTA").value("true").build());
+
         KeyValueType additionalDataCapl = new KeyValueType();
         additionalDataCapl.setKey("CAPL");
         additionalDataCapl.setValue("true");
@@ -550,6 +570,7 @@ public class CommonsMocks {
                 .phoneNumber("976598623").emailAddress("ezample@everis.com").build();
         WorkOrDeliveryType workOrDeliveryType = WorkOrDeliveryType.builder()
                 .scheduleDelivery("SLA")
+                .mediumDelivery("DELIVERY")
                 .workOrder(WorkforceTeamTimeSlotType.builder()
                         .workForceTeams(Arrays.asList(WorkforceTeamAvailabilityType.builder()
                                 .id("string").build()))
@@ -618,6 +639,8 @@ public class CommonsMocks {
         comercialOperationType.setPortability(portability);
         comercialOperationType.setProductOfferings(Arrays.asList(OfferingType.builder()
                 .upFront(UpFrontType.builder().indicator("string").build())
+                .productOfferingPrice(Arrays.asList(ComponentProdOfferPriceType.builder()
+                        .maxPrice(MoneyType.builder().amount(1).build()).build()))
                 .productSpecification(Arrays.asList(productSpecification)).build()));
         comercialOperationTypes.add(comercialOperationType);
 
@@ -686,6 +709,7 @@ public class CommonsMocks {
         PaymentType paymentType = PaymentType
                 .builder()
                 .paymentType("EX")
+                .cid("string")
                 .build();
 
         IdentityValidationType identityValidationType = IdentityValidationType.builder()

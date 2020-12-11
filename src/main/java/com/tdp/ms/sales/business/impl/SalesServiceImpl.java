@@ -180,7 +180,7 @@ public class SalesServiceImpl implements SalesService {
                 && (item.getChannel() == null || item.getChannel().getId() == null)) {
             return false;
         } else if (channelId != null && !channelId.isEmpty() && item.getChannel() != null
-                && item.getChannel().getId() != null && !channelId.isEmpty()) {
+                && item.getChannel().getId() != null) {
             return item.getChannel().getId().equalsIgnoreCase(channelId);
         } else {
             return true;
@@ -192,7 +192,7 @@ public class SalesServiceImpl implements SalesService {
                 && (item.getChannel() == null || item.getChannel().getDealerId() == null)) {
             return false;
         } else if (dealerId != null && !dealerId.isEmpty() && item.getChannel() != null
-                && item.getChannel().getDealerId() != null && !dealerId.isEmpty()) {
+                && item.getChannel().getDealerId() != null) {
             return item.getChannel().getDealerId().equalsIgnoreCase(dealerId);
         } else {
             return true;
@@ -202,8 +202,7 @@ public class SalesServiceImpl implements SalesService {
     public Boolean filterAgentId(Sale item, String agentId) {
         if (agentId != null && !agentId.isEmpty() && (item.getAgent() == null || item.getAgent().getId() == null)) {
             return false;
-        } else if (agentId != null && !agentId.isEmpty() && item.getAgent() != null && item.getAgent().getId() != null
-                && !agentId.isEmpty()) {
+        } else if (agentId != null && !agentId.isEmpty() && item.getAgent() != null && item.getAgent().getId() != null) {
             return item.getAgent().getId().equalsIgnoreCase(agentId);
         } else {
             return true;
@@ -215,7 +214,7 @@ public class SalesServiceImpl implements SalesService {
                 && (item.getChannel() == null || item.getChannel().getStoreId() == null)) {
             return false;
         } else if (storeId != null && !storeId.isEmpty() && item.getChannel() != null
-                && item.getChannel().getStoreId() != null && !storeId.isEmpty()) {
+                && item.getChannel().getStoreId() != null) {
             return item.getChannel().getStoreId().equalsIgnoreCase(storeId);
         } else {
             return true;
@@ -225,7 +224,7 @@ public class SalesServiceImpl implements SalesService {
     public Boolean filterStatus(Sale item, String status) {
         if (status != null && !status.isEmpty() && item.getStatus() == null) {
             return false;
-        } else if (status != null && !status.isEmpty() && item.getStatus() != null && !status.isEmpty()) {
+        } else if (status != null && !status.isEmpty() && item.getStatus() != null) {
             return item.getStatus().equalsIgnoreCase(status);
         } else {
             return true;
@@ -237,7 +236,7 @@ public class SalesServiceImpl implements SalesService {
                 || item.getRelatedParty().get(0).getNationalId() == null)) {
             return false;
         } else if (nationalId != null && !nationalId.isEmpty() && item.getRelatedParty() != null
-                && item.getRelatedParty().get(0).getNationalId() != null && !nationalId.isEmpty()) {
+                && item.getRelatedParty().get(0).getNationalId() != null) {
             return item.getRelatedParty().get(0).getNationalId().equalsIgnoreCase(nationalId);
         } else {
             return true;
@@ -249,7 +248,7 @@ public class SalesServiceImpl implements SalesService {
                 || item.getRelatedParty().get(0).getNationalIdType() == null)) {
             return false;
         } else if (nationalIdType != null && !nationalIdType.isEmpty() && item.getRelatedParty() != null
-                && item.getRelatedParty().get(0).getNationalIdType() != null && !nationalIdType.isEmpty()) {
+                && item.getRelatedParty().get(0).getNationalIdType() != null) {
             return item.getRelatedParty().get(0).getNationalIdType().equalsIgnoreCase(nationalIdType);
         } else {
             return true;
@@ -269,8 +268,7 @@ public class SalesServiceImpl implements SalesService {
                 && (item.getSaleCreationDate() == null || item.getSaleCreationDate().isEmpty())) {
             return false;
         } else if (startDateTime != null && endDateTime != null && !startDateTime.isEmpty() && !endDateTime.isEmpty()
-                && item.getSaleCreationDate() != null && !item.getSaleCreationDate().isEmpty()
-                && !startDateTime.isEmpty() && !endDateTime.isEmpty()) {
+                && item.getSaleCreationDate() != null && !item.getSaleCreationDate().isEmpty()) {
 
             try {
                 Date startDate = new SimpleDateFormat("dd/MM/yyyy'T'HH:mm:ss").parse(startDateTime);
