@@ -2,11 +2,11 @@ package com.tdp.ms.sales.model.request;
 
 import com.tdp.ms.sales.model.dto.ChannelRef;
 import com.tdp.ms.sales.model.dto.CommercialOperationType;
-import com.tdp.ms.sales.model.dto.Money;
+import com.tdp.ms.sales.model.dto.ContactMedium;
 import com.tdp.ms.sales.model.dto.IdentityValidationType;
 import com.tdp.ms.sales.model.dto.KeyValueType;
+import com.tdp.ms.sales.model.dto.Money;
 import com.tdp.ms.sales.model.dto.PaymentType;
-import com.tdp.ms.sales.model.dto.ContactMedium;
 import com.tdp.ms.sales.model.dto.RelatedParty;
 import com.tdp.ms.sales.model.dto.TimePeriod;
 import java.util.List;
@@ -38,51 +38,28 @@ import lombok.NoArgsConstructor;
 @Data
 @Builder
 public class SalesRequest {
-    private List<CommercialOperationType> commercialOperationType;//Tiene otro nombre en el swagger commercialOperation
-    private String id;//
-    private List<ContactMedium> prospectContact;//
-    private String salesId;//
-    private List<KeyValueType> additionalData;//
-    private String name;//
-    private String productType;//
-    private Money estimatedRevenue;//
-    private PaymentType paymentType;//
-    private RelatedParty agent;//Observado
-    private String description;//
-    private ChannelRef channel;//
-    private String priority;//
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    private List<CommercialOperationType> commercialOperationType;
+    private String id;
+    private List<ContactMedium> prospectContact;
+    private String salesId;
+    private List<KeyValueType> additionalData;
+    private String name;
+    private String productType;
+    private Money estimatedRevenue;
+    private PaymentType paymentType;
+    private RelatedParty agent;
+    private String description;
+    private ChannelRef channel;
+    private String priority;
     private List<RelatedParty> relatedParty;
-
     private String saleCreationDate;
-
     private String status;
-
     private String statusChangeDate;
-
     private String statusChangeReason;
-
     private String audioStatus;
-
     private List<IdentityValidationType> identityValidations;
-
     private String audioUrl;
-
-    private TimePeriod validFor;//
+    private TimePeriod validFor;
 
 
 }

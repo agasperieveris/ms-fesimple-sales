@@ -1,7 +1,7 @@
 package com.tdp.ms.sales.model.request;
 
 import com.tdp.ms.sales.model.dto.Customer;
-import com.tdp.ms.sales.model.dto.Request;
+import com.tdp.ms.sales.model.dto.ProductConfigurationRequestType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -31,12 +31,12 @@ import lombok.NoArgsConstructor;
 public class ProductOrderRequest {
     private String salesChannel;
     private String productOfferingID;
-    private boolean onlyValidationIndicator;
+    private String onlyValidationIndicator;
     private String productOrderItemID;
-    private String correlationId; // no esta en swagger
+    private Number customerId;
     private String actionType;
     private String reasonCode;
     private String reasonText;
     private Customer customer;
-    private Request request;
+    private ProductConfigurationRequestType request;
 }

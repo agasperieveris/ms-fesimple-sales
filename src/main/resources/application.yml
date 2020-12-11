@@ -6,16 +6,3 @@ server:
 spring:
   main:
     allow-bean-definition-overriding: true
-
-application:
-  swagger:
-    title: '@project.name@'
-    description: '@project.description@'
-    version: '@project.version@'
-    contact:
-      name: Telefonica del Peru
-      url: https://www.telefonica.com.pe
-      email: correo
-    license:
-      type: copyright
-      url: https://www.telefonica.com.pe

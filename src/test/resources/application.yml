@@ -6,6 +6,28 @@ server:
 spring:
   main:
     allow-bean-definition-overriding: true
+  cloud:
+    azure:
+      eventhub:
+        connection-string: Endpoint=sb://ehub.servicebus.windows.net/;SharedAccessKeyName=test;SharedAccessKey=test
+        checkpoint-storage-account: test
+        checkpoint-access-key: test
+        checkpoint-container: test
+    stream:
+      bindings:
+        input:
+          destination: test
+          group: test
+        output:
+          destination: test
+      eventhub:
+        bindings:
+          input:
+            consumer:
+              checkpoint-mode: PARTITION_COUNT
+      default:
+        producer:
+          errorChannelEnabled: true
 
 azure:
   cosmosdb:
@@ -26,9 +48,32 @@ application:
       type: copyright
       url: https://www.telefonica.com.pe
   endpoints:
+    sku:
+      create_sku: https://localhost
+    business_parameters:
+      get_sales_characteristics_url: https://localhost
+      get_risk_domain_url: https://localhost
+      get_bonificacion_simcard: https://localhost
+      get_parameters_simcard: https://localhost
+      get_parameters_financiamiento_fija: https://localhost
+    product_order:
+      create_product_order_url: https://localhost
+    receptor:
+      register_url: https://localhost
     url:
+      put_sale: https://localhost
       business_parameters:
         seq_number: SEQ001
         sequential: https://localhost
+    stock:
+      reserve_stock_url: https://localhost
+    payment:
+      generate_cip_payment_identifier: https://localhost
+    quotation:
+      create_quotation: https://localhost
+  timeout:
+    get_order_timeout: 180000
+    get_order_timeout_read: 180000
+    get_order_timeout_write: 180000
   catalog-error:
-    url: http://localhost
+    url: https://aks-berserkers-ingress-dev.eastus2.cloudapp.azure.com
