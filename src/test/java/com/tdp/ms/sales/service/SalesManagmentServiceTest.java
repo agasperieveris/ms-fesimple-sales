@@ -212,6 +212,12 @@ public class SalesManagmentServiceTest {
 
         salesManagmentService.post(salesRequest);
 
+        salesRequest.getSale().getAdditionalData().stream()
+                .filter(item -> item.getKey().equalsIgnoreCase("ufxauthorization"))
+                .findFirst()
+                .ifPresent(item -> item.setValue(""));
+        salesManagmentService.post(salesRequest);
+
         salesRequest.getSale().setProductType("WIRELESS");
         salesManagmentService.post(salesRequest);
 
@@ -252,6 +258,118 @@ public class SalesManagmentServiceTest {
         method2.invoke(salesManagmentServiceImpl, getRiskDomain, Arrays.asList(BusinessParameterExt.builder().build()),
                 getBonificacionSim, getParametersSimCard, salesRequest.getSale(), salesRequest, sapidSimcard, commercialOperationReason,
                 flag, flag, flag, flag, flag, channelIdRequest, customerIdRequest, productOfferingIdRequest);
+    }
+
+    @Test
+    void assignBillingOffers_Test() throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
+        Method method = SalesManagmentServiceImpl.class.getDeclaredMethod("assignBillingOffers", List.class, List.class, List.class, List.class);
+        method.setAccessible(true);
+        Sale sale = CommonsMocks.createSaleMock2();
+        method.invoke(salesManagmentServiceImpl, sale.getCommercialOperation().get(0).getProductOfferings(),
+                new ArrayList<>(), new ArrayList<>(), new ArrayList<>());
+    }
+
+    @Test
+    void postSales_MigracionFija_Test() throws InvocationTargetException, IllegalAccessException, NoSuchMethodException {
+        Sale sale = CommonsMocks.createSaleMock2();
+        sale.getCommercialOperation().get(0).getOrder().setProductOrderId("");
+
+        PostSalesRequest salesRequest = PostSalesRequest
+                .builder()
+                .sale(sale)
+                .headersMap(headersMap)
+                .build();
+
+        BusinessParameterExt ext1 = BusinessParameterExt
+                .builder()
+                .codComercialOperationType("CAEQ")
+                .codActionType("CW")
+                .codCharacteristicId("9941")
+                .codCharacteristicCode("AcquisitionType")
+                .codCharacteristicValue("private")
+                .build();
+        List<BusinessParameterExt> extList = new ArrayList<>();
+        extList.add(ext1);
+        BusinessParameterData businessParameterData1 = BusinessParameterData
+                .builder()
+                .ext(extList)
+                .build();
+        BusinessParameterDataSeq businessParameterData2 = BusinessParameterDataSeq
+                .builder()
+                .active(false)
+                .build();
+        List<BusinessParameterData> dataList = new ArrayList<>();
+        dataList.add(businessParameterData1);
+
+        List<BusinessParameterDataSeq> dataList2 = new ArrayList<>();
+        dataList2.add(businessParameterData2);
+
+        GetSalesCharacteristicsResponse businessParametersResponse = GetSalesCharacteristicsResponse
+                .builder()
+                .data(dataList)
+                .build();
+        BusinessParametersResponse expectBusinessParametersResponse = BusinessParametersResponse
+                .builder()
+                .data(dataList2)
+                .build();
+
+        BusinessParametersFinanciamientoFijaResponse bpFijaResponse = BusinessParametersFinanciamientoFijaResponse.builder()
+                .data(Arrays.asList(BusinessParameterFinanciamientoFijaData.builder()
+                        .ext(Arrays.asList(BusinessParameterFinanciamientoFijaExt.builder()
+                                        .id(1)
+                                        .nomProductType("Landline")
+                                        .nomParameter("financialEntity")
+                                        .desParameterTitle("Código de financiamiento fija")
+                                        .codParameterValue("FVFIR00006")
+                                        .build(),
+                                BusinessParameterFinanciamientoFijaExt.builder()
+                                        .id(2)
+                                        .nomProductType("Landline")
+                                        .nomParameter("chargeCodeInstallation")
+                                        .desParameterTitle("Código de financiamiento asociado a la instalación")
+                                        .codParameterValue("FRVTSE_001")
+                                        .build(),
+                                BusinessParameterFinanciamientoFijaExt.builder()
+                                        .id(3)
+                                        .nomProductType("Landline")
+                                        .nomParameter("chargeCodeDevicePremium")
+                                        .desParameterTitle("Código de financiamiento asociado a Upgrade a Modem Premium")
+                                        .codParameterValue("FRIOEQ_002")
+                                        .build(),
+                                BusinessParameterFinanciamientoFijaExt.builder()
+                                        .id(4)
+                                        .nomProductType("Landline")
+                                        .nomParameter("chargeCodeUltraWifi")
+                                        .desParameterTitle("Código de financiamiento asociado a Ultra Wifi")
+                                        .codParameterValue("FRIOEQ_007")
+                                        .build()))
+                        .build()))
+                .build();
+
+        List<BusinessParametersFinanciamientoFijaResponse> bpFinanciamientoFijaResponseList = new ArrayList<>();
+        bpFinanciamientoFijaResponseList.add(bpFijaResponse);
+
+        Mockito.when(businessParameterWebClient.getSalesCharacteristicsByCommercialOperationType(any()))
+                .thenReturn(Mono.just(businessParametersResponse));
+
+        Mockito.when(businessParameterWebClient.getRiskDomain(any(), any()))
+                .thenReturn(Mono.just(expectBusinessParametersResponse));
+
+        Mockito.when(businessParameterWebClient.getParametersFinanciamientoFija(any()))
+                .thenReturn(Mono.just(bpFijaResponse));
+
+        ProductorderResponse productorderResponse = new ProductorderResponse();
+        CreateProductOrderResponseType createProductOrderResponseType =  new CreateProductOrderResponseType();
+        productorderResponse.setCreateProductOrderResponse(createProductOrderResponseType);
+        Mockito.when(productOrderWebClient.createProductOrder(any(), eq(salesRequest.getHeadersMap()), any()))
+                .thenReturn(Mono.just(productorderResponse));
+
+        Mockito.when(salesRepository.findBySalesId(any())).thenReturn(Mono.just(sale));
+        Mockito.when(salesRepository.save(any())).thenReturn(Mono.just(sale));
+
+        salesRequest.getSale().getCommercialOperation().get(0).setReason("CAPL");
+        salesRequest.getSale().getCommercialOperation().get(0).setAction("MODIFY");
+        salesManagmentService.post(salesRequest);
     }
 
     @Test
@@ -639,5 +757,178 @@ public class SalesManagmentServiceTest {
                         .additionalData(null)
                         .build()))
                 .build());
+    }
+
+    @Test
+    void wirelineMigrations_Test() throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
+        Sale sale = CommonsMocks.createSaleMock2();
+        sale.getCommercialOperation().get(0).getOrder().setProductOrderId("");
+
+        PostSalesRequest salesRequest = PostSalesRequest
+                .builder()
+                .sale(sale)
+                .headersMap(headersMap)
+                .build();
+
+        BusinessParameterExt ext1 = BusinessParameterExt
+                .builder()
+                .codComercialOperationType("CAEQ")
+                .codActionType("CW")
+                .codCharacteristicId("9941")
+                .codCharacteristicCode("AcquisitionType")
+                .codCharacteristicValue("private")
+                .build();
+        List<BusinessParameterExt> extList = new ArrayList<>();
+        extList.add(ext1);
+        BusinessParameterData businessParameterData1 = BusinessParameterData
+                .builder()
+                .ext(extList)
+                .build();
+        BusinessParameterDataSeq businessParameterData2 = BusinessParameterDataSeq
+                .builder()
+                .active(false)
+                .build();
+        List<BusinessParameterData> dataList = new ArrayList<>();
+        dataList.add(businessParameterData1);
+
+        List<BusinessParameterDataSeq> dataList2 = new ArrayList<>();
+        dataList2.add(businessParameterData2);
+
+        GetSalesCharacteristicsResponse businessParametersResponse = GetSalesCharacteristicsResponse
+                .builder()
+                .data(dataList)
+                .build();
+        BusinessParametersResponse expectBusinessParametersResponse = BusinessParametersResponse
+                .builder()
+                .data(dataList2)
+                .build();
+
+        BusinessParametersFinanciamientoFijaResponse bpFijaResponse = BusinessParametersFinanciamientoFijaResponse.builder()
+                .data(Arrays.asList(BusinessParameterFinanciamientoFijaData.builder()
+                        .ext(Arrays.asList(BusinessParameterFinanciamientoFijaExt.builder()
+                                        .id(1)
+                                        .nomProductType("Landline")
+                                        .nomParameter("financialEntity")
+                                        .desParameterTitle("Código de financiamiento fija")
+                                        .codParameterValue("FVFIR00006")
+                                        .build(),
+                                BusinessParameterFinanciamientoFijaExt.builder()
+                                        .id(2)
+                                        .nomProductType("Landline")
+                                        .nomParameter("chargeCodeInstallation")
+                                        .desParameterTitle("Código de financiamiento asociado a la instalación")
+                                        .codParameterValue("FRVTSE_001")
+                                        .build(),
+                                BusinessParameterFinanciamientoFijaExt.builder()
+                                        .id(3)
+                                        .nomProductType("Landline")
+                                        .nomParameter("chargeCodeDevicePremium")
+                                        .desParameterTitle("Código de financiamiento asociado a Upgrade a Modem Premium")
+                                        .codParameterValue("FRIOEQ_002")
+                                        .build(),
+                                BusinessParameterFinanciamientoFijaExt.builder()
+                                        .id(4)
+                                        .nomProductType("Landline")
+                                        .nomParameter("chargeCodeUltraWifi")
+                                        .desParameterTitle("Código de financiamiento asociado a Ultra Wifi")
+                                        .codParameterValue("FRIOEQ_007")
+                                        .build()))
+                        .build()))
+                .build();
+
+        List<BusinessParametersFinanciamientoFijaResponse> bpFinanciamientoFijaResponseList = new ArrayList<>();
+        bpFinanciamientoFijaResponseList.add(bpFijaResponse);
+
+        Mockito.when(businessParameterWebClient.getSalesCharacteristicsByCommercialOperationType(any()))
+                .thenReturn(Mono.just(businessParametersResponse));
+
+        Mockito.when(businessParameterWebClient.getRiskDomain(any(), any()))
+                .thenReturn(Mono.just(expectBusinessParametersResponse));
+
+        Mockito.when(businessParameterWebClient.getParametersFinanciamientoFija(any()))
+                .thenReturn(Mono.just(bpFijaResponse));
+
+        ProductorderResponse productorderResponse = new ProductorderResponse();
+        CreateProductOrderResponseType createProductOrderResponseType =  new CreateProductOrderResponseType();
+        productorderResponse.setCreateProductOrderResponse(createProductOrderResponseType);
+        Mockito.when(productOrderWebClient.createProductOrder(any(), eq(salesRequest.getHeadersMap()), any()))
+                .thenReturn(Mono.just(productorderResponse));
+
+        Mockito.when(salesRepository.findBySalesId(any())).thenReturn(Mono.just(sale));
+        Mockito.when(salesRepository.save(any())).thenReturn(Mono.just(sale));
+
+        salesRequest.getSale().getCommercialOperation().get(0).setReason("CAPL");
+        salesRequest.getSale().getCommercialOperation().get(0).setAction("MODIFY");
+
+        Method method = SalesManagmentServiceImpl.class.getDeclaredMethod("wirelineMigrations", List.class,
+                PostSalesRequest.class, Boolean[].class, String.class);
+        method.setAccessible(true);
+
+        final Boolean[] flgFinanciamiento = {true};
+        method.invoke(salesManagmentServiceImpl, bpFinanciamientoFijaResponseList.get(0).getData().get(0).getExt(),
+                salesRequest, flgFinanciamiento, "CH");
+
+        /*Method methodFillProductOfferingProductSpecId = SalesManagmentServiceImpl.class.getDeclaredMethod("fillProductOfferingProductSpecId", List.class, List.class);
+        methodFillProductOfferingProductSpecId.setAccessible(true);
+        methodFillProductOfferingProductSpecId.invoke(salesManagmentServiceImpl,
+                Arrays.asList(MigrationComponent.builder()
+                        .componentName("landline")
+                        .build()), sale.getCommercialOperation().get(0).getProductOfferings().get(0).getProductSpecification());*/
+    }
+
+    @Test
+    void compareComponents_Test() throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
+        Method method = SalesManagmentServiceImpl.class.getDeclaredMethod("compareComponents", String.class);
+        method.setAccessible(true);
+
+        method.invoke(salesManagmentServiceImpl, "broadband");
+        method.invoke(salesManagmentServiceImpl, "cableTv");
+        method.invoke(salesManagmentServiceImpl, "device");
+        method.invoke(salesManagmentServiceImpl, "landline");
+        method.invoke(salesManagmentServiceImpl, "accessories");
+    }
+
+    @Test
+    void buildGenesisError_Test() throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
+        Method method = SalesManagmentServiceImpl.class.getDeclaredMethod("buildGenesisError", String.class, String.class);
+        method.setAccessible(true);
+        method.invoke(salesManagmentServiceImpl, "test", "test");
+    }
+
+    @Test
+    void addOrderIntoSale_Test() throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
+        Sale sale = CommonsMocks.createSaleMock2();
+        sale.getCommercialOperation().get(0).getOrder().setProductOrderId("");
+
+        PostSalesRequest salesRequest = PostSalesRequest
+                .builder()
+                .sale(sale)
+                .headersMap(headersMap)
+                .build();
+
+        ProductorderResponse productorderResponse = new ProductorderResponse();
+        CreateProductOrderResponseType createProductOrderResponseType =  new CreateProductOrderResponseType();
+        productorderResponse.setCreateProductOrderResponse(createProductOrderResponseType);
+        Mockito.when(productOrderWebClient.createProductOrder(any(), eq(salesRequest.getHeadersMap()), any()))
+                .thenReturn(Mono.just(productorderResponse));
+
+        Mockito.when(salesRepository.findBySalesId(any())).thenReturn(Mono.just(sale));
+        Mockito.when(salesRepository.save(any())).thenReturn(Mono.just(sale));
+
+        CreateQuotationResponse createQuotationResponse =  new CreateQuotationResponse();
+        Mockito.when(quotationWebClient.createQuotation(any(), any())).thenReturn(Mono.just(createQuotationResponse));
+
+        Method method = SalesManagmentServiceImpl.class.getDeclaredMethod("addOrderIntoSale", CreateProductOrderGeneralRequest.class,
+                PostSalesRequest.class, Sale.class, Boolean[].class, CreateQuotationRequest.class, ProductorderResponse.class);
+        method.setAccessible(true);
+        final Boolean[] flgFinanciamiento = {false};
+        method.invoke(salesManagmentServiceImpl, new CreateProductOrderGeneralRequest(), salesRequest, sale, flgFinanciamiento,
+                new CreateQuotationRequest(), ProductorderResponse.builder().createProductOrderResponse(CreateProductOrderResponseType.builder().productOrderId("string").build()).build());
+        flgFinanciamiento[0] = true;
+        sale.setIdentityValidations(null);
+        method.invoke(salesManagmentServiceImpl, new CreateProductOrderGeneralRequest(), salesRequest, sale, flgFinanciamiento,
+                new CreateQuotationRequest(), ProductorderResponse.builder().createProductOrderResponse(CreateProductOrderResponseType.builder().productOrderId("string").build()).build());
+        method.invoke(salesManagmentServiceImpl, new CreateProductOrderGeneralRequest(), salesRequest, sale, flgFinanciamiento,
+                new CreateQuotationRequest(), ProductorderResponse.builder().createProductOrderResponse(CreateProductOrderResponseType.builder().productOrderId("").build()).build());
     }
 }

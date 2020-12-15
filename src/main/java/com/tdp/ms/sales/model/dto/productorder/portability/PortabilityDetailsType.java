@@ -29,17 +29,17 @@ import lombok.ToString;
 @AllArgsConstructor
 @NoArgsConstructor
 public class PortabilityDetailsType {
-    private String sourceOperator;
-    private String serviceType;
-    private String planType;
     private String activationDate;
-    private String equipmentCommitmentEndDate;
+    private String sourceOperator;
+    private String planType;
+    private String serviceType;
     private String salesDepartment;
     private String consultationId;
+    private String equipmentCommitmentEndDate;
     private String consultationGroup;
-    private String documentType;
     private String documentNumber;
+    private String documentType;
     private String customerName;
-    private String customerEmail;
     private String customerContactPhone;
+    private String customerEmail;
 }
