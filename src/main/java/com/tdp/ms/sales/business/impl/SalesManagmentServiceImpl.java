@@ -1759,22 +1759,24 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         // Sort identityValidationType by date field
         final Date[] latestDate = {null};
         final int[] cont = {0};
-        identityValidationTypes.stream().forEach(ivt -> {
-            // convert String date to Date
-            DateFormat format = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSSSSSZ");
-            try {
-                Date currentDate = format.parse(ivt.getDate());
-                if (latestDate[0] == null || latestDate[0].before(currentDate)) {
-                    latestDate[0] = currentDate;
-                    cont[0]++;
+        if (identityValidationTypes != null && !identityValidationTypes.isEmpty()) {
+            identityValidationTypes.stream().forEach(ivt -> {
+                // convert String date to Date
+                DateFormat format = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSSSSSZ");
+                try {
+                    Date currentDate = format.parse(ivt.getDate());
+                    if (latestDate[0] == null || latestDate[0].before(currentDate)) {
+                        latestDate[0] = currentDate;
+                        cont[0]++;
+                    }
+                } catch (ParseException ex) {
+                    LOG.error("Post Sales Validate Negotiation Exception: " + ex);
                 }
-            } catch (ParseException ex) {
-                LOG.error("Post Sales Validate Negotiation Exception: " + ex);
-            }
-        });
-
+            });
+        }
         // validate validationType
-        if (!identityValidationTypes.get(cont[0]).getValidationType().equalsIgnoreCase("Biometric")) {
+        if (identityValidationTypes != null && !identityValidationTypes.get(cont[0])
+                .getValidationType().equalsIgnoreCase("Biometric")) {
             isBiometric[0] = false;
         }
 
@@ -2445,7 +2447,9 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                 .changedCharacteristics(changedCharacteristicList)
                 .build();
 
-        if (!saleRequest.getCommercialOperation().get(0).getReason().equalsIgnoreCase("PORTA")) {
+        if (!saleRequest.getCommercialOperation().get(0).getReason().equalsIgnoreCase("PORTA")
+                && !(saleRequest.getCommercialOperation().get(0).getReason().equalsIgnoreCase("ALTA")
+                    && saleRequest.getProductType().equalsIgnoreCase(Constants.WIRELESS))) {
             changedContainedProduct1.setProductId(saleRequest.getCommercialOperation().get(0).getProduct().getId()); // Consultar porque hay 2 product ids
         }
 
