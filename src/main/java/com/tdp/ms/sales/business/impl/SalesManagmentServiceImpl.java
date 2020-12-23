@@ -2079,7 +2079,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
             }
 
             caplBoRemoved1.setBillingOfferId(this.getStringValueByKeyFromAdditionalDataList(saleRequest
-                    .getCommercialOperation().get(0).getProduct().getAdditionalData(), "productSpecPricingID"));
+                    .getCommercialOperation().get(0).getProduct().getAdditionalData(), "billingOfferId"));
             caplBoRemovedList.add(caplBoRemoved1);
         } else {
             caplRequestProductOrder.setActionType("CH");
@@ -2255,7 +2255,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
             }
 
             caeqCaplBoRemoved1.setBillingOfferId(this.getStringValueByKeyFromAdditionalDataList(saleRequest
-                    .getCommercialOperation().get(0).getProduct().getAdditionalData(), "productSpecPricingID"));
+                    .getCommercialOperation().get(0).getProduct().getAdditionalData(), "billingOfferId"));
             caeqCaplBoRemovedList.add(caeqCaplBoRemoved1);
         } else {
             caeqCaplRequestProductOrder.setActionType("CH");
