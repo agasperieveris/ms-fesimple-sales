@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: ms-fesimple-sales
-  namespace: certi-e2e1
+  namespace: certi-buat
 spec:
   replicas: 1
   selector:
@@ -25,7 +25,7 @@ spec:
             - name: ENV
               value: ambiente
             - name: SPRING_APPLICATION_JSON
-              value: '{"spring":{"cloud":{"config":{"uri":"http://ms-fesimple-configserver-svc.berserkers.svc.cluster.local:4041","profile":"e2e1"}}}}'
+              value: '{"spring":{"cloud":{"config":{"uri":"http://ms-fesimple-configserver-svc.berserkers.svc.cluster.local:4041","profile":"buat"}}}}'
       imagePullSecrets:
         - name: acr-registry
 ---
@@ -33,7 +33,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: ms-fesimple-sales-svc
-  namespace: certi-e2e1
+  namespace: certi-buat
   labels:
     app: "ms-fesimple-sales"
 spec:
@@ -50,7 +50,7 @@ apiVersion: networking.k8s.io/v1beta1
 kind: Ingress
 metadata:
   name: ms-fesimple-sales-ingress-nginx
-  namespace: certi-e2e1
+  namespace: certi-buat
   annotations:
     kubernetes.io/ingress.class: nginx
     nginx.ingress.kubernetes.io/rewrite-target: /$2
@@ -71,4 +71,4 @@ spec:
           - backend:
               serviceName: ms-fesimple-sales-svc
               servicePort: 4041
-            path: /ms-fesimple-sales-certi-e2e1(/|$)(.*)
+            path: /ms-fesimple-sales-certi-buat(/|$)(.*)
