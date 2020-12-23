@@ -91,12 +91,36 @@ public class SalesLeadControllerTest {
     }
 
     @Test
-    void updateSales() {
+    void updateSales_Test() {
         Mockito.when(salesService.put(any(), any(), any()))
                 .thenReturn(Mono.just(salesResponse));
 
         WebTestClient.ResponseSpec responseSpec = webClient.put()
                 .uri("/fesimple/v1/saleslead/FE-000000001")
+                .accept(MediaType.APPLICATION_JSON)
+                .header(HttpHeadersKey.UNICA_SERVICE_ID, "550e8400-e29b-41d4-a716-446655440000")
+                .header(HttpHeadersKey.UNICA_APPLICATION, "genesis")
+                .header(HttpHeadersKey.UNICA_PID, "550e8400-e29b-41d4-a716-446655440000")
+                .header(HttpHeadersKey.UNICA_USER, "genesis")
+                .bodyValue(sale)
+                .exchange();
+
+        responseSpec.expectStatus().isOk();
+
+        responseSpec.expectBody()
+                .jsonPath("$.id").isEqualTo(salesResponse.getId())
+                .jsonPath("$.name").isEqualTo(salesResponse.getName())
+                .jsonPath("$.description").isEqualTo(salesResponse.getDescription());
+
+    }
+
+    @Test
+    void updateSales_Event_Test() {
+        Mockito.when(salesService.putEvent(any(), any(), any()))
+                .thenReturn(Mono.just(salesResponse));
+
+        WebTestClient.ResponseSpec responseSpec = webClient.put()
+                .uri("/fesimple/v1/saleslead/FE-000000001/event")
                 .accept(MediaType.APPLICATION_JSON)
                 .header(HttpHeadersKey.UNICA_SERVICE_ID, "550e8400-e29b-41d4-a716-446655440000")
                 .header(HttpHeadersKey.UNICA_APPLICATION, "genesis")

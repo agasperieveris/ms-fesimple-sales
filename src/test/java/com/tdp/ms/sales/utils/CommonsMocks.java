@@ -535,13 +535,17 @@ public class CommonsMocks {
                 .maxPrice(MoneyType.builder().amount(1).build()).build()));
 
         ComposingProductType productSpecification = ComposingProductType.builder()
+                .name("TV")
                 .productType("landline")
                 .refinedProduct(RefinedProductType.builder()
                         .productCharacteristics(Arrays.asList(ProductSpecCharacteristicType.builder()
                                 .id("string")
+                                .name("productOfferingProductSpecID")
                                 .build()))
                         .build())
                 .build();
+        ComposingProductType productSpecificationSva = productSpecification;
+        productSpecificationSva.setProductType("sva");
 
         MoneyType maxPrice = MoneyType
                 .builder()
@@ -641,7 +645,17 @@ public class CommonsMocks {
                 .upFront(UpFrontType.builder().indicator("string").build())
                 .productOfferingPrice(Arrays.asList(ComponentProdOfferPriceType.builder()
                         .maxPrice(MoneyType.builder().amount(1).build()).build()))
-                .productSpecification(Arrays.asList(productSpecification)).build()));
+                .productSpecification(Arrays.asList(productSpecification, productSpecificationSva))
+                .additionalData(Arrays.asList(KeyValueType.builder().key("productType").value("channelTV").build(),
+                        KeyValueType.builder().key("parentProductCatalogID").value("string").build()))
+                .build()));
+        comercialOperationType.setProduct(ProductInstanceType.builder()
+                .productRelationShip(Arrays.asList(RelatedProductType.builder()
+                        .product(ProductRefInfoType.builder()
+                                .productType("broadband").id("string").name("Internet_Plan").build())
+                        .build()))
+                .publicId("string")
+                .build());
         comercialOperationTypes.add(comercialOperationType);
 
         Money estimatedRevenue = new Money();
