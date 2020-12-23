@@ -2078,8 +2078,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                 caplRequestProductOrder.setActionType("CH"); // landline, cableTv, broadband, bundle
             }
 
-            // TODO: cambiar productSpecPricingId por billingOfferId
-            caplBoRemoved1.setProductSpecPricingId(this.getStringValueByKeyFromAdditionalDataList(saleRequest
+            caplBoRemoved1.setBillingOfferId(this.getStringValueByKeyFromAdditionalDataList(saleRequest
                     .getCommercialOperation().get(0).getProduct().getAdditionalData(), "productSpecPricingID"));
             caplBoRemovedList.add(caplBoRemoved1);
         } else {
@@ -2255,8 +2254,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                 caeqCaplRequestProductOrder.setActionType("CH"); // landline, cableTv, broadband, bundle
             }
 
-            // TODO: cambiar productSpecPricingId por billingOfferId
-            caeqCaplBoRemoved1.setProductSpecPricingId(this.getStringValueByKeyFromAdditionalDataList(saleRequest
+            caeqCaplBoRemoved1.setBillingOfferId(this.getStringValueByKeyFromAdditionalDataList(saleRequest
                     .getCommercialOperation().get(0).getProduct().getAdditionalData(), "productSpecPricingID"));
             caeqCaplBoRemovedList.add(caeqCaplBoRemoved1);
         } else {
