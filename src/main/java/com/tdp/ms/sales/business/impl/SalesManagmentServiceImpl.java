@@ -956,7 +956,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                             request.getHeadersMap());
                     return saleRequestUpdated.flatMap(saleItem -> {
                         // Call to Reserve Stock Service When Commercial Operation include CAEQ
-                        if (flgCaeq[0] || flgAlta[0]) {
+                        if (flgCaeq[0] || flgAlta[0] || isMobilePortability) {
 
                             return this.callToReserveStockAndCreateQuotation(request, saleItem,
                                     flgCasi[0], flgFinanciamiento[0], sapidSimcard[0]);
@@ -1675,7 +1675,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                 .accountId(sale.getRelatedParty().get(0).getAccountId())
                 .commercialAgreement("N")
                 .customer(customerQuotation)
-                .operationType(sale.getCommercialOperation().get(0).getReason()) // Pendiente confirmación para alta, reason = ALTA
+                .operationType(sale.getCommercialOperation().get(0).getReason()) // Debe llegar para Alta reason = ALTA y para Porta reason = PORTA
                 .totalAmount(totalAmount)
                 .downPayment(downPayment)
                 .totalCustomerRecurrentCost(totalCustomerRecurrentCost)
