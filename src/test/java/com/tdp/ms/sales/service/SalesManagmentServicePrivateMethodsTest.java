@@ -226,6 +226,7 @@ public class SalesManagmentServicePrivateMethodsTest {
                 .build();
         Sale sale = CommonsMocks.createSaleMock();
         sale.getChannel().setId("CC");
+        sale.getCommercialOperation().get(0).setReason("ALTA");
 
         method.invoke(salesManagmentServiceImpl,sale, altaRequest, "CC", "C0001", "OF0001", "CIP0001",
                 businessParametersResponseObjectExt, "SAPID0001", false);
@@ -254,6 +255,7 @@ public class SalesManagmentServicePrivateMethodsTest {
                 .build();
         Sale sale = CommonsMocks.createSaleMock();
         sale.getChannel().setId("DLC");
+        sale.getCommercialOperation().get(0).setReason("ALTA");
 
         method.invoke(salesManagmentServiceImpl,sale, altaRequest, "CC", "C0001", "OF0001", "CIP0001",
                 businessParametersResponseObjectExt, "SAPID0001", false);
@@ -337,7 +339,7 @@ public class SalesManagmentServicePrivateMethodsTest {
 
         CreateProductOrderGeneralRequest createProductOrderGeneralRequest = CreateProductOrderGeneralRequest
                 .builder().createProductOrderRequest(ProductOrderCaeqRequest.builder()
-                        .actionType("string").customerId("string").onlyValidationIndicator("false")
+                        .actionType("string").customer(Customer.builder().customerId("string").build()).onlyValidationIndicator("false")
                         .productOfferingId("string").salesChannel("string")
                         .request(CaeqRequest.builder().build()).build()).build();
 
@@ -372,7 +374,7 @@ public class SalesManagmentServicePrivateMethodsTest {
 
         CreateProductOrderGeneralRequest createProductOrderGeneralRequest = CreateProductOrderGeneralRequest
                 .builder().createProductOrderRequest(ProductOrderCaeqCaplRequest.builder()
-                        .actionType("string").customerId("string").onlyValidationIndicator("false")
+                        .actionType("string").customer(Customer.builder().customerId("string").build()).onlyValidationIndicator("false")
                         .productOfferingId("string").salesChannel("string").request(CaeqCaplRequest.builder().build()).build()).build();
 
         Sale saleRequest = Sale.builder()
