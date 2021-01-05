@@ -1,13 +1,12 @@
 package com.tdp.ms.sales.model.dto;
 
-import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * Class: ProductRefInfoType. <br/>
+ * Class: ProductRelationShipProduct. <br/>
  * <b>Copyright</b>: &copy; 2019 Telef&oacute;nica del Per&uacute;<br/>
  * <b>Company</b>: Telef&oacute;nica del Per&uacute;<br/>
  *
@@ -15,11 +14,11 @@ import lombok.NoArgsConstructor;
  *         <u>Service Provider</u>: Everis Per&uacute; SAC (EVE) <br/>
  *         <u>Developed by</u>: <br/>
  *         <ul>
- *         <li>Developer name</li>
+ *         <li>Sergio Rivas</li>
  *         </ul>
  *         <u>Changes</u>:<br/>
  *         <ul>
- *         <li>YYYY-MM-DD Creaci&oacute;n del proyecto.</li>
+ *         <li>2021-01-05 Creaci&oacute;n del proyecto.</li>
  *         </ul>
  * @version 1.0
  */
@@ -28,22 +27,20 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class ProductRefInfoType {
+public class ProductRelationShipProduct {
+    private String description;
+    private Object relatedParty;
+    private Object characteristic;
+    private String name;
+    private Object productRelationship;
     private String id;
     private String href;
-    private String name;
+    private Object place;
+    private Object additionalData;
+    private Object category;
+    private Object productSpec;
     private String publicId;
-    private String description;
     private String productType;
-    private List<String> tags;
-    private List<CategoryTreeType> category;
     private String startDate;
-    private String terminationDate;
-    private List<EntityRefType> place;
-    private EntityRefType productSpec;
-    private List<ProductCharacteristicType> characteristic;
-    private List<ComponentProdPriceType> productPrice;
-    private List<RelatedPartyRefType> relatedParty;
-    private List<ProductProductRelationShip> productRelationship;
-    private List<KeyValueType> additionalData;
+    private Object productPrice;
 }

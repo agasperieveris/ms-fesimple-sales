@@ -306,6 +306,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         // Order Attributes if is Scheduling
         if (saleRequest.getCommercialOperation() != null
                 && saleRequest.getCommercialOperation().get(0).getWorkOrDeliveryType() != null
+                && saleRequest.getCommercialOperation().get(0).getWorkOrDeliveryType().getScheduleDelivery() != null
                 && !saleRequest.getCommercialOperation().get(0).getWorkOrDeliveryType().getScheduleDelivery()
                 .equalsIgnoreCase("SLA")) {
 
@@ -1051,13 +1052,16 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         AltaFijaRequest altaFijaRequest = new AltaFijaRequest();
         altaFijaRequest.setNewProducts(newProductsAltaFijaList);
         altaFijaRequest.setAppointmentId(saleRequest.getCommercialOperation().get(0).getWorkOrDeliveryType() != null
+                && saleRequest.getCommercialOperation().get(0).getWorkOrDeliveryType().getWorkOrder() != null
+                && saleRequest.getCommercialOperation().get(0).getWorkOrDeliveryType().getWorkOrder()
+                .getWorkForceTeams() != null
                 ? saleRequest.getCommercialOperation().get(0).getWorkOrDeliveryType().getWorkOrder().getWorkForceTeams()
                 .get(0).getId() : null);
         altaFijaRequest.setAppointmentNumber(saleRequest.getSalesId());
         altaFijaRequest.setServiceabilityInfo(serviceabilityInfo);
         altaFijaRequest.setSourceApp(saleRequest.getSalesId());
         altaFijaRequest.setOrderAttributes(altaFijaOrderAttributesList);
-        if (!StringUtils.isEmpty(saleRequest.getPaymenType().getCid())) {
+        if (saleRequest.getPaymenType() != null && !StringUtils.isEmpty(saleRequest.getPaymenType().getCid())) {
             altaFijaRequest.setCip(saleRequest.getPaymenType().getCid());
         }
         altaFijaRequest.setUpfrontIndicator(saleRequest.getCommercialOperation().get(0)
@@ -2201,7 +2205,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                 .builder()
                 .sourceApp("FE")
                 .newProducts(newProductCaeqList)
-                .orderAttributes(caeqOrderAttributes)
+                .orderAttributes(caeqOrderAttributes.isEmpty() ? null : caeqOrderAttributes)
                 .shipmentDetails(saleRequest.getCommercialOperation().get(0).getWorkOrDeliveryType() != null
                         ? createShipmentDetail(saleRequest): null)
                 .build();
@@ -2211,7 +2215,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
 
         ProductOrderCaeqRequest caeqProductOrderRequest = new ProductOrderCaeqRequest();
         caeqProductOrderRequest.setSalesChannel(channelIdRequest);
-        caeqProductOrderRequest.setCustomerId(customerIdRequest);
+        caeqProductOrderRequest.getCustomer().setCustomerId(customerIdRequest);
         caeqProductOrderRequest.setProductOfferingId(productOfferingIdRequest);
         caeqProductOrderRequest.setOnlyValidationIndicator(Constants.STRING_FALSE);
         caeqProductOrderRequest.setActionType("CW");
@@ -2240,7 +2244,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         // Code from CAPL
         ProductOrderCaeqCaplRequest caeqCaplRequestProductOrder = new ProductOrderCaeqCaplRequest();
         caeqCaplRequestProductOrder.setSalesChannel(channelIdRequest);
-        caeqCaplRequestProductOrder.setCustomerId(customerIdRequest);
+        caeqCaplRequestProductOrder.getCustomer().setCustomerId(customerIdRequest);
         caeqCaplRequestProductOrder.setProductOfferingId(productOfferingIdRequest);
         caeqCaplRequestProductOrder.setOnlyValidationIndicator(Constants.STRING_FALSE);
 
@@ -2373,39 +2377,42 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
 
         documentTypeValue = this.getStringValueByKeyFromAdditionalDataList(saleRequest.getPaymenType()
                                                                         .getAdditionalData(), "paymentDocument");
-        if (documentTypeValue.equalsIgnoreCase("Boleta")) {
-            documentTypeValue = "BO";
-        } else if (documentTypeValue.equalsIgnoreCase("Factura")) {
-            documentTypeValue = "FA";
+        if (!documentTypeValue.isEmpty()) {
+            if (documentTypeValue.equalsIgnoreCase("Boleta")) {
+                documentTypeValue = "BO";
+            } else if (documentTypeValue.equalsIgnoreCase("Factura")) {
+                documentTypeValue = "FA";
+            }
+            FlexAttrValueType deliveryAttrValue =  FlexAttrValueType
+                    .builder()
+                    .stringValue(documentTypeValue)
+                    .valueType(Constants.STRING)
+                    .build();
+            FlexAttrType documentTypeAttr = FlexAttrType
+                    .builder()
+                    .attrName("DOCUMENT_TYPE")
+                    .flexAttrValue(deliveryAttrValue)
+                    .build();
+            caeqOrderAttributes.add(documentTypeAttr);
         }
-        FlexAttrValueType deliveryAttrValue =  FlexAttrValueType
-                .builder()
-                .stringValue(documentTypeValue)
-                .valueType(Constants.STRING)
-                .build();
-        FlexAttrType documentTypeAttr = FlexAttrType
-                .builder()
-                .attrName("DOCUMENT_TYPE")
-                .flexAttrValue(deliveryAttrValue)
-                .build();
 
         String customerRuc = saleRequest.getRelatedParty().size() < 2
                                     || StringUtils.isEmpty(saleRequest.getRelatedParty().get(1).getNationalId()) ? ""
                                                                 : saleRequest.getRelatedParty().get(1).getNationalId();
 
-        FlexAttrValueType paymentAttrValue =  FlexAttrValueType
-                .builder()
-                .stringValue(customerRuc)
-                .valueType(Constants.STRING)
-                .build();
-        FlexAttrType customerRucAttr = FlexAttrType
-                .builder()
-                .attrName("CUSTOMER_RUC")
-                .flexAttrValue(paymentAttrValue)
-                .build();
-
-        caeqOrderAttributes.add(documentTypeAttr);
-        caeqOrderAttributes.add(customerRucAttr);
+        if (!customerRuc.isEmpty()) {
+            FlexAttrValueType paymentAttrValue =  FlexAttrValueType
+                    .builder()
+                    .stringValue(customerRuc)
+                    .valueType(Constants.STRING)
+                    .build();
+            FlexAttrType customerRucAttr = FlexAttrType
+                    .builder()
+                    .attrName("CUSTOMER_RUC")
+                    .flexAttrValue(paymentAttrValue)
+                    .build();
+            caeqOrderAttributes.add(customerRucAttr);
+        }
     }
 
     public List<ChangedContainedProduct> changedContainedCaeqList(Sale saleRequest, String tempNum) {
@@ -2447,9 +2454,18 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         changedCharacteristicList.add(changedCharacteristic3);
 
         // SIMGROUP Characteristic (Conditional)
-        if (saleRequest.getCommercialOperation().get(0).getDeviceOffering().size() > 1) {
+        if (saleRequest.getCommercialOperation().get(0).getDeviceOffering().size() == 1) {
+            ChangedCharacteristic changedCharacteristic4 = ChangedCharacteristic
+                    .builder()
+                    .characteristicId("16524")
+                    .characteristicValue(saleRequest.getCommercialOperation().get(0).getDeviceOffering().get(0)
+                            .getSimSpecifications().get(0).getType())
+                    .build();
+            changedCharacteristicList.add(changedCharacteristic4);
+
+        } else if (saleRequest.getCommercialOperation().get(0).getDeviceOffering().size() > 1) {
             String simGroup = saleRequest.getCommercialOperation().get(0).getDeviceOffering().get(1)
-                                                                            .getSimSpecifications().get(0).getType(); // Pendiente confirmación si este atributo tiene como valores nanoSim, estandar, etc.
+                                                                            .getSimSpecifications().get(0).getType();
             ChangedCharacteristic changedCharacteristic4 = ChangedCharacteristic
                     .builder()
                     .characteristicId("16524")
@@ -2466,15 +2482,31 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                 .build();
 
         if (!saleRequest.getCommercialOperation().get(0).getReason().equalsIgnoreCase("PORTA")
-                && !(saleRequest.getCommercialOperation().get(0).getReason().equalsIgnoreCase("ALTA")
-                    && saleRequest.getProductType().equalsIgnoreCase(Constants.WIRELESS))) {
-            changedContainedProduct1.setProductId(saleRequest.getCommercialOperation().get(0).getProduct().getId()); // Consultar porque hay 2 product ids
+                && !saleRequest.getCommercialOperation().get(0).getReason().equalsIgnoreCase("ALTA")
+                && saleRequest.getProductType().equalsIgnoreCase(Constants.WIRELESS)
+                && saleRequest.getCommercialOperation().get(0).getProduct().getProductRelationShip() != null) {
+            // FEMS-3799 (CR)
+            setChangedContainedProductProductId(changedContainedProduct1, saleRequest.getCommercialOperation().get(0)
+                    .getProduct().getProductRelationShip());
         }
 
         List<ChangedContainedProduct> changedContainedProductList = new ArrayList<>();
         changedContainedProductList.add(changedContainedProduct1);
 
         return changedContainedProductList;
+    }
+
+    private void setChangedContainedProductProductId(ChangedContainedProduct changedContainedProduct,
+                                                     List<RelatedProductType> productRelationShip) {
+        // FEMS-3799 (CR)
+        productRelationShip.stream()
+                .filter(item -> item.getProduct().getDescription().equalsIgnoreCase("SimDevice"))
+                .findFirst()
+                .ifPresent(item -> item.getProduct().getProductRelationship().stream()
+                        .filter(pr -> pr.getProduct().getDescription().equalsIgnoreCase("Device"))
+                        .findFirst()
+                        .ifPresent(pr -> changedContainedProduct.setProductId(pr.getProduct().getId()))
+                );
     }
 
     private String getAcquisitionTypeValue(Sale saleRequest) {
@@ -2666,7 +2698,9 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                 .onlyValidationIndicator(Constants.STRING_FALSE)
                 .request(migracionFijaRequest)
                 .salesChannel(request.getSale().getChannel().getId())
-                .customerId(request.getSale().getRelatedParty().get(0).getCustomerId())
+                .customer(com.tdp.ms.sales.model.dto.productorder.Customer.builder()
+                        .customerId(request.getSale().getRelatedParty().get(0).getCustomerId())
+                        .build())
                 .productOfferingId(request.getSale().getCommercialOperation().get(0).getProductOfferings().get(0)
                         .getId())
                 .build();
