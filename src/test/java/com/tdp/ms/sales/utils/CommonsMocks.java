@@ -136,6 +136,14 @@ public class CommonsMocks {
         product.setProductSpec(entityRefType);
         product.setPublicId("234562433");
         product.setProductOffering(entityRefType);
+        product.setProductRelationShip(Arrays.asList(RelatedProductType.builder()
+                .product(ProductRefInfoType.builder()
+                        .description("SimDevice").name("Device").id("string")
+                        .productRelationship(Arrays.asList(ProductProductRelationShip.builder()
+                                .product(ProductRelationShipProduct.builder()
+                                        .description("Device").id("8091734238").build()).build()))
+                        .build())
+                .build()));
 
         CreateProductOrderResponseType order = CreateProductOrderResponseType
                 .builder()
