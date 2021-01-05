@@ -18,7 +18,7 @@
 
 	<groupId>com.tdp.ms</groupId>
 	<artifactId>sales</artifactId>
-	<version>1.2.34</version>
+	<version>1.2.36</version>
 	<name>${project.groupId}:${project.artifactId}</name>
 	<description>Template from Genesis Framework to build microservices</description>
 
@@ -90,12 +90,6 @@
 		</dependency>
 
 		<dependency>
-			<groupId>com.microsoft.azure</groupId>
-			<artifactId>spring-data-cosmosdb</artifactId>
-			<version>2.2.0</version>
-		</dependency>
-
-		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-devtools</artifactId>
 			<scope>runtime</scope>
@@ -134,15 +128,22 @@
 			<artifactId>guava</artifactId>
 			<version>29.0-jre</version>
 		</dependency>
+
 		<dependency>
 			<groupId>com.azure</groupId>
 			<artifactId>azure-cosmos</artifactId>
 			<version>4.2.0</version>
 		</dependency>
+
 		<dependency>
 			<groupId>com.microsoft.azure</groupId>
-			<artifactId>azure-cosmosdb-spring-boot-starter</artifactId>
+			<artifactId>spring-data-cosmosdb</artifactId>
 			<version>2.2.0</version>
+		</dependency>
+
+		<dependency>
+			<groupId>com.tdp.genesis.starter.cosmosdb</groupId>
+			<artifactId>genesis-starter-cosmosdb</artifactId>
 		</dependency>
 
 		<dependency>
@@ -435,15 +436,18 @@
 								<ignoredUnusedDeclaredDependency>io.swagger:swagger-annotations:jar::</ignoredUnusedDeclaredDependency>
 								<ignoredUnusedDeclaredDependency>org.slf4j:slf4j-api:jar::</ignoredUnusedDeclaredDependency>
 								<ignoredUnusedDeclaredDependency>org.springframework.cloud:spring-cloud-starter-config:jar::</ignoredUnusedDeclaredDependency>
-								<ignoredUnusedDeclaredDependency>com.microsoft.azure:azure-cosmosdb-spring-boot-starter:jar::</ignoredUnusedDeclaredDependency>
 								<ignoredUnusedDeclaredDependency>com.google.guava:guava:jar::</ignoredUnusedDeclaredDependency>
-								<ignoredUnusedDeclaredDependency>com.azure:azure-cosmos:jar::</ignoredUnusedDeclaredDependency>
 								<ignoredUnusedDeclaredDependency>com.microsoft.azure:spring-cloud-azure-eventhubs-stream-binder:jar::</ignoredUnusedDeclaredDependency>
 								<ignoredUnusedDeclaredDependency>io.projectreactor:reactor-test:jar::</ignoredUnusedDeclaredDependency>
 								<ignoredUnusedDeclaredDependency>junit:junit:jar::</ignoredUnusedDeclaredDependency>
 								<ignoredUnusedDeclaredDependency>org.springframework.integration:spring-integration-core:jar::</ignoredUnusedDeclaredDependency>
 								<ignoredUnusedDeclaredDependency>com.microsoft.azure:spring-integration-azure-core:jar::</ignoredUnusedDeclaredDependency>
 								<ignoredUnusedDeclaredDependency>io.netty:netty-transport:jar::</ignoredUnusedDeclaredDependency>
+								<ignoredUnusedDeclaredDependency>com.tdp.genesis.starter.cosmosdb:genesis-starter-cosmosdb:jar::</ignoredUnusedDeclaredDependency>
+								<ignoredUnusedDeclaredDependency>com.microsoft.azure:azure-cosmosdb-spring-boot-starter:jar::</ignoredUnusedDeclaredDependency>
+								<ignoredUnusedDeclaredDependency>com.microsoft.azure:spring-data-cosmosdb:jar::</ignoredUnusedDeclaredDependency>
+								<ignoredUnusedDeclaredDependency>com.azure:azure-cosmos:jar::</ignoredUnusedDeclaredDependency>
+								<ignoredUnusedDeclaredDependency>com.microsoft.azure:spring-data-cosmosdb:jar::</ignoredUnusedDeclaredDependency>
 							</ignoredUnusedDeclaredDependencies>
 						</configuration>
 					</execution>
