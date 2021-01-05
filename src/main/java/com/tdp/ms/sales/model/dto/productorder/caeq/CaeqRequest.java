@@ -34,6 +34,7 @@ import lombok.NoArgsConstructor;
 public class CaeqRequest {
     private List<NewProductCaeq> newProducts;
     private String sourceApp;
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     private List<FlexAttrType> orderAttributes;
     private ShipmentDetailsType shipmentDetails;
     private String cip;
