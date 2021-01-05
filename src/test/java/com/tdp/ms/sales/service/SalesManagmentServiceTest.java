@@ -573,7 +573,7 @@ public class SalesManagmentServiceTest {
     @Test
     void caeqCommercialOperationTest() {
         CreateProductOrderGeneralRequest mainCaeqRequestProductOrder = new CreateProductOrderGeneralRequest();
-
+        sale.getCommercialOperation().get(0).setReason("CAEQ");
         CreateProductOrderGeneralRequest result = salesManagmentServiceImpl
                 .caeqCommercialOperation(sale, mainCaeqRequestProductOrder,
                         "CEC", "CS920", "OF201", "JSG423DE6H");
@@ -583,6 +583,7 @@ public class SalesManagmentServiceTest {
     @Test
     void caeqCaplCommercialOperationTest() {
         CreateProductOrderGeneralRequest mainCaeqCaplRequestProductOrder = new CreateProductOrderGeneralRequest();
+        sale.getCommercialOperation().get(0).setReason("CAEQ");
 
         CreateProductOrderGeneralRequest result = salesManagmentServiceImpl
                 .caeqCaplCommercialOperation(sale, mainCaeqCaplRequestProductOrder,
@@ -601,10 +602,30 @@ public class SalesManagmentServiceTest {
     @Test
     void getChangedContainedCaeqListTest() {
         List<ChangedContainedProduct> changedContainedProducts = new ArrayList<>();
+        sale.getCommercialOperation().get(0).setReason("CAEQ");
 
-        List<ChangedContainedProduct> result = salesManagmentServiceImpl
-                .changedContainedCaeqList(sale, "temp1");
+        salesManagmentServiceImpl.changedContainedCaeqList(sale, "temp1");
 
+        // deviceOfferings con solo un objeto
+        sale.getCommercialOperation().get(0).setDeviceOffering(Collections.singletonList(sale.getCommercialOperation().get(0).getDeviceOffering().get(0)));
+        salesManagmentServiceImpl.changedContainedCaeqList(sale, "temp1");
+    }
+
+    @Test
+    void setChangedContainedProductProductId_Test()  throws NoSuchMethodException, InvocationTargetException,
+            IllegalAccessException {
+        Method method = SalesManagmentServiceImpl.class.getDeclaredMethod("setChangedContainedProductProductId",
+                ChangedContainedProduct.class, List.class);
+
+        method.setAccessible(true);
+        method.invoke(salesManagmentServiceImpl,ChangedContainedProduct.builder().build(), Arrays.asList(RelatedProductType.builder()
+                .product(ProductRefInfoType.builder()
+                        .description("SimDevice").name("Device").id("string")
+                        .productRelationship(Collections.singletonList(ProductProductRelationShip.builder()
+                                .product(ProductRelationShipProduct.builder()
+                                        .description("Device").id("8091734238").build()).build()))
+                        .build())
+                .build()));
     }
 
     @Test

@@ -1,5 +1,6 @@
 package com.tdp.ms.sales.client.impl;
 
+import com.google.gson.Gson;
 import com.tdp.genesis.core.constants.HttpHeadersKey;
 import com.tdp.genesis.core.exception.GenesisException;
 import com.tdp.genesis.core.exception.GenesisExceptionBuilder;
@@ -53,6 +54,8 @@ public class ProductOrderWebClientImpl implements ProductOrderWebClient {
     @Override
     public Mono<ProductorderResponse> createProductOrder(CreateProductOrderGeneralRequest request,
                                                          HashMap<String,String> headersMap, Sale sale) {
+        System.out.println("-> createProductOrder");
+        System.out.println(new Gson().toJson(request));
         return webClientInsecure
                 .post()
                 .uri(createProductOrderUrl)
