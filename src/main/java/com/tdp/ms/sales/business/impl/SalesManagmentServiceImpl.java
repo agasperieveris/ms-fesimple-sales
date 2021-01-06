@@ -609,9 +609,6 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         if (commercialOperationType.getProductOfferings() == null) {
             commercialOperationType.setProductOfferings(new ArrayList<>());
         }
-        if (commercialOperationType.getDeviceOffering() == null) {
-            commercialOperationType.setDeviceOffering(new ArrayList<>());
-        }
         if (commercialOperationType.getAdditionalData() == null) {
             commercialOperationType.setAdditionalData(new ArrayList<>());
         }
@@ -716,7 +713,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
             }
         }
 
-        flgFinanciamiento[0] = saleRequest.getCommercialOperation().get(0).getDeviceOffering() != null ? false :
+        flgFinanciamiento[0] = saleRequest.getCommercialOperation().get(0).getDeviceOffering() == null ? false :
                 !StringUtils.isEmpty(saleRequest.getCommercialOperation().get(0).getDeviceOffering()
                 .get(0).getOffers().get(0).getBillingOfferings().get(0).getCommitmentPeriods().get(0)
                 .getFinancingInstalments().get(0).getDescription()) && !saleRequest.getCommercialOperation().get(0)
