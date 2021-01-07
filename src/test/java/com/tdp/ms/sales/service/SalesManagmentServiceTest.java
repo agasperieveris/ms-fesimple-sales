@@ -939,17 +939,17 @@ public class SalesManagmentServiceTest {
         CreateQuotationResponse createQuotationResponse =  new CreateQuotationResponse();
         Mockito.when(quotationWebClient.createQuotation(any(), any())).thenReturn(Mono.just(createQuotationResponse));
 
-        Method method = SalesManagmentServiceImpl.class.getDeclaredMethod("addOrderIntoSale", CreateProductOrderGeneralRequest.class,
-                PostSalesRequest.class, Sale.class, Boolean[].class, CreateQuotationRequest.class, ProductorderResponse.class);
+        Method method = SalesManagmentServiceImpl.class.getDeclaredMethod("addOrderIntoSale", PostSalesRequest.class,
+                Sale.class, Boolean[].class, CreateQuotationRequest.class, ProductorderResponse.class);
         method.setAccessible(true);
         final Boolean[] flgFinanciamiento = {false};
-        method.invoke(salesManagmentServiceImpl, new CreateProductOrderGeneralRequest(), salesRequest, sale, flgFinanciamiento,
+        method.invoke(salesManagmentServiceImpl, salesRequest, sale, flgFinanciamiento,
                 new CreateQuotationRequest(), ProductorderResponse.builder().createProductOrderResponse(CreateProductOrderResponseType.builder().productOrderId("string").build()).build());
         flgFinanciamiento[0] = true;
         sale.setIdentityValidations(null);
-        method.invoke(salesManagmentServiceImpl, new CreateProductOrderGeneralRequest(), salesRequest, sale, flgFinanciamiento,
+        method.invoke(salesManagmentServiceImpl, salesRequest, sale, flgFinanciamiento,
                 new CreateQuotationRequest(), ProductorderResponse.builder().createProductOrderResponse(CreateProductOrderResponseType.builder().productOrderId("string").build()).build());
-        method.invoke(salesManagmentServiceImpl, new CreateProductOrderGeneralRequest(), salesRequest, sale, flgFinanciamiento,
+        method.invoke(salesManagmentServiceImpl, salesRequest, sale, flgFinanciamiento,
                 new CreateQuotationRequest(), ProductorderResponse.builder().createProductOrderResponse(CreateProductOrderResponseType.builder().productOrderId("").build()).build());
     }
 }
