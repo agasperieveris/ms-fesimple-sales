@@ -29,5 +29,5 @@ import reactor.core.publisher.Mono;
 public interface SalesRepository extends ReactiveCosmosRepository<Sale, String> {
     Mono<Sale> findBySalesId(String salesId);
 
-    Flux<Sale> findByChannel_IdContainingAndChannel_DealerIdContainingAndAgent_IdContainingAndChannel_StoreIdContainingAndStatusContaining(String channelId, String dealerId, String idAgent, String storeId, String status);
+    Flux<Sale> findByStatusNot(String status);
 }
