@@ -151,7 +151,7 @@ public class SalesServiceImpl implements SalesService {
                                   String endDateTime, String size, String pageCount, String page,
                                   String maxResultCount) {
 
-        return salesRepository.findAll().filter(item -> filterSalesWithParams(item, saleId, dealerId, idAgent,
+        return salesRepository.findByStatusNot("NEGOCIACION").filter(item -> filterSalesWithParams(item, saleId, dealerId, idAgent,
                 customerId, nationalId, nationalIdType, status, channelId, storeId, orderId, startDateTime,
                 endDateTime));
     }
