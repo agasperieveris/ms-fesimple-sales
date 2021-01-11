@@ -98,6 +98,7 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
+import org.apache.commons.collections4.CollectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -896,6 +897,8 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         // Getting CIP Code
         String cipCode = "";
         if (saleRequest.getCommercialOperation().get(0).getWorkOrDeliveryType() != null
+                && !StringUtils.isEmpty(saleRequest.getCommercialOperation().get(0).getWorkOrDeliveryType()
+                .getMediumDelivery())
                 && saleRequest.getCommercialOperation().get(0).getWorkOrDeliveryType().getMediumDelivery()
                 .equalsIgnoreCase("DELIVERY")
                 && saleRequest.getPaymenType().getPaymentType().equalsIgnoreCase("EX")
@@ -909,7 +912,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         CreateProductOrderGeneralRequest mainRequestProductOrder = new CreateProductOrderGeneralRequest();
 
         // Recognizing Mobile Portability
-        Boolean isMobilePortability = commercialOperationReason.equalsIgnoreCase("PORTA");
+        Boolean isMobilePortability = commercialOperationReason.equalsIgnoreCase("PORTABILIDAD");
 
         // Recognizing CAPL Commercial Operation Type
         if (flgCapl[0] && !flgCaeq[0] && !flgCasi[0] && !flgAlta[0]) {
@@ -926,8 +929,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
 
             mainRequestProductOrder = this.caeqCaplCommercialOperation(saleRequest, mainRequestProductOrder,
                     channelIdRequest, customerIdRequest, productOfferingIdRequest, cipCode);
-        } else if (!flgCapl[0] && !flgCaeq[0] && !flgCasi[0] && flgAlta[0]
-                || isMobilePortability) {
+        } else if (!flgCapl[0] && !flgCaeq[0] && !flgCasi[0] && flgAlta[0] || isMobilePortability) {
 
             mainRequestProductOrder = this.altaCommercialOperation(saleRequest, mainRequestProductOrder,
                     channelIdRequest, customerIdRequest, productOfferingIdRequest, cipCode, getBonificacionSim,
@@ -1877,7 +1879,8 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         altaRequestProductOrder.setActionType("PR");
 
         // Identifying if is Alta Only Simcard or Alta Combo (Equipment + Simcard)
-        Boolean altaCombo = saleRequest.getCommercialOperation().get(0).getDeviceOffering().size() > 1;
+        Boolean altaCombo = saleRequest.getCommercialOperation().get(0).getDeviceOffering() != null
+                && saleRequest.getCommercialOperation().get(0).getDeviceOffering().size() > 1;
 
         // ALTA Product Changes
         ProductChangeAltaMobile altaProductChanges = new ProductChangeAltaMobile();
@@ -1929,15 +1932,21 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                 .characteristicValue(sapidSimcardBp) // SAPID PARAMETRIZADO EN BP
                 .build();
         changedCharacteristicList.add(changedCharacteristic1);
+
         // ICCID Characteristic
-        String iccidSim = this.getStringValueByKeyFromAdditionalDataList(saleRequest.getAdditionalData(),
-                                                                                                    "SIM_ICCID");
-        ChangedCharacteristic changedCharacteristic2 = ChangedCharacteristic
-                .builder()
-                .characteristicId("799244")
-                .characteristicValue(iccidSim) // 8958080008100067567
-                .build();
-        changedCharacteristicList.add(changedCharacteristic2);
+        String channelId = saleRequest.getChannel().getId();
+        Boolean isRetail = channelId.equalsIgnoreCase("DLC") || channelId.equalsIgnoreCase("DLV")
+                || channelId.equalsIgnoreCase("DLS");
+        if (Boolean.TRUE.equals(isRetail)) {
+            String iccidSim = this.getStringValueByKeyFromAdditionalDataList(saleRequest.getAdditionalData(),
+                    "SIM_ICCID");
+            ChangedCharacteristic changedCharacteristic2 = ChangedCharacteristic
+                    .builder()
+                    .characteristicId("799244")
+                    .characteristicValue(iccidSim) // 8958080008100067567
+                    .build();
+            changedCharacteristicList.add(changedCharacteristic2);
+        }
 
         ChangedContainedProduct changedContainedProduct2 = ChangedContainedProduct
                 .builder()
@@ -1972,9 +1981,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         List<FlexAttrType> altaOrderAttributesList = this.commonOrderAttributes(saleRequest);
 
         // Order Attributes when channel is retail
-        String channelId = saleRequest.getChannel().getId();
-        if (channelId.equalsIgnoreCase("DLC") || channelId.equalsIgnoreCase("DLV")
-                || channelId.equalsIgnoreCase("DLS")) {
+        if (Boolean.TRUE.equals(isRetail)) {
             //  RETAIL PAYMENT NUMBER ATTRIBUTE
             String paymentNumber = this.getStringValueByKeyFromAdditionalDataList(saleRequest.getAdditionalData(),
                     "NUMERO_TICKET");
@@ -2164,7 +2171,9 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
             }
         });
 
-        saleRequest.getCommercialOperation().get(0).getWorkOrDeliveryType().getAdditionalData().stream().forEach(item -> {
+        CollectionUtils.emptyIfNull(saleRequest.getCommercialOperation().get(0).getWorkOrDeliveryType()
+                .getAdditionalData())
+                .stream().forEach(item -> {
             if (item.getKey().equalsIgnoreCase(SHOP_ADDRESS)) {
                 shipmentDetailsType.setShopAddress(item.getValue());
             } else if (item.getKey().equalsIgnoreCase("shopName")) {
@@ -2174,7 +2183,8 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
             }
         });
 
-        saleRequest.getCommercialOperation().get(0).getWorkOrDeliveryType().getPlace().get(0).getAdditionalData()
+        CollectionUtils.emptyIfNull(saleRequest.getCommercialOperation().get(0).getWorkOrDeliveryType().getPlace()
+                .get(0).getAdditionalData())
                 .stream().forEach(item -> {
                     if (item.getKey().equalsIgnoreCase("stateOrProvinceCode")) {
                         shipmentDetailsType.setProvinceOfShippingAddress(item.getValue());
