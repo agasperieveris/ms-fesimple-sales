@@ -120,7 +120,7 @@ public class ProductOrderWebClientImplTest {
 
         FinancingInstalment financingInstalment1 = new FinancingInstalment();
         financingInstalment1.setInstalments(instalments);
-        financingInstalment1.setDescription("CONTADO");
+        financingInstalment1.setDescription("TELEFCONT");
         List<FinancingInstalment> financingInstalmentsList = new ArrayList<>();
         financingInstalmentsList.add(financingInstalment1);
 
