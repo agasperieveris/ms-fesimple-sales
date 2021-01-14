@@ -9,23 +9,7 @@ import com.tdp.ms.sales.client.ProductOrderWebClient;
 import com.tdp.ms.sales.client.QuotationWebClient;
 import com.tdp.ms.sales.client.StockWebClient;
 import com.tdp.ms.sales.client.WebClientReceptor;
-import com.tdp.ms.sales.model.dto.BusinessParameterDataObjectExt;
-import com.tdp.ms.sales.model.dto.BusinessParameterExt;
-import com.tdp.ms.sales.model.dto.CommercialOperationType;
-import com.tdp.ms.sales.model.dto.ComposingProductType;
-import com.tdp.ms.sales.model.dto.ContactMedium;
-import com.tdp.ms.sales.model.dto.CreateProductOrderResponseType;
-import com.tdp.ms.sales.model.dto.DeviceOffering;
-import com.tdp.ms.sales.model.dto.IdentityValidationType;
-import com.tdp.ms.sales.model.dto.KeyValueType;
-import com.tdp.ms.sales.model.dto.MigrationComponent;
-import com.tdp.ms.sales.model.dto.OfferingType;
-import com.tdp.ms.sales.model.dto.PortabilityType;
-import com.tdp.ms.sales.model.dto.ProductSpecCharacteristicType;
-import com.tdp.ms.sales.model.dto.RelatedProductType;
-import com.tdp.ms.sales.model.dto.ShipmentDetailsType;
-import com.tdp.ms.sales.model.dto.SiteRefType;
-import com.tdp.ms.sales.model.dto.TimePeriod;
+import com.tdp.ms.sales.model.dto.*;
 import com.tdp.ms.sales.model.dto.businessparameter.BusinessParameterFinanciamientoFijaData;
 import com.tdp.ms.sales.model.dto.businessparameter.BusinessParameterFinanciamientoFijaExt;
 import com.tdp.ms.sales.model.dto.productorder.CreateProductOrderGeneralRequest;
@@ -624,7 +608,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                 && !StringUtils.isEmpty(deviceOfferings.get(0).getOffers().get(0).getBillingOfferings().get(0)
                 .getCommitmentPeriods().get(0).getFinancingInstalments().get(0).getDescription())
                 && !deviceOfferings.get(0).getOffers().get(0).getBillingOfferings().get(0).getCommitmentPeriods().get(0)
-                .getFinancingInstalments().get(0).getDescription().equals("CONTADO")) {
+                .getFinancingInstalments().get(0).getDescription().equals("TELEFCONT")) {
             return true;
         }
         return false;
@@ -1604,10 +1588,13 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                 .creditLimit(sale.getRelatedParty().get(0).getScore().getFinancingCapacity())
                 .contactMedia(contactMediumList).build();
 
+        Double simAmount = sale.getCommercialOperation().get(0).getDeviceOffering().size() > 0 ?
+                sale.getCommercialOperation().get(0).getDeviceOffering().get(1).getSimSpecifications().get(0).getPrice()
+                        .get(0).getValue().doubleValue() : 0.0;
+
         Number amountTotalAmount = sale.getCommercialOperation().get(0).getDeviceOffering().get(0).getOffers().get(0)
                 .getBillingOfferings().get(0).getCommitmentPeriods().get(0).getFinancingInstalments().get(0)
-                .getInstalments().getTotalAmount().getValue().doubleValue() - sale.getCommercialOperation().get(0)
-                .getDeviceOffering().get(1).getSimSpecifications().get(0).getPrice().get(0).getValue().doubleValue();
+                .getInstalments().getTotalAmount().getValue().doubleValue() - simAmount;
 
         MoneyAmount totalAmount = MoneyAmount
                 .builder()

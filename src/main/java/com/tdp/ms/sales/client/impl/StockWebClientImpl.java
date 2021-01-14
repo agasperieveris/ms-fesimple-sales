@@ -50,6 +50,8 @@ public class StockWebClientImpl implements StockWebClient {
     @Override
     public Mono<ReserveStockResponse> reserveStock(ReserveStockRequest request, HashMap<String, String> headersMap,
                                                    Sale sale) {
+        System.out.println("->reserveStock");
+        System.out.println(new Gson().toJson(request));
         return webClientInsecure
                 .post()
                 .uri(reserveStockUrl)
