@@ -1481,10 +1481,10 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
 
     private Mono<Sale> callToCreateQuotation(PostSalesRequest request, Sale sale, Boolean flgCasi,
                                                                                     Boolean flgFinanciamiento) {
-        CreateQuotationRequest createQuotationRequest = new CreateQuotationRequest();
-        this.buildCreateQuotationRequest(createQuotationRequest, request, flgCasi);
 
         if (flgFinanciamiento) {
+            CreateQuotationRequest createQuotationRequest = new CreateQuotationRequest();
+            this.buildCreateQuotationRequest(createQuotationRequest, request, flgCasi);
             return quotationWebClient.createQuotation(createQuotationRequest, sale)
                     .flatMap(createQuotationResponse -> {
                         this.setQuotationResponseInSales(createQuotationResponse,
@@ -1588,7 +1588,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                 .creditLimit(sale.getRelatedParty().get(0).getScore().getFinancingCapacity())
                 .contactMedia(contactMediumList).build();
 
-        Double simAmount = sale.getCommercialOperation().get(0).getDeviceOffering().size() > 0 ?
+        Double simAmount = sale.getCommercialOperation().get(0).getDeviceOffering().size() > 1 ?
                 sale.getCommercialOperation().get(0).getDeviceOffering().get(1).getSimSpecifications().get(0).getPrice()
                         .get(0).getValue().doubleValue() : 0.0;
 
