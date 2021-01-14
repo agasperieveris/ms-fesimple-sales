@@ -606,9 +606,9 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                 && deviceOfferings.get(0).getOffers().get(0).getBillingOfferings().get(0).getCommitmentPeriods().get(0)
                 .getFinancingInstalments() != null
                 && !StringUtils.isEmpty(deviceOfferings.get(0).getOffers().get(0).getBillingOfferings().get(0)
-                .getCommitmentPeriods().get(0).getFinancingInstalments().get(0).getDescription())
+                .getCommitmentPeriods().get(0).getFinancingInstalments().get(0).getCodigo())
                 && !deviceOfferings.get(0).getOffers().get(0).getBillingOfferings().get(0).getCommitmentPeriods().get(0)
-                .getFinancingInstalments().get(0).getDescription().equals("TELEFCONT")) {
+                .getFinancingInstalments().get(0).getCodigo().equals("TELEFCONT")) {
             return true;
         }
         return false;
