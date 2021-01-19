@@ -2202,15 +2202,18 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         List<NewProductCaeq> newProductCaeqList = new ArrayList<>();
         newProductCaeqList.add(newProductCaeq1);
 
+        // Refactored Code from CAPL
+        List<FlexAttrType> caeqCaplOrderAttributes = this.commonOrderAttributes(saleRequest);
+
         // Order Attributes
-        List<FlexAttrType> caeqOrderAttributes = new ArrayList<>();
-        this.addCaeqOderAttributes(caeqOrderAttributes, saleRequest);
+        //List<FlexAttrType> caeqOrderAttributes = new ArrayList<>();
+        this.addCaeqOderAttributes(caeqCaplOrderAttributes, saleRequest);
 
         CaeqRequest caeqRequest = CaeqRequest
                 .builder()
                 .sourceApp("FE")
                 .newProducts(newProductCaeqList)
-                .orderAttributes(caeqOrderAttributes.isEmpty() ? null : caeqOrderAttributes)
+                .orderAttributes(caeqCaplOrderAttributes.isEmpty() ? null : caeqCaplOrderAttributes)
                 .shipmentDetails(saleRequest.getCommercialOperation().get(0).getWorkOrDeliveryType() != null
                         ? createShipmentDetail(saleRequest): null)
                 .build();
