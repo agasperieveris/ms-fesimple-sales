@@ -68,8 +68,7 @@ public class SalesWebClientImpl implements SalesWebClient {
                     return !existFieldInAdditionalData("createContractDate", additionalData)
                             ? "No se ha añadido campo createContractDate" : "";
                 case "04":
-                    return !existFieldInAdditionalData("submitOrderDate", additionalData)
-                            ? "No se ha añadido campo submitOrderDate" : "";
+                    return "";
                 case "06":
                     return !existFieldInAdditionalData("tratamientoDatosDate", additionalData)
                             ? "No se ha añadido campo createContractDate" : "";
