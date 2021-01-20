@@ -681,6 +681,9 @@ public class SalesManagmentServiceTest {
         method.setAccessible(true);
 
         Sale sale = new Sale();
+        sale.setCommercialOperation(Collections.singletonList(CommercialOperationType.builder()
+                .reason("CAPL")
+                .build()));
 
         PostSalesRequest postSalesRequest = PostSalesRequest
                 .builder()
@@ -691,6 +694,9 @@ public class SalesManagmentServiceTest {
         ReceptorResponse receptorResponse =  new ReceptorResponse();
         Mockito.when(webClientReceptor.register(any(), any())).thenReturn(Mono.just(receptorResponse));
 
+        method.invoke(salesManagmentServiceImpl, postSalesRequest);
+
+        postSalesRequest.getSale().getCommercialOperation().get(0).setReason("CAEQ");
         method.invoke(salesManagmentServiceImpl, postSalesRequest);
     }
 

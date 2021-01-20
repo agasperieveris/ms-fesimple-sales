@@ -134,6 +134,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
     private WebClientReceptor webClientReceptor;
 
     private static final String FLOW_SALE_POST = "01";
+    private static final String FLOW_SALE_INVITATION = "03";
 
     private static final String SHIPPING_LOCALITY = "shippingLocality";
     private static final String PROVINCE_OF_SHIPPING_ADDRESS = "provinceOfShippingAddress";
@@ -174,32 +175,36 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
     }
 
     private void postSalesEventFlow(PostSalesRequest request) {
-        if (request.getSale().getAdditionalData() != null) {
-            request.getSale().getAdditionalData().add(
-                    KeyValueType
-                            .builder()
-                            .key("initialProcessDate")
-                            .value(DateUtils.getDatetimeNowCosmosDbFormat())
-                            .build()
-            );
-        } else {
+        if (request.getSale().getAdditionalData() == null) {
             request.getSale().setAdditionalData(new ArrayList<>());
-            request.getSale().getAdditionalData().add(
-                    KeyValueType
-                            .builder()
-                            .key("initialProcessDate")
-                            .value(DateUtils.getDatetimeNowCosmosDbFormat())
-                            .build()
-            );
         }
+        request.getSale().getAdditionalData().add(
+                KeyValueType
+                        .builder()
+                        .key("initialProcessDate")
+                        .value(DateUtils.getDatetimeNowCosmosDbFormat())
+                        .build());
 
+        callReceptors(request);
+    }
+
+    private void callReceptors(PostSalesRequest request) {
+        callWebClientReceptor(request, FLOW_SALE_POST);
+
+        String reason = request.getSale().getCommercialOperation().get(0).getReason();
+        if (reason.equalsIgnoreCase("CAPL") || reason.equalsIgnoreCase("CAEQ")) {
+            callWebClientReceptor(request, FLOW_SALE_INVITATION);
+        }
+    }
+
+    private void callWebClientReceptor(PostSalesRequest request, String eventFlowCode) {
         // Llamada a receptor
         webClientReceptor
                 .register(
                         ReceptorRequest
                                 .builder()
                                 .businessId(request.getSale().getSalesId())
-                                .typeEventFlow(FLOW_SALE_POST)
+                                .typeEventFlow(eventFlowCode)
                                 .message(request.getSale())
                                 .build(),
                         request.getHeadersMap()
@@ -2439,7 +2444,11 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         ChangedCharacteristic changedCharacteristic2 = ChangedCharacteristic
                 .builder()
                 .characteristicId("15734")
-                .characteristicValue(saleRequest.getCommercialOperation().get(0).getDeviceOffering().get(0).getId())
+                .characteristicValue(saleRequest.getCommercialOperation().get(0).getDeviceOffering().stream()
+                        .filter(item -> !item.getDeviceType().equalsIgnoreCase("SIM"))
+                        .findFirst()
+                        .orElse(null)
+                        .getId())
                 .build();
 
         // EquipmentIMEI Characteristic
