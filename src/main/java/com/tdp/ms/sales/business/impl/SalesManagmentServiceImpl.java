@@ -2602,10 +2602,15 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         request.setChannel(sale.getChannel().getId());
 
         List<StockItem> itemsList =  new ArrayList<>();
+
         // Equipment Item
         Item item1 = Item
                 .builder()
-                .id(sale.getCommercialOperation().get(0).getDeviceOffering().get(0).getSapid())
+                .id(sale.getCommercialOperation().get(0).getDeviceOffering().stream()
+                        .filter(item -> !item.getDeviceType().equalsIgnoreCase("SIM"))
+                        .findFirst()
+                        .orElse(null)
+                        .getSapid())
                 .type("IMEI")
                 .build();
         StockItem stockItem1 = StockItem
@@ -2619,7 +2624,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
             Item item2 = Item
                     .builder()
                     .id(sapidSimcardBp)
-                    .type("IMEI")
+                    .type("ICCID")
                     .build();
             StockItem stockItem2 = StockItem
                     .builder()
