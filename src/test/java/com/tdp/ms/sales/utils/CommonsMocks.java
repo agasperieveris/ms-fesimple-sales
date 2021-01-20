@@ -74,6 +74,7 @@ public class CommonsMocks {
         deviceOffering.setAdditionalData(additionalDatas);
         deviceOffering.setId("s");
         deviceOffering.setSapid("SAD123PID");
+        deviceOffering.setDeviceType("SmartPhone");
 
         StockType stockType = StockType
                 .builder()
