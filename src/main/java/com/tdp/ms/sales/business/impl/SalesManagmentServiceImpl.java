@@ -2439,7 +2439,11 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         ChangedCharacteristic changedCharacteristic2 = ChangedCharacteristic
                 .builder()
                 .characteristicId("15734")
-                .characteristicValue(saleRequest.getCommercialOperation().get(0).getDeviceOffering().get(0).getId())
+                .characteristicValue(saleRequest.getCommercialOperation().get(0).getDeviceOffering().stream()
+                        .filter(item -> !item.getDeviceType().equalsIgnoreCase("SIM"))
+                        .findFirst()
+                        .orElse(null)
+                        .getId())
                 .build();
 
         // EquipmentIMEI Characteristic
