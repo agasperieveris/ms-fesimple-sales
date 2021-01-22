@@ -16,6 +16,7 @@ import com.tdp.ms.sales.model.dto.productorder.altafija.ServiceabilityOfferType;
 import com.tdp.ms.sales.model.dto.productorder.altamobile.AltaMobileRequest;
 import com.tdp.ms.sales.model.dto.productorder.altamobile.ProductOrderAltaMobileRequest;
 import com.tdp.ms.sales.model.dto.productorder.caeq.CaeqRequest;
+import com.tdp.ms.sales.model.dto.productorder.caeq.ChangedContainedProduct;
 import com.tdp.ms.sales.model.dto.productorder.caeq.ProductOrderCaeqRequest;
 import com.tdp.ms.sales.model.dto.productorder.caeqcapl.CaeqCaplRequest;
 import com.tdp.ms.sales.model.dto.productorder.caeqcapl.ProductOrderCaeqCaplRequest;
@@ -208,7 +209,7 @@ public class SalesManagmentServicePrivateMethodsTest {
     void altaCommercialOperationTest() throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
         Method method = SalesManagmentServiceImpl.class.getDeclaredMethod("altaCommercialOperation", Sale.class,
                 CreateProductOrderGeneralRequest.class, String.class, String.class, String.class, String.class,
-                BusinessParametersResponseObjectExt.class, String.class, Boolean.class);
+                BusinessParametersResponseObjectExt.class, String.class, Boolean.class, Boolean.class);
 
         method.setAccessible(true);
 
@@ -229,7 +230,7 @@ public class SalesManagmentServicePrivateMethodsTest {
         sale.getCommercialOperation().get(0).setReason("ALTA");
 
         method.invoke(salesManagmentServiceImpl,sale, altaRequest, "CC", "C0001", "OF0001", "CIP0001",
-                businessParametersResponseObjectExt, "SAPID0001", false);
+                businessParametersResponseObjectExt, "SAPID0001", false, false);
     }
 
     @Test
@@ -237,7 +238,7 @@ public class SalesManagmentServicePrivateMethodsTest {
                                                                                                 IllegalAccessException {
         Method method = SalesManagmentServiceImpl.class.getDeclaredMethod("altaCommercialOperation", Sale.class,
                 CreateProductOrderGeneralRequest.class, String.class, String.class, String.class, String.class,
-                BusinessParametersResponseObjectExt.class, String.class, Boolean.class);
+                BusinessParametersResponseObjectExt.class, String.class, Boolean.class, Boolean.class);
 
         method.setAccessible(true);
 
@@ -258,7 +259,7 @@ public class SalesManagmentServicePrivateMethodsTest {
         sale.getCommercialOperation().get(0).setReason("ALTA");
 
         method.invoke(salesManagmentServiceImpl,sale, altaRequest, "CC", "C0001", "OF0001", "CIP0001",
-                businessParametersResponseObjectExt, "SAPID0001", false);
+                businessParametersResponseObjectExt, "SAPID0001", false, false);
     }
 
     @Test
@@ -654,8 +655,15 @@ public class SalesManagmentServicePrivateMethodsTest {
         List<NewProductAltaFija> newProductsAltaFijaList = (List) method.invoke(salesManagmentServiceImpl, sale,
                 newAssignedBillingOffersLandlineList, newAssignedBillingOffersBroadbandList,
                 newAssignedBillingOffersCableTvList);
+    }
 
-        //Assert.assertEquals(newProductsAltaFijaList, "Sale");
+    @Test
+    void casiAttributes_Test() throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
+        Method method = SalesManagmentServiceImpl.class.getDeclaredMethod("casiAttributes",
+                Sale.class, String.class, ChangedContainedProduct.class, List.class, Boolean.class);
+        method.setAccessible(true);
+        method.invoke(salesManagmentServiceImpl, sale, "string", ChangedContainedProduct.builder().build(),
+                new ArrayList<ChangedContainedProduct>(), true);
     }
 
 }
