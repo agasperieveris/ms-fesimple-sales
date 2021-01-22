@@ -904,25 +904,26 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         Boolean isMobilePortability = commercialOperationReason.equalsIgnoreCase("PORTABILIDAD");
 
         // Recognizing CAPL Commercial Operation Type
-        if (flgCapl[0] && !flgCaeq[0] && !flgCasi[0] && !flgAlta[0]) {
+        if (flgCapl[0] && !flgCaeq[0] && !flgCasi[0] && !flgAlta[0]) { // CAPL
 
             mainRequestProductOrder = this.caplCommercialOperation(saleRequest, mainRequestProductOrder,
                     channelIdRequest, customerIdRequest, productOfferingIdRequest, cipCode);
 
-        } else if (!flgCapl[0] && flgCaeq[0] && !flgCasi[0] && !flgAlta[0]) { // Recognizing CAEQ Commercial Operation Type
+        } else if (!flgCapl[0] && flgCaeq[0] && !flgAlta[0]) { // Recognizing CAEQ Commercial Operation Type
 
-            mainRequestProductOrder = this.caeqCommercialOperation(saleRequest, mainRequestProductOrder,
-                    channelIdRequest, customerIdRequest, productOfferingIdRequest, cipCode);
+            mainRequestProductOrder = this.caeqCommercialOperation(saleRequest, mainRequestProductOrder, flgCasi[0],
+                    channelIdRequest, customerIdRequest, productOfferingIdRequest, cipCode, sapidSimcard[0]);
 
-        } else if (flgCapl[0] && flgCaeq[0] && !flgCasi[0] && !flgAlta[0]) { // Recognizing CAEQ+CAPL Commercial Operation Type
+        } else if (flgCapl[0] && flgCaeq[0] && !flgAlta[0]) { // Recognizing CAEQ+CAPL Commercial Operation Type
 
-            mainRequestProductOrder = this.caeqCaplCommercialOperation(saleRequest, mainRequestProductOrder,
-                    channelIdRequest, customerIdRequest, productOfferingIdRequest, cipCode);
-        } else if (!flgCapl[0] && !flgCaeq[0] && !flgCasi[0] && flgAlta[0] || isMobilePortability) {
+            mainRequestProductOrder = this.caeqCaplCommercialOperation(saleRequest, mainRequestProductOrder, flgCasi[0],
+                    channelIdRequest, customerIdRequest, productOfferingIdRequest, cipCode, sapidSimcard[0]);
+
+        } else if (!flgCapl[0] && !flgCaeq[0] && flgAlta[0] || isMobilePortability) { // ALTA
 
             mainRequestProductOrder = this.altaCommercialOperation(saleRequest, mainRequestProductOrder,
                     channelIdRequest, customerIdRequest, productOfferingIdRequest, cipCode, getBonificacionSim,
-                    sapidSimcard[0], isMobilePortability);
+                    sapidSimcard[0], isMobilePortability, flgCasi[0]);
         }
 
         // FEMS-1514 Validación de creación Orden
@@ -1856,7 +1857,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                                     CreateProductOrderGeneralRequest mainRequestProductOrder, String channelIdRequest,
                                     String customerIdRequest, String productOfferingIdRequest, String cipCode,
                                     BusinessParametersResponseObjectExt bonificacionSimcardResponse,
-                                    String sapidSimcardBp, Boolean isMobilePortability) {
+                                    String sapidSimcardBp, Boolean isMobilePortability, Boolean flagCasi) {
 
         // Building request for ALTA CommercialTypeOperation
         ProductOrderAltaMobileRequest altaRequestProductOrder = new ProductOrderAltaMobileRequest();
@@ -1910,7 +1911,8 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
 
         if (altaCombo) {
             // ChangeContainedProduct Equipment
-            altaChangedContainedProductList = this.changedContainedCaeqList(saleRequest, "temp2");
+            altaChangedContainedProductList = this.changedContainedCaeqList(saleRequest, "temp2",
+                    sapidSimcardBp, flagCasi);
             //altaChangedContainedProductList.get(0).setProductId(""); // Doesnt sent it in Alta
         }
 
@@ -2187,12 +2189,14 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
     }
 
     public CreateProductOrderGeneralRequest caeqCommercialOperation(Sale saleRequest,
-                                    CreateProductOrderGeneralRequest mainRequestProductOrder, String channelIdRequest,
-                                    String customerIdRequest, String productOfferingIdRequest, String cipCode) {
+                                    CreateProductOrderGeneralRequest mainRequestProductOrder, Boolean flgCasi,
+                                    String channelIdRequest, String customerIdRequest, String productOfferingIdRequest,
+                                    String cipCode, String sapidSimcardBp) {
         // Building request for CAEQ CommercialTypeOperation
 
         // Refactored Code from CAEQ
-        List<ChangedContainedProduct> changedContainedProductList = this.changedContainedCaeqList(saleRequest, Constants.TEMP1);
+        List<ChangedContainedProduct> changedContainedProductList = this.changedContainedCaeqList(saleRequest,
+                Constants.TEMP1, sapidSimcardBp, flgCasi);
 
         ProductChangeCaeq productChangeCaeq = ProductChangeCaeq
                 .builder()
@@ -2241,8 +2245,9 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
     }
 
     public CreateProductOrderGeneralRequest caeqCaplCommercialOperation(Sale saleRequest,
-                                    CreateProductOrderGeneralRequest mainRequestProductOrder, String channelIdRequest,
-                                    String customerIdRequest, String productOfferingIdRequest, String cipCode) {
+                                    CreateProductOrderGeneralRequest mainRequestProductOrder, Boolean flgCasi,
+                                    String channelIdRequest, String customerIdRequest, String productOfferingIdRequest,
+                                    String cipCode, String sapidSimcardBp) {
         // Building request for CAEQ+CAPL CommercialTypeOperation
 
         Boolean flgOnlyCapl = true;
@@ -2303,7 +2308,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
 
         // Refactored Code from CAEQ
         List<ChangedContainedProduct> changedContainedProductList = this.changedContainedCaeqList(saleRequest,
-                                                                                                    Constants.TEMP1);
+                Constants.TEMP1, sapidSimcardBp, flgCasi);
 
         caeqCaplProductChanges.setChangedContainedProducts(changedContainedProductList);
         newProductCaeqCapl1.setProductChanges(caeqCaplProductChanges);
@@ -2429,7 +2434,8 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         }
     }
 
-    public List<ChangedContainedProduct> changedContainedCaeqList(Sale saleRequest, String tempNum) {
+    public List<ChangedContainedProduct> changedContainedCaeqList(Sale saleRequest, String tempNum,
+                                                                  String sapidSimcardBp, Boolean flgCasi) {
         String acquisitionType = "";
         acquisitionType = getAcquisitionTypeValue(saleRequest);
 
@@ -2509,8 +2515,49 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         }
 
         List<ChangedContainedProduct> changedContainedProductList = new ArrayList<>();
-        changedContainedProductList.add(changedContainedProduct1);
+        // FEMS3873 - CASI attributes
+        return casiAttributes(saleRequest, sapidSimcardBp, changedContainedProduct1, changedContainedProductList,
+                flgCasi);
+    }
 
+    private List<ChangedContainedProduct> casiAttributes(Sale saleRequest, String sapidSimcardBp,
+                                                   ChangedContainedProduct changedContainedProduct1,
+                                                   List<ChangedContainedProduct> changedContainedProductList,
+                                                    Boolean flgCasi) {
+        // Cuando viene activo el flag de CASI
+        if (flgCasi) {
+            List<RelatedProductType> productRelationShipList = saleRequest.getCommercialOperation().get(0).getProduct().getProductRelationShip();
+            // Buscar el productId para simcard
+            String simcardProductId = productRelationShipList.stream()
+                    .filter(prs -> prs.getProduct().getName().equalsIgnoreCase("SimDevice")
+                            || prs.getProduct().getName().equalsIgnoreCase("Simcard"))
+                    .findFirst().orElse(RelatedProductType.builder()
+                            .product(ProductRefInfoType.builder().id(null).build()).build())
+                    .getProduct()
+                    .getId();
+
+            // Buscar el productId para device
+            String deviceProductId = productRelationShipList.stream()
+                    .filter(prs -> !prs.getProduct().getName().equalsIgnoreCase("SimDevice")
+                            && !prs.getProduct().getName().equalsIgnoreCase("Simcard"))
+                    .findFirst().orElse(RelatedProductType.builder()
+                            .product(ProductRefInfoType.builder().id(null).build()).build())
+                    .getProduct()
+                    .getId();
+
+            changedContainedProduct1.setProductId(deviceProductId);
+
+            ChangedContainedProduct changedContainedProductCasi = ChangedContainedProduct.builder()
+                    .productId(simcardProductId)
+                    .temporaryId("changeSimcard")
+                    .productCatalogId("7431")
+                    .changedCharacteristics(Collections.singletonList(ChangedCharacteristic.builder()
+                            .characteristicId("9751").characteristicValue(sapidSimcardBp)
+                            .build()))
+                    .build();
+            changedContainedProductList.add(changedContainedProductCasi);
+        }
+        changedContainedProductList.add(changedContainedProduct1);
         return changedContainedProductList;
     }
 
