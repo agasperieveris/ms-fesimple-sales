@@ -575,8 +575,8 @@ public class SalesManagmentServiceTest {
         CreateProductOrderGeneralRequest mainCaeqRequestProductOrder = new CreateProductOrderGeneralRequest();
         sale.getCommercialOperation().get(0).setReason("CAEQ");
         CreateProductOrderGeneralRequest result = salesManagmentServiceImpl
-                .caeqCommercialOperation(sale, mainCaeqRequestProductOrder,
-                        "CEC", "CS920", "OF201", "JSG423DE6H");
+                .caeqCommercialOperation(sale, mainCaeqRequestProductOrder, false,
+                        "CEC", "CS920", "OF201", "JSG423DE6H", "string");
 
     }
 
@@ -586,8 +586,8 @@ public class SalesManagmentServiceTest {
         sale.getCommercialOperation().get(0).setReason("CAEQ");
 
         CreateProductOrderGeneralRequest result = salesManagmentServiceImpl
-                .caeqCaplCommercialOperation(sale, mainCaeqCaplRequestProductOrder,
-                        "CC", "CS158", "OF486", "K3BD9EN349");
+                .caeqCaplCommercialOperation(sale, mainCaeqCaplRequestProductOrder, false,
+                        "CC", "CS158", "OF486", "K3BD9EN349", "string");
 
     }
 
@@ -604,11 +604,11 @@ public class SalesManagmentServiceTest {
         List<ChangedContainedProduct> changedContainedProducts = new ArrayList<>();
         sale.getCommercialOperation().get(0).setReason("CAEQ");
 
-        salesManagmentServiceImpl.changedContainedCaeqList(sale, "temp1");
+        salesManagmentServiceImpl.changedContainedCaeqList(sale, "temp1", "string", false);
 
         // deviceOfferings con solo un objeto
         sale.getCommercialOperation().get(0).setDeviceOffering(Collections.singletonList(sale.getCommercialOperation().get(0).getDeviceOffering().get(0)));
-        salesManagmentServiceImpl.changedContainedCaeqList(sale, "temp1");
+        salesManagmentServiceImpl.changedContainedCaeqList(sale, "temp1", "string", false);
     }
 
     @Test
