@@ -462,9 +462,12 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                         ChangedCharacteristic changedCharacteristicBroadband1 = ChangedCharacteristic
                                 .builder()
                                 .characteristicId("3241482")
-                                .characteristicValue(saleRequest.getCommercialOperation().get(0)
-                                        .getProductOfferings().get(0).getProductOfferingPrice().get(0)
-                                        .getBenefits().get(0).getDownloadSpeed())
+                                .characteristicValue(productSpecification.getProductPrice().get(2)
+                                        .getAdditionalData().stream()
+                                        .filter(item -> item.getKey().equalsIgnoreCase("downloadSpeed"))
+                                        .findFirst()
+                                        .orElse(KeyValueType.builder().value(null).build())
+                                        .getValue())
                                 .build();
                         changedCharacteristicsBroadbandList.add(changedCharacteristicBroadband1);
 
@@ -549,7 +552,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                                 .build();
                         newProductsAltaFijaList.add(newProductAltaFijaShareEquipment);
 
-                    } else if (productType.equalsIgnoreCase("Accesories")) {
+                    } else if (productType.equalsIgnoreCase("Accessories")) {
 
                         ChangedCharacteristic changedCharacteristicAccesories1 = ChangedCharacteristic
                                 .builder()
