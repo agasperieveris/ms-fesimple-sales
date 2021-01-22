@@ -661,7 +661,8 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         String channelId = saleRequest.getChannel().getId();
         Boolean isRetail = channelId.equalsIgnoreCase("DLC") || channelId.equalsIgnoreCase("DLV")
                 || channelId.equalsIgnoreCase("DLS");
-        if (Boolean.TRUE.equals(isRetail)) {
+        Boolean statusValidado = saleRequest.getStatus().equalsIgnoreCase("VALIDADO");
+        if (Boolean.TRUE.equals(isRetail) && statusValidado) {
             if (StringUtils.isEmpty(this.getStringValueByKeyFromAdditionalDataList(saleRequest.getAdditionalData(),
                     "MOVILE_IMEI"))) {
                 return Mono.error(GenesisException
@@ -740,7 +741,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                     .map(bpFinanciamientoFijaData -> bpFinanciamientoFijaData.get(0))
                     .map(BusinessParameterFinanciamientoFijaData::getExt)
                     .flatMap(parametersFinanciamientoFija -> processFija(parametersFinanciamientoFija, saleRequest,
-                            request, flgFinanciamiento));
+                            request, flgFinanciamiento, isRetail));
 
         } else if ((commercialOperationReason.equalsIgnoreCase("CAPL")
                 || commercialOperationReason.equalsIgnoreCase("REPLACEOFFER"))
@@ -754,7 +755,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                     .map(bpFinanciamientoFijaData -> bpFinanciamientoFijaData.get(0))
                     .map(BusinessParameterFinanciamientoFijaData::getExt)
                     .flatMap(parametersFinanciamientoFija -> wirelineMigrations(parametersFinanciamientoFija, request,
-                            flgFinanciamiento, actionType));
+                            flgFinanciamiento, actionType, isRetail));
 
         } else if (mainProductType.equalsIgnoreCase(Constants.WIRELESS)) {
             // Mobile Commercial Operations
@@ -796,7 +797,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                         .flatMap(tuple -> validationsAndBuildings(tuple.getT1(), tuple.getT2(), tuple.getT3(),
                                 tuple.getT4(), saleRequest, request, sapidSimcard, commercialOperationReason, flgCapl,
                                 flgCaeq, flgCasi, flgAlta, flgFinanciamiento, channelIdRequest, customerIdRequest,
-                                productOfferingIdRequest));
+                                productOfferingIdRequest, isRetail));
 
             } else if (!StringUtils.isEmpty(saleRequest.getCommercialOperation().get(0).getOrder().getProductOrderId())
                     && !StringUtils.isEmpty(saleRequest.getCommercialOperation().get(0).getDeviceOffering().get(0)
@@ -871,7 +872,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                                                final Boolean[] flgCaeq, final Boolean[] flgCasi,
                                                final Boolean[] flgAlta, final Boolean[] flgFinanciamiento,
                                                String channelIdRequest, String customerIdRequest,
-                                               String productOfferingIdRequest) {
+                                               String productOfferingIdRequest, Boolean isRetail) {
 
         if (!getRiskDomain.getData().isEmpty() && getRiskDomain.getData().get(0).getActive()) {
             // if it is a risk domain, cancel operation
@@ -928,59 +929,62 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                     sapidSimcard[0], isMobilePortability);
         }
 
-        // FEMS-1514 Validación de creación Orden
-        Mono<Sale> saleRequestUpdated = creationOrderValidation(saleRequest, mainRequestProductOrder,
+        // FEMS-1514 Validación de creación Orden -> solo cuando es flujo retail se debe hacer validación
+        Mono<Sale> saleRequestValidation = creationOrderValidation(saleRequest, mainRequestProductOrder,
                 request.getHeadersMap());
 
-        CreateProductOrderGeneralRequest finalMainRequestProdOrder = mainRequestProductOrder;
-        return saleRequestUpdated.flatMap(saleItem ->
-                productOrderWebClient.createProductOrder(finalMainRequestProdOrder, request.getHeadersMap(), saleItem)
-                .flatMap(createOrderResponse -> {
-                    saleItem.getCommercialOperation().get(0).setOrder(createOrderResponse
-                            .getCreateProductOrderResponse());
+        if (isRetail && saleRequest.getStatus().equalsIgnoreCase("NEGOCIACION")) {
+            return saleRequestValidation.flatMap(salesRepository::save);
+        } else {
+            CreateProductOrderGeneralRequest finalMainRequestProdOrder = mainRequestProductOrder;
+            return productOrderWebClient.createProductOrder(finalMainRequestProdOrder, request.getHeadersMap(),
+                    saleRequest).flatMap(createOrderResponse -> {
+                        saleRequest.getCommercialOperation().get(0).setOrder(createOrderResponse
+                                .getCreateProductOrderResponse());
 
-                    if (validateNegotiation(saleItem.getAdditionalData(),
-                            saleItem.getIdentityValidations())) {
-                        saleItem.setStatus(Constants.NEGOCIACION);
-                    } else if (!StringUtils.isEmpty(createOrderResponse.getCreateProductOrderResponse()
-                            .getProductOrderId())) {
-                        saleItem.setStatus("NUEVO");
-                    } else {
-                        saleItem.setStatus("PENDIENTE");
-                    }
-                    saleItem.setAudioStatus("PENDIENTE");
-
-                    // Ship Delivery logic (tambo) - SERGIO
-                    if (saleItem.getCommercialOperation().get(0).getWorkOrDeliveryType() != null
-                            && saleItem.getCommercialOperation().get(0).getWorkOrDeliveryType()
-                            .getMediumDelivery().equalsIgnoreCase("Tienda")) {
-                        saleItem.setAdditionalData(additionalDataAssigments(saleItem
-                                .getAdditionalData(), saleItem));
-                    }
-
-                    // Call to Reserve Stock Service When Commercial Operation include CAEQ
-                    if (flgCaeq[0] || flgAlta[0] || isMobilePortability) {
-
-                        return this.callToReserveStockAndCreateQuotation(PostSalesRequest.builder()
-                                        .sale(saleItem).headersMap(request.getHeadersMap()).build(), saleItem,
-                                flgCasi[0], flgFinanciamiento[0], sapidSimcard[0]);
-                    } else {
-                        if (Boolean.TRUE.equals(flgCasi[0])) {
-                            // Call to Create Quotation Service When CommercialOperation Contains CASI
-                            return this.callToCreateQuotation(PostSalesRequest.builder()
-                                            .sale(saleItem).headersMap(request.getHeadersMap()).build(), saleItem,
-                                    flgCasi[0], flgFinanciamiento[0]);
+                        if (validateNegotiation(saleRequest.getAdditionalData(),
+                                saleRequest.getIdentityValidations())) {
+                            saleRequest.setStatus(Constants.NEGOCIACION);
+                        } else if (!StringUtils.isEmpty(createOrderResponse.getCreateProductOrderResponse()
+                                .getProductOrderId())) {
+                            saleRequest.setStatus("NUEVO");
                         } else {
-                            // Case when is Only CAPL
-                            return salesRepository.save(saleItem)
-                                    .map(r -> {
-                                        this.postSalesEventFlow(PostSalesRequest.builder()
-                                                .sale(saleItem).headersMap(request.getHeadersMap()).build());
-                                        return r;
-                                    });
+                            saleRequest.setStatus("PENDIENTE");
                         }
-                    }
-                }));
+                        saleRequest.setAudioStatus("PENDIENTE");
+
+                        // Ship Delivery logic (tambo) - SERGIO
+                        if (saleRequest.getCommercialOperation().get(0).getWorkOrDeliveryType() != null
+                                && saleRequest.getCommercialOperation().get(0).getWorkOrDeliveryType()
+                                .getMediumDelivery().equalsIgnoreCase("Tienda")) {
+                            saleRequest.setAdditionalData(additionalDataAssigments(saleRequest
+                                    .getAdditionalData(), saleRequest));
+                        }
+
+                        // Call to Reserve Stock Service When Commercial Operation include CAEQ
+                        if (flgCaeq[0] || flgAlta[0] || isMobilePortability) {
+
+                            return this.callToReserveStockAndCreateQuotation(PostSalesRequest.builder()
+                                            .sale(saleRequest).headersMap(request.getHeadersMap()).build(), saleRequest,
+                                    flgCasi[0], flgFinanciamiento[0], sapidSimcard[0]);
+                        } else {
+                            if (Boolean.TRUE.equals(flgCasi[0])) {
+                                // Call to Create Quotation Service When CommercialOperation Contains CASI
+                                return this.callToCreateQuotation(PostSalesRequest.builder()
+                                                .sale(saleRequest).headersMap(request.getHeadersMap()).build(),
+                                        saleRequest, flgCasi[0], flgFinanciamiento[0]);
+                            } else {
+                                // Case when is Only CAPL
+                                return salesRepository.save(saleRequest)
+                                        .map(r -> {
+                                            this.postSalesEventFlow(PostSalesRequest.builder()
+                                                    .sale(saleRequest).headersMap(request.getHeadersMap()).build());
+                                            return r;
+                                        });
+                            }
+                        }
+                    });
+        }
     }
 
     private void assignBillingOffers(List<OfferingType> productOfferings,
@@ -1020,7 +1024,8 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
     }
 
     private Mono<Sale> processFija(List<BusinessParameterFinanciamientoFijaExt> parametersFinanciamientoFija,
-                                   Sale saleRequest, PostSalesRequest request, final Boolean[] flgFinanciamiento) {
+                                   Sale saleRequest, PostSalesRequest request, final Boolean[] flgFinanciamiento,
+                                   Boolean isRetail) {
         // Building Create Quotation Request to use into Create Order Request
         CreateQuotationRequest createQuotationFijaRequest = new CreateQuotationRequest();
         if (flgFinanciamiento[0]) {
@@ -1088,23 +1093,25 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         mainRequestProductOrder.setCreateProductOrderRequest(productOrderAltaFijaRequest);
 
         return createOrderFija(mainRequestProductOrder, request, saleRequest, flgFinanciamiento,
-                createQuotationFijaRequest);
+                createQuotationFijaRequest, isRetail);
     }
 
     private Mono<Sale> createOrderFija(CreateProductOrderGeneralRequest mainRequestProductOrder,
                                        PostSalesRequest request, Sale saleRequest, final Boolean[] flgFinanciamiento,
-                                       CreateQuotationRequest createQuotationFijaRequest) {
+                                       CreateQuotationRequest createQuotationFijaRequest, Boolean isRetail) {
 
         // FEMS-1514 Validación de creación Orden
-        Mono<Sale> saleRequestUpdated = creationOrderValidation(saleRequest, mainRequestProductOrder,
+        Mono<Sale> saleRequestValidation = creationOrderValidation(saleRequest, mainRequestProductOrder,
                 request.getHeadersMap());
-        return saleRequestUpdated.flatMap(saleItem -> {
+        if (isRetail && saleRequest.getStatus().equalsIgnoreCase("NEGOCIACION")) {
+            return saleRequestValidation.flatMap(salesRepository::save);
+        } else {
             // Call de Create Alta Fija Order
-            return productOrderWebClient.createProductOrder(mainRequestProductOrder, request.getHeadersMap(), saleItem)
-                    .flatMap(createOrderResponse -> addOrderIntoSale(PostSalesRequest.builder()
-                                    .sale(saleItem).headersMap(request.getHeadersMap()).build(), saleItem,
+            return productOrderWebClient.createProductOrder(mainRequestProductOrder, request.getHeadersMap(),
+                    saleRequest).flatMap(createOrderResponse -> addOrderIntoSale(PostSalesRequest.builder()
+                                    .sale(saleRequest).headersMap(request.getHeadersMap()).build(), saleRequest,
                             flgFinanciamiento, createQuotationFijaRequest, createOrderResponse));
-        });
+        }
     }
 
     private Mono<Sale> addOrderIntoSale(PostSalesRequest request, Sale saleRequest, final Boolean[] flgFinanciamiento,
@@ -2658,7 +2665,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
 
     private Mono<Sale> wirelineMigrations(List<BusinessParameterFinanciamientoFijaExt> parametersFinanciamientoFija,
                                           PostSalesRequest request, final Boolean[] flgFinanciamiento,
-                                          String actionType) {
+                                          String actionType, Boolean isRetail) {
 
         // Building Create Quotation Request to use into Create Order Request
         CreateQuotationRequest createQuotationFijaRequest = new CreateQuotationRequest();
@@ -2735,7 +2742,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         mainRequestProductOrder.setCreateProductOrderRequest(productOrderMigracionFijaRequest);
 
         return createOrderFija(mainRequestProductOrder, request, request.getSale(), flgFinanciamiento,
-                createQuotationFijaRequest);
+                createQuotationFijaRequest, isRetail);
     }
 
     private ServiceabilityInfoType buildServiceabilityInfoType(PostSalesRequest request) {

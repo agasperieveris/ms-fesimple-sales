@@ -227,16 +227,16 @@ public class SalesManagmentServiceTest {
         salesManagmentService.post(salesRequest);
 
         Method method = SalesManagmentServiceImpl.class.getDeclaredMethod("processFija", List.class, Sale.class,
-                PostSalesRequest.class, Boolean[].class);
+                PostSalesRequest.class, Boolean[].class, Boolean.class);
         method.setAccessible(true);
         final Boolean[] flgFinanciamiento = {false};
-        method.invoke(salesManagmentServiceImpl, bpFinanciamientoFijaResponseList, salesRequest.getSale(), salesRequest, flgFinanciamiento);
+        method.invoke(salesManagmentServiceImpl, bpFinanciamientoFijaResponseList, salesRequest.getSale(), salesRequest, flgFinanciamiento, false);
 
         /* validationsAndBuildings method */
         Method method2 = SalesManagmentServiceImpl.class.getDeclaredMethod("validationsAndBuildings",
                 BusinessParametersResponse.class, List.class, BusinessParametersResponseObjectExt.class,
                 BusinessParametersResponseObjectExt.class , Sale.class, PostSalesRequest.class, String[].class, String.class,
-                Boolean[].class, Boolean[].class, Boolean[].class, Boolean[].class, Boolean[].class, String.class, String.class, String.class);
+                Boolean[].class, Boolean[].class, Boolean[].class, Boolean[].class, Boolean[].class, String.class, String.class, String.class, Boolean.class);
         method2.setAccessible(true);
 
         BusinessParametersResponse getRiskDomain = MapperUtils.mapper(BusinessParametersResponse.class, "{\"metadata\":{\"info\":\"Dominios de Riesgos SPAN\",\"type\":\"KeyValueActive\",\"label\":{\"key\":\"id\",\"value\":\"nombreDominio\",\"active\":\"estado\",\"ext\":\"-\"}},\"data\":[{\"key\":\"430\",\"value\":\"plusmail.cf\",\"active\":false,\"ext\":\"-\"}]}");
@@ -252,12 +252,12 @@ public class SalesManagmentServiceTest {
         final Boolean[] flag = {true};
         method2.invoke(salesManagmentServiceImpl, getRiskDomainTrue, Arrays.asList(BusinessParameterExt.builder().build()),
                 getBonificacionSim, getParametersSimCard, salesRequest.getSale(), salesRequest, sapidSimcard, commercialOperationReason,
-                flag, flag, flag, flag, flag, channelIdRequest, customerIdRequest, productOfferingIdRequest);
+                flag, flag, flag, flag, flag, channelIdRequest, customerIdRequest, productOfferingIdRequest, false);
         Sale sale1 = CommonsMocks.createSaleMock();
         salesRequest.setSale(sale1);
         method2.invoke(salesManagmentServiceImpl, getRiskDomain, Arrays.asList(BusinessParameterExt.builder().build()),
                 getBonificacionSim, getParametersSimCard, salesRequest.getSale(), salesRequest, sapidSimcard, commercialOperationReason,
-                flag, flag, flag, flag, flag, channelIdRequest, customerIdRequest, productOfferingIdRequest);
+                flag, flag, flag, flag, flag, channelIdRequest, customerIdRequest, productOfferingIdRequest, false);
     }
 
     @Test
@@ -408,6 +408,7 @@ public class SalesManagmentServiceTest {
     void postSalesRetailMovilImeiNotFoundErrorTest() {
         Sale saleTest = CommonsMocks.createSaleMock();
         saleTest.getChannel().setId("DLC");
+        saleTest.setStatus("VALIDADO");
 
         PostSalesRequest salesRequest = PostSalesRequest
                 .builder()
@@ -429,6 +430,7 @@ public class SalesManagmentServiceTest {
         additionalData1.setKey("MOVILE_IMEI");
         additionalData1.setValue("test");
         saleTest.getAdditionalData().add(additionalData1);
+        saleTest.setStatus("VALIDADO");
 
         PostSalesRequest salesRequest = PostSalesRequest
                 .builder()
@@ -455,6 +457,7 @@ public class SalesManagmentServiceTest {
         additionalData2.setKey("SIM_ICCID");
         additionalData2.setValue("test");
         saleTest.getAdditionalData().add(additionalData2);
+        saleTest.setStatus("VALIDADO");
 
         PostSalesRequest salesRequest = PostSalesRequest
                 .builder()
@@ -486,6 +489,7 @@ public class SalesManagmentServiceTest {
         additionalData3.setKey("NUMERO_CAJA");
         additionalData3.setValue("test");
         saleTest.getAdditionalData().add(additionalData3);
+        saleTest.setStatus("VALIDADO");
 
         PostSalesRequest salesRequest = PostSalesRequest
                 .builder()
@@ -888,12 +892,12 @@ public class SalesManagmentServiceTest {
         salesRequest.getSale().getCommercialOperation().get(0).setAction("MODIFY");
 
         Method method = SalesManagmentServiceImpl.class.getDeclaredMethod("wirelineMigrations", List.class,
-                PostSalesRequest.class, Boolean[].class, String.class);
+                PostSalesRequest.class, Boolean[].class, String.class, Boolean.class);
         method.setAccessible(true);
 
         final Boolean[] flgFinanciamiento = {true};
         method.invoke(salesManagmentServiceImpl, bpFinanciamientoFijaResponseList.get(0).getData().get(0).getExt(),
-                salesRequest, flgFinanciamiento, "CH");
+                salesRequest, flgFinanciamiento, "CH", false);
 
         /*Method methodFillProductOfferingProductSpecId = SalesManagmentServiceImpl.class.getDeclaredMethod("fillProductOfferingProductSpecId", List.class, List.class);
         methodFillProductOfferingProductSpecId.setAccessible(true);
