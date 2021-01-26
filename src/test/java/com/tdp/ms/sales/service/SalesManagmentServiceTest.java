@@ -209,7 +209,6 @@ public class SalesManagmentServiceTest {
         Mockito.when(salesRepository.findBySalesId(any())).thenReturn(Mono.just(sale));
         Mockito.when(salesRepository.save(any())).thenReturn(Mono.just(sale));
 
-
         salesManagmentService.post(salesRequest);
 
         salesRequest.getSale().getAdditionalData().stream()
