@@ -724,6 +724,54 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
 
         flgFinanciamiento[0] = setFinancingFlag(saleRequest.getCommercialOperation().get(0).getDeviceOffering());
 
+        // Validar si es que es un reintento
+        final Sale[] saleRetry = {null};
+        salesRepository.findBySalesId(saleRequest.getSalesId()).map(saleItem -> saleRetry[0] = saleItem);
+
+        if (saleRetry[0] != null && saleRetry[0].getCommercialOperation().get(0).getOrder() != null
+                && saleRetry[0].getCommercialOperation().get(0).getDeviceOffering() == null
+                && saleRetry[0].getCommercialOperation().get(0).getDeviceOffering().get(0).getStock() == null
+                && StringUtils.isEmpty(saleRetry[0].getCommercialOperation().get(0).getDeviceOffering().get(0)
+                .getStock().getReservationId())) { // Retry from Reservation
+
+            // Call to Reserve Stock Service When Commercial Operation include CAEQ
+            if (flgCaeq[0] || flgAlta[0]) {
+
+                return this.callToReserveStockAndCreateQuotation(PostSalesRequest.builder()
+                                .sale(saleRetry[0]).headersMap(request.getHeadersMap())
+                                .build(), saleRetry[0], flgCasi[0],
+                        flgFinanciamiento[0], sapidSimcard[0]);
+            } else {
+                if (Boolean.TRUE.equals(flgCasi[0])) {
+
+                    // Call to Create Quotation Service When CommercialOperation Contains CASI
+                    return this.callToCreateQuotation(PostSalesRequest.builder()
+                            .sale(saleRetry[0]).headersMap(request.getHeadersMap())
+                            .build(), saleRetry[0], true, flgFinanciamiento[0]);
+                } else {
+                    // Case when is Only CAPL
+                    return salesRepository.save(saleRetry[0])
+                            .map(r -> {
+                                this.postSalesEventFlow(PostSalesRequest.builder()
+                                        .sale(saleRetry[0]).headersMap(request.getHeadersMap())
+                                        .build());
+                                return r;
+                            });
+                }
+            }
+
+        } else if (saleRetry[0] != null && saleRetry[0].getCommercialOperation().get(0).getOrder() != null
+                && saleRetry[0].getCommercialOperation().get(0).getDeviceOffering() != null
+                && saleRetry[0].getCommercialOperation().get(0).getDeviceOffering().get(0).getStock() != null
+                && !StringUtils.isEmpty(saleRetry[0].getCommercialOperation().get(0).getDeviceOffering().get(0)
+                .getStock().getReservationId())) { // Retry from Create Quotation
+
+            // Call to Create Quotation Service When CommercialOperation Contains CAEQ
+            return this.callToCreateQuotation(PostSalesRequest.builder()
+                            .sale(saleRetry[0]).headersMap(request.getHeadersMap()).build(),
+                    saleRetry[0], flgCasi[0], flgFinanciamiento[0]);
+        }
+
         // Getting Main CommercialTypeOperation value
         String commercialOperationReason = saleRequest.getCommercialOperation().get(0).getReason();
         String mainProductType = saleRequest.getProductType();
@@ -799,38 +847,6 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                                 flgCaeq, flgCasi, flgAlta, flgFinanciamiento, channelIdRequest, customerIdRequest,
                                 productOfferingIdRequest, isRetail));
 
-            } else if (!StringUtils.isEmpty(saleRequest.getCommercialOperation().get(0).getOrder().getProductOrderId())
-                    && !StringUtils.isEmpty(saleRequest.getCommercialOperation().get(0).getDeviceOffering().get(0)
-                    .getStock())
-                    && StringUtils.isEmpty(saleRequest.getCommercialOperation().get(0).getDeviceOffering().get(0)
-                    .getStock().getReservationId())) { // Retry from Reservation
-
-                // Call to Reserve Stock Service When Commercial Operation include CAEQ
-                if (flgCaeq[0] || flgAlta[0]) {
-
-                    return this.callToReserveStockAndCreateQuotation(request, saleRequest, flgCasi[0],
-                            flgFinanciamiento[0], sapidSimcard[0]);
-                } else {
-                    if (Boolean.TRUE.equals(flgCasi[0])) {
-
-                        // Call to Create Quotation Service When CommercialOperation Contains CASI
-                        return this.callToCreateQuotation(request, saleRequest, flgCasi[0], flgFinanciamiento[0]);
-                    } else {
-                        // Case when is Only CAPL
-                        return salesRepository.save(saleRequest)
-                                .map(r -> {
-                                    this.postSalesEventFlow(request);
-                                    return r;
-                                });
-                    }
-                }
-
-            } else if (!StringUtils.isEmpty(saleRequest.getCommercialOperation().get(0).getOrder().getProductOrderId())
-                    && !StringUtils.isEmpty(saleRequest.getCommercialOperation().get(0).getDeviceOffering().get(0)
-                    .getStock().getReservationId())) { // Retry from Create Quotation
-
-                // Call to Create Quotation Service When CommercialOperation Contains CAEQ
-                return this.callToCreateQuotation(request, saleRequest, flgCasi[0], flgFinanciamiento[0]);
             } else {
                 return salesRepository.save(saleRequest)
                         .map(r -> {
@@ -2666,7 +2682,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                 .id(sale.getCommercialOperation().get(0).getDeviceOffering().stream()
                         .filter(item -> !item.getDeviceType().equalsIgnoreCase("SIM"))
                         .findFirst()
-                        .orElse(null)
+                        .orElse(DeviceOffering.builder().sapid(null).build())
                         .getSapid())
                 .type("IMEI")
                 .build();
