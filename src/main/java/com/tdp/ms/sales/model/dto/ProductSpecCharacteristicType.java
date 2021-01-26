@@ -5,6 +5,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 /**
  * Class: ProductSpecCharacteristicType. <br/>
  * <b>Copyright</b>: &copy; 2019 Telef&oacute;nica del Per&uacute;<br/>
@@ -30,6 +32,7 @@ public class ProductSpecCharacteristicType {
     private String id;
     private String name;
     private String description;
-    private String valueType;
     private TimePeriodType validFor;
+    private List<Object> productSpecCharacteristicValue;
+    private Object objectCharacteristicValue;
 }
