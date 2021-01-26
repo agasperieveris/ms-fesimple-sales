@@ -21,7 +21,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.UUID;
 
-import com.tdp.ms.sales.utils.Commons;
 import com.tdp.ms.sales.utils.Constants;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -112,8 +111,6 @@ public class SalesServiceImpl implements SalesService {
                 .switchIfEmpty(Mono.error(new NotFoundException("El salesId solicitado no se encuentra registrado.")))
                 .flatMap(item -> {
                     request.setSalesId(item.getSalesId());
-                    request.setStatusChangeDate(Commons.getDatetimeNow());
-                    request.setStatusChangeReason("Sale Update");
                     return salesRepository.save(request);
                 });
 
@@ -130,10 +127,7 @@ public class SalesServiceImpl implements SalesService {
                                     .key("initialProcessDate")
                                     .value(DateUtils.getDatetimeNowCosmosDbFormat())
                                     .build()
-
                     );
-                    r.setStatusChangeDate(Commons.getDatetimeNow());
-                    r.setStatusChangeReason("Event Update");
                     // Llamada a receptor
                     webClientReceptor
                             .register(
@@ -157,7 +151,7 @@ public class SalesServiceImpl implements SalesService {
                                   String endDateTime, String size, String pageCount, String page,
                                   String maxResultCount) {
 
-        return salesRepository.findByStatusNot("NEGOCIACION").filter(item -> filterSalesWithParams(item, saleId, dealerId, idAgent,
+        return salesRepository.findAll().filter(item -> filterSalesWithParams(item, saleId, dealerId, idAgent,
                 customerId, nationalId, nationalIdType, status, channelId, storeId, orderId, startDateTime,
                 endDateTime));
     }
