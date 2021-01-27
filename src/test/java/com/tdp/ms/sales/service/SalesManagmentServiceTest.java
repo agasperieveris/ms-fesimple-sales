@@ -406,7 +406,8 @@ public class SalesManagmentServiceTest {
     @Test
     void postSalesRetailMovilImeiNotFoundErrorTest() {
         Sale saleTest = CommonsMocks.createSaleMock();
-        saleTest.getChannel().setId("DLC");
+        saleTest.setStatus("VALIDADO");
+        saleTest.setAdditionalData(Arrays.asList(KeyValueType.builder().key("flowSale").value("Retail").build()));
 
         PostSalesRequest salesRequest = PostSalesRequest
                 .builder()
@@ -422,12 +423,16 @@ public class SalesManagmentServiceTest {
     @Test
     void postSalesRetailsSimIccidNotFoundErrorTest() {
         Sale saleTest = CommonsMocks.createSaleMock();
-        saleTest.getChannel().setId("DLC");
 
         KeyValueType additionalData1 = new KeyValueType();
         additionalData1.setKey("MOVILE_IMEI");
         additionalData1.setValue("test");
         saleTest.getAdditionalData().add(additionalData1);
+
+        saleTest.getAdditionalData().stream()
+                .filter(item -> item.getKey().equalsIgnoreCase("flowSale"))
+                .findFirst()
+                .ifPresent(item -> item.setValue("Retail"));
 
         PostSalesRequest salesRequest = PostSalesRequest
                 .builder()
@@ -443,7 +448,6 @@ public class SalesManagmentServiceTest {
     @Test
     void postSalesRetailsNumeroCajaNotFoundErrorTest() {
         Sale saleTest = CommonsMocks.createSaleMock();
-        saleTest.getChannel().setId("DLC");
 
         KeyValueType additionalData1 = new KeyValueType();
         additionalData1.setKey("MOVILE_IMEI");
@@ -454,6 +458,11 @@ public class SalesManagmentServiceTest {
         additionalData2.setKey("SIM_ICCID");
         additionalData2.setValue("test");
         saleTest.getAdditionalData().add(additionalData2);
+
+        saleTest.getAdditionalData().stream()
+                .filter(item -> item.getKey().equalsIgnoreCase("flowSale"))
+                .findFirst()
+                .ifPresent(item -> item.setValue("Retail"));
 
         PostSalesRequest salesRequest = PostSalesRequest
                 .builder()
@@ -469,7 +478,6 @@ public class SalesManagmentServiceTest {
     @Test
     void postSalesRetailsNumeroTicketNotFoundErrorTest() {
         Sale saleTest = CommonsMocks.createSaleMock();
-        saleTest.getChannel().setId("DLC");
 
         KeyValueType additionalData1 = new KeyValueType();
         additionalData1.setKey("MOVILE_IMEI");
@@ -485,6 +493,11 @@ public class SalesManagmentServiceTest {
         additionalData3.setKey("NUMERO_CAJA");
         additionalData3.setValue("test");
         saleTest.getAdditionalData().add(additionalData3);
+
+        saleTest.getAdditionalData().stream()
+                .filter(item -> item.getKey().equalsIgnoreCase("flowSale"))
+                .findFirst()
+                .ifPresent(item -> item.setValue("Retail"));
 
         PostSalesRequest salesRequest = PostSalesRequest
                 .builder()
