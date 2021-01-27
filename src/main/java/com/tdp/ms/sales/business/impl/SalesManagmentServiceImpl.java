@@ -1955,7 +1955,6 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         changedCharacteristicList.add(changedCharacteristic1);
 
         // ICCID Characteristic
-        String channelId = saleRequest.getChannel().getId();
         String flowSaleValue = saleRequest.getAdditionalData().stream()
                 .filter(keyValueType -> keyValueType.getKey().equalsIgnoreCase("flowSale"))
                 .findFirst()
