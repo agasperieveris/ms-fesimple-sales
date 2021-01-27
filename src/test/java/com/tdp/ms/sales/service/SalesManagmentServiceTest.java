@@ -428,6 +428,7 @@ public class SalesManagmentServiceTest {
         additionalData1.setKey("MOVILE_IMEI");
         additionalData1.setValue("test");
         saleTest.getAdditionalData().add(additionalData1);
+        saleTest.setStatus("VALIDADO");
 
         saleTest.getAdditionalData().stream()
                 .filter(item -> item.getKey().equalsIgnoreCase("flowSale"))
@@ -458,6 +459,7 @@ public class SalesManagmentServiceTest {
         additionalData2.setKey("SIM_ICCID");
         additionalData2.setValue("test");
         saleTest.getAdditionalData().add(additionalData2);
+        saleTest.setStatus("VALIDADO");
 
         saleTest.getAdditionalData().stream()
                 .filter(item -> item.getKey().equalsIgnoreCase("flowSale"))
@@ -493,6 +495,7 @@ public class SalesManagmentServiceTest {
         additionalData3.setKey("NUMERO_CAJA");
         additionalData3.setValue("test");
         saleTest.getAdditionalData().add(additionalData3);
+        saleTest.setStatus("VALIDADO");
 
         saleTest.getAdditionalData().stream()
                 .filter(item -> item.getKey().equalsIgnoreCase("flowSale"))

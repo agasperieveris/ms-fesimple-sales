@@ -74,6 +74,7 @@ public class CommonsMocks {
         deviceOffering.setAdditionalData(additionalDatas);
         deviceOffering.setId("s");
         deviceOffering.setSapid("SAD123PID");
+        deviceOffering.setDeviceType("SmartPhone");
 
         StockType stockType = StockType
                 .builder()
@@ -189,6 +190,9 @@ public class CommonsMocks {
 
         ComposingProductType productSpecification2 = new ComposingProductType();
         productSpecification2.setProductType("broadband");
+        productSpecification2.setProductPrice(Arrays.asList(ComponentProdOfferPriceType.builder().build(),
+                ComponentProdOfferPriceType.builder().build(),
+                ComponentProdOfferPriceType.builder().additionalData(Arrays.asList(KeyValueType.builder().key("downloadSpeed").value("string").build())).build()));
         productSpecification2.setRefinedProduct(refinedProduct);
 
         ComposingProductType productSpecification3 = new ComposingProductType();
