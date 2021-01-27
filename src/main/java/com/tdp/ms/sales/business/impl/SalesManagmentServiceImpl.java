@@ -658,9 +658,12 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         }
 
         // Validation if is retail
-        String channelId = saleRequest.getChannel().getId();
-        Boolean isRetail = channelId.equalsIgnoreCase("DLC") || channelId.equalsIgnoreCase("DLV")
-                || channelId.equalsIgnoreCase("DLS");
+        String flowSaleValue = saleRequest.getAdditionalData().stream()
+                .filter(keyValueType -> keyValueType.getKey().equalsIgnoreCase("flowSale"))
+                .findFirst()
+                .orElse(KeyValueType.builder().value(null).build())
+                .getValue();
+        Boolean isRetail = flowSaleValue.equalsIgnoreCase("Retail");
         Boolean statusValidado = saleRequest.getStatus().equalsIgnoreCase("VALIDADO");
         if (Boolean.TRUE.equals(isRetail) && statusValidado) {
             if (StringUtils.isEmpty(this.getStringValueByKeyFromAdditionalDataList(saleRequest.getAdditionalData(),
@@ -1955,8 +1958,12 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
 
         // ICCID Characteristic
         String channelId = saleRequest.getChannel().getId();
-        Boolean isRetail = channelId.equalsIgnoreCase("DLC") || channelId.equalsIgnoreCase("DLV")
-                || channelId.equalsIgnoreCase("DLS");
+        String flowSaleValue = saleRequest.getAdditionalData().stream()
+                .filter(keyValueType -> keyValueType.getKey().equalsIgnoreCase("flowSale"))
+                .findFirst()
+                .orElse(KeyValueType.builder().value(null).build())
+                .getValue();
+        Boolean isRetail = flowSaleValue.equalsIgnoreCase("Retail");
         if (Boolean.TRUE.equals(isRetail)) {
             String iccidSim = this.getStringValueByKeyFromAdditionalDataList(saleRequest.getAdditionalData(),
                     "SIM_ICCID");
@@ -2376,11 +2383,13 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                 deliveryCode = kv.getValue();
             }
         }
-        String channelId = saleRequest.getChannel().getId();
-        Boolean flgRetailChannel = channelId.equalsIgnoreCase("DLC")
-                || channelId.equalsIgnoreCase("DLV")
-                || channelId.equalsIgnoreCase("DLS");
-        if (flgRetailChannel) {
+        String flowSaleValue = saleRequest.getAdditionalData().stream()
+                .filter(keyValueType -> keyValueType.getKey().equalsIgnoreCase("flowSale"))
+                .findFirst()
+                .orElse(KeyValueType.builder().value(null).build())
+                .getValue();
+        Boolean isRetail = flowSaleValue.equalsIgnoreCase("Retail");
+        if (isRetail) {
             deliveryCode = "IS";
         }
         if (!StringUtils.isEmpty(deliveryCode)) {
@@ -2398,7 +2407,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         }
 
         // Payment Method Attribute - Conditional
-        if (!flgRetailChannel && saleRequest.getPaymenType() != null && !StringUtils.isEmpty(saleRequest.getPaymenType()
+        if (!isRetail && saleRequest.getPaymenType() != null && !StringUtils.isEmpty(saleRequest.getPaymenType()
                 .getPaymentType())) {
             FlexAttrValueType paymentAttrValue =  FlexAttrValueType
                     .builder()
@@ -2485,10 +2494,13 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
 
         // EquipmentIMEI Characteristic
         String deviceImei = "000000000000000";
-        String channelId = saleRequest.getChannel().getId();
-        if (channelId.equalsIgnoreCase("DLC")
-                || channelId.equalsIgnoreCase("DLV")
-                || channelId.equalsIgnoreCase("DLS")) {
+        String flowSaleValue = saleRequest.getAdditionalData().stream()
+                .filter(keyValueType -> keyValueType.getKey().equalsIgnoreCase("flowSale"))
+                .findFirst()
+                .orElse(KeyValueType.builder().value(null).build())
+                .getValue();
+        Boolean isRetail = flowSaleValue.equalsIgnoreCase("Retail");
+        if (isRetail) {
             deviceImei = this.getStringValueByKeyFromAdditionalDataList(saleRequest.getAdditionalData(),
                                                                                                     "MOVILE_IMEI");
         }
