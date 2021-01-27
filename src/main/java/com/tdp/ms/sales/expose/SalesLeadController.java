@@ -5,7 +5,6 @@ import com.tdp.genesis.core.exception.GenesisException;
 import com.tdp.ms.sales.business.SalesService;
 import com.tdp.ms.sales.model.entity.Sale;
 import com.tdp.ms.sales.model.request.GetSalesRequest;
-import com.tdp.ms.sales.model.response.SalesResponse;
 import com.tdp.ms.sales.utils.Commons;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
