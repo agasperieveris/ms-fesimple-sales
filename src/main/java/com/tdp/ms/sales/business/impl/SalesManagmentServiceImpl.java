@@ -1406,7 +1406,12 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         if (keyValueType != null && keyValueType.getValue().equalsIgnoreCase("Retail")
                 && saleRequest.getStatus().equalsIgnoreCase(Constants.NEGOCIACION)) {
 
-            DeviceOffering saleDeviceOffering = saleRequest.getCommercialOperation().get(0).getDeviceOffering().get(0);
+            DeviceOffering saleDeviceOffering = saleRequest.getCommercialOperation().get(0).getDeviceOffering().stream()
+                    .filter(deviceOffering -> !deviceOffering.getDisplayName().equalsIgnoreCase("simcard")
+                            && !deviceOffering.getDisplayName().equalsIgnoreCase("simdevice"))
+                    .findFirst()
+                    .orElseThrow(() -> buildGenesisError(Constants.BAD_REQUEST_EXCEPTION_ID,
+                            "commercialOperation[].deviceOffering[].simSpecifications[0].sapid is missing."));
 
             Mono<List<GetSkuResponse>> getSku = getSkuWebClient.createSku(saleRequest.getChannel().getId(),
                     "default", saleDeviceOffering.getSimSpecifications().get(0).getSapid(),
@@ -1504,8 +1509,14 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                 .get(0).getAdditionalData().add(dateKv);
 
         saleRequest.getCommercialOperation().get(0).getDeviceOffering()
-                .forEach(deviceOffering -> deviceOffering.getStock()
-                        .setReservationId(reserveStockResponse.getId()));
+                .forEach(deviceOffering -> {
+                    if (deviceOffering.getStock() == null) {
+                        deviceOffering.setStock(StockType.builder()
+                                .reservationId(reserveStockResponse.getId()).build());
+                    } else {
+                        deviceOffering.getStock().setReservationId(reserveStockResponse.getId());
+                    }
+                });
 
         saleRequest.getCommercialOperation().get(0).getDeviceOffering()
                 .get(0).getStock()
@@ -1966,7 +1977,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                 .orElse(KeyValueType.builder().value(null).build())
                 .getValue();
         Boolean isRetail = flowSaleValue.equalsIgnoreCase("Retail");
-        if (Boolean.TRUE.equals(isRetail)) {
+        if (Boolean.TRUE.equals(isRetail) && saleRequest.getStatus().equalsIgnoreCase("VALIDADO")) {
             String iccidSim = this.getStringValueByKeyFromAdditionalDataList(saleRequest.getAdditionalData(),
                     "SIM_ICCID");
             ChangedCharacteristic changedCharacteristic2 = ChangedCharacteristic
@@ -2010,7 +2021,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         List<FlexAttrType> altaOrderAttributesList = this.commonOrderAttributes(saleRequest);
 
         // Order Attributes when channel is retail
-        if (Boolean.TRUE.equals(isRetail)) {
+        if (Boolean.TRUE.equals(isRetail) && saleRequest.getStatus().equalsIgnoreCase("VALIDADO")) {
             //  RETAIL PAYMENT NUMBER ATTRIBUTE
             String paymentNumber = this.getStringValueByKeyFromAdditionalDataList(saleRequest.getAdditionalData(),
                     "NUMERO_TICKET");
