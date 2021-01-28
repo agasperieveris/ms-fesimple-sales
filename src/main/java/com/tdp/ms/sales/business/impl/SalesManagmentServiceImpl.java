@@ -1243,9 +1243,9 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                 .name(sale.getRelatedParty().get(0).getFirstName())
                 .surname(sale.getRelatedParty().get(0).getLastName())
                 .segment(this.getStringValueByKeyFromAdditionalDataList(sale.getAdditionalData(),
-                        "releatedPartySegment"))
+                        "customerTypeCode"))
                 .subsegment(this.getStringValueByKeyFromAdditionalDataList(sale.getAdditionalData(),
-                        "releatedPartySubSegment"))
+                        "customerSubTypeCode"))
                 .contactMedia(contactMediumList)
                 .legalId(legalId)
                 .address(address)
@@ -1291,7 +1291,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
 
         Channel channel = Channel
                 .builder()
-                .name(sale.getChannel().getName())
+                .name(sale.getChannel().getId())
                 .build();
 
         // Financiamiento de Instalación
@@ -1495,6 +1495,11 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                 .key("reservationDate")
                 .value(Commons.getDatetimeNow())
                 .build();
+
+        if (saleRequest.getCommercialOperation().get(0).getDeviceOffering().get(0).getAdditionalData() == null) {
+            saleRequest.getCommercialOperation().get(0).getDeviceOffering().get(0).setAdditionalData(new ArrayList<>());
+        }
+
         saleRequest.getCommercialOperation().get(0).getDeviceOffering()
                 .get(0).getAdditionalData().add(dateKv);
 
@@ -1632,7 +1637,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
 
         MoneyAmount totalAmount = MoneyAmount
                 .builder()
-                .units("")
+                .units("PEN")
                 .amount(amountTotalAmount.toString())
                 .build();
 
@@ -1663,7 +1668,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         Channel channel = Channel.builder().name(sale.getChannel().getName()).build();
 
         MoneyAmount totalCost = MoneyAmount
-                .builder().units("")
+                .builder().units("PEN")
                 .amount(sale.getCommercialOperation().get(0).getDeviceOffering().get(0).getOffers().get(0)
                         .getBillingOfferings().get(0).getCommitmentPeriods().get(0).getFinancingInstalments().get(0)
                         .getInstalments().getTotalAmount().getValue().toString()).build();
@@ -1672,7 +1677,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                 .amount(sale.getCommercialOperation().get(0).getDeviceOffering().get(0).getOffers().get(0)
                         .getBillingOfferings().get(0).getCommitmentPeriods().get(0).getFinancingInstalments().get(0)
                         .getInstalments().getTotalAmount().getValue().toString())
-                .units("")
+                .units("PEN")
                 .build();
 
         List<com.tdp.ms.sales.model.dto.quotation.Item> itemsList = new ArrayList<>();
@@ -1691,7 +1696,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                     .builder()
                     .amount(sale.getCommercialOperation().get(0).getDeviceOffering().get(1).getSimSpecifications()
                                                                         .get(0).getPrice().get(0).getValue().toString())
-                    .units("")
+                    .units("PEN")
                     .build();
 
             com.tdp.ms.sales.model.dto.quotation.Item itemSim = com.tdp.ms.sales.model.dto.quotation.Item
