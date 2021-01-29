@@ -3,6 +3,7 @@ package com.tdp.ms.sales.expose;
 import com.tdp.genesis.core.constants.HttpHeadersKey;
 import com.tdp.ms.sales.business.SalesService;
 import com.tdp.ms.sales.model.dto.ChannelRef;
+import com.tdp.ms.sales.model.dto.KeyValueType;
 import com.tdp.ms.sales.model.dto.RelatedParty;
 import com.tdp.ms.sales.model.entity.Sale;
 import com.tdp.ms.sales.model.response.SalesResponse;
@@ -17,6 +18,8 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import reactor.core.publisher.Mono;
 
+import java.util.Collections;
+
 import static org.mockito.ArgumentMatchers.any;
 
 @SpringBootTest
@@ -30,15 +33,23 @@ public class SalesLeadControllerTest {
     private SalesService salesService;
 
     private static Sale sale;
+    private static Sale saleWithFileName;
     private static Sale salesResponse;
 
     @BeforeAll
     static void setup() {
-        sale = Sale
-                .builder()
+        sale = Sale.builder()
                 .id("FE-000000001")
                 .name("Sergio")
                 .description("descripcion")
+                .additionalData(Collections.singletonList(KeyValueType.builder().key("string").value("string").build()))
+                .build();
+
+        saleWithFileName = Sale.builder()
+                .id("FE-000000001")
+                .name("Sergio")
+                .description("descripcion")
+                .additionalData(Collections.singletonList(KeyValueType.builder().key("filename").value("string").build()))
                 .build();
 
         ChannelRef channel = ChannelRef
@@ -94,8 +105,10 @@ public class SalesLeadControllerTest {
     void updateSales_Test() {
         Mockito.when(salesService.put(any(), any(), any()))
                 .thenReturn(Mono.just(salesResponse));
+        Mockito.when(salesService.putEvent(any(), any(), any()))
+                .thenReturn(Mono.just(salesResponse));
 
-        WebTestClient.ResponseSpec responseSpec = webClient.put()
+        webClient.put()
                 .uri("/fesimple/v1/saleslead/FE-000000001")
                 .accept(MediaType.APPLICATION_JSON)
                 .header(HttpHeadersKey.UNICA_SERVICE_ID, "550e8400-e29b-41d4-a716-446655440000")
@@ -105,37 +118,15 @@ public class SalesLeadControllerTest {
                 .bodyValue(sale)
                 .exchange();
 
-        responseSpec.expectStatus().isOk();
-
-        responseSpec.expectBody()
-                .jsonPath("$.id").isEqualTo(salesResponse.getId())
-                .jsonPath("$.name").isEqualTo(salesResponse.getName())
-                .jsonPath("$.description").isEqualTo(salesResponse.getDescription());
-
-    }
-
-    @Test
-    void updateSales_Event_Test() {
-        Mockito.when(salesService.putEvent(any(), any(), any()))
-                .thenReturn(Mono.just(salesResponse));
-
-        WebTestClient.ResponseSpec responseSpec = webClient.put()
-                .uri("/fesimple/v1/saleslead/FE-000000001/event")
+        webClient.put()
+                .uri("/fesimple/v1/saleslead/FE-000000001")
                 .accept(MediaType.APPLICATION_JSON)
                 .header(HttpHeadersKey.UNICA_SERVICE_ID, "550e8400-e29b-41d4-a716-446655440000")
                 .header(HttpHeadersKey.UNICA_APPLICATION, "genesis")
                 .header(HttpHeadersKey.UNICA_PID, "550e8400-e29b-41d4-a716-446655440000")
                 .header(HttpHeadersKey.UNICA_USER, "genesis")
-                .bodyValue(sale)
+                .bodyValue(saleWithFileName)
                 .exchange();
-
-        responseSpec.expectStatus().isOk();
-
-        responseSpec.expectBody()
-                .jsonPath("$.id").isEqualTo(salesResponse.getId())
-                .jsonPath("$.name").isEqualTo(salesResponse.getName())
-                .jsonPath("$.description").isEqualTo(salesResponse.getDescription());
-
     }
 
     @Test
