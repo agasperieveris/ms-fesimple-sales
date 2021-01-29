@@ -3,6 +3,7 @@ package com.tdp.ms.sales.expose;
 import com.tdp.genesis.core.constants.HttpHeadersKey;
 import com.tdp.genesis.core.exception.GenesisException;
 import com.tdp.ms.sales.business.SalesService;
+import com.tdp.ms.sales.model.dto.KeyValueType;
 import com.tdp.ms.sales.model.entity.Sale;
 import com.tdp.ms.sales.model.request.GetSalesRequest;
 import com.tdp.ms.sales.utils.Commons;
@@ -156,40 +157,17 @@ public class SalesLeadController {
                                   @RequestHeader(HttpHeadersKey.UNICA_PID) String pid,
                                   @RequestHeader(HttpHeadersKey.UNICA_USER) String user) {
 
+        String audioFileName = request.getAdditionalData().stream()
+                .filter(keyValue -> keyValue.getKey().equalsIgnoreCase("filename")
+                        && keyValue.getValue() != null)
+                .findFirst()
+                .orElse(KeyValueType.builder().value(null).build())
+                .getValue();
+
+        if (audioFileName != null) {
+            return salesService.putEvent(salesId, request, Commons.fillHeaders(serviceId, application, pid, user));
+        }
         return salesService.put(salesId, request, Commons.fillHeaders(serviceId, application, pid, user));
-    }
-
-    /**
-     * Actualiza los datos de un Sale en la BBDD de la Web Convergente - FLUJO EVENTOS.
-     *
-     * @author @srivasme
-     * @param serviceId     header     Identificador único de cada ejecución.
-	 * @param application   header     Identificador del sistema que origina la solicitud.
-	 * @param pid           header     Identificador de un grupo de ejecuciones, que tienen en
-	 *                                 común estar en el mismo proceso del negocio.
-	 * @param user          header     Identificador del usuario del sistema y/o subsistema
-	 *                                 que inicia la petición.
-     * @param request Datos de la venta
-     * @return SalesResponse, datos de la venta actualizada en la BBDD de la Web
-     *         Convergente
-     */
-    @PutMapping("/{id}/event")
-    @ApiOperation(produces = MediaType.APPLICATION_JSON_VALUE,
-    value = "Actualiza los datos de un Sale en la BBDD de la Web Convergente - FLUJO EVENTOS",
-    notes = "Se debe enviar Datos existente de la venta, se actualiza en la colección sales en Cosmos DB",
-    response = Sale.class)
-    @ApiResponses(value = {
-            @ApiResponse(code =401 , message = "Unauthorized",response = GenesisException.class),
-            @ApiResponse(code =500 , message = "Internal Server Error", response=GenesisException.class),
-    })
-    public Mono<Sale> updateSalesEvent(@PathVariable("id") String salesId,
-                                  @RequestBody Sale request,
-                                  @RequestHeader(HttpHeadersKey.UNICA_SERVICE_ID) String serviceId,
-                                  @RequestHeader(HttpHeadersKey.UNICA_APPLICATION) String application,
-                                  @RequestHeader(HttpHeadersKey.UNICA_PID) String pid,
-                                  @RequestHeader(HttpHeadersKey.UNICA_USER) String user) {
-
-        return salesService.putEvent(salesId, request, Commons.fillHeaders(serviceId, application, pid, user));
     }
 
     /**
