@@ -294,7 +294,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         }
 
         // Order Attributes if is Scheduling
-        if (saleRequest.getCommercialOperation() != null
+        if (flgFinanciamiento && saleRequest.getCommercialOperation() != null
                 && saleRequest.getCommercialOperation().get(0).getWorkOrDeliveryType() != null
                 && saleRequest.getCommercialOperation().get(0).getWorkOrDeliveryType().getScheduleDelivery() != null
                 && !saleRequest.getCommercialOperation().get(0).getWorkOrDeliveryType().getScheduleDelivery()
@@ -2805,7 +2805,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                 .builder()
                 .serviceabilityId(request.getSale().getCommercialOperation().get(0)
                         .getServiceAvailability().getId())
-                .offers(serviceabilityOffersList)
+                .offers(serviceabilityOffersList.isEmpty() ? null : serviceabilityOffersList)
                 .commercialZone(commercialZone)
                 .build();
     }
