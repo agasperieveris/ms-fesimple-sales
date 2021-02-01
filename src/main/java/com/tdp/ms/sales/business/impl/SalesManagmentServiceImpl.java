@@ -164,7 +164,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         final String[] stringValue = {""};
 
         if (additionalData != null && !additionalData.isEmpty()) {
-            additionalData.stream().forEach(kv -> {
+            additionalData.forEach(kv -> {
                 if (kv.getKey().equalsIgnoreCase(key)) {
                     stringValue[0] = kv.getValue();
                 }
@@ -1414,8 +1414,8 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                             "commercialOperation[].deviceOffering[].simSpecifications[0].sapid is missing."));
 
             Mono<List<GetSkuResponse>> getSku = getSkuWebClient.createSku(saleRequest.getChannel().getId(),
-                    "default", saleDeviceOffering.getSimSpecifications().get(0).getSapid(),
-                    saleDeviceOffering.getSimSpecifications().get(0).getPrice().get(0).getValue().doubleValue(),
+                    "default", saleDeviceOffering.getSapid(),
+                    Double.parseDouble(saleDeviceOffering.getCostoPromedioSinIgvSoles()),
                     operationType, "", saleRequest.getChannel().getStoreId(), "2",
                     saleRequest.getChannel().getDealerId(), saleDeviceOffering.getSapid(),
                     saleDeviceOffering.getCostoPromedioSinIgvSoles(), headersMap).collectList();
@@ -2088,16 +2088,17 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
             altaOrderAttributesList.add(cashierRegisterAttr);
         }
 
-
+        String deliveryMethod = this.getStringValueByKeyFromAdditionalDataList(saleRequest.getAdditionalData(),
+                "deliveryMethod");
         AltaMobileRequest altaRequest = AltaMobileRequest
                 .builder()
                 .newProducts(altaNewProductsList)
                 .sourceApp("FE")
                 .orderAttributes(altaOrderAttributesList)
-                .shipmentDetails(saleRequest.getCommercialOperation().get(0).getWorkOrDeliveryType() != null
-                        ? createShipmentDetail(saleRequest): null)
+                .shipmentDetails(!StringUtils.isEmpty(deliveryMethod) && !deliveryMethod.equals("IS") && saleRequest
+                        .getCommercialOperation().get(0).getWorkOrDeliveryType() != null ?
+                        createShipmentDetail(saleRequest): null)
                 .build();
-        //if (!StringUtils.isEmpty(cipCode)) altaRequest.setCip(cipCode);
 
         // Building Main Alta Request
         altaRequestProductOrder.setRequest(altaRequest);
@@ -2174,13 +2175,16 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         List<NewProductCapl> caplNewProductsList = new ArrayList<>();
         caplNewProductsList.add(newProductCapl1);
 
+        String deliveryMethod = this.getStringValueByKeyFromAdditionalDataList(saleRequest.getAdditionalData(),
+                "deliveryMethod");
         CaplRequest caplRequest = CaplRequest
                 .builder()
                 .newProducts(caplNewProductsList)
                 .sourceApp("FE")
                 .orderAttributes(caplOrderAttributes)
-                .shipmentDetails(saleRequest.getCommercialOperation().get(0).getWorkOrDeliveryType() != null
-                        ? createShipmentDetail(saleRequest): null)
+                .shipmentDetails(!StringUtils.isEmpty(deliveryMethod) && !deliveryMethod.equals("IS") && saleRequest
+                        .getCommercialOperation().get(0).getWorkOrDeliveryType() != null ?
+                        createShipmentDetail(saleRequest): null)
                 .build();
         //if (!StringUtils.isEmpty(cipCode)) caplRequest.setCip(cipCode);
 
@@ -2262,13 +2266,16 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         //List<FlexAttrType> caeqOrderAttributes = new ArrayList<>();
         this.addCaeqOderAttributes(caeqCaplOrderAttributes, saleRequest);
 
+        String deliveryMethod = this.getStringValueByKeyFromAdditionalDataList(saleRequest.getAdditionalData(),
+                "deliveryMethod");
         CaeqRequest caeqRequest = CaeqRequest
                 .builder()
                 .sourceApp("FE")
                 .newProducts(newProductCaeqList)
                 .orderAttributes(caeqCaplOrderAttributes.isEmpty() ? null : caeqCaplOrderAttributes)
-                .shipmentDetails(saleRequest.getCommercialOperation().get(0).getWorkOrDeliveryType() != null
-                        ? createShipmentDetail(saleRequest): null)
+                .shipmentDetails(!StringUtils.isEmpty(deliveryMethod) && !deliveryMethod.equals("IS") && saleRequest
+                        .getCommercialOperation().get(0).getWorkOrDeliveryType() != null ?
+                        createShipmentDetail(saleRequest): null)
                 .build();
         if (!StringUtils.isEmpty(cipCode)) {
             caeqRequest.setCip(cipCode);
@@ -2364,13 +2371,16 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         // Adding Caeq Order Attributes
         this.addCaeqOderAttributes(caeqCaplOrderAttributes, saleRequest);
 
+        String deliveryMethod = this.getStringValueByKeyFromAdditionalDataList(saleRequest.getAdditionalData(),
+                "deliveryMethod");
         CaeqCaplRequest caeqCaplRequest = CaeqCaplRequest
                 .builder()
                 .newProducts(caeqCaplNewProductList)
                 .sourceApp("FE")
                 .orderAttributes(caeqCaplOrderAttributes)
-                .shipmentDetails(saleRequest.getCommercialOperation().get(0).getWorkOrDeliveryType() != null
-                        ? createShipmentDetail(saleRequest): null)
+                .shipmentDetails(!StringUtils.isEmpty(deliveryMethod) && !deliveryMethod.equals("IS") && saleRequest
+                        .getCommercialOperation().get(0).getWorkOrDeliveryType() != null ?
+                        createShipmentDetail(saleRequest): null)
                 .build();
         //if (!StringUtils.isEmpty(cipCode)) caeqCaplRequest.setCip(cipCode);
 
