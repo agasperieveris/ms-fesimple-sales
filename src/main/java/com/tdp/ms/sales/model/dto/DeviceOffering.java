@@ -2,6 +2,8 @@ package com.tdp.ms.sales.model.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.List;
+
+import com.google.gson.annotations.SerializedName;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -29,6 +31,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class DeviceOffering {
+    @SerializedName("device_type")
     @JsonProperty("device_type")
     private String deviceType;
     private String id;
@@ -36,11 +39,14 @@ public class DeviceOffering {
     private String brand;
     private String model;
     private String gama;
+    @SerializedName("display_name")
     @JsonProperty("display_name")
     private String displayName;
     private String clasificacionComercial;
+    @SerializedName("costoPromedioSinIGVSoles")
     @JsonProperty("costoPromedioSinIGVSoles")
     private String costoPromedioSinIgvSoles;
+    @SerializedName("sim_specifications")
     @JsonProperty("sim_specifications")
     private List<SimSpecification> simSpecifications;
     private List<Offer> offers;

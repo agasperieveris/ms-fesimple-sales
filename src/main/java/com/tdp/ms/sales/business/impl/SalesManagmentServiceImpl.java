@@ -2205,7 +2205,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         shipmentDetailsType.setShipmentSiteId("NA");
         shipmentDetailsType.setRecipientEmail(saleRequest.getCommercialOperation().get(0).getWorkOrDeliveryType().getContact().getEmailAddress());
         // additional Datas
-        saleRequest.getAdditionalData().stream().forEach(item -> {
+        saleRequest.getAdditionalData().forEach(item -> {
             if (item.getKey().equalsIgnoreCase("shipmentInstructions")) {
                 shipmentDetailsType.setShipmentInstructions(item.getValue());
             } else if (item.getKey().equalsIgnoreCase("shipmentOption")) {
@@ -2253,9 +2253,13 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
 
         NewProductCaeq newProductCaeq1 = NewProductCaeq
                 .builder()
-                .productId(saleRequest.getCommercialOperation().get(0).getProduct().getId()) // Consultar porque hay 2 product ids
+                .productId(saleRequest.getCommercialOperation().get(0).getProduct().getId())
                 .productChanges(productChangeCaeq)
                 .build();
+        if (flgCasi) {
+            newProductCaeq1.setProductCatalogId(saleRequest.getCommercialOperation().get(0).getProductOfferings().get(0)
+                    .getProductOfferingProductSpecId());
+        }
         List<NewProductCaeq> newProductCaeqList = new ArrayList<>();
         newProductCaeqList.add(newProductCaeq1);
 
@@ -2263,8 +2267,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         List<FlexAttrType> caeqCaplOrderAttributes = this.commonOrderAttributes(saleRequest);
 
         // Order Attributes
-        //List<FlexAttrType> caeqOrderAttributes = new ArrayList<>();
-        this.addCaeqOderAttributes(caeqCaplOrderAttributes, saleRequest);
+        this.addCaeqOderAttributes(caeqCaplOrderAttributes, saleRequest, flgCasi);
 
         CaeqRequest caeqRequest = CaeqRequest
                 .builder()
@@ -2367,7 +2370,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         // Refactored Code from CAPL
         List<FlexAttrType> caeqCaplOrderAttributes = this.commonOrderAttributes(saleRequest);
         // Adding Caeq Order Attributes
-        this.addCaeqOderAttributes(caeqCaplOrderAttributes, saleRequest);
+        this.addCaeqOderAttributes(caeqCaplOrderAttributes, saleRequest, flgCasi);
 
         CaeqCaplRequest caeqCaplRequest = CaeqCaplRequest
                 .builder()
@@ -2440,7 +2443,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         return commonOrderAttributes;
     }
 
-    public void addCaeqOderAttributes(List<FlexAttrType> caeqOrderAttributes, Sale saleRequest) {
+    public void addCaeqOderAttributes(List<FlexAttrType> caeqOrderAttributes, Sale saleRequest, Boolean flgCasi) {
         // Adding CAEQ Attributes
         String documentTypeValue = "";
 
@@ -2482,6 +2485,81 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                     .build();
             caeqOrderAttributes.add(customerRucAttr);
         }
+
+        // FEAT-2026 FEMS-3878: Creación de orden para CAEQ/CASI/CAPL O caeq /casi- Flujo Retail
+        casiAndRetailOrderAttributes(caeqOrderAttributes, saleRequest, flgCasi);
+    }
+
+    private void casiAndRetailOrderAttributes(List<FlexAttrType> caeqOrderAttributes, Sale saleRequest,
+                                              Boolean flgCasi) {
+        Boolean isRetail = getRetailFlag(saleRequest);
+        if (flgCasi && isRetail) {
+            String deviceSkuValue = this.getStringValueByKeyFromAdditionalDataList(saleRequest.getAdditionalData(),
+                    "DEVICE_SKU");
+            String simSkuValue = this.getStringValueByKeyFromAdditionalDataList(saleRequest.getAdditionalData(),
+                    "SIM_SKU");
+            String cashierRegisterNumber = this.getStringValueByKeyFromAdditionalDataList(saleRequest
+                    .getAdditionalData(), "NUMERO_CAJA");
+
+            FlexAttrValueType deviceSkuAttrValue =  FlexAttrValueType
+                    .builder()
+                    .stringValue(deviceSkuValue)
+                    .valueType(Constants.STRING)
+                    .build();
+            FlexAttrType deviceSkuTypeAttr = FlexAttrType
+                    .builder()
+                    .attrName("DEVICE_SKU")
+                    .flexAttrValue(deviceSkuAttrValue)
+                    .build();
+            caeqOrderAttributes.add(deviceSkuTypeAttr);
+
+            FlexAttrValueType simSkuAttrValue =  FlexAttrValueType
+                    .builder()
+                    .stringValue(simSkuValue)
+                    .valueType(Constants.STRING)
+                    .build();
+            FlexAttrType simSkuTypeAttr = FlexAttrType
+                    .builder()
+                    .attrName("SIM_SKU")
+                    .flexAttrValue(simSkuAttrValue)
+                    .build();
+            caeqOrderAttributes.add(simSkuTypeAttr);
+
+            FlexAttrValueType cachierRegisterNumberAttrValue =  FlexAttrValueType
+                    .builder()
+                    .stringValue(cashierRegisterNumber)
+                    .valueType(Constants.STRING)
+                    .build();
+            FlexAttrType cashierRegisterNumberTypeAttr = FlexAttrType
+                    .builder()
+                    .attrName("CASHIER_REGISTER_NUMBER")
+                    .flexAttrValue(cachierRegisterNumberAttrValue)
+                    .build();
+            caeqOrderAttributes.add(cashierRegisterNumberTypeAttr);
+
+            // En la HU dice: Para el caso de CAEQ= true, casi= true y capl=true / caeq=true, casi=true y capl=false en
+            // canal Retail, enviar como valor IS para el OrderAttribute de DELIVERY_METHOD
+            FlexAttrValueType deliveryMethodAttrValue =  FlexAttrValueType
+                    .builder()
+                    .stringValue("IS")
+                    .valueType(Constants.STRING)
+                    .build();
+            FlexAttrType deliveryMethodTypeAttr = FlexAttrType
+                    .builder()
+                    .attrName("DELIVERY_METHOD")
+                    .flexAttrValue(deliveryMethodAttrValue)
+                    .build();
+            caeqOrderAttributes.add(deliveryMethodTypeAttr);
+        }
+    }
+
+    private Boolean getRetailFlag(Sale saleRequest) {
+        String flowSaleValue = saleRequest.getAdditionalData().stream()
+                .filter(keyValueType -> keyValueType.getKey().equalsIgnoreCase("flowSale"))
+                .findFirst()
+                .orElse(KeyValueType.builder().value("NotRetail").build())
+                .getValue();
+        return flowSaleValue.equalsIgnoreCase("Retail");
     }
 
     public List<ChangedContainedProduct> changedContainedCaeqList(Sale saleRequest, String tempNum,
@@ -2503,18 +2581,13 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                 .characteristicValue(saleRequest.getCommercialOperation().get(0).getDeviceOffering().stream()
                         .filter(item -> !item.getDeviceType().equalsIgnoreCase("SIM"))
                         .findFirst()
-                        .orElse(null)
+                        .orElse(DeviceOffering.builder().id(null).build())
                         .getId())
                 .build();
 
         // EquipmentIMEI Characteristic
         String deviceImei = "000000000000000";
-        String flowSaleValue = saleRequest.getAdditionalData().stream()
-                .filter(keyValueType -> keyValueType.getKey().equalsIgnoreCase("flowSale"))
-                .findFirst()
-                .orElse(KeyValueType.builder().value(null).build())
-                .getValue();
-        Boolean isRetail = flowSaleValue.equalsIgnoreCase("Retail");
+        Boolean isRetail = getRetailFlag(saleRequest);
         if (isRetail) {
             deviceImei = this.getStringValueByKeyFromAdditionalDataList(saleRequest.getAdditionalData(),
                                                                                                     "MOVILE_IMEI");
@@ -2582,8 +2655,8 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
             List<RelatedProductType> productRelationShipList = saleRequest.getCommercialOperation().get(0).getProduct().getProductRelationShip();
             // Buscar el productId para simcard
             String simcardProductId = productRelationShipList.stream()
-                    .filter(prs -> prs.getProduct().getName().equalsIgnoreCase("SimDevice")
-                            || prs.getProduct().getName().equalsIgnoreCase("Simcard"))
+                    .filter(prs -> prs.getProduct().getDescription().equalsIgnoreCase("SimDevice")
+                            || prs.getProduct().getDescription().equalsIgnoreCase("Simcard"))
                     .findFirst().orElse(RelatedProductType.builder()
                             .product(ProductRefInfoType.builder().id(null).build()).build())
                     .getProduct()
@@ -2591,8 +2664,8 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
 
             // Buscar el productId para device
             String deviceProductId = productRelationShipList.stream()
-                    .filter(prs -> !prs.getProduct().getName().equalsIgnoreCase("SimDevice")
-                            && !prs.getProduct().getName().equalsIgnoreCase("Simcard"))
+                    .filter(prs -> !prs.getProduct().getDescription().equalsIgnoreCase("SimDevice")
+                            && !prs.getProduct().getDescription().equalsIgnoreCase("Simcard"))
                     .findFirst().orElse(RelatedProductType.builder()
                             .product(ProductRefInfoType.builder().id(null).build()).build())
                     .getProduct()
