@@ -307,7 +307,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                     .build();
             FlexAttrType downPaymentAttr = FlexAttrType
                     .builder()
-                    .attrName("DELIVERY_METHOD")
+                    .attrName(Constants.DELIVERY_METHOD)
                     .flexAttrValue(downPaymentAttrValue)
                     .build();
             altaFijaOrderAttributesList.add(downPaymentAttr);
@@ -659,11 +659,11 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
 
         // Validation if is retail
         String flowSaleValue = saleRequest.getAdditionalData().stream()
-                .filter(keyValueType -> keyValueType.getKey().equalsIgnoreCase("flowSale"))
+                .filter(keyValueType -> keyValueType.getKey().equalsIgnoreCase(Constants.FLOWSALE))
                 .findFirst()
                 .orElse(KeyValueType.builder().value(null).build())
                 .getValue();
-        Boolean isRetail = flowSaleValue.equalsIgnoreCase("Retail");
+        Boolean isRetail = flowSaleValue.equalsIgnoreCase(Constants.RETAIL);
         Boolean statusValidado = saleRequest.getStatus().equalsIgnoreCase("VALIDADO");
         if (Boolean.TRUE.equals(isRetail) && statusValidado) {
             if (StringUtils.isEmpty(this.getStringValueByKeyFromAdditionalDataList(saleRequest.getAdditionalData(),
@@ -683,7 +683,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                                 + "with 'SIM_ICCID' key value."})
                         .build());
             } else if (StringUtils.isEmpty(this.getStringValueByKeyFromAdditionalDataList(saleRequest
-                            .getAdditionalData(),"NUMERO_CAJA"))) {
+                            .getAdditionalData(),Constants.NUMERO_CAJA))) {
                 return Mono.error(GenesisException
                         .builder()
                         .exceptionId(Constants.BAD_REQUEST_EXCEPTION_ID)
@@ -969,9 +969,9 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                                 .getProductOrderId())) {
                             saleRequest.setStatus("NUEVO");
                         } else {
-                            saleRequest.setStatus("PENDIENTE");
+                            saleRequest.setStatus(Constants.PENDIENTE);
                         }
-                        saleRequest.setAudioStatus("PENDIENTE");
+                        saleRequest.setAudioStatus(Constants.PENDIENTE);
 
                         // Ship Delivery logic (tambo) - SERGIO
                         if (saleRequest.getCommercialOperation().get(0).getWorkOrDeliveryType() != null
@@ -1150,9 +1150,9 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
             saleRequest.setStatus("NUEVO");
         } else {
             // When Create Product Order Service fail or doesnt respond with an Order Id
-            saleRequest.setStatus("PENDIENTE");
+            saleRequest.setStatus(Constants.PENDIENTE);
         }
-        saleRequest.setAudioStatus("PENDIENTE");
+        saleRequest.setAudioStatus(Constants.PENDIENTE);
 
         if (flgFinanciamiento[0]) {
             return quotationWebClient.createQuotation(createQuotationFijaRequest,
@@ -1397,19 +1397,19 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
     private Mono<Sale> creationOrderValidation(Sale saleRequest, CreateProductOrderGeneralRequest productOrderRequest,
                                          HashMap<String, String> headersMap) {
         KeyValueType keyValueType = saleRequest.getAdditionalData().stream()
-                .filter(item -> item.getKey().equalsIgnoreCase("flowSale"))
+                .filter(item -> item.getKey().equalsIgnoreCase(Constants.FLOWSALE))
                 .findFirst()
                 .orElse(null);
 
         String operationType =
                 saleRequest.getCommercialOperation().get(0).getReason().equals("ALTA") ? "Provide" : "Change";
 
-        if (keyValueType != null && keyValueType.getValue().equalsIgnoreCase("Retail")
+        if (keyValueType != null && keyValueType.getValue().equalsIgnoreCase(Constants.RETAIL)
                 && saleRequest.getStatus().equalsIgnoreCase(Constants.NEGOCIACION)) {
 
             DeviceOffering saleDeviceOffering = saleRequest.getCommercialOperation().get(0).getDeviceOffering().stream()
                     .filter(deviceOffering -> !deviceOffering.getDisplayName().equalsIgnoreCase("simcard")
-                            && !deviceOffering.getDisplayName().equalsIgnoreCase("simdevice"))
+                            && !deviceOffering.getDisplayName().equalsIgnoreCase(Constants.SIM_DEVICE))
                     .findFirst()
                     .orElseThrow(() -> buildGenesisError(Constants.BAD_REQUEST_EXCEPTION_ID,
                             "commercialOperation[].deviceOffering[].simSpecifications[0].sapid is missing."));
@@ -1822,7 +1822,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         final Boolean[] isBiometric = {true};
 
         additionalData.stream().forEach(kv -> {
-            if (kv.getKey().equalsIgnoreCase("flowSale")
+            if (kv.getKey().equalsIgnoreCase(Constants.FLOWSALE)
                     && kv.getValue().equalsIgnoreCase("Presencial")) {
                 isPresencial[0] = true;
             }
@@ -1974,11 +1974,11 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
 
         // ICCID Characteristic
         String flowSaleValue = saleRequest.getAdditionalData().stream()
-                .filter(keyValueType -> keyValueType.getKey().equalsIgnoreCase("flowSale"))
+                .filter(keyValueType -> keyValueType.getKey().equalsIgnoreCase(Constants.FLOWSALE))
                 .findFirst()
                 .orElse(KeyValueType.builder().value(null).build())
                 .getValue();
-        Boolean isRetail = flowSaleValue.equalsIgnoreCase("Retail");
+        Boolean isRetail = flowSaleValue.equalsIgnoreCase(Constants.RETAIL);
         if (Boolean.TRUE.equals(isRetail) && saleRequest.getStatus().equalsIgnoreCase("VALIDADO")) {
             String iccidSim = this.getStringValueByKeyFromAdditionalDataList(saleRequest.getAdditionalData(),
                     "SIM_ICCID");
@@ -2070,8 +2070,9 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                     .build();
 
             //  RETAIL CASHIER REGISTER NUMBER ATTRIBUTE
-            String cashierRegisterNumber = this.getStringValueByKeyFromAdditionalDataList(saleRequest
-                                                                            .getAdditionalData(),"NUMERO_CAJA");
+            String cashierRegisterNumber =
+                    this.getStringValueByKeyFromAdditionalDataList(saleRequest.getAdditionalData(),
+                            Constants.NUMERO_CAJA);
 
             FlexAttrValueType cashierRegisterAttrValue =  FlexAttrValueType
                     .builder()
@@ -2402,11 +2403,11 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
             }
         }
         String flowSaleValue = saleRequest.getAdditionalData().stream()
-                .filter(keyValueType -> keyValueType.getKey().equalsIgnoreCase("flowSale"))
+                .filter(keyValueType -> keyValueType.getKey().equalsIgnoreCase(Constants.FLOWSALE))
                 .findFirst()
                 .orElse(KeyValueType.builder().value(null).build())
                 .getValue();
-        Boolean isRetail = flowSaleValue.equalsIgnoreCase("Retail");
+        Boolean isRetail = flowSaleValue.equalsIgnoreCase(Constants.RETAIL);
         if (isRetail) {
             deliveryCode = "IS";
         }
@@ -2418,7 +2419,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                     .build();
             FlexAttrType deliveryAttr = FlexAttrType
                     .builder()
-                    .attrName("DELIVERY_METHOD")
+                    .attrName(Constants.DELIVERY_METHOD)
                     .flexAttrValue(deliveryAttrValue)
                     .build();
             commonOrderAttributes.add(deliveryAttr);
@@ -2499,7 +2500,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
             String simSkuValue = this.getStringValueByKeyFromAdditionalDataList(saleRequest.getAdditionalData(),
                     "SIM_SKU");
             String cashierRegisterNumber = this.getStringValueByKeyFromAdditionalDataList(saleRequest
-                    .getAdditionalData(), "NUMERO_CAJA");
+                    .getAdditionalData(), Constants.NUMERO_CAJA);
 
             FlexAttrValueType deviceSkuAttrValue =  FlexAttrValueType
                     .builder()
@@ -2546,7 +2547,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                     .build();
             FlexAttrType deliveryMethodTypeAttr = FlexAttrType
                     .builder()
-                    .attrName("DELIVERY_METHOD")
+                    .attrName(Constants.DELIVERY_METHOD)
                     .flexAttrValue(deliveryMethodAttrValue)
                     .build();
             caeqOrderAttributes.add(deliveryMethodTypeAttr);
@@ -2555,11 +2556,11 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
 
     private Boolean getRetailFlag(Sale saleRequest) {
         String flowSaleValue = saleRequest.getAdditionalData().stream()
-                .filter(keyValueType -> keyValueType.getKey().equalsIgnoreCase("flowSale"))
+                .filter(keyValueType -> keyValueType.getKey().equalsIgnoreCase(Constants.FLOWSALE))
                 .findFirst()
                 .orElse(KeyValueType.builder().value("NotRetail").build())
                 .getValue();
-        return flowSaleValue.equalsIgnoreCase("Retail");
+        return flowSaleValue.equalsIgnoreCase(Constants.RETAIL);
     }
 
     public List<ChangedContainedProduct> changedContainedCaeqList(Sale saleRequest, String tempNum,
@@ -2655,7 +2656,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
             List<RelatedProductType> productRelationShipList = saleRequest.getCommercialOperation().get(0).getProduct().getProductRelationShip();
             // Buscar el productId para simcard
             String simcardProductId = productRelationShipList.stream()
-                    .filter(prs -> prs.getProduct().getDescription().equalsIgnoreCase("SimDevice")
+                    .filter(prs -> prs.getProduct().getDescription().equalsIgnoreCase(Constants.SIM_DEVICE)
                             || prs.getProduct().getDescription().equalsIgnoreCase("Simcard"))
                     .findFirst().orElse(RelatedProductType.builder()
                             .product(ProductRefInfoType.builder().id(null).build()).build())
@@ -2664,7 +2665,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
 
             // Buscar el productId para device
             String deviceProductId = productRelationShipList.stream()
-                    .filter(prs -> !prs.getProduct().getDescription().equalsIgnoreCase("SimDevice")
+                    .filter(prs -> !prs.getProduct().getDescription().equalsIgnoreCase(Constants.SIM_DEVICE)
                             && !prs.getProduct().getDescription().equalsIgnoreCase("Simcard"))
                     .findFirst().orElse(RelatedProductType.builder()
                             .product(ProductRefInfoType.builder().id(null).build()).build())
@@ -2691,7 +2692,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                                                      List<RelatedProductType> productRelationShip) {
         // FEMS-3799 (CR)
         productRelationShip.stream()
-                .filter(item -> item.getProduct().getDescription().equalsIgnoreCase("SimDevice"))
+                .filter(item -> item.getProduct().getDescription().equalsIgnoreCase(Constants.SIM_DEVICE))
                 .findFirst()
                 .ifPresent(item -> item.getProduct().getProductRelationship().stream()
                         .filter(pr -> pr.getProduct().getDescription().equalsIgnoreCase("Device"))
