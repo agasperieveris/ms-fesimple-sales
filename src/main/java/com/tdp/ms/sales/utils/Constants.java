@@ -28,6 +28,7 @@ public class Constants {
     public static final String PRODUCT_TYPE_SHEQ = "ShEq";
     public static final String PRODUCT_TYPE_DEVICE = "device";
     public static final String NEGOCIACION = "NEGOCIACION";
+    public static final String VALIDADO = "VALIDADO";
     public static final String WIRELESS = "WIRELESS";
     public static final String DEVICE_SKU = "DEVICE_SKU";
     public static final String SIM_SKU = "SIM_SKU";

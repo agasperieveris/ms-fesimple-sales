@@ -2513,13 +2513,8 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
 
         // EquipmentIMEI Characteristic
         String deviceImei = "000000000000000";
-        String flowSaleValue = saleRequest.getAdditionalData().stream()
-                .filter(keyValueType -> keyValueType.getKey().equalsIgnoreCase("flowSale"))
-                .findFirst()
-                .orElse(KeyValueType.builder().value(null).build())
-                .getValue();
-        Boolean isRetail = flowSaleValue.equalsIgnoreCase("Retail");
-        if (isRetail) {
+        Boolean isRetail = getRetailFlag(saleRequest);
+        if (isRetail && saleRequest.getStatus().equalsIgnoreCase(Constants.VALIDADO)) {
             deviceImei = this.getStringValueByKeyFromAdditionalDataList(saleRequest.getAdditionalData(),
                                                                                                     "MOVILE_IMEI");
         }
