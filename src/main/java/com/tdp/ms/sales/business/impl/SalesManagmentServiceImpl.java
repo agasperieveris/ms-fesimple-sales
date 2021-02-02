@@ -2599,7 +2599,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         // EquipmentIMEI Characteristic
         String deviceImei = "000000000000000";
         Boolean isRetail = getRetailFlag(saleRequest);
-        if (isRetail) {
+        if (isRetail && saleRequest.getStatus().equalsIgnoreCase(Constants.VALIDADO)) {
             deviceImei = this.getStringValueByKeyFromAdditionalDataList(saleRequest.getAdditionalData(),
                                                                                                     "MOVILE_IMEI");
         }
