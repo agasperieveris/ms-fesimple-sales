@@ -2458,6 +2458,15 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         }
     }
 
+    private Boolean getRetailFlag(Sale saleRequest) {
+        String flowSaleValue = saleRequest.getAdditionalData().stream()
+                .filter(keyValueType -> keyValueType.getKey().equalsIgnoreCase(Constants.FLOWSALE))
+                .findFirst()
+                .orElse(KeyValueType.builder().value("NotRetail").build())
+                .getValue();
+        return flowSaleValue.equalsIgnoreCase(Constants.RETAIL);
+    }
+
     public List<ChangedContainedProduct> changedContainedCaeqList(Sale saleRequest, String tempNum) {
         String acquisitionType = "";
         acquisitionType = getAcquisitionTypeValue(saleRequest);
