@@ -1,6 +1,7 @@
 package com.tdp.ms.sales.model.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.gson.annotations.SerializedName;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -34,8 +35,10 @@ public class RelatedParty {
     private String fullName;
     private String firstName;
     private String lastName;
+    @SerializedName("nationalID")
     @JsonProperty("nationalID")
     private String nationalId;
+    @SerializedName("nationalIDType")
     @JsonProperty("nationalIDType")
     private String nationalIdType;
     private String customerId;
