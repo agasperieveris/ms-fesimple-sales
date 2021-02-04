@@ -2600,23 +2600,23 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                         .getId())
                 .build();
 
+        List<ChangedCharacteristic> changedCharacteristicList = new ArrayList<>();
+
         // EquipmentIMEI Characteristic
-        String deviceImei = "000000000000000";
         Boolean isRetail = getRetailFlag(saleRequest);
         if (isRetail && saleRequest.getStatus().equalsIgnoreCase(Constants.VALIDADO)) {
-            deviceImei = this.getStringValueByKeyFromAdditionalDataList(saleRequest.getAdditionalData(),
+            String deviceImei = this.getStringValueByKeyFromAdditionalDataList(saleRequest.getAdditionalData(),
                                                                                                     "MOVILE_IMEI");
+            ChangedCharacteristic changedCharacteristic3 = ChangedCharacteristic
+                    .builder()
+                    .characteristicId("9871")
+                    .characteristicValue(deviceImei)
+                    .build();
+            changedCharacteristicList.add(changedCharacteristic3);
         }
-        ChangedCharacteristic changedCharacteristic3 = ChangedCharacteristic
-                .builder()
-                .characteristicId("9871")
-                .characteristicValue(deviceImei)
-                .build();
 
-        List<ChangedCharacteristic> changedCharacteristicList = new ArrayList<>();
         changedCharacteristicList.add(changedCharacteristic1);
         changedCharacteristicList.add(changedCharacteristic2);
-        changedCharacteristicList.add(changedCharacteristic3);
 
         // SIMGROUP Characteristic (Conditional)
         if (saleRequest.getCommercialOperation().get(0).getDeviceOffering().size() == 1) {
