@@ -2208,9 +2208,14 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         shipmentDetailsType.setShippingLocality(saleRequest.getCommercialOperation().get(0).getWorkOrDeliveryType().getPlace().get(0).getAddress().getStateOrProvince());
         shipmentDetailsType.setShipmentAddressId(saleRequest.getCommercialOperation().get(0).getWorkOrDeliveryType().getPlace().get(0).getId());
         shipmentDetailsType.setShipmentSiteId("NA");
-        shipmentDetailsType.setRecipientEmail(saleRequest.getCommercialOperation().get(0).getWorkOrDeliveryType().getContact().getEmailAddress());
+        saleRequest.getProspectContact().stream()
+                .filter(item -> item.getMediumType().equalsIgnoreCase("email address"))
+                .findFirst()
+                .ifPresent(contactMedium -> {
+                    shipmentDetailsType.setRecipientEmail(contactMedium.getCharacteristic().getEmailAddress());
+                });
         // additional Datas
-        saleRequest.getAdditionalData().forEach(item -> {
+        saleRequest.getCommercialOperation().get(0).getWorkOrDeliveryType().getAdditionalData().forEach(item -> {
             if (item.getKey().equalsIgnoreCase("shipmentInstructions")) {
                 shipmentDetailsType.setShipmentInstructions(item.getValue());
             } else if (item.getKey().equalsIgnoreCase("shipmentOption")) {
@@ -2219,8 +2224,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         });
 
         CollectionUtils.emptyIfNull(saleRequest.getCommercialOperation().get(0).getWorkOrDeliveryType()
-                .getAdditionalData())
-                .stream().forEach(item -> {
+                .getAdditionalData()).forEach(item -> {
             if (item.getKey().equalsIgnoreCase(SHOP_ADDRESS)) {
                 shipmentDetailsType.setShopAddress(item.getValue());
             } else if (item.getKey().equalsIgnoreCase("shopName")) {
