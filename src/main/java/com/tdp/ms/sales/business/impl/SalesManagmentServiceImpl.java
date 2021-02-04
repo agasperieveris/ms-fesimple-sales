@@ -2480,28 +2480,23 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                         .getId())
                 .build();
 
-        // EquipmentIMEI Characteristic
-        String deviceImei = "000000000000000";
-        String flowSaleValue = saleRequest.getAdditionalData().stream()
-                .filter(keyValueType -> keyValueType.getKey().equalsIgnoreCase("flowSale"))
-                .findFirst()
-                .orElse(KeyValueType.builder().value(null).build())
-                .getValue();
-        Boolean isRetail = flowSaleValue.equalsIgnoreCase("Retail");
-        if (isRetail) {
-            deviceImei = this.getStringValueByKeyFromAdditionalDataList(saleRequest.getAdditionalData(),
-                                                                                                    "MOVILE_IMEI");
-        }
-        ChangedCharacteristic changedCharacteristic3 = ChangedCharacteristic
-                .builder()
-                .characteristicId("9871")
-                .characteristicValue(deviceImei)
-                .build();
-
         List<ChangedCharacteristic> changedCharacteristicList = new ArrayList<>();
+
+        // EquipmentIMEI Characteristic
+        Boolean isRetail = getRetailFlag(saleRequest);
+        if (isRetail && saleRequest.getStatus().equalsIgnoreCase(Constants.VALIDADO)) {
+            String deviceImei = this.getStringValueByKeyFromAdditionalDataList(saleRequest.getAdditionalData(),
+                                                                                                    "MOVILE_IMEI");
+            ChangedCharacteristic changedCharacteristic3 = ChangedCharacteristic
+                    .builder()
+                    .characteristicId("9871")
+                    .characteristicValue(deviceImei)
+                    .build();
+            changedCharacteristicList.add(changedCharacteristic3);
+        }
+
         changedCharacteristicList.add(changedCharacteristic1);
         changedCharacteristicList.add(changedCharacteristic2);
-        changedCharacteristicList.add(changedCharacteristic3);
 
         // SIMGROUP Characteristic (Conditional)
         if (saleRequest.getCommercialOperation().get(0).getDeviceOffering().size() == 1) {
