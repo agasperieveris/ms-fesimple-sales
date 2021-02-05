@@ -13,6 +13,7 @@ import com.tdp.ms.sales.model.dto.*;
 import com.tdp.ms.sales.model.dto.businessparameter.BusinessParameterDataSeq;
 import com.tdp.ms.sales.model.dto.businessparameter.BusinessParameterFinanciamientoFijaData;
 import com.tdp.ms.sales.model.dto.businessparameter.BusinessParameterFinanciamientoFijaExt;
+import com.tdp.ms.sales.model.dto.businessparameter.BusinessParameterReasonCodeData;
 import com.tdp.ms.sales.model.dto.productorder.CreateProductOrderGeneralRequest;
 import com.tdp.ms.sales.model.dto.productorder.FlexAttrType;
 import com.tdp.ms.sales.model.dto.productorder.caeq.ChangedContainedProduct;
@@ -78,6 +79,8 @@ public class SalesManagmentServiceTest {
     private static final String RH_UNICA_PID = "d4ce144c-6b26-4b5c-ad29-090a3a559d83";
     private static final String RH_UNICA_USER = "BackendUser";
 
+    private static BusinessParametersReasonCode businessParametersReasonCode;
+
     @BeforeAll
     static void setup() {
 
@@ -93,6 +96,16 @@ public class SalesManagmentServiceTest {
                 .builder()
                 .sale(sale)
                 .headersMap(headersMap)
+                .build();
+
+        businessParametersReasonCode = BusinessParametersReasonCode.builder()
+                .data(Arrays.asList(BusinessParameterReasonCodeData.builder()
+                        .ext(Arrays.asList(ReasonCodeExt.builder()
+                                .casi(false)
+                                .caeq(false)
+                                .capl(false)
+                                .build()))
+                        .build()))
                 .build();
     }
 
@@ -200,6 +213,9 @@ public class SalesManagmentServiceTest {
         Mockito.when(businessParameterWebClient.getParametersFinanciamientoFija(any()))
                 .thenReturn(Mono.just(bpFijaResponse));
 
+        Mockito.when(businessParameterWebClient.getParametersReasonCode(any()))
+                .thenReturn(Mono.just(businessParametersReasonCode));
+
         ProductorderResponse productorderResponse = new ProductorderResponse();
         CreateProductOrderResponseType createProductOrderResponseType =  new CreateProductOrderResponseType();
         productorderResponse.setCreateProductOrderResponse(createProductOrderResponseType);
@@ -234,7 +250,7 @@ public class SalesManagmentServiceTest {
         /* validationsAndBuildings method */
         Method method2 = SalesManagmentServiceImpl.class.getDeclaredMethod("validationsAndBuildings",
                 BusinessParametersResponse.class, List.class, BusinessParametersResponseObjectExt.class,
-                BusinessParametersResponseObjectExt.class , Sale.class, PostSalesRequest.class, String[].class, String.class,
+                BusinessParametersResponseObjectExt.class, BusinessParametersReasonCode.class, Sale.class, PostSalesRequest.class, String[].class, String.class,
                 Boolean[].class, Boolean[].class, Boolean[].class, Boolean[].class, Boolean[].class, String.class, String.class, String.class);
         method2.setAccessible(true);
 
@@ -250,12 +266,12 @@ public class SalesManagmentServiceTest {
                 .get(0).getProductOfferings().get(0).getId();
         final Boolean[] flag = {true};
         method2.invoke(salesManagmentServiceImpl, getRiskDomainTrue, Arrays.asList(BusinessParameterExt.builder().build()),
-                getBonificacionSim, getParametersSimCard, salesRequest.getSale(), salesRequest, sapidSimcard, commercialOperationReason,
+                getBonificacionSim, getParametersSimCard, businessParametersReasonCode, salesRequest.getSale(), salesRequest, sapidSimcard, commercialOperationReason,
                 flag, flag, flag, flag, flag, channelIdRequest, customerIdRequest, productOfferingIdRequest);
         Sale sale1 = CommonsMocks.createSaleMock();
         salesRequest.setSale(sale1);
         method2.invoke(salesManagmentServiceImpl, getRiskDomain, Arrays.asList(BusinessParameterExt.builder().build()),
-                getBonificacionSim, getParametersSimCard, salesRequest.getSale(), salesRequest, sapidSimcard, commercialOperationReason,
+                getBonificacionSim, getParametersSimCard, businessParametersReasonCode, salesRequest.getSale(), salesRequest, sapidSimcard, commercialOperationReason,
                 flag, flag, flag, flag, flag, channelIdRequest, customerIdRequest, productOfferingIdRequest);
     }
 
@@ -356,6 +372,9 @@ public class SalesManagmentServiceTest {
 
         Mockito.when(businessParameterWebClient.getParametersFinanciamientoFija(any()))
                 .thenReturn(Mono.just(bpFijaResponse));
+
+        Mockito.when(businessParameterWebClient.getParametersReasonCode(any()))
+                .thenReturn(Mono.just(businessParametersReasonCode));
 
         ProductorderResponse productorderResponse = new ProductorderResponse();
         CreateProductOrderResponseType createProductOrderResponseType =  new CreateProductOrderResponseType();
@@ -590,8 +609,9 @@ public class SalesManagmentServiceTest {
         CreateProductOrderGeneralRequest mainCaeqRequestProductOrder = new CreateProductOrderGeneralRequest();
         sale.getCommercialOperation().get(0).setReason("CAEQ");
         CreateProductOrderGeneralRequest result = salesManagmentServiceImpl
-                .caeqCommercialOperation(sale, mainCaeqRequestProductOrder,
-                        "CEC", "CS920", "OF201", "JSG423DE6H");
+                .caeqCommercialOperation(sale, mainCaeqRequestProductOrder, false,
+                        "CEC", "CS920", "OF201", "JSG423DE6H",
+                        "string", businessParametersReasonCode);
 
     }
 
@@ -601,9 +621,9 @@ public class SalesManagmentServiceTest {
         sale.getCommercialOperation().get(0).setReason("CAEQ");
 
         CreateProductOrderGeneralRequest result = salesManagmentServiceImpl
-                .caeqCaplCommercialOperation(sale, mainCaeqCaplRequestProductOrder,
-                        "CC", "CS158", "OF486", "K3BD9EN349");
-
+                .caeqCaplCommercialOperation(sale, mainCaeqCaplRequestProductOrder, false,
+                        "CC", "CS158", "OF486", "K3BD9EN349",
+                        "string", businessParametersReasonCode);
     }
 
     @Test
@@ -619,11 +639,11 @@ public class SalesManagmentServiceTest {
         List<ChangedContainedProduct> changedContainedProducts = new ArrayList<>();
         sale.getCommercialOperation().get(0).setReason("CAEQ");
 
-        salesManagmentServiceImpl.changedContainedCaeqList(sale, "temp1");
+        salesManagmentServiceImpl.changedContainedCaeqList(sale, "temp1", "string", false);
 
         // deviceOfferings con solo un objeto
         sale.getCommercialOperation().get(0).setDeviceOffering(Collections.singletonList(sale.getCommercialOperation().get(0).getDeviceOffering().get(0)));
-        salesManagmentServiceImpl.changedContainedCaeqList(sale, "temp1");
+        salesManagmentServiceImpl.changedContainedCaeqList(sale, "temp1", "string", false);
     }
 
     @Test
@@ -883,6 +903,9 @@ public class SalesManagmentServiceTest {
 
         Mockito.when(businessParameterWebClient.getParametersFinanciamientoFija(any()))
                 .thenReturn(Mono.just(bpFijaResponse));
+
+        Mockito.when(businessParameterWebClient.getParametersReasonCode(any()))
+                .thenReturn(Mono.just(businessParametersReasonCode));
 
         ProductorderResponse productorderResponse = new ProductorderResponse();
         CreateProductOrderResponseType createProductOrderResponseType =  new CreateProductOrderResponseType();
