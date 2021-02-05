@@ -60,6 +60,7 @@ application:
       get_bonificacion_simcard: https://localhost
       get_parameters_simcard: https://localhost
       get_parameters_financiamiento_fija: https://localhost
+      get_parameters_reason_code: https://localhost
     product_order:
       create_product_order_url: https://localhost
     receptor:
