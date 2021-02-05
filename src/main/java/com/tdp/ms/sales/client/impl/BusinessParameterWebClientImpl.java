@@ -4,10 +4,8 @@ import com.tdp.genesis.core.constants.HttpHeadersKey;
 import com.tdp.genesis.core.exception.GenesisException;
 import com.tdp.ms.sales.client.BusinessParameterWebClient;
 import com.tdp.ms.sales.model.request.GetSalesCharacteristicsRequest;
-import com.tdp.ms.sales.model.response.BusinessParametersFinanciamientoFijaResponse;
-import com.tdp.ms.sales.model.response.BusinessParametersResponse;
-import com.tdp.ms.sales.model.response.BusinessParametersResponseObjectExt;
-import com.tdp.ms.sales.model.response.GetSalesCharacteristicsResponse;
+import com.tdp.ms.sales.model.response.*;
+
 import java.util.HashMap;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -54,6 +52,9 @@ public class BusinessParameterWebClientImpl implements BusinessParameterWebClien
 
     @Value("${application.endpoints.business_parameters.get_parameters_financiamiento_fija}")
     private String getParameterFinanciamientoFijaUrl;
+
+    @Value("${application.endpoints.business_parameters.get_parameters_reason_code}")
+    private String getParameterReasonCode;
 
     @Override
     public Mono<GetSalesCharacteristicsResponse> getSalesCharacteristicsByCommercialOperationType(
@@ -148,4 +149,18 @@ public class BusinessParameterWebClientImpl implements BusinessParameterWebClien
                 .bodyToMono(BusinessParametersFinanciamientoFijaResponse.class);
     }
 
+    @Override
+    public Mono<BusinessParametersReasonCode> getParametersReasonCode(HashMap<String, String> headersMap) {
+        return webClientInsecure
+                .get()
+                .uri(getParameterReasonCode)
+                .header(HttpHeadersKey.UNICA_APPLICATION, headersMap.get(HttpHeadersKey.UNICA_APPLICATION))
+                .header(HttpHeadersKey.UNICA_PID, headersMap.get(HttpHeadersKey.UNICA_PID))
+                .header(HttpHeadersKey.UNICA_SERVICE_ID, headersMap.get(HttpHeadersKey.UNICA_SERVICE_ID))
+                .header(HttpHeadersKey.UNICA_USER, headersMap.get(HttpHeadersKey.UNICA_USER))
+                .accept(MediaType.APPLICATION_JSON)
+                .retrieve()
+                // TODO: Configuración del WebClient para los headers
+                .bodyToMono(BusinessParametersReasonCode.class);
+    }
 }
