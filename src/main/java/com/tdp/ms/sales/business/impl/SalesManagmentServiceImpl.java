@@ -2,6 +2,7 @@ package com.tdp.ms.sales.business.impl;
 
 import com.tdp.genesis.core.exception.GenesisException;
 import com.tdp.ms.commons.util.DateUtils;
+import com.tdp.ms.commons.util.MapperUtils;
 import com.tdp.ms.sales.business.SalesManagmentService;
 import com.tdp.ms.sales.client.BusinessParameterWebClient;
 import com.tdp.ms.sales.client.GetSkuWebClient;
@@ -65,14 +66,7 @@ import com.tdp.ms.sales.model.request.GetSalesCharacteristicsRequest;
 import com.tdp.ms.sales.model.request.PostSalesRequest;
 import com.tdp.ms.sales.model.request.ReceptorRequest;
 import com.tdp.ms.sales.model.request.ReserveStockRequest;
-import com.tdp.ms.sales.model.response.BusinessParametersFinanciamientoFijaResponse;
-import com.tdp.ms.sales.model.response.BusinessParametersResponse;
-import com.tdp.ms.sales.model.response.BusinessParametersResponseObjectExt;
-import com.tdp.ms.sales.model.response.CreateQuotationResponse;
-import com.tdp.ms.sales.model.response.GetSalesCharacteristicsResponse;
-import com.tdp.ms.sales.model.response.GetSkuResponse;
-import com.tdp.ms.sales.model.response.ProductorderResponse;
-import com.tdp.ms.sales.model.response.ReserveStockResponse;
+import com.tdp.ms.sales.model.response.*;
 import com.tdp.ms.sales.repository.SalesRepository;
 import com.tdp.ms.sales.utils.Commons;
 import com.tdp.ms.sales.utils.Constants;
@@ -836,11 +830,15 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                 Mono<BusinessParametersResponseObjectExt> getParametersSimCard = businessParameterWebClient
                         .getParametersSimcard(request.getHeadersMap());
 
-                return Mono.zip(getRiskDomain, salesCharsByCot, getBonificacionSim, getParametersSimCard)
+                Mono<BusinessParametersReasonCode> getParametersReasonCode = businessParameterWebClient
+                        .getParametersReasonCode(request.getHeadersMap());
+
+                // TODO: Añadir llamada a get businessParameters - ReasonCode
+                return Mono.zip(getRiskDomain, salesCharsByCot, getBonificacionSim, getParametersSimCard, getParametersReasonCode)
                         .flatMap(tuple -> validationsAndBuildings(tuple.getT1(), tuple.getT2(), tuple.getT3(),
-                                tuple.getT4(), saleRequest, request, sapidSimcard, commercialOperationReason, flgCapl,
-                                flgCaeq, flgCasi, flgAlta, flgFinanciamiento, channelIdRequest, customerIdRequest,
-                                productOfferingIdRequest));
+                                tuple.getT4(), tuple.getT5(), saleRequest, request, sapidSimcard,
+                                commercialOperationReason, flgCapl, flgCaeq, flgCasi, flgAlta, flgFinanciamiento,
+                                channelIdRequest, customerIdRequest, productOfferingIdRequest));
 
             } else {
                 return salesRepository.save(saleRequest)
@@ -877,6 +875,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                                                List<BusinessParameterExt> salesCharsByCot,
                                                BusinessParametersResponseObjectExt getBonificacionSim,
                                                BusinessParametersResponseObjectExt getParametersSimCard,
+                                               BusinessParametersReasonCode getParameterReasonCode,
                                                Sale saleRequest,
                                                PostSalesRequest request, final String[] sapidSimcard,
                                                String commercialOperationReason, final Boolean[] flgCapl,
@@ -924,20 +923,22 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
             mainRequestProductOrder = this.caplCommercialOperation(saleRequest, mainRequestProductOrder,
                     channelIdRequest, customerIdRequest, productOfferingIdRequest, cipCode);
 
-        } else if (!flgCapl[0] && flgCaeq[0] && !flgCasi[0] && !flgAlta[0]) { // Recognizing CAEQ Commercial Operation Type
+        } else if (!flgCapl[0] && flgCaeq[0] && !flgAlta[0]) { // Recognizing CAEQ Commercial Operation Type
 
-            mainRequestProductOrder = this.caeqCommercialOperation(saleRequest, mainRequestProductOrder,
-                    channelIdRequest, customerIdRequest, productOfferingIdRequest, cipCode);
+            mainRequestProductOrder = this.caeqCommercialOperation(saleRequest, mainRequestProductOrder, flgCasi[0],
+                    channelIdRequest, customerIdRequest, productOfferingIdRequest, cipCode, sapidSimcard[0],
+                    getParameterReasonCode);
 
-        } else if (flgCapl[0] && flgCaeq[0] && !flgCasi[0] && !flgAlta[0]) { // Recognizing CAEQ+CAPL Commercial Operation Type
+        } else if (flgCapl[0] && flgCaeq[0] && !flgAlta[0]) { // Recognizing CAEQ+CAPL Commercial Operation Type
 
-            mainRequestProductOrder = this.caeqCaplCommercialOperation(saleRequest, mainRequestProductOrder,
-                    channelIdRequest, customerIdRequest, productOfferingIdRequest, cipCode);
+            mainRequestProductOrder = this.caeqCaplCommercialOperation(saleRequest, mainRequestProductOrder, flgCasi[0],
+                    channelIdRequest, customerIdRequest, productOfferingIdRequest, cipCode, sapidSimcard[0],
+                    getParameterReasonCode);
         } else if (!flgCapl[0] && !flgCaeq[0] && !flgCasi[0] && flgAlta[0] || isMobilePortability) {
 
             mainRequestProductOrder = this.altaCommercialOperation(saleRequest, mainRequestProductOrder,
                     channelIdRequest, customerIdRequest, productOfferingIdRequest, cipCode, getBonificacionSim,
-                    sapidSimcard[0], isMobilePortability);
+                    sapidSimcard[0], isMobilePortability, flgCasi[0]);
         }
 
         // FEMS-1514 Validación de creación Orden
@@ -1873,10 +1874,10 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
     }
 
     private CreateProductOrderGeneralRequest altaCommercialOperation(Sale saleRequest,
-                                    CreateProductOrderGeneralRequest mainRequestProductOrder, String channelIdRequest,
-                                    String customerIdRequest, String productOfferingIdRequest, String cipCode,
-                                    BusinessParametersResponseObjectExt bonificacionSimcardResponse,
-                                    String sapidSimcardBp, Boolean isMobilePortability) {
+                                 CreateProductOrderGeneralRequest mainRequestProductOrder, String channelIdRequest,
+                                 String customerIdRequest, String productOfferingIdRequest, String cipCode,
+                                 BusinessParametersResponseObjectExt bonificacionSimcardResponse, String sapidSimcardBp,
+                                 Boolean isMobilePortability, Boolean flagCasi) {
 
         // Building request for ALTA CommercialTypeOperation
         ProductOrderAltaMobileRequest altaRequestProductOrder = new ProductOrderAltaMobileRequest();
@@ -1930,7 +1931,8 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
 
         if (altaCombo) {
             // ChangeContainedProduct Equipment
-            altaChangedContainedProductList = this.changedContainedCaeqList(saleRequest, "temp2");
+            altaChangedContainedProductList = this.changedContainedCaeqList(saleRequest, "temp2",
+                    sapidSimcardBp, flagCasi);
             //altaChangedContainedProductList.get(0).setProductId(""); // Doesnt sent it in Alta
         }
 
@@ -2214,12 +2216,16 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
     }
 
     public CreateProductOrderGeneralRequest caeqCommercialOperation(Sale saleRequest,
-                                    CreateProductOrderGeneralRequest mainRequestProductOrder, String channelIdRequest,
-                                    String customerIdRequest, String productOfferingIdRequest, String cipCode) {
+                                    CreateProductOrderGeneralRequest mainRequestProductOrder, Boolean flgCasi,
+                                    String channelIdRequest, String customerIdRequest, String productOfferingIdRequest,
+                                    String cipCode, String sapidSimcardBp,
+                                    BusinessParametersReasonCode getParameterReasonCode) {
         // Building request for CAEQ CommercialTypeOperation
 
         // Refactored Code from CAEQ
-        List<ChangedContainedProduct> changedContainedProductList = this.changedContainedCaeqList(saleRequest, Constants.TEMP1);
+        List<ChangedContainedProduct> changedContainedProductList = this.changedContainedCaeqList(saleRequest,
+                Constants.TEMP1, sapidSimcardBp, flgCasi);
+
 
         ProductChangeCaeq productChangeCaeq = ProductChangeCaeq
                 .builder()
@@ -2260,6 +2266,13 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         caeqProductOrderRequest.setOnlyValidationIndicator(Constants.STRING_FALSE);
         caeqProductOrderRequest.setActionType("CW");
         caeqProductOrderRequest.setRequest(caeqRequest);
+        getParameterReasonCode.getData().get(0).getExt().stream()
+                .filter(reasonCodeExt -> !reasonCodeExt.getCapl() && reasonCodeExt.getCaeq()
+                        && reasonCodeExt.getCasi().booleanValue() == flgCasi)
+                .findFirst()
+                .ifPresent(reasonCodeExt -> {
+                    caeqProductOrderRequest.setReasonCode(reasonCodeExt.getReasonId());
+                });
 
         // Setting capl request into main request to send to create product order service
         mainRequestProductOrder.setCreateProductOrderRequest(caeqProductOrderRequest);
@@ -2268,8 +2281,10 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
     }
 
     public CreateProductOrderGeneralRequest caeqCaplCommercialOperation(Sale saleRequest,
-                                    CreateProductOrderGeneralRequest mainRequestProductOrder, String channelIdRequest,
-                                    String customerIdRequest, String productOfferingIdRequest, String cipCode) {
+                                    CreateProductOrderGeneralRequest mainRequestProductOrder, Boolean flgCasi,
+                                    String channelIdRequest, String customerIdRequest, String productOfferingIdRequest,
+                                    String cipCode, String sapidSimcardBp,
+                                    BusinessParametersReasonCode getParameterReasonCode) {
         // Building request for CAEQ+CAPL CommercialTypeOperation
 
         Boolean flgOnlyCapl = true;
@@ -2287,6 +2302,13 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         caeqCaplRequestProductOrder.getCustomer().setCustomerId(customerIdRequest);
         caeqCaplRequestProductOrder.setProductOfferingId(productOfferingIdRequest);
         caeqCaplRequestProductOrder.setOnlyValidationIndicator(Constants.STRING_FALSE);
+        getParameterReasonCode.getData().get(0).getExt().stream()
+                .filter(reasonCodeExt -> reasonCodeExt.getCapl() && reasonCodeExt.getCaeq()
+                        && reasonCodeExt.getCasi().booleanValue() == flgCasi)
+                .findFirst()
+                .ifPresent(reasonCodeExt -> {
+                    caeqCaplRequestProductOrder.setReasonCode(reasonCodeExt.getReasonId());
+                });
 
         RemovedAssignedBillingOffers caeqCaplBoRemoved1 = new RemovedAssignedBillingOffers();
         List<RemovedAssignedBillingOffers> caeqCaplBoRemovedList = new ArrayList<>();
@@ -2330,7 +2352,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
 
         // Refactored Code from CAEQ
         List<ChangedContainedProduct> changedContainedProductList = this.changedContainedCaeqList(saleRequest,
-                                                                                                    Constants.TEMP1);
+                Constants.TEMP1, sapidSimcardBp, flgCasi);
 
         caeqCaplProductChanges.setChangedContainedProducts(changedContainedProductList);
         newProductCaeqCapl1.setProductChanges(caeqCaplProductChanges);
@@ -2467,7 +2489,8 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         return flowSaleValue.equalsIgnoreCase(Constants.RETAIL);
     }
 
-    public List<ChangedContainedProduct> changedContainedCaeqList(Sale saleRequest, String tempNum) {
+    public List<ChangedContainedProduct> changedContainedCaeqList(Sale saleRequest, String tempNum,
+                                                                  String sapidSimcardBp, Boolean flgCasi) {
         String acquisitionType = "";
         acquisitionType = getAcquisitionTypeValue(saleRequest);
 
