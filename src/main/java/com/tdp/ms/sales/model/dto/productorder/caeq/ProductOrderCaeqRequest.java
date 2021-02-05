@@ -36,4 +36,5 @@ public class ProductOrderCaeqRequest {
     private String productOfferingId;
     private String onlyValidationIndicator;
     private String actionType;
+    private String reasonCode;
 }
