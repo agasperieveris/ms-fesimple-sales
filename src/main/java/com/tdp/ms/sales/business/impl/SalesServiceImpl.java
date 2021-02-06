@@ -12,16 +12,18 @@ import com.tdp.ms.sales.model.request.GetSalesRequest;
 import com.tdp.ms.sales.model.request.ReceptorRequest;
 import com.tdp.ms.sales.model.response.BusinessParametersResponse;
 import com.tdp.ms.sales.repository.SalesRepository;
+import com.tdp.ms.sales.utils.Commons;
+import com.tdp.ms.sales.utils.Constants;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.UUID;
-
-import com.tdp.ms.sales.utils.Constants;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -227,7 +229,14 @@ public class SalesServiceImpl implements SalesService {
         if (status != null && !status.isEmpty() && item.getStatus() == null) {
             return false;
         } else if (status != null && !status.isEmpty() && item.getStatus() != null) {
-            return item.getStatus().equalsIgnoreCase(status);
+            List<String> statusList =  Arrays.asList(status.split(","));
+            final Boolean[] isStatusMatched = {false};
+            statusList.stream().forEach(stat -> {
+                if (stat.equalsIgnoreCase(item.getStatus())) {
+                    isStatusMatched[0] = true;
+                }
+            });
+            return isStatusMatched[0];
         } else {
             return true;
         }
