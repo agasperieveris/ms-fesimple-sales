@@ -1,15 +1,11 @@
-package com.tdp.ms.sales.model.dto.productorder.caeqcapl;
+package com.tdp.ms.sales.model.dto.productorder.migracionfija;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.gson.annotations.SerializedName;
 import com.tdp.ms.sales.model.dto.productorder.Customer;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 /**
- * Class: ProductOrderCaeqCaplRequest. <br/>
+ * Class: ProductOrderMigracionFijaRequest. <br/>
  * <b>Copyright</b>: &copy; 2020 Telef&oacute;nica del Per&uacute;<br/>
  * <b>Company</b>: Telef&oacute;nica del Per&uacute;<br/>
  *
@@ -17,26 +13,26 @@ import lombok.NoArgsConstructor;
  *         <u>Service Provider</u>: Everis Per&uacute; SAC (EVE) <br/>
  *         <u>Developed by</u>: <br/>
  *         <ul>
- *         <li>Cesar Gomez</li>
+ *         <li>Sergio Rivas</li>
  *         </ul>
  *         <u>Changes</u>:<br/>
  *         <ul>
- *         <li>2020-09-29 Creaci&oacute;n del proyecto.</li>
+ *         <li>2020-12-21 Creaci&oacute;n del proyecto.</li>
  *         </ul>
  * @version 1.0
  */
-@Data
+
 @Builder
-@AllArgsConstructor
+@Getter
+@Setter
 @NoArgsConstructor
-public class ProductOrderCaeqCaplRequest {
+@AllArgsConstructor
+public class ProductOrderMigracionFijaRequest {
     private String salesChannel;
-    private CaeqCaplRequest request;
+    private MigracionFijaRequest request;
     private Customer customer = new Customer();
-    @SerializedName("productOfferingID")
     @JsonProperty("productOfferingID")
     private String productOfferingId;
     private String onlyValidationIndicator;
     private String actionType;
-    private String reasonCode;
 }

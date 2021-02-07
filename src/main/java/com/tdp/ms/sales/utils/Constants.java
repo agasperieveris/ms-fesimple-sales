@@ -20,14 +20,26 @@ package com.tdp.ms.sales.utils;
 public class Constants {
     public static final String EMAIL = "email";
     public static final String STRING = "STRING";
+    public static final String FLOWSALE = "flowSale";
+    public static final String RETAIL = "Retail";
+    public static final String NUMERO_CAJA = "NUMERO_CAJA";
     public static final String BAD_REQUEST_EXCEPTION_ID = "SVC1000";
     public static final String PRODUCT_TYPE_CABLE_TV = "cableTv";
+    public static final String PRODUCT_TYPE_CHANNEL_TV = "channelTv";
     public static final String PRODUCT_TYPE_BROADBAND = "broadband";
     public static final String PRODUCT_TYPE_LANDLINE = "landline";
+    public static final String PRODUCT_TYPE_SHEQ = "ShEq";
+    public static final String PRODUCT_TYPE_DEVICE = "device";
+    public static final String PENDIENTE = "PENDIENTE";
     public static final String NEGOCIACION = "NEGOCIACION";
+    public static final String VALIDADO = "VALIDADO";
     public static final String WIRELESS = "WIRELESS";
     public static final String DEVICE_SKU = "DEVICE_SKU";
     public static final String SIM_SKU = "SIM_SKU";
+    public static final String SIM_DEVICE = "SimDevice";
+    public static final String DELIVERY_METHOD = "DELIVERY_METHOD";
     public static final String TEMP1 = "temp1";
     public static final String UFX_AUTHORIZATION = "ufxauthorization";
+    public static final String STRING_FALSE = "false";
+    public static final String STRING_DATE_TIME_FORMATTER = "dd/MM/yyyy'T'HH:mm:ss";
 }

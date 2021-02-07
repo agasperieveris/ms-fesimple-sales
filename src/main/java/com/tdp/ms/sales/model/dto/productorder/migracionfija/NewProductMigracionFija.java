@@ -1,15 +1,16 @@
-package com.tdp.ms.sales.model.dto.productorder.caeqcapl;
+package com.tdp.ms.sales.model.dto.productorder.migracionfija;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.gson.annotations.SerializedName;
+import com.tdp.ms.sales.model.dto.productorder.altafija.ProductChangeAltaFija;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 /**
- * Class: NewProductCaeqCapl. <br/>
+ * Class: NewProductMigracionFija. <br/>
  * <b>Copyright</b>: &copy; 2020 Telef&oacute;nica del Per&uacute;<br/>
  * <b>Company</b>: Telef&oacute;nica del Per&uacute;<br/>
  *
@@ -17,24 +18,23 @@ import lombok.NoArgsConstructor;
  *         <u>Service Provider</u>: Everis Per&uacute; SAC (EVE) <br/>
  *         <u>Developed by</u>: <br/>
  *         <ul>
- *         <li>Cesar Gomez</li>
+ *         <li>Sergio Rivas</li>
  *         </ul>
  *         <u>Changes</u>:<br/>
  *         <ul>
- *         <li>2020-09-24 Creaci&oacute;n del proyecto.</li>
+ *         <li>2020-12-15 Creaci&oacute;n del proyecto.</li>
  *         </ul>
  * @version 1.0
  */
-@Data
 @Builder
-@AllArgsConstructor
+@Getter
+@Setter
 @NoArgsConstructor
-@JsonInclude(JsonInclude.Include.NON_NULL)
-public class NewProductCaeqCapl {
-    @JsonInclude(JsonInclude.Include.NON_NULL)
+@AllArgsConstructor
+public class NewProductMigracionFija {
     private String productCatalogId;
-    @SerializedName("productID")
     @JsonProperty("productID")
     private String productId;
-    private ProductChangeCaeqCapl productChanges;
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private ProductChangeAltaFija productChanges;
 }

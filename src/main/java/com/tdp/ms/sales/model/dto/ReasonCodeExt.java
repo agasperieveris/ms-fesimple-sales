@@ -1,4 +1,4 @@
-package com.tdp.ms.sales.model.dto.productorder.capl;
+package com.tdp.ms.sales.model.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -6,7 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * Class: RemovedAssignedBillingOffers. <br/>
+ * Class: BusinessParameterDataObjectExt. <br/>
  * <b>Copyright</b>: &copy; 2020 Telef&oacute;nica del Per&uacute;<br/>
  * <b>Company</b>: Telef&oacute;nica del Per&uacute;<br/>
  *
@@ -14,13 +14,11 @@ import lombok.NoArgsConstructor;
  *         <u>Service Provider</u>: Everis Per&uacute; SAC (EVE) <br/>
  *         <u>Developed by</u>: <br/>
  *         <ul>
- *         <li>Cesar Gomez</li>
  *         <li>Sergio Rivas</li>
  *         </ul>
  *         <u>Changes</u>:<br/>
  *         <ul>
- *         <li>2020-09-24 Creaci&oacute;n del proyecto.</li>
- *         <li>2020-12-23 FEMS-3612 CR: Cambio de campo productSpecPricingID a billingOfferId.</li>
+ *         <li>2021-02-05 Creaci&oacute;n de la clase.</li>
  *         </ul>
  * @version 1.0
  */
@@ -28,6 +26,12 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class RemovedAssignedBillingOffers {
-    private String billingOfferId;
+public class ReasonCodeExt {
+    private Long numId;
+    private String reasonId;
+    private String reason;
+    private String productType;
+    private Boolean capl;
+    private Boolean caeq;
+    private Boolean casi;
 }
