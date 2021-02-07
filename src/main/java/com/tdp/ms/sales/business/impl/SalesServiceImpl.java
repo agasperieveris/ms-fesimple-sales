@@ -12,13 +12,17 @@ import com.tdp.ms.sales.model.request.GetSalesRequest;
 import com.tdp.ms.sales.model.request.ReceptorRequest;
 import com.tdp.ms.sales.model.response.BusinessParametersResponse;
 import com.tdp.ms.sales.repository.SalesRepository;
+import com.tdp.ms.sales.utils.Commons;
+import com.tdp.ms.sales.utils.Constants;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -93,7 +97,7 @@ public class SalesServiceImpl implements SalesService {
             // asignar fecha de creación
             ZoneId zone = ZoneId.of("America/Lima");
             ZonedDateTime date = ZonedDateTime.now(zone);
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy'T'HH:mm:ss");
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern(Constants.STRING_DATE_TIME_FORMATTER);
             request.setSaleCreationDate(date.format(formatter));
 
             return salesRepository.save(request);
@@ -225,7 +229,14 @@ public class SalesServiceImpl implements SalesService {
         if (status != null && !status.isEmpty() && item.getStatus() == null) {
             return false;
         } else if (status != null && !status.isEmpty() && item.getStatus() != null) {
-            return item.getStatus().equalsIgnoreCase(status);
+            List<String> statusList =  Arrays.asList(status.split(","));
+            final Boolean[] isStatusMatched = {false};
+            statusList.stream().forEach(stat -> {
+                if (stat.equalsIgnoreCase(item.getStatus())) {
+                    isStatusMatched[0] = true;
+                }
+            });
+            return isStatusMatched[0];
         } else {
             return true;
         }
@@ -271,9 +282,10 @@ public class SalesServiceImpl implements SalesService {
                 && item.getSaleCreationDate() != null && !item.getSaleCreationDate().isEmpty()) {
 
             try {
-                Date startDate = new SimpleDateFormat("dd/MM/yyyy'T'HH:mm:ss").parse(startDateTime);
-                Date endDate = new SimpleDateFormat("dd/MM/yyyy'T'HH:mm:ss").parse(endDateTime);
-                Date requestDate = new SimpleDateFormat("dd/MM/yyyy'T'HH:mm:ss").parse(item.getSaleCreationDate());
+                Date startDate = new SimpleDateFormat(Constants.STRING_DATE_TIME_FORMATTER).parse(startDateTime);
+                Date endDate = new SimpleDateFormat(Constants.STRING_DATE_TIME_FORMATTER).parse(endDateTime);
+                Date requestDate = new SimpleDateFormat(Constants.STRING_DATE_TIME_FORMATTER)
+                        .parse(item.getSaleCreationDate());
                 return requestDate.after(startDate) && requestDate.before(endDate);
             } catch (ParseException e) {
                 return false;

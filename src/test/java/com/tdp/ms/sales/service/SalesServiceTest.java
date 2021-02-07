@@ -335,6 +335,7 @@ public class SalesServiceTest {
 
     @Test
     void getSaleListTest(){
+        Mockito.when(salesRepository.findByStatusNot("NEGOCIACION")).thenReturn(Flux.just(sale));
         Mockito.when(salesRepository.findAll()).thenReturn(Flux.just(sale));
 
         Flux<Sale> result = salesService.getSaleList("1","bc12",

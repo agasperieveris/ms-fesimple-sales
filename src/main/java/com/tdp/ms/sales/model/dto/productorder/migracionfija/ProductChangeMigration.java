@@ -1,14 +1,13 @@
-package com.tdp.ms.sales.model.dto;
+package com.tdp.ms.sales.model.dto.productorder.migracionfija;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
-
-import java.util.List;
+import lombok.Setter;
 
 /**
- * Class: ProductSpecCharacteristicType. <br/>
+ * Class: MigrationComponent. <br/>
  * <b>Copyright</b>: &copy; 2019 Telef&oacute;nica del Per&uacute;<br/>
  * <b>Company</b>: Telef&oacute;nica del Per&uacute;<br/>
  *
@@ -16,7 +15,7 @@ import java.util.List;
  *         <u>Service Provider</u>: Everis Per&uacute; SAC (EVE) <br/>
  *         <u>Developed by</u>: <br/>
  *         <ul>
- *         <li>Developer name</li>
+ *         <li>Sergio Rivas</li>
  *         </ul>
  *         <u>Changes</u>:<br/>
  *         <ul>
@@ -24,15 +23,12 @@ import java.util.List;
  *         </ul>
  * @version 1.0
  */
+
 @AllArgsConstructor
 @NoArgsConstructor
-@Data
+@Getter
+@Setter
 @Builder
-public class ProductSpecCharacteristicType {
-    private String id;
-    private String name;
-    private String description;
-    private TimePeriodType validFor;
-    private List<Object> productSpecCharacteristicValue;
-    private Object objectCharacteristicValue;
+public class ProductChangeMigration {
+    private ChangedContainedProductMigration changedContainedProducts;
 }

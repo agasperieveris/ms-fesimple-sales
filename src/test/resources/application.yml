@@ -33,7 +33,11 @@ azure:
   cosmosdb:
     uri: https://cosmosdbconvergentedev.documents.azure.com:443/
     key: Dqormfg8aZmhUQ9UHAfOkD6BZkxF2t3smniH9Sxjfi0R1xP8eBU9pFN9mbz86lLIAUKDjbZ6rxjRPwGNoygaYA==
+    secondaryKey: Dqormfg8aZmhUQ9UHAfOkD6BZkxF2t3smniH9Sxjfi0R1xP8eBU9pFN9mbz86lLIAUKDjbZ6rxjRPwGNoygaYA==
     database: dbconvergentedev
+    maxPool: 1000
+    timeout: 60000
+    idleConnection: 120000
 
 application:
   swagger:
@@ -56,6 +60,7 @@ application:
       get_bonificacion_simcard: https://localhost
       get_parameters_simcard: https://localhost
       get_parameters_financiamiento_fija: https://localhost
+      get_parameters_reason_code: https://localhost
     product_order:
       create_product_order_url: https://localhost
     receptor:
