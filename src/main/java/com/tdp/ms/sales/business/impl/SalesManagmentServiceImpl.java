@@ -953,7 +953,8 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         Mono<Sale> saleRequestValidation = creationOrderValidation(saleRequest, mainRequestProductOrder,
                 request.getHeadersMap());
 
-        if (isRetail && saleRequest.getStatus().equalsIgnoreCase("NEGOCIACION")) {
+        if (isRetail && saleRequest.getStatus().equalsIgnoreCase(Constants.NEGOCIACION)
+                && !saleRequest.getCommercialOperation().get(0).getReason().equalsIgnoreCase("CAPL")) {
             return saleRequestValidation.flatMap(salesRepository::save);
         } else {
             CreateProductOrderGeneralRequest finalMainRequestProdOrder = mainRequestProductOrder;
