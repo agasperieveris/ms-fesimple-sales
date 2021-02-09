@@ -29,5 +29,5 @@ import lombok.NoArgsConstructor;
 @Data
 @Builder
 public class WorkforceTeamTimeSlotType {
-    private List<WorkforceTeamAvailabilityType> workForceTeams;
+    private List<WorkforceTeamAvailabilityType> workforceTeams;
 }

@@ -1,8 +1,8 @@
 package com.tdp.ms.sales.business.impl;
 
+import com.google.gson.Gson;
 import com.tdp.genesis.core.exception.GenesisException;
 import com.tdp.ms.commons.util.DateUtils;
-import com.tdp.ms.commons.util.MapperUtils;
 import com.tdp.ms.sales.business.SalesManagmentService;
 import com.tdp.ms.sales.client.BusinessParameterWebClient;
 import com.tdp.ms.sales.client.GetSkuWebClient;
@@ -310,17 +310,19 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
 
     private void buildServiceAvailabilityAltaFija(Sale saleRequest,
                                                   List<ServiceabilityOfferType> serviceabilityOffersList) {
-        saleRequest.getCommercialOperation().get(0).getServiceAvailability().getOffers().stream()
-                .forEach(availabilityOffer -> {
-                    String serviceAbilityType = availabilityOffer.getServices().get(0).getType();
+        Number offerPriority = saleRequest.getCommercialOperation().get(0).getServiceAvailability()
+                                                                        .getOffers().get(0).getPriority();
+        saleRequest.getCommercialOperation().get(0).getServiceAvailability().getOffers().get(0).getServices().stream()
+                .forEach(serviceOffer -> {
+                    String serviceAbilityType = serviceOffer.getType();
 
-                    if (serviceAbilityType.equalsIgnoreCase("VOICE")) {
+                    if (serviceAbilityType.equalsIgnoreCase("landline")) {
 
                         // Serviceability Landline
                         CharacteristicOfferType describeByLandline1 =  CharacteristicOfferType
                                 .builder()
                                 .characteristicName("ALLOCATION_ID")
-                                .characteristicValue(availabilityOffer.getServices().get(0).getAllocationId())
+                                .characteristicValue(serviceOffer.getAllocationId())
                                 .build();
 
                         List<CharacteristicOfferType> describeByLandlineList = new ArrayList<>();
@@ -328,7 +330,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
 
                         ProductLineType productOfferLandline1 = ProductLineType
                                 .builder()
-                                .type(serviceAbilityType)
+                                .type("VOICE")
                                 .description("Servicio de Voz")
                                 .networkTechnology(this.getStringValueByKeyFromAdditionalDataList(saleRequest
                                         .getCommercialOperation().get(0).getServiceAvailability()
@@ -343,12 +345,12 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
 
                         ServiceabilityOfferType serviceabilityOfferLandline = ServiceabilityOfferType
                                 .builder()
-                                .idOfferPriority(availabilityOffer.getPriority().toString())
+                                .idOfferPriority(offerPriority)
                                 .productOffer(productOfferLandlineList)
                                 .build();
                         serviceabilityOffersList.add(serviceabilityOfferLandline);
 
-                    } else if (serviceAbilityType.equalsIgnoreCase("BB")) {
+                    } else if (serviceAbilityType.equalsIgnoreCase("broadband")) {
 
                         // Serviceability Broadband
                         CharacteristicOfferType describeByBroadband1 =  CharacteristicOfferType
@@ -364,7 +366,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
 
                         ProductLineType productOfferBroadband1 = ProductLineType
                                 .builder()
-                                .type(serviceAbilityType)
+                                .type("BB")
                                 .description("Servicio de banda ancha")
                                 .networkTechnology(this.getStringValueByKeyFromAdditionalDataList(saleRequest
                                         .getCommercialOperation().get(0).getServiceAvailability()
@@ -379,17 +381,17 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
 
                         ServiceabilityOfferType serviceabilityOfferBroadband = ServiceabilityOfferType
                                 .builder()
-                                .idOfferPriority(availabilityOffer.getPriority().toString())
+                                .idOfferPriority(offerPriority)
                                 .productOffer(productOfferBroadbandList)
                                 .build();
                         serviceabilityOffersList.add(serviceabilityOfferBroadband);
 
-                    } else if (serviceAbilityType.equalsIgnoreCase("TV")) {
+                    } else if (serviceAbilityType.equalsIgnoreCase("tv")) {
 
                         // Serviceability CableTv
                         ProductLineType productOfferCableTv1 = ProductLineType
                                 .builder()
-                                .type(serviceAbilityType)
+                                .type("TV")
                                 .description("Servicio de Television")
                                 .networkTechnology(this.getStringValueByKeyFromAdditionalDataList(saleRequest
                                         .getCommercialOperation().get(0).getServiceAvailability()
@@ -403,7 +405,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
 
                         ServiceabilityOfferType serviceabilityOfferCableTv = ServiceabilityOfferType
                                 .builder()
-                                .idOfferPriority(availabilityOffer.getPriority().toString())
+                                .idOfferPriority(offerPriority)
                                 .productOffer(productOfferCableTvList)
                                 .build();
                         serviceabilityOffersList.add(serviceabilityOfferCableTv);
@@ -976,6 +978,8 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
 
                         // Ship Delivery logic (tambo) - SERGIO
                         if (saleRequest.getCommercialOperation().get(0).getWorkOrDeliveryType() != null
+                                && !StringUtils.isEmpty(saleRequest.getCommercialOperation().get(0)
+                                .getWorkOrDeliveryType().getMediumDelivery())
                                 && saleRequest.getCommercialOperation().get(0).getWorkOrDeliveryType()
                                 .getMediumDelivery().equalsIgnoreCase("Tienda")) {
                             saleRequest.setAdditionalData(additionalDataAssigments(saleRequest
@@ -1073,6 +1077,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
 
         // Building ServiceAvailability
         ServiceabilityInfoType serviceabilityInfo = buildServiceabilityInfoType(request);
+        LOG.info("serviceabilityInfo: " + new Gson().toJson(serviceabilityInfo));
 
         // Order Attributes Alta Fija
         List<FlexAttrType> altaFijaOrderAttributesList = new ArrayList<>();
@@ -1084,8 +1089,8 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         altaFijaRequest.setAppointmentId(saleRequest.getCommercialOperation().get(0).getWorkOrDeliveryType() != null
                 && saleRequest.getCommercialOperation().get(0).getWorkOrDeliveryType().getWorkOrder() != null
                 && saleRequest.getCommercialOperation().get(0).getWorkOrDeliveryType().getWorkOrder()
-                .getWorkForceTeams() != null
-                ? saleRequest.getCommercialOperation().get(0).getWorkOrDeliveryType().getWorkOrder().getWorkForceTeams()
+                .getWorkforceTeams() != null
+                ? saleRequest.getCommercialOperation().get(0).getWorkOrDeliveryType().getWorkOrder().getWorkforceTeams()
                 .get(0).getId() : null);
         altaFijaRequest.setAppointmentNumber(saleRequest.getSalesId());
         altaFijaRequest.setServiceabilityInfo(serviceabilityInfo);
@@ -1097,12 +1102,18 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         altaFijaRequest.setUpfrontIndicator(saleRequest.getCommercialOperation().get(0)
                 .getProductOfferings().get(0).getUpFront().getIndicator());
 
+        com.tdp.ms.sales.model.dto.productorder.Customer altaFijaCustomer =
+                com.tdp.ms.sales.model.dto.productorder.Customer
+                        .builder()
+                        .customerId(saleRequest.getRelatedParty().get(0).getCustomerId())
+                        .build();
+
         // Alta Fija Customize Request
         ProductOrderAltaFijaRequest productOrderAltaFijaRequest = ProductOrderAltaFijaRequest
                 .builder()
                 .salesChannel(saleRequest.getChannel().getId())
                 .request(altaFijaRequest)
-                .customerId(saleRequest.getRelatedParty().get(0).getCustomerId())
+                .customer(altaFijaCustomer)
                 .productOfferingId(saleRequest.getCommercialOperation().get(0)
                         .getProductOfferings().get(0).getId())
                 .onlyValidationIndicator(Constants.STRING_FALSE)
@@ -2911,7 +2922,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         migracionFijaRequest.setAppointmentId(request.getSale().getCommercialOperation().get(0)
                 .getWorkOrDeliveryType() != null
                 ? request.getSale().getCommercialOperation().get(0).getWorkOrDeliveryType().getWorkOrder()
-                .getWorkForceTeams().get(0).getId() : null);
+                .getWorkforceTeams().get(0).getId() : null);
         migracionFijaRequest.setAppointmentNumber(request.getSale().getSalesId());
         migracionFijaRequest.setServiceabilityInfo(serviceabilityInfo);
         migracionFijaRequest.setSourceApp(request.getSale().getSalesId());

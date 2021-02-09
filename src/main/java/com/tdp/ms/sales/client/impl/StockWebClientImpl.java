@@ -11,6 +11,8 @@ import com.tdp.ms.sales.model.response.ReserveStockResponse;
 import com.tdp.ms.sales.repository.SalesRepository;
 import java.util.HashMap;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
@@ -47,11 +49,12 @@ public class StockWebClientImpl implements StockWebClient {
     @Value("${application.endpoints.stock.reserve_stock_url}")
     private String reserveStockUrl;
 
+    private static final Logger LOG = LoggerFactory.getLogger(StockWebClientImpl.class);
+
     @Override
     public Mono<ReserveStockResponse> reserveStock(ReserveStockRequest request, HashMap<String, String> headersMap,
                                                    Sale sale) {
-        System.out.println("->reserveStock");
-        System.out.println(new Gson().toJson(request));
+        LOG.info("Reserve Stock Request: ".concat(new Gson().toJson(request)));
         return webClientInsecure
                 .post()
                 .uri(reserveStockUrl)
@@ -62,8 +65,8 @@ public class StockWebClientImpl implements StockWebClient {
                 .bodyValue(request)
                 .accept(MediaType.APPLICATION_JSON)
                 .retrieve()
-                .bodyToMono(ReserveStockResponse.class)
-                .onErrorResume(throwable -> throwExceptionReserveStock(sale));
+                .bodyToMono(ReserveStockResponse.class);
+                //.onErrorResume(throwable -> throwExceptionReserveStock(sale));
     }
 
     // TODO: Definir al método throwExceptionReserveStock como privado, por tema de los test con Mockito no funcionaba
