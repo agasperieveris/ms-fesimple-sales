@@ -588,7 +588,7 @@ public class CommonsMocks {
                 .scheduleDelivery("SLA")
                 .mediumDelivery("DELIVERY")
                 .workOrder(WorkforceTeamTimeSlotType.builder()
-                        .workForceTeams(Arrays.asList(WorkforceTeamAvailabilityType.builder()
+                        .workforceTeams(Arrays.asList(WorkforceTeamAvailabilityType.builder()
                                 .id("string").build()))
                         .build())
                 .contact(mediumCharacteristic).place(places).additionalData(additionalDatas).build();

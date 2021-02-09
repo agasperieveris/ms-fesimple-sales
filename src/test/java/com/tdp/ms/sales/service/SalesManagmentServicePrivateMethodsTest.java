@@ -412,7 +412,7 @@ public class SalesManagmentServicePrivateMethodsTest {
 
         CreateProductOrderGeneralRequest createProductOrderGeneralRequest = CreateProductOrderGeneralRequest
                 .builder().createProductOrderRequest(ProductOrderAltaFijaRequest.builder()
-                        .actionType("string").customerId("string").onlyValidationIndicator("false")
+                        .actionType("string").customer(new Customer("123456")).onlyValidationIndicator("false")
                         .productOfferingId("string").salesChannel("string").request(new AltaFijaRequest()).build()).build();
 
         Sale saleRequest = Sale.builder()

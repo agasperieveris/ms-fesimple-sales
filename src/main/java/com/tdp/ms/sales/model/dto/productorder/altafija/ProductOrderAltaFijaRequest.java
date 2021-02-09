@@ -1,6 +1,7 @@
 package com.tdp.ms.sales.model.dto.productorder.altafija;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.tdp.ms.sales.model.dto.productorder.Customer;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -32,7 +33,7 @@ import lombok.Setter;
 public class ProductOrderAltaFijaRequest {
     private String salesChannel;
     private AltaFijaRequest request;
-    private String customerId;
+    private Customer customer;
     @JsonProperty("productOfferingID")
     private String productOfferingId;
     private String onlyValidationIndicator;

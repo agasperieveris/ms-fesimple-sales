@@ -13,6 +13,8 @@ import com.tdp.ms.sales.repository.SalesRepository;
 import com.tdp.ms.sales.utils.Constants;
 import java.util.HashMap;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -51,11 +53,12 @@ public class ProductOrderWebClientImpl implements ProductOrderWebClient {
     @Value("${application.endpoints.product_order.create_product_order_url}")
     private String createProductOrderUrl;
 
+    private static final Logger LOG = LoggerFactory.getLogger(ProductOrderWebClientImpl.class);
+
     @Override
     public Mono<ProductorderResponse> createProductOrder(CreateProductOrderGeneralRequest request,
                                                          HashMap<String,String> headersMap, Sale sale) {
-        System.out.println("-> createProductOrder");
-        System.out.println(new Gson().toJson(request));
+        LOG.info("Create Order Request: ".concat(new Gson().toJson(request)));
         return webClientInsecure
                 .post()
                 .uri(createProductOrderUrl)
