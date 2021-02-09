@@ -30,6 +30,7 @@ import com.tdp.ms.sales.model.request.CreateQuotationRequest;
 import com.tdp.ms.sales.model.request.PostSalesRequest;
 import com.tdp.ms.sales.model.response.*;
 import com.tdp.ms.sales.utils.CommonsMocks;
+import com.tdp.ms.sales.utils.Constants;
 import com.tdp.ms.sales.utils.ConstantsTest;
 import org.junit.Assert;
 import org.junit.jupiter.api.BeforeAll;
@@ -671,4 +672,77 @@ public class SalesManagmentServicePrivateMethodsTest {
                 new ArrayList<ChangedContainedProduct>(), true);
     }
 
+    @Test
+    void assignBillingOffersTest() throws NoSuchMethodException, InvocationTargetException,
+            IllegalAccessException {
+        Method method = SalesManagmentServiceImpl.class.getDeclaredMethod("assignBillingOffers",
+                List.class, List.class, List.class, List.class);
+
+        method.setAccessible(true);
+
+        List<NewAssignedBillingOffers> newAssignedBillingOffersCableTvList =  new ArrayList<>();
+        List<NewAssignedBillingOffers> newAssignedBillingOffersBroadbandList =  new ArrayList<>();
+        List<NewAssignedBillingOffers> newAssignedBillingOffersLandlineList =  new ArrayList<>();
+
+
+        ComposingProductType composingProductType1 = new ComposingProductType();
+        composingProductType1.setProductType("sva");
+        List<ComposingProductType> productSpecificationList = new ArrayList<>();
+        productSpecificationList.add(composingProductType1);
+
+
+        List<KeyValueType> additionalDataList1 = new ArrayList<>();
+        additionalDataList1.add(KeyValueType.builder().key("productType").value("cableTv").build());
+        additionalDataList1.add(KeyValueType.builder().key("parentProductCatalogID").value("123456").build());
+
+        List<KeyValueType> additionalDataList2 = new ArrayList<>();
+        additionalDataList2.add(KeyValueType.builder().key("productType").value("broadband").build());
+        additionalDataList1.add(KeyValueType.builder().key("parentProductCatalogID").value("123456").build());
+
+        List<KeyValueType> additionalDataList3 = new ArrayList<>();
+        additionalDataList3.add(KeyValueType.builder().key("productType").value("landline").build());
+        additionalDataList1.add(KeyValueType.builder().key("parentProductCatalogID").value("123456").build());
+
+        OfferingType offeringType1 = new OfferingType();
+        offeringType1.setProductSpecification(productSpecificationList);
+        offeringType1.setId("1");
+        offeringType1.setAdditionalData(additionalDataList1);
+
+        OfferingType offeringType2 = new OfferingType();
+        offeringType2.setProductSpecification(productSpecificationList);
+        offeringType2.setId("2");
+        offeringType2.setAdditionalData(additionalDataList2);
+
+        OfferingType offeringType3 = new OfferingType();
+        offeringType3.setProductSpecification(productSpecificationList);
+        offeringType3.setId("3");
+        offeringType3.setAdditionalData(additionalDataList3);
+
+        List<OfferingType> productOfferingsList = new ArrayList<>();
+        productOfferingsList.add(offeringType1);
+        productOfferingsList.add(offeringType2);
+        productOfferingsList.add(offeringType3);
+
+        method.invoke(salesManagmentServiceImpl, productOfferingsList, newAssignedBillingOffersCableTvList,
+                newAssignedBillingOffersBroadbandList, newAssignedBillingOffersLandlineList);
+    }
+
+    @Test
+    void casiAndRetailOrderAttributesTest() throws NoSuchMethodException, InvocationTargetException,
+            IllegalAccessException {
+        Method method = SalesManagmentServiceImpl.class.getDeclaredMethod("casiAndRetailOrderAttributes",
+                List.class, Sale.class, Boolean.class);
+
+        method.setAccessible(true);
+
+        List<FlexAttrType> caeqOrderAttributesList = new ArrayList<>();
+        Sale sale = CommonsMocks.createSaleMock();
+        sale.getAdditionalData().add(KeyValueType.builder().key("DEVICE_SKU").value("123456").build());
+        sale.getAdditionalData().add(KeyValueType.builder().key("SIM_SKU").value("123456").build());
+        sale.getAdditionalData().add(KeyValueType.builder().key("NUMERO_CAJA").value("123456").build());
+        sale.getAdditionalData().remove(3);
+        sale.getAdditionalData().add(KeyValueType.builder().key(Constants.FLOWSALE).value(Constants.RETAIL).build());
+
+        method.invoke(salesManagmentServiceImpl, caeqOrderAttributesList, sale, true);
+    }
 }
