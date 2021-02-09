@@ -1,6 +1,7 @@
 package com.tdp.ms.sales.model.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.gson.annotations.SerializedName;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -31,6 +32,7 @@ import lombok.NoArgsConstructor;
 public class SiteRefType {
     private String id;
     private String href;
+    @SerializedName("@referredType")
     @JsonProperty("@referredType")
     private String referredType;
     private String name;

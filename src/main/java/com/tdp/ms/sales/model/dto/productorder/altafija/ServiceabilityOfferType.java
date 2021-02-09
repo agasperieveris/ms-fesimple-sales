@@ -28,6 +28,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ServiceabilityOfferType {
-    private String idOfferPriority;
+    private Number idOfferPriority;
     private List<ProductLineType> productOffer;
 }
