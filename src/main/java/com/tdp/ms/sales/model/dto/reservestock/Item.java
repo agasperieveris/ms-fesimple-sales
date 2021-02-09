@@ -1,6 +1,7 @@
 package com.tdp.ms.sales.model.dto.reservestock;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.gson.annotations.SerializedName;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -32,6 +33,7 @@ public class Item {
     private String type;
     private String name;
     private String condition;
+    @SerializedName("SKU")
     @JsonProperty("SKU")
     private String sku;
 }
