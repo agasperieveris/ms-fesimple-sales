@@ -38,6 +38,8 @@ public class Constants {
     public static final String VALIDADO = "VALIDADO";
     public static final String WIRELESS = "WIRELESS";
     public static final String DEVICE_SKU = "DEVICE_SKU";
+    public static final String DEVICE_TYPE_SIM = "SIM";
+    public static final String DEVICE_TYPE_SMARTPHONE = "Smartphone";
     public static final String SIM_SKU = "SIM_SKU";
     public static final String SIM_DEVICE = "SimDevice";
     public static final String DELIVERY_METHOD = "DELIVERY_METHOD";
