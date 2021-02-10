@@ -928,6 +928,8 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         // Getting CIP Code
         String cipCode = "";
         if (saleRequest.getCommercialOperation().get(0).getWorkOrDeliveryType() != null
+                && !StringUtils.isEmpty(saleRequest.getCommercialOperation().get(0).getWorkOrDeliveryType()
+                .getMediumDelivery())
                 && saleRequest.getCommercialOperation().get(0).getWorkOrDeliveryType().getMediumDelivery()
                 .equalsIgnoreCase("DELIVERY")
                 && saleRequest.getPaymenType().getPaymentType().equalsIgnoreCase("EX")
