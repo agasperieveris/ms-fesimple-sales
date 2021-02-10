@@ -1295,7 +1295,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
             com.tdp.ms.sales.model.dto.quotation.Item itemInstallation = com.tdp.ms.sales.model.dto.quotation.Item
                     .builder()
                     .offeringId(offeringId)
-                    .orderActionId(sale.getCommercialOperation().get(0).getOrder().getProductOrderReferenceNumber())
+                    .orderActionId(sale.getCommercialOperation().get(0).getOrder().getProductOrderId())
                     .itemChargeCode(this.getStringValueFromBpExtListByParameterName(
                                                             "chargeCodeInstallation", bpFinanciamiento))
                     .build();
@@ -1311,7 +1311,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
             com.tdp.ms.sales.model.dto.quotation.Item itemModemPremium = com.tdp.ms.sales.model.dto.quotation.Item
                     .builder()
                     .offeringId(offeringId)
-                    .orderActionId(sale.getCommercialOperation().get(0).getOrder().getProductOrderReferenceNumber())
+                    .orderActionId(sale.getCommercialOperation().get(0).getOrder().getProductOrderId())
                     .itemChargeCode(this.getStringValueFromBpExtListByParameterName(
                                                             "chargeCodeDevicePremium", bpFinanciamiento))
                     .build();
@@ -1327,7 +1327,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
             com.tdp.ms.sales.model.dto.quotation.Item itemUltraWifi = com.tdp.ms.sales.model.dto.quotation.Item
                     .builder()
                     .offeringId(offeringId)
-                    .orderActionId(sale.getCommercialOperation().get(0).getOrder().getProductOrderReferenceNumber())
+                    .orderActionId(sale.getCommercialOperation().get(0).getOrder().getProductOrderId())
                     .itemChargeCode(this.getStringValueFromBpExtListByParameterName(
                                                             "chargeCodeUltraWifi", bpFinanciamiento))
                     .build();
@@ -1360,7 +1360,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
 
         CreateQuotationRequestBody body = CreateQuotationRequestBody
                 .builder()
-                .orderId(sale.getCommercialOperation().get(0).getOrder().getProductOrderId())
+                .orderId(sale.getCommercialOperation().get(0).getOrder().getProductOrderReferenceNumber())
                 .accountId(sale.getRelatedParty().get(0).getAccountId())
                 .billingAgreement(sale.getRelatedParty().get(0).getBillingArragmentId())
                 .commercialAgreement("N")
@@ -1673,7 +1673,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                 .type("mobile phone")
                 .offeringId("EQUIP_FE".concat(sale.getCommercialOperation().get(0).getProduct().getPublicId()))
                 .totalCost(totalCost)
-                .orderActionId(sale.getCommercialOperation().get(0).getOrder().getProductOrderReferenceNumber())
+                .orderActionId(sale.getCommercialOperation().get(0).getOrder().getProductOrderId())
                 .build();
         itemsList.add(itemEquipment);
 
@@ -1699,7 +1699,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                 .builder()
                 .items(itemsList)
                 .billingAgreement(sale.getRelatedParty().get(0).getBillingArragmentId())
-                .orderId(sale.getCommercialOperation().get(0).getOrder().getProductOrderId())
+                .orderId(sale.getCommercialOperation().get(0).getOrder().getProductOrderReferenceNumber())
                 .accountId(sale.getRelatedParty().get(0).getAccountId())
                 .commercialAgreement("N")
                 .customer(customerQuotation)
