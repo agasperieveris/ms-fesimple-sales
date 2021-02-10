@@ -2693,14 +2693,13 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         }
         request.setItems(itemsList);
 
-        request.setOrderAction(createOrderResponse.getNewProductsInNewOfferings().get(0)
-                .getProductOrderItemReferenceNumber());
+        request.setOrderAction(org.apache.commons.lang3.StringUtils.chop(createOrderResponse
+                .getNewProductsInNewOfferings().get(0).getProductOrderItemReferenceNumber()));
 
         Order order = Order
                 .builder()
                 // Quitar último caracter
-                .id(org.apache.commons.lang3.StringUtils.chop(sale.getCommercialOperation().get(0).getOrder()
-                        .getProductOrderId()))
+                .id(sale.getCommercialOperation().get(0).getOrder().getProductOrderId())
                 .build();
         request.setOrder(order);
 
