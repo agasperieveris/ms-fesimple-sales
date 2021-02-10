@@ -931,7 +931,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         CreateProductOrderGeneralRequest mainRequestProductOrder = new CreateProductOrderGeneralRequest();
 
         // Recognizing Mobile Portability
-        Boolean isMobilePortability = commercialOperationReason.equalsIgnoreCase("PORTABILIDAD");
+        Boolean isMobilePortability = commercialOperationReason.equalsIgnoreCase(Constants.PORTABILIDAD);
 
         // Recognizing CAPL Commercial Operation Type
         if (flgCapl[0] && !flgCaeq[0] && !flgCasi[0] && !flgAlta[0]) { // CAPL
@@ -1210,20 +1210,20 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
 
         Sale sale = salesRequest.getSale();
 
-        TimePeriod validFor = TimePeriod
-                .builder()
-                .endDateTime(Commons.getDatetimeNow())
-                .startDateTime(Commons.getDatetimeNow())
-                .build();
+        final String[] email = {null};
+        sale.getProspectContact().stream()
+                .filter(item -> item.getMediumType().equalsIgnoreCase("email address"))
+                .findFirst()
+                .ifPresent(item -> email[0] = item.getCharacteristic().getEmailAddress());
         com.tdp.ms.sales.model.dto.quotation.ContactMedium contactMedium1 = com.tdp.ms.sales.model.dto.quotation
                 .ContactMedium
                 .builder()
                 .type(Constants.EMAIL)
-                .name(sale.getProspectContact().get(0).getCharacteristic().getEmailAddress())
+                .name(email[0])
                 .preferred("true")
                 .isActive("true")
-                .validFor(validFor)
                 .build();
+
         List<com.tdp.ms.sales.model.dto.quotation.ContactMedium> contactMediumList = new ArrayList<>();
         contactMediumList.add(contactMedium1);
 
@@ -1594,20 +1594,18 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
 
         Sale sale = salesRequest.getSale();
 
-        TimePeriod validFor = TimePeriod
-                .builder()
-                .startDateTime(Commons.getDatetimeNow())
-                .endDateTime(Commons.getDatetimeNow())
-                .build();
-
+        final String[] email = {null};
+        sale.getProspectContact().stream()
+                .filter(item -> item.getMediumType().equalsIgnoreCase("email address"))
+                .findFirst()
+                .ifPresent(item -> email[0] = item.getCharacteristic().getEmailAddress());
         com.tdp.ms.sales.model.dto.quotation.ContactMedium contactMedium1 = com.tdp.ms.sales.model.dto.quotation
                 .ContactMedium
                 .builder()
-                .validFor(validFor)
-                .preferred("true")
-                .name(sale.getProspectContact().get(0).getCharacteristic().getEmailAddress())
-                .isActive("true")
                 .type(Constants.EMAIL)
+                .name(email[0])
+                .preferred("true")
+                .isActive("true")
                 .build();
         List<com.tdp.ms.sales.model.dto.quotation.ContactMedium> contactMediumList = new ArrayList<>();
         contactMediumList.add(contactMedium1);
@@ -1649,9 +1647,9 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                 .name(sale.getRelatedParty().get(0).getFirstName())
                 .surname(sale.getRelatedParty().get(0).getLastName())
                 .subsegment(this.getStringValueByKeyFromAdditionalDataList(sale.getAdditionalData(),
-                                                                                        "releatedPartySubSegment"))
+                                                                                        "customerSubTypeCode"))
                 .segment(this.getStringValueByKeyFromAdditionalDataList(sale.getAdditionalData(),
-                                                                                        "releatedPartySegment"))
+                                                                                        "customerTypeCode"))
                 .address(address)
                 .legalId(legalId)
                 .creditLimit(sale.getRelatedParty().get(0).getScore().getFinancingCapacity())
@@ -1695,7 +1693,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                 .id(sale.getChannel().getStoreId())
                 .build();
 
-        Channel channel = Channel.builder().name(sale.getChannel().getName()).build();
+        Channel channel = Channel.builder().name(sale.getChannel().getId()).build();
 
         MoneyAmount totalCost = MoneyAmount
                 .builder().units("PEN")
@@ -1703,10 +1701,11 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                         .getBillingOfferings().get(0).getCommitmentPeriods().get(0).getFinancingInstalments().get(0)
                         .getInstalments().getTotalAmount().getValue().toString()).build();
 
+        Double taxExcludedAmountDouble = sale.getCommercialOperation().get(0).getDeviceOffering().get(0).getOffers()
+                .get(0).getBillingOfferings().get(0).getCommitmentPeriods().get(0).getFinancingInstalments().get(0)
+                .getInstalments().getTotalAmount().getValue().doubleValue() * 0.18;
         MoneyAmount taxExcludedAmount = MoneyAmount.builder()
-                .amount(sale.getCommercialOperation().get(0).getDeviceOffering().get(0).getOffers().get(0)
-                        .getBillingOfferings().get(0).getCommitmentPeriods().get(0).getFinancingInstalments().get(0)
-                        .getInstalments().getTotalAmount().getValue().toString())
+                .amount(taxExcludedAmountDouble.toString())
                 .units("PEN")
                 .build();
 
@@ -2803,7 +2802,9 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         request.setReason("PRAEL");
 
         List<String> requiredActionList =  new ArrayList<>();
-        requiredActionList.add("PR");
+        requiredActionList.add(sale.getCommercialOperation().get(0).getReason().equalsIgnoreCase("ALTA")
+                || sale.getCommercialOperation().get(0).getReason().equalsIgnoreCase(Constants.PORTABILIDAD) ? "PR"
+                : "CH");
         request.setRequiredActions(requiredActionList);
 
         List<String> usageList =  new ArrayList<>();
@@ -2856,11 +2857,13 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         }
         request.setItems(itemsList);
 
-        request.setOrderAction(createOrderResponse.getProductOrderReferenceNumber());
+        request.setOrderAction(createOrderResponse.getProductOrderId());
 
         Order order = Order
                 .builder()
-                .id(createOrderResponse.getProductOrderId())
+                // Quitar último caracter
+                .id(org.apache.commons.lang3.StringUtils.chop(createOrderResponse.getNewProductsInNewOfferings().get(0)
+                        .getProductOrderItemReferenceNumber()))
                 .build();
         request.setOrder(order);
 
