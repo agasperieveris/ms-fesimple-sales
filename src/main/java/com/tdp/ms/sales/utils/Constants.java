@@ -49,4 +49,7 @@ public class Constants {
     public static final String UFX_AUTHORIZATION = "ufxauthorization";
     public static final String STRING_FALSE = "false";
     public static final String STRING_DATE_TIME_FORMATTER = "dd/MM/yyyy'T'HH:mm:ss";
+    public static final String STATUS_VALIDADO = "VALIDADO";
+    public static final String MEDIUM_TYPE_EMAIL_ADDRESS = "email address";
+    public static final String KEY_DELIVERY_METHOD = "deliveryMethod";
 }
