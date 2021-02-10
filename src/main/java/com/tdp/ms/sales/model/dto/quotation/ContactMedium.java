@@ -1,6 +1,7 @@
 package com.tdp.ms.sales.model.dto.quotation;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.gson.annotations.SerializedName;
 import com.tdp.ms.sales.model.dto.TimePeriod;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -29,6 +30,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class ContactMedium {
+    @SerializedName("@type")
     @JsonProperty("@type")
     private String type;
     private String name;
