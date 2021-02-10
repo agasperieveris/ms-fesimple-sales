@@ -681,6 +681,9 @@ public class SalesManagmentServiceTest {
                 .builder()
                 .productOrderReferenceNumber("761787835447")
                 .productOrderId("930686A")
+                .newProductsInNewOfferings(Arrays.asList(NewProductInNewOfferingInstanceConfigurationType.builder()
+                        .productOrderItemReferenceNumber("123456789A")
+                        .build()))
                 .build();
 
         method.invoke(salesManagmentServiceImpl,reserveStockRequest, sale, createProductOrderResponse, "");
@@ -753,6 +756,9 @@ public class SalesManagmentServiceTest {
                 .builder()
                 .productOrderReferenceNumber("761787835447")
                 .productOrderId("930686A")
+                .newProductsInNewOfferings(Arrays.asList(NewProductInNewOfferingInstanceConfigurationType.builder()
+                        .productOrderItemReferenceNumber("123456789A")
+                        .build()))
                 .build();
         sale.getCommercialOperation().get(0).setOrder(createProductOrderResponse);
 
