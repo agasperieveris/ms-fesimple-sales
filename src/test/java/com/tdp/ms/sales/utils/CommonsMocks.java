@@ -200,7 +200,7 @@ public class CommonsMocks {
         productSpecification3.setRefinedProduct(refinedProduct);
 
         ComposingProductType productSpecification4 = new ComposingProductType();
-        productSpecification4.setProductType("ShEq");
+        productSpecification4.setProductType("Device");
         productSpecification4.setRefinedProduct(refinedProduct);
 
         ComposingProductType productSpecification5 = new ComposingProductType();
