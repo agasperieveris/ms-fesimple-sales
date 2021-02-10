@@ -222,8 +222,6 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                 .build();
 
         String upFrontIndAttrStringValue = saleRequest.getCommercialOperation().get(0).getProductOfferings() != null
-                && !saleRequest.getCommercialOperation().get(0).getProductOfferings().isEmpty()
-                && saleRequest.getCommercialOperation().get(0).getProductOfferings().get(0).getUpFront() != null
                 && !StringUtils.isEmpty(saleRequest.getCommercialOperation().get(0).getProductOfferings()
                 .get(0).getUpFront().getIndicator()) ?
                 saleRequest.getCommercialOperation().get(0).getProductOfferings().get(0).getUpFront().getIndicator() :
@@ -680,7 +678,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                 .orElse(KeyValueType.builder().value(null).build())
                 .getValue();
         Boolean isRetail = flowSaleValue.equalsIgnoreCase(Constants.RETAIL);
-        Boolean statusValidado = saleRequest.getStatus().equalsIgnoreCase("VALIDADO");
+        Boolean statusValidado = saleRequest.getStatus().equalsIgnoreCase(Constants.STATUS_VALIDADO);
         if (Boolean.TRUE.equals(isRetail) && statusValidado) {
             if (StringUtils.isEmpty(this.getStringValueByKeyFromAdditionalDataList(saleRequest.getAdditionalData(),
                     "MOVILE_IMEI"))) {
@@ -930,8 +928,6 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         // Getting CIP Code
         String cipCode = "";
         if (saleRequest.getCommercialOperation().get(0).getWorkOrDeliveryType() != null
-                && !StringUtils.isEmpty(saleRequest.getCommercialOperation().get(0).getWorkOrDeliveryType()
-                .getMediumDelivery())
                 && saleRequest.getCommercialOperation().get(0).getWorkOrDeliveryType().getMediumDelivery()
                 .equalsIgnoreCase("DELIVERY")
                 && saleRequest.getPaymenType().getPaymentType().equalsIgnoreCase("EX")
@@ -1238,7 +1234,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
 
         final String[] email = {null};
         sale.getProspectContact().stream()
-                .filter(item -> item.getMediumType().equalsIgnoreCase("email address"))
+                .filter(item -> item.getMediumType().equalsIgnoreCase(Constants.MEDIUM_TYPE_EMAIL_ADDRESS))
                 .findFirst()
                 .ifPresent(item -> email[0] = item.getCharacteristic().getEmailAddress());
         com.tdp.ms.sales.model.dto.quotation.ContactMedium contactMedium1 = com.tdp.ms.sales.model.dto.quotation
@@ -1577,7 +1573,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                 }
 
                 // cambiar status a "VALIDADO"
-                saleRequest.setStatus("VALIDADO");
+                saleRequest.setStatus(Constants.STATUS_VALIDADO);
                 return saleRequest;
             });
         } else {
@@ -1685,7 +1681,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
 
         final String[] email = {null};
         sale.getProspectContact().stream()
-                .filter(item -> item.getMediumType().equalsIgnoreCase("email address"))
+                .filter(item -> item.getMediumType().equalsIgnoreCase(Constants.MEDIUM_TYPE_EMAIL_ADDRESS))
                 .findFirst()
                 .ifPresent(item -> email[0] = item.getCharacteristic().getEmailAddress());
         com.tdp.ms.sales.model.dto.quotation.ContactMedium contactMedium1 = com.tdp.ms.sales.model.dto.quotation
@@ -2085,7 +2081,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                 .orElse(KeyValueType.builder().value(null).build())
                 .getValue();
         Boolean isRetail = flowSaleValue.equalsIgnoreCase(Constants.RETAIL);
-        if (Boolean.TRUE.equals(isRetail) && saleRequest.getStatus().equalsIgnoreCase("VALIDADO")) {
+        if (Boolean.TRUE.equals(isRetail) && saleRequest.getStatus().equalsIgnoreCase(Constants.STATUS_VALIDADO)) {
             String iccidSim = this.getStringValueByKeyFromAdditionalDataList(saleRequest.getAdditionalData(),
                     "SIM_ICCID");
             ChangedCharacteristic changedCharacteristic2 = ChangedCharacteristic
@@ -2129,7 +2125,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         List<FlexAttrType> altaOrderAttributesList = this.commonOrderAttributes(saleRequest);
 
         // Order Attributes when channel is retail
-        if (Boolean.TRUE.equals(isRetail) && saleRequest.getStatus().equalsIgnoreCase("VALIDADO")) {
+        if (Boolean.TRUE.equals(isRetail) && saleRequest.getStatus().equalsIgnoreCase(Constants.STATUS_VALIDADO)) {
             //  RETAIL PAYMENT NUMBER ATTRIBUTE
             String paymentNumber = this.getStringValueByKeyFromAdditionalDataList(saleRequest.getAdditionalData(),
                     "NUMERO_TICKET");
@@ -2198,7 +2194,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         }
 
         String deliveryMethod = this.getStringValueByKeyFromAdditionalDataList(saleRequest.getAdditionalData(),
-                "deliveryMethod");
+                Constants.KEY_DELIVERY_METHOD);
         AltaMobileRequest altaRequest = AltaMobileRequest
                 .builder()
                 .newProducts(altaNewProductsList)
@@ -2285,7 +2281,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         caplNewProductsList.add(newProductCapl1);
 
         String deliveryMethod = this.getStringValueByKeyFromAdditionalDataList(saleRequest.getAdditionalData(),
-                "deliveryMethod");
+                Constants.KEY_DELIVERY_METHOD);
         CaplRequest caplRequest = CaplRequest
                 .builder()
                 .newProducts(caplNewProductsList)
@@ -2315,7 +2311,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         shipmentDetailsType.setShipmentAddressId(saleRequest.getCommercialOperation().get(0).getWorkOrDeliveryType().getPlace().get(0).getId());
         shipmentDetailsType.setShipmentSiteId("NA");
         saleRequest.getProspectContact().stream()
-                .filter(item -> item.getMediumType().equalsIgnoreCase("email address"))
+                .filter(item -> item.getMediumType().equalsIgnoreCase(Constants.MEDIUM_TYPE_EMAIL_ADDRESS))
                 .findFirst()
                 .ifPresent(contactMedium -> {
                     shipmentDetailsType.setRecipientEmail(contactMedium.getCharacteristic().getEmailAddress());
@@ -2383,7 +2379,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         this.addCaeqOderAttributes(caeqCaplOrderAttributes, saleRequest, flgCasi);
 
         String deliveryMethod = this.getStringValueByKeyFromAdditionalDataList(saleRequest.getAdditionalData(),
-                "deliveryMethod");
+                Constants.KEY_DELIVERY_METHOD);
         CaeqRequest caeqRequest = CaeqRequest
                 .builder()
                 .sourceApp("FE")
@@ -2504,7 +2500,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         this.addCaeqOderAttributes(caeqCaplOrderAttributes, saleRequest, flgCasi);
 
         String deliveryMethod = this.getStringValueByKeyFromAdditionalDataList(saleRequest.getAdditionalData(),
-                "deliveryMethod");
+                Constants.KEY_DELIVERY_METHOD);
         CaeqCaplRequest caeqCaplRequest = CaeqCaplRequest
                 .builder()
                 .newProducts(caeqCaplNewProductList)
@@ -2531,7 +2527,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         // Delivery Method Attribute
         String deliveryCode = "";
         for (KeyValueType kv : saleRequest.getAdditionalData()) {
-            if (kv.getKey().equals("deliveryMethod")) {
+            if (kv.getKey().equals(Constants.KEY_DELIVERY_METHOD)) {
                 deliveryCode = kv.getValue();
             }
         }
@@ -2845,7 +2841,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
 
         // Getting Delivery Method (IS, SP)
         for (KeyValueType kv : saleRequest.getAdditionalData()) {
-            if (kv.getKey().equals("deliveryMethod")) {
+            if (kv.getKey().equals(Constants.KEY_DELIVERY_METHOD)) {
                 deliveryType = kv.getValue();
             }
         }
