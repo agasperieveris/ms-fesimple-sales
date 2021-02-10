@@ -418,6 +418,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                                                   List<NewAssignedBillingOffers> newAssignedBillingOffersBroadbandList,
                                                   List<NewAssignedBillingOffers> newAssignedBillingOffersCableTvList) {
         List<NewProductAltaFija> newProductsAltaFijaList = new ArrayList<>();
+        final Integer[] cont = {1};
 
         String baId = saleRequest.getRelatedParty().get(0).getBillingArragmentId();
         String accountId = saleRequest.getRelatedParty().get(0).getAccountId();
@@ -428,16 +429,16 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
 
                     String productType = productSpecification.getProductType();
                     if (productType.equalsIgnoreCase(Constants.PRODUCT_TYPE_LANDLINE)) {
-
                         NewProductAltaFija newProductAltaFijaLandline = NewProductAltaFija
                                 .builder()
                                 .productCatalogId(productSpecification.getRefinedProduct()
                                         .getProductCharacteristics().get(0).getId())
-                                .temporaryId("temp")
+                                .temporaryId("temp".concat(cont[0].toString()))
                                 .baId(baId)
                                 .accountId(accountId)
                                 .invoiceCompany("TDP")
                                 .build();
+                        cont[0]++;
 
                         //Adding Landline SVAs
                         if (!newAssignedBillingOffersLandlineList.isEmpty()) {
@@ -452,6 +453,16 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                         newProductsAltaFijaList.add(newProductAltaFijaLandline);
 
                     } else if (productType.equalsIgnoreCase("broadband")) {
+                        NewProductAltaFija newProductAltaFijaBroadband = NewProductAltaFija
+                                .builder()
+                                .productCatalogId(productSpecification.getRefinedProduct()
+                                        .getProductCharacteristics().get(0).getId())
+                                .temporaryId("temp".concat(cont[0].toString()))
+                                .baId(baId)
+                                .accountId(accountId)
+                                .invoiceCompany("TDP")
+                                .build();
+                        cont[0]++;
 
                         List<ChangedCharacteristic> changedCharacteristicsBroadbandList = new ArrayList<>();
 
@@ -480,10 +491,11 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
 
                         ChangedContainedProduct changedContainedProductBroadband1 = ChangedContainedProduct
                                 .builder()
-                                .temporaryId("temp")
+                                .temporaryId("temp".concat(cont[0].toString()))
                                 .productCatalogId("3241312")
                                 .changedCharacteristics(changedCharacteristicsBroadbandList)
                                 .build();
+                        cont[0]++;
 
                         List<ChangedContainedProduct> changedContainedProductsBroadbandList =
                                 new ArrayList<>();
@@ -499,29 +511,21 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                                     newAssignedBillingOffersBroadbandList);
                         }
 
-                        NewProductAltaFija newProductAltaFijaBroadband = NewProductAltaFija
-                                .builder()
-                                .productCatalogId(productSpecification.getRefinedProduct()
-                                        .getProductCharacteristics().get(0).getId())
-                                .temporaryId("temp")
-                                .baId(baId)
-                                .accountId(accountId)
-                                .invoiceCompany("TDP")
-                                .productChanges(productChangesBroadband)
-                                .build();
+                        newProductAltaFijaBroadband.setProductChanges(productChangesBroadband);
+
                         newProductsAltaFijaList.add(newProductAltaFijaBroadband);
 
                     } else if (productType.equalsIgnoreCase(Constants.PRODUCT_TYPE_CABLE_TV)) {
-
                         NewProductAltaFija newProductAltaFijaCableTv = NewProductAltaFija
                                 .builder()
                                 .productCatalogId(productSpecification.getRefinedProduct()
                                         .getProductCharacteristics().get(0).getId())
-                                .temporaryId("temp")
+                                .temporaryId("temp".concat(cont[0].toString()))
                                 .baId(baId)
                                 .accountId(accountId)
                                 .invoiceCompany("TDP")
                                 .build();
+                        cont[0]++;
 
                         //Adding CableTv SVAs
                         if (!newAssignedBillingOffersCableTvList.isEmpty()) {
@@ -535,20 +539,30 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
 
                         newProductsAltaFijaList.add(newProductAltaFijaCableTv);
 
-                    } else if (productType.equalsIgnoreCase("ShEq")) {
-
+                    } else if (productType.equalsIgnoreCase("device")) {
                         NewProductAltaFija newProductAltaFijaShareEquipment = NewProductAltaFija
                                 .builder()
                                 .productCatalogId(productSpecification.getRefinedProduct()
                                         .getProductCharacteristics().get(0).getId())
-                                .temporaryId("temp")
+                                .temporaryId("temp".concat(cont[0].toString()))
                                 .baId(baId)
                                 .accountId(accountId)
                                 .invoiceCompany("TDP")
                                 .build();
                         newProductsAltaFijaList.add(newProductAltaFijaShareEquipment);
+                        cont[0]++;
 
                     } else if (productType.equalsIgnoreCase("Accessories")) {
+                        NewProductAltaFija newProductAltaFijaAccesories = NewProductAltaFija
+                                .builder()
+                                .productCatalogId(productSpecification.getRefinedProduct()
+                                        .getProductCharacteristics().get(0).getId())
+                                .temporaryId("temp".concat(cont[0].toString()))
+                                .baId(baId)
+                                .accountId(accountId)
+                                .invoiceCompany("TDP")
+                                .build();
+                        cont[0]++;
 
                         ChangedCharacteristic changedCharacteristicAccesories1 = ChangedCharacteristic
                                 .builder()
@@ -562,10 +576,11 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
 
                         ChangedContainedProduct changedContainedProductAccesories1 = ChangedContainedProduct
                                 .builder()
-                                .temporaryId("temp")
+                                .temporaryId("temp".concat(cont[0].toString()))
                                 .productCatalogId("34134811")
                                 .changedCharacteristics(changedCharacteristicsAccesoriesList)
                                 .build();
+                        cont[0]++;
 
                         List<ChangedContainedProduct> changedContainedProductsAccesoriesList =
                                 new ArrayList<>();
@@ -576,16 +591,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                                 .changedContainedProducts(changedContainedProductsAccesoriesList)
                                 .build();
 
-                        NewProductAltaFija newProductAltaFijaAccesories = NewProductAltaFija
-                                .builder()
-                                .productCatalogId(productSpecification.getRefinedProduct()
-                                        .getProductCharacteristics().get(0).getId())
-                                .temporaryId("temp")
-                                .baId(baId)
-                                .accountId(accountId)
-                                .invoiceCompany("TDP")
-                                .productChanges(productChangesAccesories)
-                                .build();
+                        newProductAltaFijaAccesories.setProductChanges(productChangesAccesories);
                         newProductsAltaFijaList.add(newProductAltaFijaAccesories);
                     }
                 });
