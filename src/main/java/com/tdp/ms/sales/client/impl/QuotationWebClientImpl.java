@@ -10,6 +10,8 @@ import com.tdp.ms.sales.model.request.CreateQuotationRequest;
 import com.tdp.ms.sales.model.response.CreateQuotationResponse;
 import com.tdp.ms.sales.repository.SalesRepository;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
@@ -46,9 +48,11 @@ public class QuotationWebClientImpl implements QuotationWebClient {
     @Value("${application.endpoints.quotation.create_quotation}")
     private String createQuotationUrl;
 
+    private static final Logger LOG = LoggerFactory.getLogger(QuotationWebClientImpl.class);
+
     @Override
     public Mono<CreateQuotationResponse> createQuotation(CreateQuotationRequest request, Sale sale) {
-        System.out.println("-> create Quotation");
+        LOG.info("->Create Order Request: ".concat(new Gson().toJson(request.getBody())));
         System.out.println(new Gson().toJson(request.getBody()));
         return webClientInsecure
                 .post()

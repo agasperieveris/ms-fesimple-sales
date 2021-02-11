@@ -54,7 +54,7 @@ public class StockWebClientImpl implements StockWebClient {
     @Override
     public Mono<ReserveStockResponse> reserveStock(ReserveStockRequest request, HashMap<String, String> headersMap,
                                                    Sale sale) {
-        LOG.info("Reserve Stock Request: ".concat(new Gson().toJson(request)));
+        LOG.info("->Reserve Stock Request: ".concat(new Gson().toJson(request)));
         return webClientInsecure
                 .post()
                 .uri(reserveStockUrl)
