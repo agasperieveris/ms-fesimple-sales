@@ -792,6 +792,10 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                 flgAlta[0] = booleanValue;
             }
         }
+        LOG.info("CAPL: " + flgCapl[0]);
+        LOG.info("CAEQ: " + flgCaeq[0]);
+        LOG.info("CASI: " + flgCasi[0]);
+        LOG.info("ALTA: " + flgAlta[0]);
 
         flgFinanciamiento[0] = setFinancingFlag(saleRequest.getCommercialOperation().get(0).getDeviceOffering());
 
@@ -825,6 +829,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                 && saleRequest.getCommercialOperation().get(0).getAction().equalsIgnoreCase("PROVIDE"))
         {
             // Fija Commercial Operations
+            LOG.info("Alta Fija Sales Case");
 
             return businessParameterWebClient
                     .getParametersFinanciamientoFija(request.getHeadersMap())
@@ -838,6 +843,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                 || commercialOperationReason.equalsIgnoreCase("REPLACEOFFER"))
                 && mainProductType.equalsIgnoreCase("WIRELINE")
                 && saleRequest.getCommercialOperation().get(0).getAction().equalsIgnoreCase("MODIFY")) {
+            LOG.info("Migration Sales Case");
 
             String actionType = commercialOperationReason.equalsIgnoreCase("CAPL") ? "CW" : "CH";
             return businessParameterWebClient
@@ -849,6 +855,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                             flgFinanciamiento, actionType, isRetail));
 
         } else if (mainProductType.equalsIgnoreCase(Constants.WIRELESS)) {
+            LOG.info("Wireless Sales Case");
             // Mobile Commercial Operations
             Boolean deviceOfferingIsNullOrEmpty = deviceOfferingIsNullOrEmpty(saleRequest);
 
@@ -970,39 +977,46 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
 
         // Recognizing Mobile Portability
         Boolean isMobilePortability = commercialOperationReason.equalsIgnoreCase(Constants.PORTABILIDAD);
+        LOG.info("Sales contain Mobile Portability: " + isMobilePortability);
 
         // Recognizing CAPL Commercial Operation Type
-        if (flgCapl[0] && !flgCaeq[0] && !flgCasi[0] && !flgAlta[0]) { // CAPL
+        if (flgCapl[0] && !flgCaeq[0] && !flgCasi[0] && !flgAlta[0]) {
+            LOG.info("CAPL Sales Case");
 
             mainRequestProductOrder = this.caplCommercialOperation(saleRequest, mainRequestProductOrder,
                     channelIdRequest, customerIdRequest, productOfferingIdRequest, cipCode);
 
         } else if (!flgCapl[0] && flgCaeq[0] && !flgAlta[0]) { // Recognizing CAEQ Commercial Operation Type
+            LOG.info("CAEQ Sales Case");
 
             mainRequestProductOrder = this.caeqCommercialOperation(saleRequest, mainRequestProductOrder, flgCasi[0],
                     channelIdRequest, customerIdRequest, productOfferingIdRequest, cipCode, sapidSimcard[0],
                     getParameterReasonCode);
 
         } else if (flgCapl[0] && flgCaeq[0] && !flgAlta[0]) { // Recognizing CAEQ+CAPL Commercial Operation Type
+            LOG.info("CAEQ + CAPL Sales Case");
 
             mainRequestProductOrder = this.caeqCaplCommercialOperation(saleRequest, mainRequestProductOrder, flgCasi[0],
                     channelIdRequest, customerIdRequest, productOfferingIdRequest, cipCode, sapidSimcard[0],
                     getParameterReasonCode);
         } else if (!flgCapl[0] && !flgCaeq[0] && flgAlta[0] || isMobilePortability) {
+            LOG.info("ALTA or Mobile Portability Sales Case");
 
             mainRequestProductOrder = this.altaCommercialOperation(saleRequest, mainRequestProductOrder,
                     channelIdRequest, customerIdRequest, productOfferingIdRequest, cipCode, getBonificacionSim,
                     sapidSimcard[0], isMobilePortability, flgCasi[0]);
         }
 
-        // FEMS-1514 Validación de creación Orden -> solo cuando es flujo retail se debe hacer validación
-        Mono<Sale> saleRequestValidation = creationOrderValidation(saleRequest, mainRequestProductOrder,
-                request.getHeadersMap());
-
-        if (isRetail && saleRequest.getStatus().equalsIgnoreCase(Constants.NEGOCIACION)
-                && !saleRequest.getCommercialOperation().get(0).getReason().equalsIgnoreCase("CAPL")) {
-            return saleRequestValidation.flatMap(salesRepository::save);
+        if ( saleRequest.getCommercialOperation().get(0).getDeviceOffering() != null
+                && !saleRequest.getCommercialOperation().get(0).getDeviceOffering().isEmpty()
+                && isRetail && saleRequest.getStatus().equalsIgnoreCase("NEGOCIACION")) {
+            LOG.info("Sales flowSale Retail and Status NEGOCIACION, executing Create Order Validation");
+            // FEMS-1514 Validación de creación Orden -> solo cuando es flujo retail, status negociacion
+            // y la venta involucra un equipo, se debe hacer validación
+            return creationOrderValidation(saleRequest, mainRequestProductOrder,
+                    request.getHeadersMap()).flatMap(salesRepository::save);
         } else {
+            LOG.info("Executing Create Order Service");
             CreateProductOrderGeneralRequest finalMainRequestProdOrder = mainRequestProductOrder;
             return productOrderWebClient.createProductOrder(finalMainRequestProdOrder, request.getHeadersMap(),
                     saleRequest).flatMap(createOrderResponse -> {
@@ -1064,7 +1078,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
             String productTypeSva = productOfferings.get(i).getProductSpecification().get(0)
                     .getProductType();
             String productTypeComponent = this.getStringValueByKeyFromAdditionalDataList(
-                    productOfferings.get(i).getAdditionalData(), "productType"); // Pendiente confirmación de la ruta de referencia del Additional Data
+                    productOfferings.get(i).getAdditionalData(), "productType");
 
             if (productTypeSva.equalsIgnoreCase("sva")) {
 
@@ -1189,12 +1203,15 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                                        PostSalesRequest request, Sale saleRequest, final Boolean[] flgFinanciamiento,
                                        CreateQuotationRequest createQuotationFijaRequest, Boolean isRetail) {
 
-        // FEMS-1514 Validación de creación Orden
-        Mono<Sale> saleRequestValidation = creationOrderValidation(saleRequest, mainRequestProductOrder,
-                request.getHeadersMap());
-        if (isRetail && saleRequest.getStatus().equalsIgnoreCase("NEGOCIACION")) {
-            return saleRequestValidation.flatMap(salesRepository::save);
+        if (saleRequest.getCommercialOperation().get(0).getDeviceOffering() != null
+                && !saleRequest.getCommercialOperation().get(0).getDeviceOffering().isEmpty()
+                && isRetail && saleRequest.getStatus().equalsIgnoreCase("NEGOCIACION")) {
+            // FEMS-1514 Validación de creación Orden -> solo cuando es flujo retail, status negociacion
+            // y la venta involucra un equipo, se debe hacer validación
+            return creationOrderValidation(saleRequest, mainRequestProductOrder,
+                    request.getHeadersMap()).flatMap(salesRepository::save);
         } else {
+            LOG.info("Executing Create Order Service");
             // Call de Create Alta Fija Order
             return productOrderWebClient.createProductOrder(mainRequestProductOrder, request.getHeadersMap(),
                     saleRequest).flatMap(createOrderResponse -> addOrderIntoSale(PostSalesRequest.builder()
@@ -2278,6 +2295,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                                     CreateProductOrderGeneralRequest mainRequestProductOrder, String channelIdRequest,
                                     String customerIdRequest, String productOfferingIdRequest, String cipCode) {
         Boolean flgOnlyCapl = true;
+        LOG.info("Flag is only CAPL: " + flgOnlyCapl);
 
         // Recognizing Capl into same plan or Capl with new plan
         if (!saleRequest.getCommercialOperation().get(0).getProduct().getProductOffering().getId().equals(saleRequest
