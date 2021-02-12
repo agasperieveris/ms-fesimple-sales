@@ -791,6 +791,20 @@ public class SalesManagmentServicePrivateMethodsTest {
         List<ServiceabilityOfferType> serviceabilityOffersList = new ArrayList<>();
         Sale sale = CommonsMocks.createSaleMock();
 
+        ServiceType serviceType1 = new ServiceType();
+        serviceType1.setType("landline");
+        serviceType1.setAllocationId("0036");
+        ServiceType serviceType2 = new ServiceType();
+        serviceType2.setType("broadband");
+        ServiceType serviceType3 = new ServiceType();
+        serviceType3.setType("tv");
+        List<ServiceType> servicesList = new ArrayList<>();
+        servicesList.add(serviceType1);
+        servicesList.add(serviceType2);
+        servicesList.add(serviceType3);
+
+        sale.getCommercialOperation().get(0).getServiceAvailability().getOffers().get(0).setServices(servicesList);
+
         method.invoke(salesManagmentServiceImpl,sale, serviceabilityOffersList);
     }
 
@@ -932,6 +946,24 @@ public class SalesManagmentServicePrivateMethodsTest {
         sale.getAdditionalData().add(KeyValueType.builder().key("NUMERO_CAJA").value("123456").build());
         sale.getAdditionalData().remove(3);
         sale.getAdditionalData().add(KeyValueType.builder().key(Constants.FLOWSALE).value(Constants.RETAIL).build());
+
+        method.invoke(salesManagmentServiceImpl, caeqOrderAttributesList, sale, true);
+    }
+
+    @Test
+    void addCaeqOderAttributesTest() throws NoSuchMethodException, InvocationTargetException,
+            IllegalAccessException {
+        Method method = SalesManagmentServiceImpl.class.getDeclaredMethod("addCaeqOderAttributes",
+                List.class, Sale.class, Boolean.class);
+
+        method.setAccessible(true);
+
+        List<FlexAttrType> caeqOrderAttributesList = new ArrayList<>();
+        Sale sale = CommonsMocks.createSaleMock();
+
+        RelatedParty relatedParty2 = new RelatedParty();
+        relatedParty2.setNationalId("1503761783461661");
+        sale.getRelatedParty().add(relatedParty2);
 
         method.invoke(salesManagmentServiceImpl, caeqOrderAttributesList, sale, true);
     }
