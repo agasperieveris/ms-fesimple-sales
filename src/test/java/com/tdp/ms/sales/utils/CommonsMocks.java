@@ -264,6 +264,17 @@ public class CommonsMocks {
         serviceAvailability.setOffers(offersServicesList);
         serviceAvailability.setAdditionalData(additionalDatas);
 
+        serviceAvailability.getAdditionalData().add(KeyValueType.builder()
+                .key("networkAccessTechnologyLandline").value("FTTH").build());
+        serviceAvailability.getAdditionalData().add(KeyValueType.builder()
+                .key("serviceTechnologyLandline").value("HFC").build());
+        serviceAvailability.getAdditionalData().add(KeyValueType.builder()
+                .key("maxSpeed").value("1000Mbps").build());
+        serviceAvailability.getAdditionalData().add(KeyValueType.builder()
+                .key("networkAccessTechnologyBroadband").value("FTTH").build());
+        serviceAvailability.getAdditionalData().add(KeyValueType.builder()
+                .key("serviceTechnologyBroadband").value("HFC").build());
+
         PortabilityType portability =  new PortabilityType();
         portability.setReceipt("test");
         portability.setProductType("test");
@@ -353,10 +364,13 @@ public class CommonsMocks {
 
         relatedParties.add(relatedParty);
 
+        List<KeyValueType> paymentAdditionalData = new ArrayList<>();
+        paymentAdditionalData.add(KeyValueType.builder().key("paymentDocument").value("Boleta").build());
         PaymentType paymentType = PaymentType
                 .builder()
                 .paymentType("EX")
                 .cid("string")
+                .additionalData(paymentAdditionalData)
                 .build();
 
         IdentityValidationType identityValidationType = IdentityValidationType.builder()
