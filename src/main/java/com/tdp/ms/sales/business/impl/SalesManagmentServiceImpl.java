@@ -1203,6 +1203,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                 .nationalIdType(sale.getRelatedParty().get(0).getNationalIdType())
                 .build();
 
+        /* Se borra el campo a pedido de Lincoln
         Address address = Address
                 .builder()
                 .streetNr(sale.getCommercialOperation().get(0).getWorkOrDeliveryType().getPlace().get(0).getAddress()
@@ -1221,7 +1222,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                         .getAddress().getRegion())
                 .country(sale.getCommercialOperation().get(0).getWorkOrDeliveryType().getPlace().get(0)
                         .getAddress().getCountry())
-                .build();
+                .build();*/
 
         Customer customerQuotation = Customer
                 .builder()
@@ -1235,7 +1236,6 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                         "customerSubTypeCode"))
                 .contactMedia(contactMediumList)
                 .legalId(legalId)
-                .address(address)
                 .creditLimit(sale.getRelatedParty().get(0).getScore().getFinancingCapacity())
                 .build();
 
@@ -1575,6 +1575,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                 .nationalId(sale.getRelatedParty().get(0).getNationalId())
                 .build();
 
+        /* Se borra el campo address, a pedido de Lincoln
         Address address = Address
                 .builder()
                 .streetName(sale.getCommercialOperation().get(0).getWorkOrDeliveryType().getPlace().get(0).getAddress()
@@ -1595,7 +1596,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                                                                                             .getAddress().getCountry())
                 .region(sale.getCommercialOperation().get(0).getWorkOrDeliveryType().getPlace().get(0)
                                                                                             .getAddress().getRegion())
-                .build();
+                .build();*/
 
         Customer customerQuotation = Customer
                 .builder()
@@ -1607,7 +1608,6 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                                                                                         "customerSubTypeCode"))
                 .segment(this.getStringValueByKeyFromAdditionalDataList(sale.getAdditionalData(),
                                                                                         "customerTypeCode"))
-                .address(address)
                 .legalId(legalId)
                 .creditLimit(sale.getRelatedParty().get(0).getScore().getFinancingCapacity())
                 .contactMedia(contactMediumList).build();

@@ -52,8 +52,7 @@ public class QuotationWebClientImpl implements QuotationWebClient {
 
     @Override
     public Mono<CreateQuotationResponse> createQuotation(CreateQuotationRequest request, Sale sale) {
-        LOG.info("->Create Order Request: ".concat(new Gson().toJson(request.getBody())));
-        System.out.println(new Gson().toJson(request.getBody()));
+        LOG.info("->Quotation Request: ".concat(new Gson().toJson(request.getBody())));
         return webClientInsecure
                 .post()
                 .uri(createQuotationUrl)
