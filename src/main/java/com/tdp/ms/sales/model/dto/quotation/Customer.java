@@ -37,6 +37,5 @@ public class Customer {
     private String subsegment;
     private List<ContactMedium> contactMedia = new ArrayList<>();
     private LegalId legalId;
-    private Address address;
     private String creditLimit;
 }
