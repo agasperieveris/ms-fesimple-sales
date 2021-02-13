@@ -160,9 +160,9 @@ public class SalesManagmentServicePrivateMethodsTest {
 
         CreateQuotationResponse quotationResponse = CreateQuotationResponse
                 .builder()
-                .numberOfInstalments(1)
+                .numberOfInstalments("1")
                 .recurringChargePeriod("monthly")
-                .amountPerInstalment(130)
+                .amountPerInstalment("130")
                 .build();
 
         method.invoke(salesManagmentServiceImpl, quotationResponse, sale);

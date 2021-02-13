@@ -61,9 +61,9 @@ public class QuotationWebClientImplTest {
 
         CreateQuotationResponse createQuotationResponse = CreateQuotationResponse
                 .builder()
-                .numberOfInstalments(1)
+                .numberOfInstalments("1")
                 .recurringChargePeriod("monthly")
-                .amountPerInstalment(10)
+                .amountPerInstalment("10")
                 .build();
 
         mockBackEnd.enqueue(new MockResponse()

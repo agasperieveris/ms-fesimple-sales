@@ -27,7 +27,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class CreateQuotationResponse {
-    private Integer numberOfInstalments;
+    private String numberOfInstalments;
     private String recurringChargePeriod;
-    private Integer amountPerInstalment;
+    private String amountPerInstalment;
 }

@@ -1418,7 +1418,8 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                 .commercialAgreement("N")
                 .serviceIdLobConcat(serviceIdLobConcat[0])
                 .customer(customerQuotation)
-                .operationType(sale.getCommercialOperation().get(0).getReason())
+                .operationType(getOperationTypeForQuotationRequest(sale.getCommercialOperation().get(0)
+                                .getAdditionalData(), sale.getCommercialOperation().get(0).getReason()))
                 .totalAmount(totalAmount)
                 .associatedPlanRecurrentCost(associatedPlanRecurrentCost)
                 .totalCustomerRecurrentCost(totalCustomerRecurrentCost)
@@ -1430,6 +1431,22 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                 .build();
 
         createQuotationRequest.setBody(body);
+    }
+
+    private String getOperationTypeForQuotationRequest(List<KeyValueType> additionalData, String reason) {
+        String isCapl = additionalData.stream()
+                .filter(item -> item.getKey().equalsIgnoreCase(Constants.CAPL))
+                .findFirst()
+                .orElse(KeyValueType.builder().value("false").build())
+                .getValue();
+
+        String isCaeq = additionalData.stream()
+                .filter(item -> item.getKey().equalsIgnoreCase(Constants.CAEQ))
+                .findFirst()
+                .orElse(KeyValueType.builder().value("false").build())
+                .getValue();
+
+        return Boolean.parseBoolean(isCapl) && Boolean.parseBoolean(isCaeq) ? Constants.CAEQ : reason;
     }
 
     private Mono<Sale> creationOrderValidation(Sale saleRequest, CreateProductOrderGeneralRequest productOrderRequest,
@@ -1766,7 +1783,8 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                 .accountId(sale.getRelatedParty().get(0).getAccountId())
                 .commercialAgreement("N")
                 .customer(customerQuotation)
-                .operationType(sale.getCommercialOperation().get(0).getReason()) // Debe llegar para Alta reason = ALTA y para Porta reason = PORTA
+                .operationType(getOperationTypeForQuotationRequest(sale.getCommercialOperation().get(0)
+                        .getAdditionalData(), sale.getCommercialOperation().get(0).getReason()))
                 .totalAmount(totalAmount)
                 .downPayment(downPayment)
                 .totalCustomerRecurrentCost(totalCustomerRecurrentCost)

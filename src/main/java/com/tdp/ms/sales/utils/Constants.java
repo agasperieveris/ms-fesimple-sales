@@ -22,6 +22,8 @@ public class Constants {
     public static final String STRING = "STRING";
     public static final String FLOWSALE = "flowSale";
     public static final String RETAIL = "Retail";
+    public static final String CAEQ = "CAEQ";
+    public static final String CAPL = "CAPL";
     public static final String PORTABILIDAD = "PORTABILIDAD";
     public static final String NUMERO_CAJA = "NUMERO_CAJA";
     public static final String BAD_REQUEST_EXCEPTION_ID = "SVC1000";
