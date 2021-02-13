@@ -1,5 +1,7 @@
 package com.tdp.ms.sales.business.impl;
 
+import com.azure.core.annotation.Post;
+import com.google.gson.Gson;
 import com.tdp.genesis.core.exception.GenesisException;
 import com.tdp.ms.commons.util.DateUtils;
 import com.tdp.ms.commons.util.MapperUtils;
@@ -610,6 +612,54 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         return false;
     }
 
+    private Mono<Sale> retryRequest(PostSalesRequest request, Sale sale, Boolean flgCaeq, Boolean flgAlta,
+                                       Boolean flgCasi, Boolean flgFinanciamiento, String sapidSimcard) {
+        if (sale != null && sale.getCommercialOperation().get(0).getOrder() != null
+                && sale.getCommercialOperation().get(0).getDeviceOffering() == null
+                && sale.getCommercialOperation().get(0).getDeviceOffering().get(0).getStock() == null
+                && StringUtils.isEmpty(sale.getCommercialOperation().get(0).getDeviceOffering().get(0)
+                .getStock().getReservationId())) { // Retry from Reservation
+
+            // Call to Reserve Stock Service When Commercial Operation include CAEQ
+            if (flgCaeq || flgAlta) {
+
+                return this.callToReserveStockAndCreateQuotation(PostSalesRequest.builder()
+                                .sale(sale).headersMap(request.getHeadersMap())
+                                .build(), sale, flgCasi, flgFinanciamiento, sapidSimcard);
+            } else {
+                if (Boolean.TRUE.equals(flgCasi)) {
+
+                    // Call to Create Quotation Service When CommercialOperation Contains CASI
+                    return this.callToCreateQuotation(PostSalesRequest.builder()
+                            .sale(sale).headersMap(request.getHeadersMap())
+                            .build(), sale, true, flgFinanciamiento);
+                } else {
+                    // Case when is Only CAPL
+                    return salesRepository.save(sale)
+                            .map(r -> {
+                                this.postSalesEventFlow(PostSalesRequest.builder()
+                                        .sale(sale).headersMap(request.getHeadersMap())
+                                        .build());
+                                return r;
+                            });
+                }
+            }
+
+        } else if (sale != null && sale.getCommercialOperation().get(0).getOrder() != null
+                && sale.getCommercialOperation().get(0).getDeviceOffering() != null
+                && sale.getCommercialOperation().get(0).getDeviceOffering().get(0).getStock() != null
+                && !StringUtils.isEmpty(sale.getCommercialOperation().get(0).getDeviceOffering().get(0)
+                .getStock().getReservationId())) { // Retry from Create Quotation
+
+            // Call to Create Quotation Service When CommercialOperation Contains CAEQ
+            return this.callToCreateQuotation(PostSalesRequest.builder()
+                    .sale(sale)
+                    .headersMap(request.getHeadersMap())
+                    .build(), sale, flgCasi, flgFinanciamiento);
+        }
+        return Mono.justOrEmpty(sale);
+    }
+
     @Override
     public Mono<Sale> post(PostSalesRequest request) {
 
@@ -651,8 +701,8 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                 .findFirst()
                 .orElse(KeyValueType.builder().value(null).build())
                 .getValue();
-        Boolean isRetail = flowSaleValue.equalsIgnoreCase("Retail");
-        Boolean statusValidado = saleRequest.getStatus().equalsIgnoreCase("VALIDADO");
+        Boolean isRetail = flowSaleValue.equalsIgnoreCase(Constants.RETAIL);
+        Boolean statusValidado = saleRequest.getStatus().equalsIgnoreCase(Constants.VALIDADO);
         if (Boolean.TRUE.equals(isRetail) && statusValidado) {
             if (StringUtils.isEmpty(this.getStringValueByKeyFromAdditionalDataList(saleRequest.getAdditionalData(),
                     "MOVILE_IMEI"))) {
@@ -715,54 +765,25 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
 
         flgFinanciamiento[0] = setFinancingFlag(saleRequest.getCommercialOperation().get(0).getDeviceOffering());
 
-        // Validar si es que es un reintento
-        final Sale[] saleRetry = {null};
-        salesRepository.findBySalesId(saleRequest.getSalesId()).map(saleItem -> saleRetry[0] = saleItem);
+        // Validate if it is a retry from Frontend
+        return salesRepository.findBySalesId(saleRequest.getSalesId())
+                // Main function
+                .defaultIfEmpty(Sale.builder().build())
+                // Validate existing sale
+                .flatMap(saleItem -> {
+                    if (saleItem.getSalesId() == null || saleItem.getCommercialOperation().get(0).getOrder() == null) {
+                        return mainFunction(saleRequest, request, flgAlta, flgCapl, flgCaeq, flgCasi,
+                                flgFinanciamiento, isRetail, sapidSimcard);
+                    }
+                    return retryRequest(request, saleItem, flgCaeq[0], flgAlta[0], flgCasi[0],
+                            flgFinanciamiento[0], sapidSimcard[0]);
+                });
 
-        if (saleRetry[0] != null && saleRetry[0].getCommercialOperation().get(0).getOrder() != null
-                && saleRetry[0].getCommercialOperation().get(0).getDeviceOffering() == null
-                && saleRetry[0].getCommercialOperation().get(0).getDeviceOffering().get(0).getStock() == null
-                && StringUtils.isEmpty(saleRetry[0].getCommercialOperation().get(0).getDeviceOffering().get(0)
-                .getStock().getReservationId())) { // Retry from Reservation
+    }
 
-            // Call to Reserve Stock Service When Commercial Operation include CAEQ
-            if (flgCaeq[0] || flgAlta[0]) {
-
-                return this.callToReserveStockAndCreateQuotation(PostSalesRequest.builder()
-                                .sale(saleRetry[0]).headersMap(request.getHeadersMap())
-                                .build(), saleRetry[0], flgCasi[0],
-                        flgFinanciamiento[0], sapidSimcard[0]);
-            } else {
-                if (Boolean.TRUE.equals(flgCasi[0])) {
-
-                    // Call to Create Quotation Service When CommercialOperation Contains CASI
-                    return this.callToCreateQuotation(PostSalesRequest.builder()
-                            .sale(saleRetry[0]).headersMap(request.getHeadersMap())
-                            .build(), saleRetry[0], true, flgFinanciamiento[0]);
-                } else {
-                    // Case when is Only CAPL
-                    return salesRepository.save(saleRetry[0])
-                            .map(r -> {
-                                this.postSalesEventFlow(PostSalesRequest.builder()
-                                        .sale(saleRetry[0]).headersMap(request.getHeadersMap())
-                                        .build());
-                                return r;
-                            });
-                }
-            }
-
-        } else if (saleRetry[0] != null && saleRetry[0].getCommercialOperation().get(0).getOrder() != null
-                && saleRetry[0].getCommercialOperation().get(0).getDeviceOffering() != null
-                && saleRetry[0].getCommercialOperation().get(0).getDeviceOffering().get(0).getStock() != null
-                && !StringUtils.isEmpty(saleRetry[0].getCommercialOperation().get(0).getDeviceOffering().get(0)
-                .getStock().getReservationId())) { // Retry from Create Quotation
-
-            // Call to Create Quotation Service When CommercialOperation Contains CAEQ
-            return this.callToCreateQuotation(PostSalesRequest.builder()
-                            .sale(saleRetry[0]).headersMap(request.getHeadersMap()).build(),
-                    saleRetry[0], flgCasi[0], flgFinanciamiento[0]);
-        }
-
+    private Mono<Sale> mainFunction(Sale saleRequest, PostSalesRequest request, final Boolean[] flgAlta,
+                                    final Boolean[] flgCapl, final Boolean[] flgCaeq, final Boolean[] flgCasi,
+                                    final Boolean[] flgFinanciamiento, Boolean isRetail, final String[] sapidSimcard) {
         // Getting Main CommercialTypeOperation value
         String commercialOperationReason = saleRequest.getCommercialOperation().get(0).getReason();
         String mainProductType = saleRequest.getProductType();
@@ -835,7 +856,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                 Mono<BusinessParametersReasonCode> getParametersReasonCode = businessParameterWebClient
                         .getParametersReasonCode(request.getHeadersMap());
 
-                // TODO: Añadir llamada a get businessParameters - ReasonCode
+                // Añadir llamada a get businessParameters - ReasonCode
                 return Mono.zip(getRiskDomain, salesCharsByCot, getBonificacionSim, getParametersSimCard, getParametersReasonCode)
                         .flatMap(tuple -> validationsAndBuildings(tuple.getT1(), tuple.getT2(), tuple.getT3(),
                                 tuple.getT4(), tuple.getT5(), saleRequest, request, sapidSimcard,
@@ -1182,7 +1203,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
 
         final String[] email = {null};
         sale.getProspectContact().stream()
-                .filter(item -> item.getMediumType().equalsIgnoreCase("email address"))
+                .filter(item -> item.getMediumType().equalsIgnoreCase(Constants.EMAIL_ADDRESS))
                 .findFirst()
                 .ifPresent(item -> email[0] = item.getCharacteristic().getEmailAddress());
         com.tdp.ms.sales.model.dto.quotation.ContactMedium contactMedium1 = com.tdp.ms.sales.model.dto.quotation
@@ -1478,7 +1499,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                         .build());
 
                 // cambiar status a "VALIDADO"
-                saleRequest.setStatus("VALIDADO");
+                saleRequest.setStatus(Constants.VALIDADO);
                 return saleRequest;
             });
         } else {
@@ -1580,7 +1601,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
 
         final String[] email = {null};
         sale.getProspectContact().stream()
-                .filter(item -> item.getMediumType().equalsIgnoreCase("email address"))
+                .filter(item -> item.getMediumType().equalsIgnoreCase(Constants.EMAIL_ADDRESS))
                 .findFirst()
                 .ifPresent(item -> email[0] = item.getCharacteristic().getEmailAddress());
         com.tdp.ms.sales.model.dto.quotation.ContactMedium contactMedium1 = com.tdp.ms.sales.model.dto.quotation
@@ -1985,8 +2006,8 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                 .findFirst()
                 .orElse(KeyValueType.builder().value(null).build())
                 .getValue();
-        Boolean isRetail = flowSaleValue.equalsIgnoreCase("Retail");
-        if (Boolean.TRUE.equals(isRetail)) {
+        Boolean isRetail = flowSaleValue.equalsIgnoreCase(Constants.RETAIL);
+        if (Boolean.TRUE.equals(isRetail) && saleRequest.getStatus().equalsIgnoreCase(Constants.VALIDADO)) {
             String iccidSim = this.getStringValueByKeyFromAdditionalDataList(saleRequest.getAdditionalData(),
                     "SIM_ICCID");
             ChangedCharacteristic changedCharacteristic2 = ChangedCharacteristic
@@ -2030,7 +2051,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         List<FlexAttrType> altaOrderAttributesList = this.commonOrderAttributes(saleRequest);
 
         // Order Attributes when channel is retail
-        if (Boolean.TRUE.equals(isRetail)) {
+        if (Boolean.TRUE.equals(isRetail) && saleRequest.getStatus().equalsIgnoreCase(Constants.VALIDADO)) {
             //  RETAIL PAYMENT NUMBER ATTRIBUTE
             String paymentNumber = this.getStringValueByKeyFromAdditionalDataList(saleRequest.getAdditionalData(),
                     "NUMERO_TICKET");
@@ -2096,7 +2117,6 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
             altaOrderAttributesList.add(simSkuAttr);
             altaOrderAttributesList.add(cashierRegisterAttr);
         }
-
 
         AltaMobileRequest altaRequest = AltaMobileRequest
                 .builder()
@@ -2211,7 +2231,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         shipmentDetailsType.setShipmentAddressId(saleRequest.getCommercialOperation().get(0).getWorkOrDeliveryType().getPlace().get(0).getId());
         shipmentDetailsType.setShipmentSiteId("NA");
         saleRequest.getProspectContact().stream()
-                .filter(item -> item.getMediumType().equalsIgnoreCase("email address"))
+                .filter(item -> item.getMediumType().equalsIgnoreCase(Constants.EMAIL_ADDRESS))
                 .findFirst()
                 .ifPresent(contactMedium -> {
                     shipmentDetailsType.setRecipientEmail(contactMedium.getCharacteristic().getEmailAddress());
@@ -2422,7 +2442,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         // Delivery Method Attribute
         String deliveryCode = "";
         for (KeyValueType kv : saleRequest.getAdditionalData()) {
-            if (kv.getKey().equals("deliveryMethod")) {
+            if (kv.getKey().equals(Constants.DELIVERY_METHOD_CAMEL_CASE)) {
                 deliveryCode = kv.getValue();
             }
         }
@@ -2628,7 +2648,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
 
         // Getting Delivery Method (IS, SP)
         for (KeyValueType kv : saleRequest.getAdditionalData()) {
-            if (kv.getKey().equals("deliveryMethod")) {
+            if (kv.getKey().equals(Constants.DELIVERY_METHOD_CAMEL_CASE)) {
                 deliveryType = kv.getValue();
             }
         }

@@ -227,25 +227,40 @@ public class SalesManagmentServiceTest {
 
         salesManagmentService.post(salesRequest);
 
+        Method methodMainFuntion = SalesManagmentServiceImpl.class.getDeclaredMethod("mainFunction", Sale.class, PostSalesRequest.class,
+                Boolean[].class, Boolean[].class, Boolean[].class, Boolean[].class, Boolean[].class, Boolean.class, String[].class);
+        methodMainFuntion.setAccessible(true);
+        final Boolean[] flag = {false};
+        final Boolean[] flagTrue = {true};
+        final Boolean[] flgFinanciamiento = {false};
+        final String[] sapidSimcard = {""};
+        methodMainFuntion.invoke(salesManagmentServiceImpl, sale, salesRequest, flagTrue, flag, flag, flag, flag, false, sapidSimcard);
+
         salesRequest.getSale().getAdditionalData().stream()
                 .filter(item -> item.getKey().equalsIgnoreCase("ufxauthorization"))
                 .findFirst()
                 .ifPresent(item -> item.setValue(""));
         salesManagmentService.post(salesRequest);
+        methodMainFuntion.invoke(salesManagmentServiceImpl, sale, salesRequest, flagTrue, flag, flag, flag, flag, false, sapidSimcard);
+
+        salesRequest.getSale().setProductType("cualquier otra cosa");
+        salesManagmentService.post(salesRequest);
+        methodMainFuntion.invoke(salesManagmentServiceImpl, sale, salesRequest, flagTrue, flag, flag, flag, flag, false, sapidSimcard);
 
         salesRequest.getSale().setProductType("WIRELESS");
         salesManagmentService.post(salesRequest);
+        methodMainFuntion.invoke(salesManagmentServiceImpl, sale, salesRequest, flagTrue, flag, flag, flag, flag, false, sapidSimcard);
 
         // Segundo IF
         salesRequest.getSale().getCommercialOperation().get(0).getOrder().setProductOrderId("string");
         salesRequest.getSale().getCommercialOperation().get(0).getDeviceOffering().get(0).getStock().setReservationId("string");
         salesManagmentService.post(salesRequest);
+        methodMainFuntion.invoke(salesManagmentServiceImpl, sale, salesRequest, flagTrue, flag, flag, flag, flag, false, sapidSimcard);
 
         Method method = SalesManagmentServiceImpl.class.getDeclaredMethod("processFija", List.class, Sale.class,
                 PostSalesRequest.class, Boolean[].class);
         method.setAccessible(true);
-        final Boolean[] flgFinanciamiento = {false};
-        method.invoke(salesManagmentServiceImpl, bpFinanciamientoFijaResponseList, salesRequest.getSale(), salesRequest, flgFinanciamiento);
+        method.invoke(salesManagmentServiceImpl, bpFinanciamientoFijaResponseList, salesRequest.getSale(), salesRequest, flgFinanciamiento, false);
 
         /* validationsAndBuildings method */
         Method method2 = SalesManagmentServiceImpl.class.getDeclaredMethod("validationsAndBuildings",
@@ -258,13 +273,12 @@ public class SalesManagmentServiceTest {
         BusinessParametersResponse getRiskDomainTrue = MapperUtils.mapper(BusinessParametersResponse.class, "{\"metadata\":{\"info\":\"Dominios de Riesgos SPAN\",\"type\":\"KeyValueActive\",\"label\":{\"key\":\"id\",\"value\":\"nombreDominio\",\"active\":\"estado\",\"ext\":\"-\"}},\"data\":[{\"key\":\"430\",\"value\":\"plusmail.cf\",\"active\":true,\"ext\":\"-\"}]}");
         BusinessParametersResponseObjectExt getBonificacionSim = MapperUtils.mapper(BusinessParametersResponseObjectExt.class, "{\"metadata\":{\"info\":\"Códigos de bonificación\",\"type\":\"KeyValueActiveExt\",\"label\":{\"key\":\"channel\",\"value\":\"productSpecPricingID\",\"active\":\"active\",\"ext\":\"parentProductCatalogID\"}},\"data\":[{\"key\":\"CC\",\"value\":\"34572615\",\"active\":true,\"ext\":\"7431\"}]}");
         BusinessParametersResponseObjectExt getParametersSimCard = MapperUtils.mapper(BusinessParametersResponseObjectExt.class, "{\"metadata\":{\"info\":\"Parámetros del simcard para sales\",\"type\":\"KeyValueActiveExt\",\"label\":{\"key\":\"codParam\",\"value\":\"desParam\",\"active\":\"active\",\"ext\":\"-\"}},\"data\":[{\"key\":\"sku\",\"value\":\"SKU0001\",\"active\":true,\"ext\":\" \"},{\"key\":\"sapid\",\"value\":\"TSPE4128234R510201\",\"active\":true,\"ext\":\"-\"}]}");
-        final String[] sapidSimcard = {""};
+
         String commercialOperationReason = "PORTA";
         String channelIdRequest = salesRequest.getSale().getChannel().getId();
         String customerIdRequest = salesRequest.getSale().getRelatedParty().get(0).getCustomerId();
         String productOfferingIdRequest = salesRequest.getSale().getCommercialOperation()
                 .get(0).getProductOfferings().get(0).getId();
-        final Boolean[] flag = {true};
         method2.invoke(salesManagmentServiceImpl, getRiskDomainTrue, Arrays.asList(BusinessParameterExt.builder().build()),
                 getBonificacionSim, getParametersSimCard, businessParametersReasonCode, salesRequest.getSale(), salesRequest, sapidSimcard, commercialOperationReason,
                 flag, flag, flag, flag, flag, channelIdRequest, customerIdRequest, productOfferingIdRequest);
@@ -273,6 +287,24 @@ public class SalesManagmentServiceTest {
         method2.invoke(salesManagmentServiceImpl, getRiskDomain, Arrays.asList(BusinessParameterExt.builder().build()),
                 getBonificacionSim, getParametersSimCard, businessParametersReasonCode, salesRequest.getSale(), salesRequest, sapidSimcard, commercialOperationReason,
                 flag, flag, flag, flag, flag, channelIdRequest, customerIdRequest, productOfferingIdRequest);
+    }
+
+    @Test
+    void retryRequest_Test() throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
+        PostSalesRequest salesRequest = PostSalesRequest
+                .builder()
+                .sale(sale)
+                .headersMap(headersMap)
+                .build();
+
+        Method method = SalesManagmentServiceImpl.class.getDeclaredMethod("retryRequest", PostSalesRequest.class,
+                Sale.class, Boolean.class, Boolean.class, Boolean.class, Boolean.class, String.class);
+        method.setAccessible(true);
+        Sale sale = CommonsMocks.createSaleMock2();
+        method.invoke(salesManagmentServiceImpl, salesRequest, sale, true, true, false, false, "");
+        method.invoke(salesManagmentServiceImpl, salesRequest, sale, true, true, true, false, "");
+        method.invoke(salesManagmentServiceImpl, salesRequest, sale, false, false, false, false, "");
+        method.invoke(salesManagmentServiceImpl, salesRequest, null, false, false, false, false, "");
     }
 
     @Test
