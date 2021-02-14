@@ -12,13 +12,13 @@
 	<properties>
 		<maven-pmd-plugin.version>3.12.0</maven-pmd-plugin.version>
 		<maven-project-info-reports-plugin.version>3.0.0</maven-project-info-reports-plugin.version>
-		<sonar.exclusions>com/tdp/ms/sales/**/*</sonar.exclusions>
-		<sonar.coverage.exclusions>com/tdp/ms/sales/**/*</sonar.coverage.exclusions>
+		<sonar.exclusions>com/tdp/ms/sales/eventflow/**/*</sonar.exclusions>
+		<sonar.coverage.exclusions>com/tdp/ms/sales/eventflow/**/*</sonar.coverage.exclusions>
 	</properties>
 
 	<groupId>com.tdp.ms</groupId>
 	<artifactId>sales</artifactId>
-	<version>1.2.29</version>
+	<version>1.4.27</version>
 	<name>${project.groupId}:${project.artifactId}</name>
 	<description>Template from Genesis Framework to build microservices</description>
 
@@ -55,6 +55,12 @@
 		</dependency>
 
 		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-collections4</artifactId>
+			<version>4.4</version>
+		</dependency>
+
+		<dependency>
 			<groupId>org.mockito</groupId>
 			<artifactId>mockito-core</artifactId>
 			<version>3.1.0</version>
@@ -87,12 +93,6 @@
 		<dependency>
 			<groupId>org.springframework.cloud</groupId>
 			<artifactId>spring-cloud-starter-config</artifactId>
-		</dependency>
-
-		<dependency>
-			<groupId>com.microsoft.azure</groupId>
-			<artifactId>spring-data-cosmosdb</artifactId>
-			<version>2.2.0</version>
 		</dependency>
 
 		<dependency>
@@ -134,15 +134,22 @@
 			<artifactId>guava</artifactId>
 			<version>29.0-jre</version>
 		</dependency>
+
 		<dependency>
 			<groupId>com.azure</groupId>
 			<artifactId>azure-cosmos</artifactId>
 			<version>4.2.0</version>
 		</dependency>
+
 		<dependency>
 			<groupId>com.microsoft.azure</groupId>
-			<artifactId>azure-cosmosdb-spring-boot-starter</artifactId>
+			<artifactId>spring-data-cosmosdb</artifactId>
 			<version>2.2.0</version>
+		</dependency>
+
+		<dependency>
+			<groupId>com.tdp.genesis.starter.cosmosdb</groupId>
+			<artifactId>genesis-starter-cosmosdb</artifactId>
 		</dependency>
 
 		<dependency>
@@ -435,15 +442,18 @@
 								<ignoredUnusedDeclaredDependency>io.swagger:swagger-annotations:jar::</ignoredUnusedDeclaredDependency>
 								<ignoredUnusedDeclaredDependency>org.slf4j:slf4j-api:jar::</ignoredUnusedDeclaredDependency>
 								<ignoredUnusedDeclaredDependency>org.springframework.cloud:spring-cloud-starter-config:jar::</ignoredUnusedDeclaredDependency>
-								<ignoredUnusedDeclaredDependency>com.microsoft.azure:azure-cosmosdb-spring-boot-starter:jar::</ignoredUnusedDeclaredDependency>
 								<ignoredUnusedDeclaredDependency>com.google.guava:guava:jar::</ignoredUnusedDeclaredDependency>
-								<ignoredUnusedDeclaredDependency>com.azure:azure-cosmos:jar::</ignoredUnusedDeclaredDependency>
 								<ignoredUnusedDeclaredDependency>com.microsoft.azure:spring-cloud-azure-eventhubs-stream-binder:jar::</ignoredUnusedDeclaredDependency>
 								<ignoredUnusedDeclaredDependency>io.projectreactor:reactor-test:jar::</ignoredUnusedDeclaredDependency>
 								<ignoredUnusedDeclaredDependency>junit:junit:jar::</ignoredUnusedDeclaredDependency>
 								<ignoredUnusedDeclaredDependency>org.springframework.integration:spring-integration-core:jar::</ignoredUnusedDeclaredDependency>
 								<ignoredUnusedDeclaredDependency>com.microsoft.azure:spring-integration-azure-core:jar::</ignoredUnusedDeclaredDependency>
 								<ignoredUnusedDeclaredDependency>io.netty:netty-transport:jar::</ignoredUnusedDeclaredDependency>
+								<ignoredUnusedDeclaredDependency>com.tdp.genesis.starter.cosmosdb:genesis-starter-cosmosdb:jar::</ignoredUnusedDeclaredDependency>
+								<ignoredUnusedDeclaredDependency>com.microsoft.azure:azure-cosmosdb-spring-boot-starter:jar::</ignoredUnusedDeclaredDependency>
+								<ignoredUnusedDeclaredDependency>com.microsoft.azure:spring-data-cosmosdb:jar::</ignoredUnusedDeclaredDependency>
+								<ignoredUnusedDeclaredDependency>com.azure:azure-cosmos:jar::</ignoredUnusedDeclaredDependency>
+								<ignoredUnusedDeclaredDependency>com.microsoft.azure:spring-data-cosmosdb:jar::</ignoredUnusedDeclaredDependency>
 							</ignoredUnusedDeclaredDependencies>
 						</configuration>
 					</execution>

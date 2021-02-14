@@ -1,12 +1,15 @@
 package com.tdp.ms.sales.expose;
 
 import com.tdp.genesis.core.constants.HttpHeadersKey;
+import com.tdp.genesis.core.exception.GenesisException;
 import com.tdp.ms.sales.business.SalesService;
+import com.tdp.ms.sales.model.dto.KeyValueType;
 import com.tdp.ms.sales.model.entity.Sale;
 import com.tdp.ms.sales.model.request.GetSalesRequest;
-import com.tdp.ms.sales.model.response.SalesResponse;
 import com.tdp.ms.sales.utils.Commons;
 import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
 import java.util.HashMap;
 import java.util.Map;
 import javax.validation.Valid;
@@ -54,15 +57,24 @@ public class SalesLeadController {
 
     /**
      * se listan las ventas de la BBDD.
-     *
-     * @return
+     * @param serviceId     header     Identificador único de cada ejecución.
+	 * @param application   header     Identificador del sistema que origina la solicitud.
+	 * @param pid           header     Identificador de un grupo de ejecuciones, que tienen en
+	 *                                 común estar en el mismo proceso del negocio.
+	 * @param user          header     Identificador del usuario del sistema y/o subsistema
+	 *                                 que inicia la petición.
+     * @return              Sale
      */
 
     @GetMapping(value = "/{id}")
     @ApiOperation(produces = MediaType.APPLICATION_JSON_VALUE,
             value = "Obtiene por id la venta",
-            notes = "Se debe enviar id como parámetro",
-            response = SalesResponse.class)
+            notes = "Se debe enviar id como parámetro, se conulta la colección sales de Cosmos DB",
+            response = Sale.class)
+    @ApiResponses(value = {
+            @ApiResponse(code =404 , message = "El id no se encuentra registrado en BD.",response = GenesisException.class),
+            @ApiResponse(code =500 , message = "Internal Server Error", response=GenesisException.class),
+    })
     public Mono<Sale> getSales(@PathVariable("id") String id,
                                         @RequestHeader(HttpHeadersKey.UNICA_SERVICE_ID) String serviceId,
                                         @RequestHeader(HttpHeadersKey.UNICA_APPLICATION) String application,
@@ -85,6 +97,12 @@ public class SalesLeadController {
      * Registra los datos de un Sale en la BBDD de la Web Convergente.
      *
      * @author @srivasme
+     * @param serviceId     header     Identificador único de cada ejecución.
+	 * @param application   header     Identificador del sistema que origina la solicitud.
+	 * @param pid           header     Identificador de un grupo de ejecuciones, que tienen en
+	 *                                 común estar en el mismo proceso del negocio.
+	 * @param user          header     Identificador del usuario del sistema y/o subsistema
+	 *                                 que inicia la petición.
      * @param request Datos de la venta
      * @return SalesResponse, datos de la venta registrada en la BBDD de la Web
      *         Convergente
@@ -92,6 +110,14 @@ public class SalesLeadController {
 
     @PostMapping()
     @ResponseStatus(HttpStatus.CREATED)
+    @ApiOperation(produces = MediaType.APPLICATION_JSON_VALUE,
+    value = "Registra los datos de un Sale en la BBDD de la Web Convergente.",
+    notes = "Se debe enviar Datos de la venta, se guarda la colección sales en Cosmos DB",
+    response = Sale.class)
+    @ApiResponses(value = {
+            @ApiResponse(code =401 , message = "Unauthorized",response = GenesisException.class),
+            @ApiResponse(code =500 , message = "Internal Server Error", response=GenesisException.class),
+    })
     public Mono<Sale> createdSales(@Valid @RequestBody Sale request,
             @RequestHeader(HttpHeadersKey.UNICA_SERVICE_ID) String serviceId,
             @RequestHeader(HttpHeadersKey.UNICA_APPLICATION) String application,
@@ -102,15 +128,28 @@ public class SalesLeadController {
     }
 
     /**
-     * ACtualiza los datos de un Sale en la BBDD de la Web Convergente.
+     * Actualiza los datos de un Sale en la BBDD de la Web Convergente.
      *
      * @author @srivasme
+     * @param serviceId     header     Identificador único de cada ejecución.
+	 * @param application   header     Identificador del sistema que origina la solicitud.
+	 * @param pid           header     Identificador de un grupo de ejecuciones, que tienen en
+	 *                                 común estar en el mismo proceso del negocio.
+	 * @param user          header     Identificador del usuario del sistema y/o subsistema
+	 *                                 que inicia la petición.
      * @param request Datos de la venta
      * @return SalesResponse, datos de la venta actualizada en la BBDD de la Web
      *         Convergente
      */
-
     @PutMapping("/{id}")
+    @ApiOperation(produces = MediaType.APPLICATION_JSON_VALUE,
+    value = "Actualiza los datos de un Sale en la BBDD de la Web Convergente",
+    notes = "Se debe enviar Datos existente de la venta, se actualiza en la colección sales en Cosmos DB",
+    response = Sale.class)
+    @ApiResponses(value = {
+            @ApiResponse(code =401 , message = "Unauthorized",response = GenesisException.class),
+            @ApiResponse(code =500 , message = "Internal Server Error", response=GenesisException.class),
+    })
     public Mono<Sale> updateSales(@PathVariable("id") String salesId,
                                   @RequestBody Sale request,
                                   @RequestHeader(HttpHeadersKey.UNICA_SERVICE_ID) String serviceId,
@@ -118,39 +157,39 @@ public class SalesLeadController {
                                   @RequestHeader(HttpHeadersKey.UNICA_PID) String pid,
                                   @RequestHeader(HttpHeadersKey.UNICA_USER) String user) {
 
+        String audioFileName = request.getAdditionalData().stream()
+                .filter(keyValue -> keyValue.getKey().equalsIgnoreCase("filename")
+                        && keyValue.getValue() != null)
+                .findFirst()
+                .orElse(KeyValueType.builder().value(null).build())
+                .getValue();
+
+        if (audioFileName != null) {
+            return salesService.putEvent(salesId, request, Commons.fillHeaders(serviceId, application, pid, user));
+        }
         return salesService.put(salesId, request, Commons.fillHeaders(serviceId, application, pid, user));
     }
 
     /**
-     * ACtualiza los datos de un Sale en la BBDD de la Web Convergente - FLUJO EVENTOS.
-     *
-     * @author @srivasme
-     * @param request Datos de la venta
-     * @return SalesResponse, datos de la venta actualizada en la BBDD de la Web
-     *         Convergente
-     */
-    @PutMapping("/{id}/event")
-    public Mono<Sale> updateSalesEvent(@PathVariable("id") String salesId,
-                                  @RequestBody Sale request,
-                                  @RequestHeader(HttpHeadersKey.UNICA_SERVICE_ID) String serviceId,
-                                  @RequestHeader(HttpHeadersKey.UNICA_APPLICATION) String application,
-                                  @RequestHeader(HttpHeadersKey.UNICA_PID) String pid,
-                                  @RequestHeader(HttpHeadersKey.UNICA_USER) String user) {
-
-        return salesService.putEvent(salesId, request, Commons.fillHeaders(serviceId, application, pid, user));
-    }
-
-    /**
      * se listan las ventas que cumplan con los campos solicitados.
-     *
-     * @return
-     */
+     * @param serviceId     header     Identificador único de cada ejecución.
+	 * @param application   header     Identificador del sistema que origina la solicitud.
+	 * @param pid           header     Identificador de un grupo de ejecuciones, que tienen en
+	 *                                 común estar en el mismo proceso del negocio.
+	 * @param user          header     Identificador del usuario del sistema y/o subsistema
+	 *                                 que inicia la petición.
+     * @return              Lista de Sale
+     */        
 
     @GetMapping
     @ApiOperation(produces = MediaType.APPLICATION_JSON_VALUE,
             value = "Obtiene por id la venta",
-            notes = "Se debe enviar id como parámetro",
-            response = SalesResponse.class)
+            notes = "Se debe enviar id como parámetro para conseguir la colección sale de Cosmos DB",
+            responseContainer ="List", response = Sale.class)
+    @ApiResponses(value = {
+            @ApiResponse(code =401 , message = "Unauthorized",response = GenesisException.class),
+            @ApiResponse(code =500 , message = "Internal Server Error", response=GenesisException.class),
+    })
     public Flux<Sale> getSalesList(@RequestHeader(HttpHeadersKey.UNICA_SERVICE_ID) String serviceId,
                         @RequestHeader(HttpHeadersKey.UNICA_APPLICATION) String application,
                         @RequestHeader(HttpHeadersKey.UNICA_PID) String pid,

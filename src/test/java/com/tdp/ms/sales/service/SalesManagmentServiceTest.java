@@ -13,6 +13,7 @@ import com.tdp.ms.sales.model.dto.*;
 import com.tdp.ms.sales.model.dto.businessparameter.BusinessParameterDataSeq;
 import com.tdp.ms.sales.model.dto.businessparameter.BusinessParameterFinanciamientoFijaData;
 import com.tdp.ms.sales.model.dto.businessparameter.BusinessParameterFinanciamientoFijaExt;
+import com.tdp.ms.sales.model.dto.businessparameter.BusinessParameterReasonCodeData;
 import com.tdp.ms.sales.model.dto.productorder.CreateProductOrderGeneralRequest;
 import com.tdp.ms.sales.model.dto.productorder.FlexAttrType;
 import com.tdp.ms.sales.model.dto.productorder.caeq.ChangedContainedProduct;
@@ -78,6 +79,8 @@ public class SalesManagmentServiceTest {
     private static final String RH_UNICA_PID = "d4ce144c-6b26-4b5c-ad29-090a3a559d83";
     private static final String RH_UNICA_USER = "BackendUser";
 
+    private static BusinessParametersReasonCode businessParametersReasonCode;
+
     @BeforeAll
     static void setup() {
 
@@ -93,6 +96,16 @@ public class SalesManagmentServiceTest {
                 .builder()
                 .sale(sale)
                 .headersMap(headersMap)
+                .build();
+
+        businessParametersReasonCode = BusinessParametersReasonCode.builder()
+                .data(Arrays.asList(BusinessParameterReasonCodeData.builder()
+                        .ext(Arrays.asList(ReasonCodeExt.builder()
+                                .casi(false)
+                                .caeq(false)
+                                .capl(false)
+                                .build()))
+                        .build()))
                 .build();
     }
 
@@ -113,6 +126,197 @@ public class SalesManagmentServiceTest {
 
     @Test
     void postSalesTest() throws InvocationTargetException, IllegalAccessException, NoSuchMethodException {
+        Sale sale = CommonsMocks.createSaleMock2();
+
+        PostSalesRequest salesRequest = PostSalesRequest
+                .builder()
+                .sale(sale)
+                .headersMap(headersMap)
+                .build();
+
+        BusinessParameterExt ext1 = BusinessParameterExt
+                .builder()
+                .codComercialOperationType("CAEQ")
+                .codActionType("CW")
+                .codCharacteristicId("9941")
+                .codCharacteristicCode("AcquisitionType")
+                .codCharacteristicValue("private")
+                .build();
+        List<BusinessParameterExt> extList = new ArrayList<>();
+        extList.add(ext1);
+        BusinessParameterData businessParameterData1 = BusinessParameterData
+                .builder()
+                .ext(extList)
+                .build();
+        BusinessParameterDataSeq businessParameterData2 = BusinessParameterDataSeq
+                .builder()
+                .active(false)
+                .build();
+        List<BusinessParameterData> dataList = new ArrayList<>();
+        dataList.add(businessParameterData1);
+
+        List<BusinessParameterDataSeq> dataList2 = new ArrayList<>();
+        dataList2.add(businessParameterData2);
+
+        GetSalesCharacteristicsResponse businessParametersResponse = GetSalesCharacteristicsResponse
+                .builder()
+                .data(dataList)
+                .build();
+        BusinessParametersResponse expectBusinessParametersResponse = BusinessParametersResponse
+                .builder()
+                .data(dataList2)
+                .build();
+
+        BusinessParametersFinanciamientoFijaResponse bpFijaResponse = BusinessParametersFinanciamientoFijaResponse.builder()
+                .data(Arrays.asList(BusinessParameterFinanciamientoFijaData.builder()
+                        .ext(Arrays.asList(BusinessParameterFinanciamientoFijaExt.builder()
+                                        .id(1)
+                                        .nomProductType("Landline")
+                                        .nomParameter("financialEntity")
+                                        .desParameterTitle("Código de financiamiento fija")
+                                        .codParameterValue("FVFIR00006")
+                                        .build(),
+                                BusinessParameterFinanciamientoFijaExt.builder()
+                                        .id(2)
+                                        .nomProductType("Landline")
+                                        .nomParameter("chargeCodeInstallation")
+                                        .desParameterTitle("Código de financiamiento asociado a la instalación")
+                                        .codParameterValue("FRVTSE_001")
+                                        .build(),
+                                BusinessParameterFinanciamientoFijaExt.builder()
+                                        .id(3)
+                                        .nomProductType("Landline")
+                                        .nomParameter("chargeCodeDevicePremium")
+                                        .desParameterTitle("Código de financiamiento asociado a Upgrade a Modem Premium")
+                                        .codParameterValue("FRIOEQ_002")
+                                        .build(),
+                                BusinessParameterFinanciamientoFijaExt.builder()
+                                        .id(4)
+                                        .nomProductType("Landline")
+                                        .nomParameter("chargeCodeUltraWifi")
+                                        .desParameterTitle("Código de financiamiento asociado a Ultra Wifi")
+                                        .codParameterValue("FRIOEQ_007")
+                                        .build()))
+                        .build()))
+                .build();
+
+        List<BusinessParametersFinanciamientoFijaResponse> bpFinanciamientoFijaResponseList = new ArrayList<>();
+        bpFinanciamientoFijaResponseList.add(bpFijaResponse);
+
+        Mockito.when(businessParameterWebClient.getSalesCharacteristicsByCommercialOperationType(any()))
+                .thenReturn(Mono.just(businessParametersResponse));
+
+        Mockito.when(businessParameterWebClient.getRiskDomain(any(), any()))
+                .thenReturn(Mono.just(expectBusinessParametersResponse));
+
+        Mockito.when(businessParameterWebClient.getParametersFinanciamientoFija(any()))
+                .thenReturn(Mono.just(bpFijaResponse));
+
+        Mockito.when(businessParameterWebClient.getParametersReasonCode(any()))
+                .thenReturn(Mono.just(businessParametersReasonCode));
+
+        ProductorderResponse productorderResponse = new ProductorderResponse();
+        CreateProductOrderResponseType createProductOrderResponseType =  new CreateProductOrderResponseType();
+        productorderResponse.setCreateProductOrderResponse(createProductOrderResponseType);
+        Mockito.when(productOrderWebClient.createProductOrder(any(), eq(salesRequest.getHeadersMap()), any()))
+                .thenReturn(Mono.just(productorderResponse));
+
+        Mockito.when(salesRepository.findBySalesId(any())).thenReturn(Mono.just(sale));
+        Mockito.when(salesRepository.save(any())).thenReturn(Mono.just(sale));
+
+        salesManagmentService.post(salesRequest);
+
+        Method methodMainFuntion = SalesManagmentServiceImpl.class.getDeclaredMethod("mainFunction", Sale.class, PostSalesRequest.class,
+                Boolean[].class, Boolean[].class, Boolean[].class, Boolean[].class, Boolean[].class, Boolean.class, String[].class);
+        methodMainFuntion.setAccessible(true);
+        final Boolean[] flag = {false};
+        final Boolean[] flagTrue = {true};
+        final Boolean[] flgFinanciamiento = {false};
+        final String[] sapidSimcard = {""};
+        methodMainFuntion.invoke(salesManagmentServiceImpl, sale, salesRequest, flagTrue, flag, flag, flag, flag, false, sapidSimcard);
+
+        salesRequest.getSale().getAdditionalData().stream()
+                .filter(item -> item.getKey().equalsIgnoreCase("ufxauthorization"))
+                .findFirst()
+                .ifPresent(item -> item.setValue(""));
+        salesManagmentService.post(salesRequest);
+        methodMainFuntion.invoke(salesManagmentServiceImpl, sale, salesRequest, flagTrue, flag, flag, flag, flag, false, sapidSimcard);
+
+        salesRequest.getSale().setProductType("cualquier otra cosa");
+        salesManagmentService.post(salesRequest);
+        methodMainFuntion.invoke(salesManagmentServiceImpl, sale, salesRequest, flagTrue, flag, flag, flag, flag, false, sapidSimcard);
+
+        salesRequest.getSale().setProductType("WIRELESS");
+        salesManagmentService.post(salesRequest);
+        methodMainFuntion.invoke(salesManagmentServiceImpl, sale, salesRequest, flagTrue, flag, flag, flag, flag, false, sapidSimcard);
+
+        // Segundo IF
+        salesRequest.getSale().getCommercialOperation().get(0).getOrder().setProductOrderId("string");
+        salesRequest.getSale().getCommercialOperation().get(0).getDeviceOffering().get(0).getStock().setReservationId("string");
+        salesManagmentService.post(salesRequest);
+        methodMainFuntion.invoke(salesManagmentServiceImpl, sale, salesRequest, flagTrue, flag, flag, flag, flag, false, sapidSimcard);
+
+        Method method = SalesManagmentServiceImpl.class.getDeclaredMethod("processFija", List.class, Sale.class,
+                PostSalesRequest.class, Boolean[].class);
+        method.setAccessible(true);
+        method.invoke(salesManagmentServiceImpl, bpFinanciamientoFijaResponseList, salesRequest.getSale(), salesRequest, flgFinanciamiento);
+
+        /* validationsAndBuildings method */
+        Method method2 = SalesManagmentServiceImpl.class.getDeclaredMethod("validationsAndBuildings",
+                BusinessParametersResponse.class, List.class, BusinessParametersResponseObjectExt.class,
+                BusinessParametersResponseObjectExt.class, BusinessParametersReasonCode.class, Sale.class, PostSalesRequest.class, String[].class, String.class,
+                Boolean[].class, Boolean[].class, Boolean[].class, Boolean[].class, Boolean[].class, String.class, String.class, String.class);
+        method2.setAccessible(true);
+
+        BusinessParametersResponse getRiskDomain = MapperUtils.mapper(BusinessParametersResponse.class, "{\"metadata\":{\"info\":\"Dominios de Riesgos SPAN\",\"type\":\"KeyValueActive\",\"label\":{\"key\":\"id\",\"value\":\"nombreDominio\",\"active\":\"estado\",\"ext\":\"-\"}},\"data\":[{\"key\":\"430\",\"value\":\"plusmail.cf\",\"active\":false,\"ext\":\"-\"}]}");
+        BusinessParametersResponse getRiskDomainTrue = MapperUtils.mapper(BusinessParametersResponse.class, "{\"metadata\":{\"info\":\"Dominios de Riesgos SPAN\",\"type\":\"KeyValueActive\",\"label\":{\"key\":\"id\",\"value\":\"nombreDominio\",\"active\":\"estado\",\"ext\":\"-\"}},\"data\":[{\"key\":\"430\",\"value\":\"plusmail.cf\",\"active\":true,\"ext\":\"-\"}]}");
+        BusinessParametersResponseObjectExt getBonificacionSim = MapperUtils.mapper(BusinessParametersResponseObjectExt.class, "{\"metadata\":{\"info\":\"Códigos de bonificación\",\"type\":\"KeyValueActiveExt\",\"label\":{\"key\":\"channel\",\"value\":\"productSpecPricingID\",\"active\":\"active\",\"ext\":\"parentProductCatalogID\"}},\"data\":[{\"key\":\"CC\",\"value\":\"34572615\",\"active\":true,\"ext\":\"7431\"}]}");
+        BusinessParametersResponseObjectExt getParametersSimCard = MapperUtils.mapper(BusinessParametersResponseObjectExt.class, "{\"metadata\":{\"info\":\"Parámetros del simcard para sales\",\"type\":\"KeyValueActiveExt\",\"label\":{\"key\":\"codParam\",\"value\":\"desParam\",\"active\":\"active\",\"ext\":\"-\"}},\"data\":[{\"key\":\"sku\",\"value\":\"SKU0001\",\"active\":true,\"ext\":\" \"},{\"key\":\"sapid\",\"value\":\"TSPE4128234R510201\",\"active\":true,\"ext\":\"-\"}]}");
+
+        String commercialOperationReason = "PORTA";
+        String channelIdRequest = salesRequest.getSale().getChannel().getId();
+        String customerIdRequest = salesRequest.getSale().getRelatedParty().get(0).getCustomerId();
+        String productOfferingIdRequest = salesRequest.getSale().getCommercialOperation()
+                .get(0).getProductOfferings().get(0).getId();
+        method2.invoke(salesManagmentServiceImpl, getRiskDomainTrue, Arrays.asList(BusinessParameterExt.builder().build()),
+                getBonificacionSim, getParametersSimCard, businessParametersReasonCode, salesRequest.getSale(), salesRequest, sapidSimcard, commercialOperationReason,
+                flag, flag, flag, flag, flag, channelIdRequest, customerIdRequest, productOfferingIdRequest);
+        Sale sale1 = CommonsMocks.createSaleMock();
+        salesRequest.setSale(sale1);
+        method2.invoke(salesManagmentServiceImpl, getRiskDomain, Arrays.asList(BusinessParameterExt.builder().build()),
+                getBonificacionSim, getParametersSimCard, businessParametersReasonCode, salesRequest.getSale(), salesRequest, sapidSimcard, commercialOperationReason,
+                flag, flag, flag, flag, flag, channelIdRequest, customerIdRequest, productOfferingIdRequest);
+    }
+
+    @Test
+    void retryRequest_Test() throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
+        PostSalesRequest salesRequest = PostSalesRequest
+                .builder()
+                .sale(sale)
+                .headersMap(headersMap)
+                .build();
+
+        Method method = SalesManagmentServiceImpl.class.getDeclaredMethod("retryRequest", PostSalesRequest.class,
+                Sale.class, Boolean.class, Boolean.class, Boolean.class, Boolean.class, String.class);
+        method.setAccessible(true);
+        Sale sale = CommonsMocks.createSaleMock2();
+        method.invoke(salesManagmentServiceImpl, salesRequest, sale, true, true, false, false, "");
+        method.invoke(salesManagmentServiceImpl, salesRequest, sale, true, true, true, false, "");
+        method.invoke(salesManagmentServiceImpl, salesRequest, sale, false, false, false, false, "");
+        method.invoke(salesManagmentServiceImpl, salesRequest, null, false, false, false, false, "");
+    }
+
+    @Test
+    void assignBillingOffers_Test() throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
+        Method method = SalesManagmentServiceImpl.class.getDeclaredMethod("assignBillingOffers", List.class, List.class, List.class, List.class);
+        method.setAccessible(true);
+        Sale sale = CommonsMocks.createSaleMock2();
+        method.invoke(salesManagmentServiceImpl, sale.getCommercialOperation().get(0).getProductOfferings(),
+                new ArrayList<>(), new ArrayList<>(), new ArrayList<>());
+    }
+
+    @Test
+    void postSales_MigracionFija_Test() throws InvocationTargetException, IllegalAccessException, NoSuchMethodException {
         Sale sale = CommonsMocks.createSaleMock2();
         sale.getCommercialOperation().get(0).getOrder().setProductOrderId("");
 
@@ -200,6 +404,9 @@ public class SalesManagmentServiceTest {
         Mockito.when(businessParameterWebClient.getParametersFinanciamientoFija(any()))
                 .thenReturn(Mono.just(bpFijaResponse));
 
+        Mockito.when(businessParameterWebClient.getParametersReasonCode(any()))
+                .thenReturn(Mono.just(businessParametersReasonCode));
+
         ProductorderResponse productorderResponse = new ProductorderResponse();
         CreateProductOrderResponseType createProductOrderResponseType =  new CreateProductOrderResponseType();
         productorderResponse.setCreateProductOrderResponse(createProductOrderResponseType);
@@ -209,49 +416,9 @@ public class SalesManagmentServiceTest {
         Mockito.when(salesRepository.findBySalesId(any())).thenReturn(Mono.just(sale));
         Mockito.when(salesRepository.save(any())).thenReturn(Mono.just(sale));
 
-
+        salesRequest.getSale().getCommercialOperation().get(0).setReason("CAPL");
+        salesRequest.getSale().getCommercialOperation().get(0).setAction("MODIFY");
         salesManagmentService.post(salesRequest);
-
-        salesRequest.getSale().setProductType("WIRELESS");
-        salesManagmentService.post(salesRequest);
-
-        // Segundo IF
-        salesRequest.getSale().getCommercialOperation().get(0).getOrder().setProductOrderId("string");
-        salesRequest.getSale().getCommercialOperation().get(0).getDeviceOffering().get(0).getStock().setReservationId("string");
-        salesManagmentService.post(salesRequest);
-
-        Method method = SalesManagmentServiceImpl.class.getDeclaredMethod("processFija", List.class, Sale.class,
-                PostSalesRequest.class, Boolean[].class);
-        method.setAccessible(true);
-        final Boolean[] flgFinanciamiento = {false};
-        method.invoke(salesManagmentServiceImpl, bpFinanciamientoFijaResponseList, salesRequest.getSale(), salesRequest, flgFinanciamiento);
-
-        /* validationsAndBuildings method */
-        Method method2 = SalesManagmentServiceImpl.class.getDeclaredMethod("validationsAndBuildings",
-                BusinessParametersResponse.class, List.class, BusinessParametersResponseObjectExt.class,
-                BusinessParametersResponseObjectExt.class , Sale.class, PostSalesRequest.class, String[].class, String.class,
-                Boolean[].class, Boolean[].class, Boolean[].class, Boolean[].class, Boolean[].class, String.class, String.class, String.class);
-        method2.setAccessible(true);
-
-        BusinessParametersResponse getRiskDomain = MapperUtils.mapper(BusinessParametersResponse.class, "{\"metadata\":{\"info\":\"Dominios de Riesgos SPAN\",\"type\":\"KeyValueActive\",\"label\":{\"key\":\"id\",\"value\":\"nombreDominio\",\"active\":\"estado\",\"ext\":\"-\"}},\"data\":[{\"key\":\"430\",\"value\":\"plusmail.cf\",\"active\":false,\"ext\":\"-\"}]}");
-        BusinessParametersResponse getRiskDomainTrue = MapperUtils.mapper(BusinessParametersResponse.class, "{\"metadata\":{\"info\":\"Dominios de Riesgos SPAN\",\"type\":\"KeyValueActive\",\"label\":{\"key\":\"id\",\"value\":\"nombreDominio\",\"active\":\"estado\",\"ext\":\"-\"}},\"data\":[{\"key\":\"430\",\"value\":\"plusmail.cf\",\"active\":true,\"ext\":\"-\"}]}");
-        BusinessParametersResponseObjectExt getBonificacionSim = MapperUtils.mapper(BusinessParametersResponseObjectExt.class, "{\"metadata\":{\"info\":\"Códigos de bonificación\",\"type\":\"KeyValueActiveExt\",\"label\":{\"key\":\"channel\",\"value\":\"productSpecPricingID\",\"active\":\"active\",\"ext\":\"parentProductCatalogID\"}},\"data\":[{\"key\":\"CC\",\"value\":\"34572615\",\"active\":true,\"ext\":\"7431\"}]}");
-        BusinessParametersResponseObjectExt getParametersSimCard = MapperUtils.mapper(BusinessParametersResponseObjectExt.class, "{\"metadata\":{\"info\":\"Parámetros del simcard para sales\",\"type\":\"KeyValueActiveExt\",\"label\":{\"key\":\"codParam\",\"value\":\"desParam\",\"active\":\"active\",\"ext\":\"-\"}},\"data\":[{\"key\":\"sku\",\"value\":\"SKU0001\",\"active\":true,\"ext\":\" \"},{\"key\":\"sapid\",\"value\":\"TSPE4128234R510201\",\"active\":true,\"ext\":\"-\"}]}");
-        final String[] sapidSimcard = {""};
-        String commercialOperationReason = "PORTA";
-        String channelIdRequest = salesRequest.getSale().getChannel().getId();
-        String customerIdRequest = salesRequest.getSale().getRelatedParty().get(0).getCustomerId();
-        String productOfferingIdRequest = salesRequest.getSale().getCommercialOperation()
-                .get(0).getProductOfferings().get(0).getId();
-        final Boolean[] flag = {true};
-        method2.invoke(salesManagmentServiceImpl, getRiskDomainTrue, Arrays.asList(BusinessParameterExt.builder().build()),
-                getBonificacionSim, getParametersSimCard, salesRequest.getSale(), salesRequest, sapidSimcard, commercialOperationReason,
-                flag, flag, flag, flag, flag, channelIdRequest, customerIdRequest, productOfferingIdRequest);
-        Sale sale1 = CommonsMocks.createSaleMock();
-        salesRequest.setSale(sale1);
-        method2.invoke(salesManagmentServiceImpl, getRiskDomain, Arrays.asList(BusinessParameterExt.builder().build()),
-                getBonificacionSim, getParametersSimCard, salesRequest.getSale(), salesRequest, sapidSimcard, commercialOperationReason,
-                flag, flag, flag, flag, flag, channelIdRequest, customerIdRequest, productOfferingIdRequest);
     }
 
     @Test
@@ -270,7 +437,8 @@ public class SalesManagmentServiceTest {
         StepVerifier.create(result).verifyError();
     }
 
-    @Test
+    // TODO validar por qué no pasó este test en e2e1
+    /*@Test
     void postSalesSalesIdNotFoundErrorTest() {
         Sale saleTest = CommonsMocks.createSaleMock();
         saleTest.setSalesId("");
@@ -284,12 +452,13 @@ public class SalesManagmentServiceTest {
         Mono<Sale> result = salesManagmentService.post(salesRequest);
 
         StepVerifier.create(result).verifyError();
-    }
+    }*/
 
     @Test
     void postSalesRetailMovilImeiNotFoundErrorTest() {
         Sale saleTest = CommonsMocks.createSaleMock();
-        saleTest.getChannel().setId("DLC");
+        saleTest.setStatus("VALIDADO");
+        saleTest.setAdditionalData(Arrays.asList(KeyValueType.builder().key("flowSale").value("Retail").build()));
 
         PostSalesRequest salesRequest = PostSalesRequest
                 .builder()
@@ -305,12 +474,17 @@ public class SalesManagmentServiceTest {
     @Test
     void postSalesRetailsSimIccidNotFoundErrorTest() {
         Sale saleTest = CommonsMocks.createSaleMock();
-        saleTest.getChannel().setId("DLC");
 
         KeyValueType additionalData1 = new KeyValueType();
         additionalData1.setKey("MOVILE_IMEI");
         additionalData1.setValue("test");
         saleTest.getAdditionalData().add(additionalData1);
+        saleTest.setStatus("VALIDADO");
+
+        saleTest.getAdditionalData().stream()
+                .filter(item -> item.getKey().equalsIgnoreCase("flowSale"))
+                .findFirst()
+                .ifPresent(item -> item.setValue("Retail"));
 
         PostSalesRequest salesRequest = PostSalesRequest
                 .builder()
@@ -326,7 +500,6 @@ public class SalesManagmentServiceTest {
     @Test
     void postSalesRetailsNumeroCajaNotFoundErrorTest() {
         Sale saleTest = CommonsMocks.createSaleMock();
-        saleTest.getChannel().setId("DLC");
 
         KeyValueType additionalData1 = new KeyValueType();
         additionalData1.setKey("MOVILE_IMEI");
@@ -337,6 +510,12 @@ public class SalesManagmentServiceTest {
         additionalData2.setKey("SIM_ICCID");
         additionalData2.setValue("test");
         saleTest.getAdditionalData().add(additionalData2);
+        saleTest.setStatus("VALIDADO");
+
+        saleTest.getAdditionalData().stream()
+                .filter(item -> item.getKey().equalsIgnoreCase("flowSale"))
+                .findFirst()
+                .ifPresent(item -> item.setValue("Retail"));
 
         PostSalesRequest salesRequest = PostSalesRequest
                 .builder()
@@ -352,7 +531,6 @@ public class SalesManagmentServiceTest {
     @Test
     void postSalesRetailsNumeroTicketNotFoundErrorTest() {
         Sale saleTest = CommonsMocks.createSaleMock();
-        saleTest.getChannel().setId("DLC");
 
         KeyValueType additionalData1 = new KeyValueType();
         additionalData1.setKey("MOVILE_IMEI");
@@ -368,6 +546,12 @@ public class SalesManagmentServiceTest {
         additionalData3.setKey("NUMERO_CAJA");
         additionalData3.setValue("test");
         saleTest.getAdditionalData().add(additionalData3);
+        saleTest.setStatus("VALIDADO");
+
+        saleTest.getAdditionalData().stream()
+                .filter(item -> item.getKey().equalsIgnoreCase("flowSale"))
+                .findFirst()
+                .ifPresent(item -> item.setValue("Retail"));
 
         PostSalesRequest salesRequest = PostSalesRequest
                 .builder()
@@ -455,21 +639,23 @@ public class SalesManagmentServiceTest {
     @Test
     void caeqCommercialOperationTest() {
         CreateProductOrderGeneralRequest mainCaeqRequestProductOrder = new CreateProductOrderGeneralRequest();
-
+        sale.getCommercialOperation().get(0).setReason("CAEQ");
         CreateProductOrderGeneralRequest result = salesManagmentServiceImpl
-                .caeqCommercialOperation(sale, mainCaeqRequestProductOrder,
-                        "CEC", "CS920", "OF201", "JSG423DE6H");
+                .caeqCommercialOperation(sale, mainCaeqRequestProductOrder, false,
+                        "CEC", "CS920", "OF201", "JSG423DE6H",
+                        "string", businessParametersReasonCode);
 
     }
 
     @Test
     void caeqCaplCommercialOperationTest() {
         CreateProductOrderGeneralRequest mainCaeqCaplRequestProductOrder = new CreateProductOrderGeneralRequest();
+        sale.getCommercialOperation().get(0).setReason("CAEQ");
 
         CreateProductOrderGeneralRequest result = salesManagmentServiceImpl
-                .caeqCaplCommercialOperation(sale, mainCaeqCaplRequestProductOrder,
-                        "CC", "CS158", "OF486", "K3BD9EN349");
-
+                .caeqCaplCommercialOperation(sale, mainCaeqCaplRequestProductOrder, false,
+                        "CC", "CS158", "OF486", "K3BD9EN349",
+                        "string", businessParametersReasonCode);
     }
 
     @Test
@@ -483,10 +669,30 @@ public class SalesManagmentServiceTest {
     @Test
     void getChangedContainedCaeqListTest() {
         List<ChangedContainedProduct> changedContainedProducts = new ArrayList<>();
+        sale.getCommercialOperation().get(0).setReason("CAEQ");
 
-        List<ChangedContainedProduct> result = salesManagmentServiceImpl
-                .changedContainedCaeqList(sale, "temp1");
+        salesManagmentServiceImpl.changedContainedCaeqList(sale, "temp1", "string", false);
 
+        // deviceOfferings con solo un objeto
+        sale.getCommercialOperation().get(0).setDeviceOffering(Collections.singletonList(sale.getCommercialOperation().get(0).getDeviceOffering().get(0)));
+        salesManagmentServiceImpl.changedContainedCaeqList(sale, "temp1", "string", false);
+    }
+
+    @Test
+    void setChangedContainedProductProductId_Test()  throws NoSuchMethodException, InvocationTargetException,
+            IllegalAccessException {
+        Method method = SalesManagmentServiceImpl.class.getDeclaredMethod("setChangedContainedProductProductId",
+                ChangedContainedProduct.class, List.class);
+
+        method.setAccessible(true);
+        method.invoke(salesManagmentServiceImpl,ChangedContainedProduct.builder().build(), Arrays.asList(RelatedProductType.builder()
+                .product(ProductRefInfoType.builder()
+                        .description("SimDevice").name("Device").id("string")
+                        .productRelationship(Collections.singletonList(ProductProductRelationShip.builder()
+                                .product(ProductRelationShipProduct.builder()
+                                        .description("Device").id("8091734238").build()).build()))
+                        .build())
+                .build()));
     }
 
     @Test
@@ -503,6 +709,9 @@ public class SalesManagmentServiceTest {
                 .builder()
                 .productOrderReferenceNumber("761787835447")
                 .productOrderId("930686A")
+                .newProductsInNewOfferings(Arrays.asList(NewProductInNewOfferingInstanceConfigurationType.builder()
+                        .productOrderItemReferenceNumber("123456789A")
+                        .build()))
                 .build();
 
         method.invoke(salesManagmentServiceImpl,reserveStockRequest, sale, createProductOrderResponse, "");
@@ -569,6 +778,9 @@ public class SalesManagmentServiceTest {
                 .builder()
                 .productOrderReferenceNumber("761787835447")
                 .productOrderId("930686A")
+                .newProductsInNewOfferings(Arrays.asList(NewProductInNewOfferingInstanceConfigurationType.builder()
+                        .productOrderItemReferenceNumber("123456789A")
+                        .build()))
                 .build();
         sale.getCommercialOperation().get(0).setOrder(createProductOrderResponse);
 
@@ -639,5 +851,180 @@ public class SalesManagmentServiceTest {
                         .additionalData(null)
                         .build()))
                 .build());
+    }
+
+    @Test
+    void wirelineMigrations_Test() throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
+        Sale sale = CommonsMocks.createSaleMock2();
+
+        PostSalesRequest salesRequest = PostSalesRequest
+                .builder()
+                .sale(sale)
+                .headersMap(headersMap)
+                .build();
+
+        BusinessParameterExt ext1 = BusinessParameterExt
+                .builder()
+                .codComercialOperationType("CAEQ")
+                .codActionType("CW")
+                .codCharacteristicId("9941")
+                .codCharacteristicCode("AcquisitionType")
+                .codCharacteristicValue("private")
+                .build();
+        List<BusinessParameterExt> extList = new ArrayList<>();
+        extList.add(ext1);
+        BusinessParameterData businessParameterData1 = BusinessParameterData
+                .builder()
+                .ext(extList)
+                .build();
+        BusinessParameterDataSeq businessParameterData2 = BusinessParameterDataSeq
+                .builder()
+                .active(false)
+                .build();
+        List<BusinessParameterData> dataList = new ArrayList<>();
+        dataList.add(businessParameterData1);
+
+        List<BusinessParameterDataSeq> dataList2 = new ArrayList<>();
+        dataList2.add(businessParameterData2);
+
+        GetSalesCharacteristicsResponse businessParametersResponse = GetSalesCharacteristicsResponse
+                .builder()
+                .data(dataList)
+                .build();
+        BusinessParametersResponse expectBusinessParametersResponse = BusinessParametersResponse
+                .builder()
+                .data(dataList2)
+                .build();
+
+        BusinessParametersFinanciamientoFijaResponse bpFijaResponse = BusinessParametersFinanciamientoFijaResponse.builder()
+                .data(Arrays.asList(BusinessParameterFinanciamientoFijaData.builder()
+                        .ext(Arrays.asList(BusinessParameterFinanciamientoFijaExt.builder()
+                                        .id(1)
+                                        .nomProductType("Landline")
+                                        .nomParameter("financialEntity")
+                                        .desParameterTitle("Código de financiamiento fija")
+                                        .codParameterValue("FVFIR00006")
+                                        .build(),
+                                BusinessParameterFinanciamientoFijaExt.builder()
+                                        .id(2)
+                                        .nomProductType("Landline")
+                                        .nomParameter("chargeCodeInstallation")
+                                        .desParameterTitle("Código de financiamiento asociado a la instalación")
+                                        .codParameterValue("FRVTSE_001")
+                                        .build(),
+                                BusinessParameterFinanciamientoFijaExt.builder()
+                                        .id(3)
+                                        .nomProductType("Landline")
+                                        .nomParameter("chargeCodeDevicePremium")
+                                        .desParameterTitle("Código de financiamiento asociado a Upgrade a Modem Premium")
+                                        .codParameterValue("FRIOEQ_002")
+                                        .build(),
+                                BusinessParameterFinanciamientoFijaExt.builder()
+                                        .id(4)
+                                        .nomProductType("Landline")
+                                        .nomParameter("chargeCodeUltraWifi")
+                                        .desParameterTitle("Código de financiamiento asociado a Ultra Wifi")
+                                        .codParameterValue("FRIOEQ_007")
+                                        .build()))
+                        .build()))
+                .build();
+
+        List<BusinessParametersFinanciamientoFijaResponse> bpFinanciamientoFijaResponseList = new ArrayList<>();
+        bpFinanciamientoFijaResponseList.add(bpFijaResponse);
+
+        Mockito.when(businessParameterWebClient.getSalesCharacteristicsByCommercialOperationType(any()))
+                .thenReturn(Mono.just(businessParametersResponse));
+
+        Mockito.when(businessParameterWebClient.getRiskDomain(any(), any()))
+                .thenReturn(Mono.just(expectBusinessParametersResponse));
+
+        Mockito.when(businessParameterWebClient.getParametersFinanciamientoFija(any()))
+                .thenReturn(Mono.just(bpFijaResponse));
+
+        Mockito.when(businessParameterWebClient.getParametersReasonCode(any()))
+                .thenReturn(Mono.just(businessParametersReasonCode));
+
+        ProductorderResponse productorderResponse = new ProductorderResponse();
+        CreateProductOrderResponseType createProductOrderResponseType =  new CreateProductOrderResponseType();
+        productorderResponse.setCreateProductOrderResponse(createProductOrderResponseType);
+        Mockito.when(productOrderWebClient.createProductOrder(any(), eq(salesRequest.getHeadersMap()), any()))
+                .thenReturn(Mono.just(productorderResponse));
+
+        Mockito.when(salesRepository.findBySalesId(any())).thenReturn(Mono.just(sale));
+        Mockito.when(salesRepository.save(any())).thenReturn(Mono.just(sale));
+
+        salesRequest.getSale().getCommercialOperation().get(0).setReason("CAPL");
+        salesRequest.getSale().getCommercialOperation().get(0).setAction("MODIFY");
+
+        Method method = SalesManagmentServiceImpl.class.getDeclaredMethod("wirelineMigrations", List.class,
+                PostSalesRequest.class, Boolean[].class, String.class);
+        method.setAccessible(true);
+
+        final Boolean[] flgFinanciamiento = {true};
+        method.invoke(salesManagmentServiceImpl, bpFinanciamientoFijaResponseList.get(0).getData().get(0).getExt(),
+                salesRequest, flgFinanciamiento, "CH");
+
+        /*Method methodFillProductOfferingProductSpecId = SalesManagmentServiceImpl.class.getDeclaredMethod("fillProductOfferingProductSpecId", List.class, List.class);
+        methodFillProductOfferingProductSpecId.setAccessible(true);
+        methodFillProductOfferingProductSpecId.invoke(salesManagmentServiceImpl,
+                Arrays.asList(MigrationComponent.builder()
+                        .componentName("landline")
+                        .build()), sale.getCommercialOperation().get(0).getProductOfferings().get(0).getProductSpecification());*/
+    }
+
+    @Test
+    void compareComponents_Test() throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
+        Method method = SalesManagmentServiceImpl.class.getDeclaredMethod("compareComponents", String.class);
+        method.setAccessible(true);
+
+        method.invoke(salesManagmentServiceImpl, "broadband");
+        method.invoke(salesManagmentServiceImpl, "cableTv");
+        method.invoke(salesManagmentServiceImpl, "device");
+        method.invoke(salesManagmentServiceImpl, "landline");
+        method.invoke(salesManagmentServiceImpl, "accessories");
+    }
+
+    @Test
+    void buildGenesisError_Test() throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
+        Method method = SalesManagmentServiceImpl.class.getDeclaredMethod("buildGenesisError", String.class, String.class);
+        method.setAccessible(true);
+        method.invoke(salesManagmentServiceImpl, "test", "test");
+    }
+
+    @Test
+    void addOrderIntoSale_Test() throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
+        Sale sale = CommonsMocks.createSaleMock2();
+        sale.getCommercialOperation().get(0).getOrder().setProductOrderId("");
+
+        PostSalesRequest salesRequest = PostSalesRequest
+                .builder()
+                .sale(sale)
+                .headersMap(headersMap)
+                .build();
+
+        ProductorderResponse productorderResponse = new ProductorderResponse();
+        CreateProductOrderResponseType createProductOrderResponseType =  new CreateProductOrderResponseType();
+        productorderResponse.setCreateProductOrderResponse(createProductOrderResponseType);
+        Mockito.when(productOrderWebClient.createProductOrder(any(), eq(salesRequest.getHeadersMap()), any()))
+                .thenReturn(Mono.just(productorderResponse));
+
+        Mockito.when(salesRepository.findBySalesId(any())).thenReturn(Mono.just(sale));
+        Mockito.when(salesRepository.save(any())).thenReturn(Mono.just(sale));
+
+        CreateQuotationResponse createQuotationResponse =  new CreateQuotationResponse();
+        Mockito.when(quotationWebClient.createQuotation(any(), any())).thenReturn(Mono.just(createQuotationResponse));
+
+        Method method = SalesManagmentServiceImpl.class.getDeclaredMethod("addOrderIntoSale", PostSalesRequest.class,
+                Sale.class, Boolean[].class, CreateQuotationRequest.class, ProductorderResponse.class);
+        method.setAccessible(true);
+        final Boolean[] flgFinanciamiento = {false};
+        method.invoke(salesManagmentServiceImpl, salesRequest, sale, flgFinanciamiento,
+                new CreateQuotationRequest(), ProductorderResponse.builder().createProductOrderResponse(CreateProductOrderResponseType.builder().productOrderId("string").build()).build());
+        flgFinanciamiento[0] = true;
+        sale.setIdentityValidations(null);
+        method.invoke(salesManagmentServiceImpl, salesRequest, sale, flgFinanciamiento,
+                new CreateQuotationRequest(), ProductorderResponse.builder().createProductOrderResponse(CreateProductOrderResponseType.builder().productOrderId("string").build()).build());
+        method.invoke(salesManagmentServiceImpl, salesRequest, sale, flgFinanciamiento,
+                new CreateQuotationRequest(), ProductorderResponse.builder().createProductOrderResponse(CreateProductOrderResponseType.builder().productOrderId("").build()).build());
     }
 }

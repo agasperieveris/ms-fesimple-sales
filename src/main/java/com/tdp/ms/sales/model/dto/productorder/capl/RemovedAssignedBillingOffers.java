@@ -1,6 +1,5 @@
 package com.tdp.ms.sales.model.dto.productorder.capl;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -16,10 +15,12 @@ import lombok.NoArgsConstructor;
  *         <u>Developed by</u>: <br/>
  *         <ul>
  *         <li>Cesar Gomez</li>
+ *         <li>Sergio Rivas</li>
  *         </ul>
  *         <u>Changes</u>:<br/>
  *         <ul>
  *         <li>2020-09-24 Creaci&oacute;n del proyecto.</li>
+ *         <li>2020-12-23 FEMS-3612 CR: Cambio de campo productSpecPricingID a billingOfferId.</li>
  *         </ul>
  * @version 1.0
  */
@@ -28,6 +29,5 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class RemovedAssignedBillingOffers {
-    @JsonProperty("productSpecPricingID")
-    private String productSpecPricingId;
+    private String billingOfferId;
 }

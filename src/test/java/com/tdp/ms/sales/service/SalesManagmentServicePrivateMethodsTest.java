@@ -158,9 +158,9 @@ public class SalesManagmentServicePrivateMethodsTest {
 
         CreateQuotationResponse quotationResponse = CreateQuotationResponse
                 .builder()
-                .numberOfInstalments(1)
+                .numberOfInstalments("1")
                 .recurringChargePeriod("monthly")
-                .amountPerInstalment(130)
+                .amountPerInstalment("130")
                 .build();
 
         method.invoke(salesManagmentServiceImpl, quotationResponse, sale);
@@ -208,7 +208,7 @@ public class SalesManagmentServicePrivateMethodsTest {
     void altaCommercialOperationTest() throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
         Method method = SalesManagmentServiceImpl.class.getDeclaredMethod("altaCommercialOperation", Sale.class,
                 CreateProductOrderGeneralRequest.class, String.class, String.class, String.class, String.class,
-                BusinessParametersResponseObjectExt.class, String.class, Boolean.class);
+                BusinessParametersResponseObjectExt.class, String.class, Boolean.class, Boolean.class);
 
         method.setAccessible(true);
 
@@ -226,9 +226,10 @@ public class SalesManagmentServicePrivateMethodsTest {
                 .build();
         Sale sale = CommonsMocks.createSaleMock();
         sale.getChannel().setId("CC");
+        sale.getCommercialOperation().get(0).setReason("ALTA");
 
         method.invoke(salesManagmentServiceImpl,sale, altaRequest, "CC", "C0001", "OF0001", "CIP0001",
-                businessParametersResponseObjectExt, "SAPID0001", false);
+                businessParametersResponseObjectExt, "SAPID0001", false, false);
     }
 
     @Test
@@ -236,7 +237,7 @@ public class SalesManagmentServicePrivateMethodsTest {
                                                                                                 IllegalAccessException {
         Method method = SalesManagmentServiceImpl.class.getDeclaredMethod("altaCommercialOperation", Sale.class,
                 CreateProductOrderGeneralRequest.class, String.class, String.class, String.class, String.class,
-                BusinessParametersResponseObjectExt.class, String.class, Boolean.class);
+                BusinessParametersResponseObjectExt.class, String.class, Boolean.class, Boolean.class);
 
         method.setAccessible(true);
 
@@ -254,9 +255,10 @@ public class SalesManagmentServicePrivateMethodsTest {
                 .build();
         Sale sale = CommonsMocks.createSaleMock();
         sale.getChannel().setId("DLC");
+        sale.getCommercialOperation().get(0).setReason("ALTA");
 
         method.invoke(salesManagmentServiceImpl,sale, altaRequest, "CC", "C0001", "OF0001", "CIP0001",
-                businessParametersResponseObjectExt, "SAPID0001", false);
+                businessParametersResponseObjectExt, "SAPID0001", false, false);
     }
 
     @Test
@@ -337,7 +339,7 @@ public class SalesManagmentServicePrivateMethodsTest {
 
         CreateProductOrderGeneralRequest createProductOrderGeneralRequest = CreateProductOrderGeneralRequest
                 .builder().createProductOrderRequest(ProductOrderCaeqRequest.builder()
-                        .actionType("string").customerId("string").onlyValidationIndicator("false")
+                        .actionType("string").customer(Customer.builder().customerId("string").build()).onlyValidationIndicator("false")
                         .productOfferingId("string").salesChannel("string")
                         .request(CaeqRequest.builder().build()).build()).build();
 
@@ -372,7 +374,7 @@ public class SalesManagmentServicePrivateMethodsTest {
 
         CreateProductOrderGeneralRequest createProductOrderGeneralRequest = CreateProductOrderGeneralRequest
                 .builder().createProductOrderRequest(ProductOrderCaeqCaplRequest.builder()
-                        .actionType("string").customerId("string").onlyValidationIndicator("false")
+                        .actionType("string").customer(Customer.builder().customerId("string").build()).onlyValidationIndicator("false")
                         .productOfferingId("string").salesChannel("string").request(CaeqCaplRequest.builder().build()).build()).build();
 
         Sale saleRequest = Sale.builder()
