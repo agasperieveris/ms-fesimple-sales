@@ -70,6 +70,8 @@ import com.tdp.ms.sales.model.response.*;
 import com.tdp.ms.sales.repository.SalesRepository;
 import com.tdp.ms.sales.utils.Commons;
 import com.tdp.ms.sales.utils.Constants;
+
+import java.math.BigInteger;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -1295,9 +1297,12 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
             com.tdp.ms.sales.model.dto.quotation.Item itemInstallation = com.tdp.ms.sales.model.dto.quotation.Item
                     .builder()
                     .offeringId(offeringId)
-                    .orderActionId(sale.getCommercialOperation().get(0).getOrder().getProductOrderReferenceNumber())
+                    .orderActionId(org.apache.commons.lang3.StringUtils.chop(sale.getCommercialOperation().get(0)
+                            .getOrder().getProductOrderReferenceNumber()))
                     .itemChargeCode(this.getStringValueFromBpExtListByParameterName(
                                                             "chargeCodeInstallation", bpFinanciamiento))
+                    .orderActionId(org.apache.commons.lang3.StringUtils.chop(sale.getCommercialOperation().get(0).getOrder()
+                            .getProductOrderReferenceNumber()))
                     .build();
             itemsList.add(itemInstallation);
         }
@@ -1311,9 +1316,12 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
             com.tdp.ms.sales.model.dto.quotation.Item itemModemPremium = com.tdp.ms.sales.model.dto.quotation.Item
                     .builder()
                     .offeringId(offeringId)
-                    .orderActionId(sale.getCommercialOperation().get(0).getOrder().getProductOrderReferenceNumber())
+                    .orderActionId(org.apache.commons.lang3.StringUtils.chop(sale.getCommercialOperation().get(0)
+                            .getOrder().getProductOrderReferenceNumber()))
                     .itemChargeCode(this.getStringValueFromBpExtListByParameterName(
                                                             "chargeCodeDevicePremium", bpFinanciamiento))
+                    .orderActionId(org.apache.commons.lang3.StringUtils.chop(sale.getCommercialOperation().get(0).getOrder()
+                            .getProductOrderReferenceNumber()))
                     .build();
             itemsList.add(itemModemPremium);
         }
@@ -1327,7 +1335,8 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
             com.tdp.ms.sales.model.dto.quotation.Item itemUltraWifi = com.tdp.ms.sales.model.dto.quotation.Item
                     .builder()
                     .offeringId(offeringId)
-                    .orderActionId(sale.getCommercialOperation().get(0).getOrder().getProductOrderReferenceNumber())
+                    .orderActionId(org.apache.commons.lang3.StringUtils.chop(sale.getCommercialOperation().get(0)
+                            .getOrder().getProductOrderReferenceNumber()))
                     .itemChargeCode(this.getStringValueFromBpExtListByParameterName(
                                                             "chargeCodeUltraWifi", bpFinanciamiento))
                     .build();
@@ -1360,7 +1369,8 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
 
         CreateQuotationRequestBody body = CreateQuotationRequestBody
                 .builder()
-                .orderId(sale.getCommercialOperation().get(0).getOrder().getProductOrderId())
+                .orderId("TEF" + String.format("%012d", new BigInteger(sale.getCommercialOperation().get(0).getOrder()
+                        .getProductOrderId())))
                 .accountId(sale.getRelatedParty().get(0).getAccountId())
                 .billingAgreement(sale.getRelatedParty().get(0).getBillingArragmentId())
                 .commercialAgreement("N")
@@ -1675,11 +1685,11 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                         .getBillingOfferings().get(0).getCommitmentPeriods().get(0).getFinancingInstalments().get(0)
                         .getInstalments().getTotalAmount().getValue().toString()).build();
 
-        Double taxExcludedAmountDouble = sale.getCommercialOperation().get(0).getDeviceOffering().get(0).getOffers()
+        double taxExcludedAmountDouble = sale.getCommercialOperation().get(0).getDeviceOffering().get(0).getOffers()
                 .get(0).getBillingOfferings().get(0).getCommitmentPeriods().get(0).getFinancingInstalments().get(0)
-                .getInstalments().getTotalAmount().getValue().doubleValue() * 0.18;
+                .getInstalments().getTotalAmount().getValue().doubleValue() * 0.82;
         MoneyAmount taxExcludedAmount = MoneyAmount.builder()
-                .amount(taxExcludedAmountDouble.toString())
+                .amount(Double.toString(taxExcludedAmountDouble))
                 .units("PEN")
                 .build();
 
@@ -1690,7 +1700,9 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                 .type("mobile phone")
                 .offeringId("EQUIP_FE".concat(sale.getCommercialOperation().get(0).getProduct().getPublicId()))
                 .totalCost(totalCost)
-                .orderActionId(sale.getCommercialOperation().get(0).getOrder().getProductOrderReferenceNumber())
+                .orderActionId(org.apache.commons.lang3.StringUtils.chop(sale.getCommercialOperation().get(0).getOrder()
+                        .getProductOrderReferenceNumber()))
+                .publicId(sale.getCommercialOperation().get(0).getProduct().getPublicId())
                 .build();
         itemsList.add(itemEquipment);
 
@@ -1707,6 +1719,8 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                     .offeringId("SIM_FE".concat(sale.getCommercialOperation().get(0).getProduct().getPublicId()))
                     .type("simcard")
                     .publicId(sale.getCommercialOperation().get(0).getProduct().getPublicId())
+                    .orderActionId(org.apache.commons.lang3.StringUtils.chop(sale.getCommercialOperation().get(0).getOrder()
+                            .getProductOrderReferenceNumber()))
                     .totalCost(totalCostSim)
                     .build();
             itemsList.add(itemSim);
@@ -1716,7 +1730,8 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                 .builder()
                 .items(itemsList)
                 .billingAgreement(sale.getRelatedParty().get(0).getBillingArragmentId())
-                .orderId(sale.getCommercialOperation().get(0).getOrder().getProductOrderId())
+                .orderId("TEF" + String.format("%012d", new BigInteger(sale.getCommercialOperation().get(0).getOrder()
+                        .getProductOrderId())))
                 .accountId(sale.getRelatedParty().get(0).getAccountId())
                 .commercialAgreement("N")
                 .customer(customerQuotation)
