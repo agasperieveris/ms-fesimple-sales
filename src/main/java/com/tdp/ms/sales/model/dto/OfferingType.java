@@ -30,6 +30,8 @@ import lombok.NoArgsConstructor;
 @Builder
 public class OfferingType {
     private String id;
+    private String code;
+    private String catalogItemType;
     private String href;
     private String correlationId;
     private String name;

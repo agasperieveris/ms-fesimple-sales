@@ -2,6 +2,7 @@ package com.tdp.ms.sales.client;
 
 import com.tdp.ms.sales.model.request.GetSalesCharacteristicsRequest;
 import com.tdp.ms.sales.model.response.BusinessParametersFinanciamientoFijaResponse;
+import com.tdp.ms.sales.model.response.BusinessParametersReasonCode;
 import com.tdp.ms.sales.model.response.BusinessParametersResponse;
 import com.tdp.ms.sales.model.response.BusinessParametersResponseObjectExt;
 import com.tdp.ms.sales.model.response.GetSalesCharacteristicsResponse;
@@ -40,4 +41,5 @@ public interface BusinessParameterWebClient {
     Mono<BusinessParametersFinanciamientoFijaResponse> getParametersFinanciamientoFija(
                                                                                     HashMap<String, String> headersMap);
 
+    Mono<BusinessParametersReasonCode> getParametersReasonCode(HashMap<String, String> headersMap);
 }

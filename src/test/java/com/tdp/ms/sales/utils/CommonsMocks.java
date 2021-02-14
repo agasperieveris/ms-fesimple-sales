@@ -74,6 +74,7 @@ public class CommonsMocks {
         deviceOffering.setAdditionalData(additionalDatas);
         deviceOffering.setId("s");
         deviceOffering.setSapid("SAD123PID");
+        deviceOffering.setDeviceType("SmartPhone");
 
         StockType stockType = StockType
                 .builder()
@@ -95,7 +96,7 @@ public class CommonsMocks {
 
         FinancingInstalment financingInstalment1 = new FinancingInstalment();
         financingInstalment1.setInstalments(instalments);
-        financingInstalment1.setDescription("CONTADO");
+        financingInstalment1.setDescription("TELEFCONT");
         List<FinancingInstalment> financingInstalmentsList = new ArrayList<>();
         financingInstalmentsList.add(financingInstalment1);
 
@@ -136,11 +137,19 @@ public class CommonsMocks {
         product.setProductSpec(entityRefType);
         product.setPublicId("234562433");
         product.setProductOffering(entityRefType);
+        product.setProductRelationShip(Arrays.asList(RelatedProductType.builder()
+                .product(ProductRefInfoType.builder()
+                        .description("SimDevice").name("Device").id("string")
+                        .productRelationship(Arrays.asList(ProductProductRelationShip.builder()
+                                .product(ProductRelationShipProduct.builder()
+                                        .description("Device").id("8091734238").build()).build()))
+                        .build())
+                .build()));
 
         CreateProductOrderResponseType order = CreateProductOrderResponseType
                 .builder()
-                .productOrderId("930686A")
-                .productOrderReferenceNumber("761787835447")
+                .productOrderId("930686")
+                .productOrderReferenceNumber("930686A")
                 .build();
 
         OfferingType offeringType1= new OfferingType();
@@ -181,6 +190,9 @@ public class CommonsMocks {
 
         ComposingProductType productSpecification2 = new ComposingProductType();
         productSpecification2.setProductType("broadband");
+        productSpecification2.setProductPrice(Arrays.asList(ComponentProdOfferPriceType.builder().build(),
+                ComponentProdOfferPriceType.builder().build(),
+                ComponentProdOfferPriceType.builder().additionalData(Arrays.asList(KeyValueType.builder().key("downloadSpeed").value("string").build())).build()));
         productSpecification2.setRefinedProduct(refinedProduct);
 
         ComposingProductType productSpecification3 = new ComposingProductType();
@@ -479,7 +491,7 @@ public class CommonsMocks {
 
         FinancingInstalment financingInstalment1 = new FinancingInstalment();
         financingInstalment1.setInstalments(instalments);
-        financingInstalment1.setDescription("CONTADO");
+        financingInstalment1.setDescription("TELEFCONT");
         List<FinancingInstalment> financingInstalmentsList = new ArrayList<>();
         financingInstalmentsList.add(financingInstalment1);
 
@@ -523,8 +535,8 @@ public class CommonsMocks {
 
         CreateProductOrderResponseType order = CreateProductOrderResponseType
                 .builder()
-                .productOrderId("930686A")
-                .productOrderReferenceNumber("761787835447")
+                .productOrderId("930686")
+                .productOrderReferenceNumber("930686A")
                 .build();
 
         OfferingType offeringType1= new OfferingType();
@@ -535,13 +547,17 @@ public class CommonsMocks {
                 .maxPrice(MoneyType.builder().amount(1).build()).build()));
 
         ComposingProductType productSpecification = ComposingProductType.builder()
+                .name("TV")
                 .productType("landline")
                 .refinedProduct(RefinedProductType.builder()
                         .productCharacteristics(Arrays.asList(ProductSpecCharacteristicType.builder()
                                 .id("string")
+                                .name("productOfferingProductSpecID")
                                 .build()))
                         .build())
                 .build();
+        ComposingProductType productSpecificationSva = productSpecification;
+        productSpecificationSva.setProductType("sva");
 
         MoneyType maxPrice = MoneyType
                 .builder()
@@ -641,7 +657,17 @@ public class CommonsMocks {
                 .upFront(UpFrontType.builder().indicator("string").build())
                 .productOfferingPrice(Arrays.asList(ComponentProdOfferPriceType.builder()
                         .maxPrice(MoneyType.builder().amount(1).build()).build()))
-                .productSpecification(Arrays.asList(productSpecification)).build()));
+                .productSpecification(Arrays.asList(productSpecification, productSpecificationSva))
+                .additionalData(Arrays.asList(KeyValueType.builder().key("productType").value("channelTV").build(),
+                        KeyValueType.builder().key("parentProductCatalogID").value("string").build()))
+                .build()));
+        comercialOperationType.setProduct(ProductInstanceType.builder()
+                .productRelationShip(Arrays.asList(RelatedProductType.builder()
+                        .product(ProductRefInfoType.builder()
+                                .productType("broadband").id("string").name("Internet_Plan").build())
+                        .build()))
+                .publicId("string")
+                .build());
         comercialOperationTypes.add(comercialOperationType);
 
         Money estimatedRevenue = new Money();

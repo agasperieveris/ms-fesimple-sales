@@ -56,13 +56,12 @@ public class DomainEventListener {
     @StreamListener(Sink.INPUT)
     public void consumeMessage(@Payload Orquestador orquestador,
                                @Headers MessageHeaders headers) {
+        Sale sale = MapperUtils.mapper(Sale.class, orquestador.getMsgPayload());
 
-        LOGGER.info("...............ORQUESTADOR_INBOX  Mensaje recibido: '{}'", orquestador);
+        LOGGER.info("...............salesId recibido: '{}'", sale.getSalesId());
 
         ZoneId zone = ZoneId.of("America/Lima");
         orquestador.setFecIniProcessMsg(ZonedDateTime.now(zone).toLocalDateTime());
-
-        Sale sale = MapperUtils.mapper(Sale.class, orquestador.getMsgPayload());
 
         try {
             // TODO: quitar headers en duro cuando se actualice ms-sale con el filter de webclient
@@ -84,6 +83,7 @@ public class DomainEventListener {
             }
 
         } catch (Exception e) {
+            LOGGER.info("...............ORQUESTADOR_INBOX  Mensaje recibido: '{}'", orquestador);
             LOGGER.error("Listener Error: " + e);
             orquestador.setCodStatus(EstadosOrquestador.PROCESADO_ERROR.getCodEstado());
             orquestador.setLog(ExceptionUtils.getStackTrace(e));

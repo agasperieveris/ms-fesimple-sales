@@ -1,5 +1,6 @@
 package com.tdp.ms.sales.client.impl;
 
+import com.google.gson.Gson;
 import com.tdp.genesis.core.constants.HttpHeadersKey;
 import com.tdp.genesis.core.exception.GenesisException;
 import com.tdp.genesis.core.exception.GenesisExceptionBuilder;
@@ -12,6 +13,8 @@ import com.tdp.ms.sales.repository.SalesRepository;
 import com.tdp.ms.sales.utils.Constants;
 import java.util.HashMap;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -50,9 +53,12 @@ public class ProductOrderWebClientImpl implements ProductOrderWebClient {
     @Value("${application.endpoints.product_order.create_product_order_url}")
     private String createProductOrderUrl;
 
+    private static final Logger LOG = LoggerFactory.getLogger(ProductOrderWebClientImpl.class);
+
     @Override
     public Mono<ProductorderResponse> createProductOrder(CreateProductOrderGeneralRequest request,
                                                          HashMap<String,String> headersMap, Sale sale) {
+        LOG.info("->Create Order Request: ".concat(new Gson().toJson(request)));
         return webClientInsecure
                 .post()
                 .uri(createProductOrderUrl)
@@ -96,22 +102,13 @@ public class ProductOrderWebClientImpl implements ProductOrderWebClient {
                         .userMessage("Bad Request from Create Product Order FE+Simple Service")
                         .wildcards(wildcardsException)
                         .build());
-            } else if (statusException.equals(HttpStatus.NOT_FOUND)) {
-                // Throw 404 status code
-                return Mono.error(builder
-                        .exceptionId("SVC1006")
-                        .userMessage("Resource Not Found from Create Product Order FE+Simple Service")
-                        .wildcards(wildcardsException)
-                        .build());
-            } else if (statusException.equals(HttpStatus.INTERNAL_SERVER_ERROR)) {
+            } else {
                 // Throw 500 status code
                 return Mono.error(builder
                         .exceptionId("SVR1000")
                         .userMessage("There was a problem from Create Product Order FE+Simple Service")
-                        //.wildcards(wildcardsException)
+                        .wildcards(wildcardsException)
                         .build());
-            } else {
-                return Mono.error(responseException);
             }
         } else {
             return Mono.error(error);

@@ -44,6 +44,6 @@ public class ProductRefInfoType {
     private List<ProductCharacteristicType> characteristic;
     private List<ComponentProdPriceType> productPrice;
     private List<RelatedPartyRefType> relatedParty;
-    private List<Object> productRelationship;
+    private List<ProductProductRelationShip> productRelationship;
     private List<KeyValueType> additionalData;
 }

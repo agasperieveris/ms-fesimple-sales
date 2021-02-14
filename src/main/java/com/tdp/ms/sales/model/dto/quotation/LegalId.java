@@ -1,6 +1,7 @@
 package com.tdp.ms.sales.model.dto.quotation;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.gson.annotations.SerializedName;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -30,8 +31,10 @@ import lombok.NoArgsConstructor;
 public class LegalId {
     private String country;
     private String isPrimary;
+    @SerializedName("nationalID")
     @JsonProperty("nationalID")
     private String nationalId;
+    @SerializedName("nationalIDType")
     @JsonProperty("nationalIDType")
     private String nationalIdType;
 }

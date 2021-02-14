@@ -1,15 +1,16 @@
-package com.tdp.ms.sales.model.dto.quotation;
+package com.tdp.ms.sales.model.dto.productorder.migracionfija;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.gson.annotations.SerializedName;
-import com.tdp.ms.sales.model.dto.TimePeriod;
+import com.tdp.ms.sales.model.dto.productorder.altafija.ProductChangeAltaFija;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 /**
- * Class: ContactMedium. <br/>
+ * Class: NewProductMigracionFija. <br/>
  * <b>Copyright</b>: &copy; 2020 Telef&oacute;nica del Per&uacute;<br/>
  * <b>Company</b>: Telef&oacute;nica del Per&uacute;<br/>
  *
@@ -17,24 +18,23 @@ import lombok.NoArgsConstructor;
  *         <u>Service Provider</u>: Everis Per&uacute; SAC (EVE) <br/>
  *         <u>Developed by</u>: <br/>
  *         <ul>
- *         <li>Cesar Gomez</li>
+ *         <li>Sergio Rivas</li>
  *         </ul>
  *         <u>Changes</u>:<br/>
  *         <ul>
- *         <li>2020-11-03 Creaci&oacute;n del proyecto.</li>
+ *         <li>2020-12-15 Creaci&oacute;n del proyecto.</li>
  *         </ul>
  * @version 1.0
  */
 @Builder
 @Getter
-@AllArgsConstructor
+@Setter
 @NoArgsConstructor
-public class ContactMedium {
-    @SerializedName("@type")
-    @JsonProperty("@type")
-    private String type;
-    private String name;
-    private String preferred;
-    private String isActive;
-    private TimePeriod validFor;
+@AllArgsConstructor
+public class NewProductMigracionFija {
+    private String productCatalogId;
+    @JsonProperty("productID")
+    private String productId;
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private ProductChangeAltaFija productChanges;
 }
