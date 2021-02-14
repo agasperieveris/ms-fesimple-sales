@@ -127,7 +127,6 @@ public class SalesManagmentServiceTest {
     @Test
     void postSalesTest() throws InvocationTargetException, IllegalAccessException, NoSuchMethodException {
         Sale sale = CommonsMocks.createSaleMock2();
-        sale.getCommercialOperation().get(0).getOrder().setProductOrderId("");
 
         PostSalesRequest salesRequest = PostSalesRequest
                 .builder()
@@ -260,7 +259,7 @@ public class SalesManagmentServiceTest {
         Method method = SalesManagmentServiceImpl.class.getDeclaredMethod("processFija", List.class, Sale.class,
                 PostSalesRequest.class, Boolean[].class);
         method.setAccessible(true);
-        method.invoke(salesManagmentServiceImpl, bpFinanciamientoFijaResponseList, salesRequest.getSale(), salesRequest, flgFinanciamiento, false);
+        method.invoke(salesManagmentServiceImpl, bpFinanciamientoFijaResponseList, salesRequest.getSale(), salesRequest, flgFinanciamiento);
 
         /* validationsAndBuildings method */
         Method method2 = SalesManagmentServiceImpl.class.getDeclaredMethod("validationsAndBuildings",
