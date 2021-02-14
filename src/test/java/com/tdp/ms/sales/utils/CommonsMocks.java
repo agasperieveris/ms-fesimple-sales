@@ -148,8 +148,8 @@ public class CommonsMocks {
 
         CreateProductOrderResponseType order = CreateProductOrderResponseType
                 .builder()
-                .productOrderId("930686A")
-                .productOrderReferenceNumber("761787835447")
+                .productOrderId("930686")
+                .productOrderReferenceNumber("930686A")
                 .build();
 
         OfferingType offeringType1= new OfferingType();
@@ -535,8 +535,8 @@ public class CommonsMocks {
 
         CreateProductOrderResponseType order = CreateProductOrderResponseType
                 .builder()
-                .productOrderId("930686A")
-                .productOrderReferenceNumber("761787835447")
+                .productOrderId("930686")
+                .productOrderReferenceNumber("930686A")
                 .build();
 
         OfferingType offeringType1= new OfferingType();

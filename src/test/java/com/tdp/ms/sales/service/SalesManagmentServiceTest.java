@@ -866,7 +866,6 @@ public class SalesManagmentServiceTest {
     @Test
     void wirelineMigrations_Test() throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
         Sale sale = CommonsMocks.createSaleMock2();
-        sale.getCommercialOperation().get(0).getOrder().setProductOrderId("");
 
         PostSalesRequest salesRequest = PostSalesRequest
                 .builder()
