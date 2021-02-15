@@ -725,6 +725,39 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
             request.getHeadersMap().put(Constants.UFX_AUTHORIZATION, tokenMcss);
         }
 
+        if (saleRequest.getCommercialOperation().get(0).getDeviceOffering() != null
+                && !saleRequest.getCommercialOperation().get(0).getDeviceOffering().isEmpty()) {
+            DeviceOffering deviceOfferingSim = saleRequest.getCommercialOperation().get(0).getDeviceOffering().stream()
+                    .filter(item -> item.getDeviceType().equalsIgnoreCase(Constants.DEVICE_TYPE_SIM))
+                    .findFirst()
+                    .orElse(null);
+            if (deviceOfferingSim != null
+                    && StringUtils.isEmpty(this.getStringValueByKeyFromAdditionalDataList(saleRequest
+                    .getAdditionalData(), "SIM_ICCID"))) {
+                return Mono.error(GenesisException
+                        .builder()
+                        .exceptionId(Constants.BAD_REQUEST_EXCEPTION_ID)
+                        .wildcards(new String[]{"SIM_ICCID is mandatory. Must be sent into Additional Data Property "
+                                + "with 'SIM_ICCID' key value."})
+                        .build());
+            }
+
+            DeviceOffering deviceOfferingSmartphone = saleRequest.getCommercialOperation().get(0).getDeviceOffering().stream()
+                    .filter(item -> !item.getDeviceType().equalsIgnoreCase(Constants.DEVICE_TYPE_SIM))
+                    .findFirst()
+                    .orElse(null);
+            if (deviceOfferingSmartphone != null
+                    && StringUtils.isEmpty(this.getStringValueByKeyFromAdditionalDataList(saleRequest.getAdditionalData(),
+                    "MOVILE_IMEI"))) {
+                return Mono.error(GenesisException
+                        .builder()
+                        .exceptionId(Constants.BAD_REQUEST_EXCEPTION_ID)
+                        .wildcards(new String[]{"MOVILE_IMEI is mandatory. Must be sent into Additional Data Property "
+                                + "with 'MOVILE_IMEI' key value."})
+                        .build());
+            }
+        }
+
         // Validation if is retail
         String flowSaleValue = saleRequest.getAdditionalData().stream()
                 .filter(keyValueType -> keyValueType.getKey().equalsIgnoreCase(Constants.FLOWSALE))
@@ -734,23 +767,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         Boolean isRetail = flowSaleValue.equalsIgnoreCase(Constants.RETAIL);
         Boolean statusValidado = saleRequest.getStatus().equalsIgnoreCase(Constants.STATUS_VALIDADO);
         if (Boolean.TRUE.equals(isRetail) && statusValidado) {
-            if (StringUtils.isEmpty(this.getStringValueByKeyFromAdditionalDataList(saleRequest.getAdditionalData(),
-                    "MOVILE_IMEI"))) {
-                return Mono.error(GenesisException
-                        .builder()
-                        .exceptionId(Constants.BAD_REQUEST_EXCEPTION_ID)
-                        .wildcards(new String[]{"MOVILE_IMEI is mandatory. Must be sent into Additional Data Property "
-                                + "with 'MOVILE_IMEI' key value."})
-                        .build());
-            } else if (StringUtils.isEmpty(this.getStringValueByKeyFromAdditionalDataList(saleRequest
-                            .getAdditionalData(),"SIM_ICCID"))) {
-                return Mono.error(GenesisException
-                        .builder()
-                        .exceptionId(Constants.BAD_REQUEST_EXCEPTION_ID)
-                        .wildcards(new String[]{"SIM_ICCID is mandatory. Must be sent into Additional Data Property "
-                                + "with 'SIM_ICCID' key value."})
-                        .build());
-            } else if (StringUtils.isEmpty(this.getStringValueByKeyFromAdditionalDataList(saleRequest
+            if (StringUtils.isEmpty(this.getStringValueByKeyFromAdditionalDataList(saleRequest
                             .getAdditionalData(),Constants.NUMERO_CAJA))) {
                 return Mono.error(GenesisException
                         .builder()
@@ -2217,36 +2234,51 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                     .attrName("PAYMENT_REGISTER_NUMBER")
                     .flexAttrValue(paymentRegisterAttrValue)
                     .build();
+            altaOrderAttributesList.add(paymentRegisterAttr);
 
             //  RETAIL DEVICE SKU ATTRIBUTE
-            String deviceSku = this.getStringValueByKeyFromAdditionalDataList(saleRequest.getAdditionalData(),
-                    Constants.DEVICE_SKU);
+            DeviceOffering deviceOfferingSmartphone = saleRequest.getCommercialOperation().get(0).getDeviceOffering().stream()
+                    .filter(item -> !item.getDeviceType().equalsIgnoreCase(Constants.DEVICE_TYPE_SIM))
+                    .findFirst()
+                    .orElse(null);
+            if (deviceOfferingSmartphone != null) {
+                String deviceSku = this.getStringValueByKeyFromAdditionalDataList(saleRequest.getAdditionalData(),
+                        Constants.DEVICE_SKU);
 
-            FlexAttrValueType deviceSkuAttrValue =  FlexAttrValueType
-                    .builder()
-                    .stringValue(deviceSku)
-                    .valueType(Constants.STRING)
-                    .build();
-            FlexAttrType deviceSkuAttr = FlexAttrType
-                    .builder()
-                    .attrName(Constants.DEVICE_SKU)
-                    .flexAttrValue(deviceSkuAttrValue)
-                    .build();
+                FlexAttrValueType deviceSkuAttrValue = FlexAttrValueType
+                        .builder()
+                        .stringValue(deviceSku)
+                        .valueType(Constants.STRING)
+                        .build();
+                FlexAttrType deviceSkuAttr = FlexAttrType
+                        .builder()
+                        .attrName(Constants.DEVICE_SKU)
+                        .flexAttrValue(deviceSkuAttrValue)
+                        .build();
+                altaOrderAttributesList.add(deviceSkuAttr);
+            }
 
             //  RETAIL SIM SKU ATTRIBUTE
-            String simSku = this.getStringValueByKeyFromAdditionalDataList(saleRequest.getAdditionalData(),
-                                                                                                    Constants.SIM_SKU);
+            DeviceOffering deviceOfferingSim = saleRequest.getCommercialOperation().get(0).getDeviceOffering().stream()
+                    .filter(item -> item.getDeviceType().equalsIgnoreCase(Constants.DEVICE_TYPE_SIM))
+                    .findFirst()
+                    .orElse(null);
+            if (deviceOfferingSim != null) {
+                String simSku = this.getStringValueByKeyFromAdditionalDataList(saleRequest.getAdditionalData(),
+                        Constants.SIM_SKU);
 
-            FlexAttrValueType simSkuAttrValue =  FlexAttrValueType
-                    .builder()
-                    .stringValue(simSku)
-                    .valueType(Constants.STRING)
-                    .build();
-            FlexAttrType simSkuAttr = FlexAttrType
-                    .builder()
-                    .attrName(Constants.SIM_SKU)
-                    .flexAttrValue(simSkuAttrValue)
-                    .build();
+                FlexAttrValueType simSkuAttrValue = FlexAttrValueType
+                        .builder()
+                        .stringValue(simSku)
+                        .valueType(Constants.STRING)
+                        .build();
+                FlexAttrType simSkuAttr = FlexAttrType
+                        .builder()
+                        .attrName(Constants.SIM_SKU)
+                        .flexAttrValue(simSkuAttrValue)
+                        .build();
+                altaOrderAttributesList.add(simSkuAttr);
+            }
 
             //  RETAIL CASHIER REGISTER NUMBER ATTRIBUTE
             String cashierRegisterNumber =
@@ -2260,13 +2292,9 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                     .build();
             FlexAttrType cashierRegisterAttr = FlexAttrType
                     .builder()
-                    .attrName(Constants.SIM_SKU)
+                    .attrName("CASHIER_REGISTER_NUMBER")
                     .flexAttrValue(cashierRegisterAttrValue)
                     .build();
-
-            altaOrderAttributesList.add(paymentRegisterAttr);
-            altaOrderAttributesList.add(deviceSkuAttr);
-            altaOrderAttributesList.add(simSkuAttr);
             altaOrderAttributesList.add(cashierRegisterAttr);
         }
 
