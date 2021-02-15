@@ -459,6 +459,7 @@ public class CommonsMocks {
 
         deviceOffering.setAdditionalData(additionalDatas);
         deviceOffering.setId("s");
+        deviceOffering.setDeviceType("Smartphone");
         deviceOffering.setSapid("SAD123PID");
         deviceOffering.setOffers(Arrays.asList(Offer.builder().billingOfferings(Arrays.asList(BillingOffering.builder()
                 .commitmentPeriods(Arrays.asList(CommitmentPeriod.builder()
@@ -537,6 +538,9 @@ public class CommonsMocks {
                 .builder()
                 .productOrderId("930686")
                 .productOrderReferenceNumber("930686A")
+                .newProductsInNewOfferings(Arrays.asList(NewProductInNewOfferingInstanceConfigurationType.builder()
+                        .productOrderItemReferenceNumber("930686A")
+                        .build()))
                 .build();
 
         OfferingType offeringType1= new OfferingType();
