@@ -617,11 +617,11 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
     private Mono<Sale> retryRequest(PostSalesRequest request, Sale sale, Boolean flgCaeq, Boolean flgAlta,
                                        Boolean flgCasi, Boolean flgFinanciamiento, String sapidSimcard) {
         sale.setStatus("NUEVO");
-        if (sale != null && sale.getCommercialOperation().get(0).getOrder() != null
+        if (sale.getCommercialOperation().get(0).getOrder() != null
                 && sale.getCommercialOperation().get(0).getDeviceOffering() == null
                 && sale.getCommercialOperation().get(0).getDeviceOffering().get(0).getStock() == null
-                && StringUtils.isEmpty(sale.getCommercialOperation().get(0).getDeviceOffering().get(0)
-                .getStock().getReservationId())) { // Retry from Reservation
+                && StringUtils.isEmpty(sale.getCommercialOperation().get(0).getDeviceOffering().get(0).getStock()
+                .getReservationId())) { // Retry from Reservation
 
             // Call to Reserve Stock Service When Commercial Operation include CAEQ
             if (flgCaeq || flgAlta) {
@@ -648,11 +648,11 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                 }
             }
 
-        } else if (sale != null && sale.getCommercialOperation().get(0).getOrder() != null
+        } else if (sale.getCommercialOperation().get(0).getOrder() != null
                 && sale.getCommercialOperation().get(0).getDeviceOffering() != null
                 && sale.getCommercialOperation().get(0).getDeviceOffering().get(0).getStock() != null
-                && !StringUtils.isEmpty(sale.getCommercialOperation().get(0).getDeviceOffering().get(0)
-                .getStock().getReservationId())) { // Retry from Create Quotation
+                && !StringUtils.isEmpty(sale.getCommercialOperation().get(0).getDeviceOffering().get(0).getStock()
+                .getReservationId())) { // Retry from Create Quotation
 
             // Call to Create Quotation Service When CommercialOperation Contains CAEQ
             return this.callToCreateQuotation(PostSalesRequest.builder()
