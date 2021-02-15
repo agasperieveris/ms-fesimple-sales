@@ -618,10 +618,10 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                                        Boolean flgCasi, Boolean flgFinanciamiento, String sapidSimcard) {
         sale.setStatus("NUEVO");
         if (sale.getCommercialOperation().get(0).getOrder() != null
-                && sale.getCommercialOperation().get(0).getDeviceOffering() == null
-                && sale.getCommercialOperation().get(0).getDeviceOffering().get(0).getStock() == null
-                && StringUtils.isEmpty(sale.getCommercialOperation().get(0).getDeviceOffering().get(0).getStock()
-                .getReservationId())) { // Retry from Reservation
+                && (sale.getCommercialOperation().get(0).getDeviceOffering() == null
+                || sale.getCommercialOperation().get(0).getDeviceOffering().get(0).getStock() == null
+                || StringUtils.isEmpty(sale.getCommercialOperation().get(0).getDeviceOffering().get(0).getStock()
+                .getReservationId()))) { // Retry from Reservation
 
             // Call to Reserve Stock Service When Commercial Operation include CAEQ
             if (flgCaeq || flgAlta) {
