@@ -88,6 +88,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import reactor.core.publisher.Mono;
 
+import static java.lang.Math.round;
+
 /**
  * Class: SalesManagmentServiceImpl. <br/>
  * <b>Copyright</b>: &copy; 2020 Telef&oacute;nica del Per&uacute;<br/>
@@ -614,6 +616,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
 
     private Mono<Sale> retryRequest(PostSalesRequest request, Sale sale, Boolean flgCaeq, Boolean flgAlta,
                                        Boolean flgCasi, Boolean flgFinanciamiento, String sapidSimcard) {
+        sale.setStatus("NUEVO");
         if (sale != null && sale.getCommercialOperation().get(0).getOrder() != null
                 && sale.getCommercialOperation().get(0).getDeviceOffering() == null
                 && sale.getCommercialOperation().get(0).getDeviceOffering().get(0).getStock() == null
@@ -768,10 +771,11 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         // Validate if it is a retry from Frontend
         return salesRepository.findBySalesId(saleRequest.getSalesId())
                 // Main function
-                .defaultIfEmpty(Sale.builder().build())
+                .defaultIfEmpty(Sale.builder().salesId(null).build())
                 // Validate existing sale
                 .flatMap(saleItem -> {
-                    if (saleItem.getSalesId() == null || saleItem.getCommercialOperation().get(0).getOrder() == null) {
+                    if (saleItem.getSalesId() == null || saleItem.getCommercialOperation() == null
+                            || saleItem.getCommercialOperation().get(0).getOrder() == null) {
                         return mainFunction(saleRequest, request, flgAlta, flgCapl, flgCaeq, flgCasi,
                                 flgFinanciamiento, isRetail, sapidSimcard);
                     }
@@ -1706,7 +1710,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                 .get(0).getBillingOfferings().get(0).getCommitmentPeriods().get(0).getFinancingInstalments().get(0)
                 .getInstalments().getTotalAmount().getValue().doubleValue() * 0.82;
         MoneyAmount taxExcludedAmount = MoneyAmount.builder()
-                .amount(Double.toString(taxExcludedAmountDouble))
+                .amount(Double.toString(round(taxExcludedAmountDouble)))
                 .units("PEN")
                 .build();
 
