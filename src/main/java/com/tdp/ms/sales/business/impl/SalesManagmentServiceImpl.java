@@ -724,40 +724,6 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         } else {
             request.getHeadersMap().put(Constants.UFX_AUTHORIZATION, tokenMcss);
         }
-
-        if (saleRequest.getCommercialOperation().get(0).getDeviceOffering() != null
-                && !saleRequest.getCommercialOperation().get(0).getDeviceOffering().isEmpty()) {
-            DeviceOffering deviceOfferingSim = saleRequest.getCommercialOperation().get(0).getDeviceOffering().stream()
-                    .filter(item -> item.getDeviceType().equalsIgnoreCase(Constants.DEVICE_TYPE_SIM))
-                    .findFirst()
-                    .orElse(null);
-            if (deviceOfferingSim != null
-                    && StringUtils.isEmpty(this.getStringValueByKeyFromAdditionalDataList(saleRequest
-                    .getAdditionalData(), "SIM_ICCID"))) {
-                return Mono.error(GenesisException
-                        .builder()
-                        .exceptionId(Constants.BAD_REQUEST_EXCEPTION_ID)
-                        .wildcards(new String[]{"SIM_ICCID is mandatory. Must be sent into Additional Data Property "
-                                + "with 'SIM_ICCID' key value."})
-                        .build());
-            }
-
-            DeviceOffering deviceOfferingSmartphone = saleRequest.getCommercialOperation().get(0).getDeviceOffering().stream()
-                    .filter(item -> !item.getDeviceType().equalsIgnoreCase(Constants.DEVICE_TYPE_SIM))
-                    .findFirst()
-                    .orElse(null);
-            if (deviceOfferingSmartphone != null
-                    && StringUtils.isEmpty(this.getStringValueByKeyFromAdditionalDataList(saleRequest.getAdditionalData(),
-                    "MOVILE_IMEI"))) {
-                return Mono.error(GenesisException
-                        .builder()
-                        .exceptionId(Constants.BAD_REQUEST_EXCEPTION_ID)
-                        .wildcards(new String[]{"MOVILE_IMEI is mandatory. Must be sent into Additional Data Property "
-                                + "with 'MOVILE_IMEI' key value."})
-                        .build());
-            }
-        }
-
         // Validation if is retail
         String flowSaleValue = saleRequest.getAdditionalData().stream()
                 .filter(keyValueType -> keyValueType.getKey().equalsIgnoreCase(Constants.FLOWSALE))
@@ -767,6 +733,39 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         Boolean isRetail = flowSaleValue.equalsIgnoreCase(Constants.RETAIL);
         Boolean statusValidado = saleRequest.getStatus().equalsIgnoreCase(Constants.STATUS_VALIDADO);
         if (Boolean.TRUE.equals(isRetail) && statusValidado) {
+            if (saleRequest.getCommercialOperation().get(0).getDeviceOffering() != null
+                    && !saleRequest.getCommercialOperation().get(0).getDeviceOffering().isEmpty()) {
+                DeviceOffering deviceOfferingSim = saleRequest.getCommercialOperation().get(0).getDeviceOffering().stream()
+                        .filter(item -> item.getDeviceType().equalsIgnoreCase(Constants.DEVICE_TYPE_SIM))
+                        .findFirst()
+                        .orElse(null);
+                if (deviceOfferingSim != null
+                        && StringUtils.isEmpty(this.getStringValueByKeyFromAdditionalDataList(saleRequest
+                        .getAdditionalData(), "SIM_ICCID"))) {
+                    return Mono.error(GenesisException
+                            .builder()
+                            .exceptionId(Constants.BAD_REQUEST_EXCEPTION_ID)
+                            .wildcards(new String[]{"SIM_ICCID is mandatory. Must be sent into Additional Data Property "
+                                    + "with 'SIM_ICCID' key value."})
+                            .build());
+                }
+
+                DeviceOffering deviceOfferingSmartphone = saleRequest.getCommercialOperation().get(0).getDeviceOffering().stream()
+                        .filter(item -> !item.getDeviceType().equalsIgnoreCase(Constants.DEVICE_TYPE_SIM))
+                        .findFirst()
+                        .orElse(null);
+                if (deviceOfferingSmartphone != null
+                        && StringUtils.isEmpty(this.getStringValueByKeyFromAdditionalDataList(saleRequest.getAdditionalData(),
+                        "MOVILE_IMEI"))) {
+                    return Mono.error(GenesisException
+                            .builder()
+                            .exceptionId(Constants.BAD_REQUEST_EXCEPTION_ID)
+                            .wildcards(new String[]{"MOVILE_IMEI is mandatory. Must be sent into Additional Data Property "
+                                    + "with 'MOVILE_IMEI' key value."})
+                            .build());
+                }
+            }
+
             if (StringUtils.isEmpty(this.getStringValueByKeyFromAdditionalDataList(saleRequest
                             .getAdditionalData(),Constants.NUMERO_CAJA))) {
                 return Mono.error(GenesisException
