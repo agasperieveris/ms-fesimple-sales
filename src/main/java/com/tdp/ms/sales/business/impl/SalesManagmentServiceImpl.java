@@ -1318,12 +1318,10 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
             com.tdp.ms.sales.model.dto.quotation.Item itemInstallation = com.tdp.ms.sales.model.dto.quotation.Item
                     .builder()
                     .offeringId(offeringId)
-                    .orderActionId(org.apache.commons.lang3.StringUtils.chop(sale.getCommercialOperation().get(0)
-                            .getOrder().getProductOrderReferenceNumber()))
                     .itemChargeCode(this.getStringValueFromBpExtListByParameterName(
                                                             "chargeCodeInstallation", bpFinanciamiento))
-                    .orderActionId(org.apache.commons.lang3.StringUtils.chop(sale.getCommercialOperation().get(0).getOrder()
-                            .getProductOrderReferenceNumber()))
+                    .orderActionId(org.apache.commons.lang3.StringUtils.chop(sale.getCommercialOperation().get(0)
+                            .getOrder().getNewProductsInNewOfferings().get(0).getProductOrderItemReferenceNumber()))
                     .build();
             itemsList.add(itemInstallation);
         }
@@ -1337,12 +1335,10 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
             com.tdp.ms.sales.model.dto.quotation.Item itemModemPremium = com.tdp.ms.sales.model.dto.quotation.Item
                     .builder()
                     .offeringId(offeringId)
-                    .orderActionId(org.apache.commons.lang3.StringUtils.chop(sale.getCommercialOperation().get(0)
-                            .getOrder().getProductOrderReferenceNumber()))
                     .itemChargeCode(this.getStringValueFromBpExtListByParameterName(
                                                             "chargeCodeDevicePremium", bpFinanciamiento))
-                    .orderActionId(org.apache.commons.lang3.StringUtils.chop(sale.getCommercialOperation().get(0).getOrder()
-                            .getProductOrderReferenceNumber()))
+                    .orderActionId(org.apache.commons.lang3.StringUtils.chop(sale.getCommercialOperation().get(0)
+                            .getOrder().getNewProductsInNewOfferings().get(0).getProductOrderItemReferenceNumber()))
                     .build();
             itemsList.add(itemModemPremium);
         }
@@ -1357,7 +1353,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                     .builder()
                     .offeringId(offeringId)
                     .orderActionId(org.apache.commons.lang3.StringUtils.chop(sale.getCommercialOperation().get(0)
-                            .getOrder().getProductOrderReferenceNumber()))
+                            .getOrder().getNewProductsInNewOfferings().get(0).getProductOrderItemReferenceNumber()))
                     .itemChargeCode(this.getStringValueFromBpExtListByParameterName(
                                                             "chargeCodeUltraWifi", bpFinanciamiento))
                     .build();
@@ -1718,11 +1714,12 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         com.tdp.ms.sales.model.dto.quotation.Item itemEquipment = com.tdp.ms.sales.model.dto.quotation.Item
                 .builder()
                 .taxExcludedAmount(taxExcludedAmount)
+                .model(sale.getCommercialOperation().get(0).getDeviceOffering().get(0).getDisplayName())
                 .type("mobile phone")
                 .offeringId("EQUIP_FE".concat(sale.getCommercialOperation().get(0).getProduct().getPublicId()))
                 .totalCost(totalCost)
                 .orderActionId(org.apache.commons.lang3.StringUtils.chop(sale.getCommercialOperation().get(0).getOrder()
-                        .getProductOrderReferenceNumber()))
+                        .getNewProductsInNewOfferings().get(0).getProductOrderItemReferenceNumber()))
                 .publicId(sale.getCommercialOperation().get(0).getProduct().getPublicId())
                 .build();
         itemsList.add(itemEquipment);
@@ -1740,8 +1737,8 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                     .offeringId("SIM_FE".concat(sale.getCommercialOperation().get(0).getProduct().getPublicId()))
                     .type("simcard")
                     .publicId(sale.getCommercialOperation().get(0).getProduct().getPublicId())
-                    .orderActionId(org.apache.commons.lang3.StringUtils.chop(sale.getCommercialOperation().get(0).getOrder()
-                            .getProductOrderReferenceNumber()))
+                    .orderActionId(org.apache.commons.lang3.StringUtils.chop(sale.getCommercialOperation().get(0)
+                            .getOrder().getNewProductsInNewOfferings().get(0).getProductOrderItemReferenceNumber()))
                     .totalCost(totalCostSim)
                     .build();
             itemsList.add(itemSim);

@@ -3,10 +3,8 @@ package com.tdp.ms.sales.utils;
 import com.tdp.genesis.core.constants.HttpHeadersKey;
 import com.tdp.ms.sales.model.dto.*;
 import com.tdp.ms.sales.model.entity.Sale;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
+
+import java.util.*;
 
 public class CommonsMocks {
 
@@ -150,6 +148,10 @@ public class CommonsMocks {
                 .builder()
                 .productOrderId("930686")
                 .productOrderReferenceNumber("930686A")
+                .newProductsInNewOfferings(Collections.singletonList(NewProductInNewOfferingInstanceConfigurationType
+                        .builder()
+                        .productOrderItemReferenceNumber("930686A")
+                        .build()))
                 .build();
 
         OfferingType offeringType1= new OfferingType();
