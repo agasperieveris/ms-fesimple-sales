@@ -305,7 +305,6 @@ public class SalesManagmentServiceTest {
         method.invoke(salesManagmentServiceImpl, salesRequest, sale, true, true, false, false, "");
         method.invoke(salesManagmentServiceImpl, salesRequest, sale, true, true, true, false, "");
         method.invoke(salesManagmentServiceImpl, salesRequest, sale, false, false, false, false, "");
-        method.invoke(salesManagmentServiceImpl, salesRequest, null, false, false, false, false, "");
     }
 
     @Test
