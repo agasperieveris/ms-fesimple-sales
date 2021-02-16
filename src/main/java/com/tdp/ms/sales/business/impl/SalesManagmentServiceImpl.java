@@ -1754,9 +1754,9 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
 
         double taxExcludedAmountDouble = sale.getCommercialOperation().get(0).getDeviceOffering().get(0).getOffers()
                 .get(0).getBillingOfferings().get(0).getCommitmentPeriods().get(0).getFinancingInstalments().get(0)
-                .getInstalments().getTotalAmount().getValue().doubleValue() * 0.82;
+                .getInstalments().getTotalAmount().getValue().doubleValue() / 1.18;
         MoneyAmount taxExcludedAmount = MoneyAmount.builder()
-                .amount(Double.toString(round(taxExcludedAmountDouble)))
+                .amount(Double.toString(round(taxExcludedAmountDouble * 100.0) / 100.0))
                 .units("PEN")
                 .build();
 
