@@ -46,5 +46,5 @@ public class Constants {
     public static final String DELIVERY_METHOD_CAMEL_CASE = "deliveryMethod";
     public static final String UFX_AUTHORIZATION = "ufxauthorization";
     public static final String STRING_FALSE = "false";
-    public static final String STRING_DATE_TIME_FORMATTER = "yyyy-MM-dd'T'HH:mm:ss";
+    public static final String STRING_DATE_TIME_FORMATTER = "dd/MM/yyyy'T'HH:mm:ss";
 }
