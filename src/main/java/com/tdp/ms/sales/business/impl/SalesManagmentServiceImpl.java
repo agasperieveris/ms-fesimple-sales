@@ -796,11 +796,14 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         final Sale[] saleRetry = {null};
         salesRepository.findBySalesId(saleRequest.getSalesId()).map(saleItem -> saleRetry[0] = saleItem);
 
+        Boolean isStockReserved = saleRetry[0] != null
+                && saleRetry[0].getCommercialOperation().get(0).getDeviceOffering() != null
+                && saleRetry[0].getCommercialOperation().get(0).getDeviceOffering().get(0).getStock() != null
+                && !StringUtils.isEmpty(saleRetry[0].getCommercialOperation().get(0).getDeviceOffering().get(0)
+                .getStock().getReservationId());
+
         if (saleRetry[0] != null && saleRetry[0].getCommercialOperation().get(0).getOrder() != null
-                && saleRetry[0].getCommercialOperation().get(0).getDeviceOffering() == null
-                && saleRetry[0].getCommercialOperation().get(0).getDeviceOffering().get(0).getStock() == null
-                && StringUtils.isEmpty(saleRetry[0].getCommercialOperation().get(0).getDeviceOffering().get(0)
-                .getStock().getReservationId())) { // Retry from Reservation
+                && !isStockReserved) { // Retry from Reservation
 
             // Call to Reserve Stock Service When Commercial Operation include CAEQ
             if (flgCaeq[0] || flgAlta[0]) {
@@ -831,10 +834,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
             }
 
         } else if (saleRetry[0] != null && saleRetry[0].getCommercialOperation().get(0).getOrder() != null
-                && saleRetry[0].getCommercialOperation().get(0).getDeviceOffering() != null
-                && saleRetry[0].getCommercialOperation().get(0).getDeviceOffering().get(0).getStock() != null
-                && !StringUtils.isEmpty(saleRetry[0].getCommercialOperation().get(0).getDeviceOffering().get(0)
-                .getStock().getReservationId())) { // Retry from Create Quotation
+                && isStockReserved) { // Retry from Create Quotation
             LOG.info("Sales Retry: Create Quotation");
 
             // Call to Create Quotation Service When CommercialOperation Contains CAEQ
