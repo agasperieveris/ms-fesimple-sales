@@ -888,9 +888,14 @@ public class SalesManagmentServicePrivateMethodsTest {
         List<NewAssignedBillingOffers> newAssignedBillingOffersBroadbandList =  new ArrayList<>();
         List<NewAssignedBillingOffers> newAssignedBillingOffersLandlineList =  new ArrayList<>();
 
+        ComponentProdOfferPriceType productPrice1 =  new ComponentProdOfferPriceType();
+        productPrice1.setProductSpecContainmentId("123123");
+        List<ComponentProdOfferPriceType> productPriceList = new ArrayList<>();
+        productPriceList.add(productPrice1);
 
         ComposingProductType composingProductType1 = new ComposingProductType();
         composingProductType1.setProductType("sva");
+        composingProductType1.setProductPrice(productPriceList);
         List<ComposingProductType> productSpecificationList = new ArrayList<>();
         productSpecificationList.add(composingProductType1);
 

@@ -33,6 +33,7 @@ public class Constants {
     public static final String PRODUCT_TYPE_LANDLINE = "landline";
     public static final String PRODUCT_TYPE_SHEQ = "ShEq";
     public static final String PRODUCT_TYPE_DEVICE = "device";
+    public static final String PRODUCT_TYPE_SVA = "sva";
     public static final String PENDIENTE = "PENDIENTE";
     public static final String NEGOCIACION = "NEGOCIACION";
     public static final String VALIDADO = "VALIDADO";
