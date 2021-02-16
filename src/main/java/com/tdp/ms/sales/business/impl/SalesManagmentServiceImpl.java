@@ -315,13 +315,39 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
 
     private void buildServiceAvailabilityAltaFija(Sale saleRequest,
                                                   List<ServiceabilityOfferType> serviceabilityOffersList) {
+
+        OfferingType mainOffering = saleRequest.getCommercialOperation().get(0).getProductOfferings().stream()
+                .filter(item -> item.getType() != null && !item.getType().equalsIgnoreCase(Constants.PRODUCT_TYPE_SVA))
+                .findFirst()
+                .orElse(null);
+
+        final Boolean[] flgProductLandline = {false};
+        final Boolean[] flgProductBroadband = {false};
+        final Boolean[] flgProductCabletv = {false};
+        if (mainOffering != null) {
+            mainOffering.getProductSpecification().stream()
+                    .forEach(item -> {
+                        if (item.getProductType().equalsIgnoreCase(Constants.PRODUCT_TYPE_LANDLINE)) {
+                            flgProductLandline[0] = true;
+                        } else if (item.getProductType().equalsIgnoreCase(Constants.PRODUCT_TYPE_BROADBAND)) {
+                            flgProductBroadband[0] = true;
+                        } else if (item.getProductType().equalsIgnoreCase(Constants.PRODUCT_TYPE_CABLE_TV)
+                                || item.getProductType().equalsIgnoreCase(Constants.PRODUCT_TYPE_CHANNEL_TV)) {
+                            flgProductCabletv[0] = true;
+                        }
+                    });
+        }
+        LOG.info("Sales has landline product: " + flgProductLandline[0]);
+        LOG.info("Sales has broadband product: " + flgProductBroadband[0]);
+        LOG.info("Sales has cableTv product: " + flgProductCabletv[0]);
+
         Number offerPriority = saleRequest.getCommercialOperation().get(0).getServiceAvailability()
                                                                         .getOffers().get(0).getPriority();
         saleRequest.getCommercialOperation().get(0).getServiceAvailability().getOffers().get(0).getServices().stream()
                 .forEach(serviceOffer -> {
                     String serviceAbilityType = serviceOffer.getType();
 
-                    if (serviceAbilityType.equalsIgnoreCase("landline")) {
+                    if (serviceAbilityType.equalsIgnoreCase("landline") && flgProductLandline[0]) {
 
                         // Serviceability Landline
                         CharacteristicOfferType describeByLandline1 =  CharacteristicOfferType
@@ -355,7 +381,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                                 .build();
                         serviceabilityOffersList.add(serviceabilityOfferLandline);
 
-                    } else if (serviceAbilityType.equalsIgnoreCase("broadband")) {
+                    } else if (serviceAbilityType.equalsIgnoreCase("broadband") && flgProductBroadband[0]) {
 
                         // Serviceability Broadband
                         CharacteristicOfferType describeByBroadband1 =  CharacteristicOfferType
@@ -391,7 +417,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                                 .build();
                         serviceabilityOffersList.add(serviceabilityOfferBroadband);
 
-                    } else if (serviceAbilityType.equalsIgnoreCase("tv")) {
+                    } else if (serviceAbilityType.equalsIgnoreCase("tv") && flgProductCabletv[0]) {
 
                         // Serviceability CableTv
                         ProductLineType productOfferCableTv1 = ProductLineType
@@ -422,6 +448,9 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                                                   List<NewAssignedBillingOffers> newAssignedBillingOffersLandlineList,
                                                   List<NewAssignedBillingOffers> newAssignedBillingOffersBroadbandList,
                                                   List<NewAssignedBillingOffers> newAssignedBillingOffersCableTvList) {
+        LOG.info("SVAs Landline: ".concat(new Gson().toJson(newAssignedBillingOffersLandlineList)));
+        LOG.info("SVAs Broadband: ".concat(new Gson().toJson(newAssignedBillingOffersBroadbandList)));
+        LOG.info("SVAs CableTv: ".concat(new Gson().toJson(newAssignedBillingOffersCableTvList)));
         List<NewProductAltaFija> newProductsAltaFijaList = new ArrayList<>();
         final Integer[] cont = {1};
 
@@ -1075,21 +1104,22 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
             String productTypeComponent = this.getStringValueByKeyFromAdditionalDataList(
                     productOfferings.get(i).getAdditionalData(), "productType");
 
-            if (productTypeSva.equalsIgnoreCase("sva")) {
+            if (productTypeSva.equalsIgnoreCase(Constants.PRODUCT_TYPE_SVA)) {
 
                 if (productTypeComponent.equalsIgnoreCase(Constants.PRODUCT_TYPE_CABLE_TV)
+                        || productTypeComponent.equalsIgnoreCase(Constants.PRODUCT_TYPE_CHANNEL_TV)
                         || productTypeComponent.equalsIgnoreCase(Constants.PRODUCT_TYPE_BROADBAND)
                         || productTypeComponent.equalsIgnoreCase(Constants.PRODUCT_TYPE_LANDLINE)) {
 
                     NewAssignedBillingOffers newAssignedBillingOffers = NewAssignedBillingOffers
                             .builder()
                             .productSpecPricingId(productOfferings.get(i).getId())
-                            .parentProductCatalogId(this.getStringValueByKeyFromAdditionalDataList(
-                                    productOfferings.get(i).getAdditionalData(),
-                                    "parentProductCatalogID"))
+                            .parentProductCatalogId(productOfferings.get(i).getProductSpecification().get(0)
+                                    .getProductPrice().get(0).getProductSpecContainmentId())
                             .build();
 
-                    if (productTypeComponent.equalsIgnoreCase(Constants.PRODUCT_TYPE_CABLE_TV)) {
+                    if (productTypeComponent.equalsIgnoreCase(Constants.PRODUCT_TYPE_CABLE_TV)
+                            || productTypeComponent.equalsIgnoreCase(Constants.PRODUCT_TYPE_CHANNEL_TV)) {
                         newAssignedBillingOffersCableTvList.add(newAssignedBillingOffers);
                     } else if (productTypeComponent.equalsIgnoreCase(Constants.PRODUCT_TYPE_BROADBAND)) {
                         newAssignedBillingOffersBroadbandList.add(newAssignedBillingOffers);
@@ -3072,7 +3102,8 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         migracionFijaRequest.setServiceabilityInfo(serviceabilityInfo);
         migracionFijaRequest.setSourceApp(request.getSale().getSalesId());
         migracionFijaRequest.setOrderAttributes(migracionFijaOrderAttributesList);
-        migracionFijaRequest.setCip(!StringUtils.isEmpty(request.getSale().getPaymenType().getCid()) ?
+        migracionFijaRequest.setCip(request.getSale().getPaymenType() != null
+                && !StringUtils.isEmpty(request.getSale().getPaymenType().getCid()) ?
                 request.getSale().getPaymenType().getCid() : null);
         migracionFijaRequest.setUpfrontIndicator(request.getSale().getCommercialOperation().get(0).getProductOfferings()
                 .get(0).getUpFront().getIndicator());
@@ -3133,7 +3164,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                 .equalsIgnoreCase(Constants.PRODUCT_TYPE_BROADBAND))
                 .findFirst()
                 .ifPresent(item -> {
-                    characteristicValue[0] = item.getProductPrice().get(3).getAdditionalData().stream()
+                    characteristicValue[0] = item.getProductPrice().get(2).getAdditionalData().stream()
                             .filter(keyValueType -> keyValueType.getKey().equalsIgnoreCase("downloadSpeed"))
                             .findFirst()
                             .orElseThrow(() -> buildGenesisError(Constants.BAD_REQUEST_EXCEPTION_ID,
@@ -3171,7 +3202,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
 
         // Paso 6: Envío de SVA
         productOfferings.forEach(productOffering -> {
-            if (productOffering.getProductSpecification().get(0).getProductType().equalsIgnoreCase("sva")) {
+            if (productOffering.getProductSpecification().get(0).getProductType().equalsIgnoreCase(Constants.PRODUCT_TYPE_SVA)) {
                 String productType = getStringValueByKeyFromAdditionalDataList(productOffering.getAdditionalData(),
                         "productType");
                 if (productType.equalsIgnoreCase(Constants.PRODUCT_TYPE_CABLE_TV)
