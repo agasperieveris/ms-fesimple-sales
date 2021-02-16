@@ -155,6 +155,7 @@ public class CommonsMocks {
         OfferingType offeringType1= new OfferingType();
         offeringType1.setId("s");
         offeringType1.setProductOfferingProductSpecId("s");
+        offeringType1.setType("BROADBAND");
 
         MoneyType maxPrice = MoneyType
                 .builder()
