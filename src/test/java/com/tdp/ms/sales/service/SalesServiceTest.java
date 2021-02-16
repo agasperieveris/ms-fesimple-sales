@@ -1,16 +1,28 @@
 package com.tdp.ms.sales.service;
 
+import com.microsoft.azure.spring.data.cosmosdb.core.ReactiveCosmosTemplate;
 import com.tdp.genesis.core.constants.HttpHeadersKey;
 import com.tdp.ms.sales.business.SalesService;
 import com.tdp.ms.sales.business.impl.SalesServiceImpl;
 import com.tdp.ms.sales.client.WebClientBusinessParameters;
 import com.tdp.ms.sales.eventflow.client.SalesWebClient;
 import com.tdp.ms.sales.eventflow.client.impl.SalesWebClientImpl;
-import com.tdp.ms.sales.model.dto.*;
+import com.tdp.ms.sales.model.dto.ChannelRef;
+import com.tdp.ms.sales.model.dto.CommercialOperationType;
+import com.tdp.ms.sales.model.dto.ContactMedium;
+import com.tdp.ms.sales.model.dto.CreateProductOrderResponseType;
+import com.tdp.ms.sales.model.dto.DeviceOffering;
+import com.tdp.ms.sales.model.dto.EntityRefType;
+import com.tdp.ms.sales.model.dto.KeyValueType;
+import com.tdp.ms.sales.model.dto.MediumCharacteristic;
+import com.tdp.ms.sales.model.dto.Money;
+import com.tdp.ms.sales.model.dto.Place;
+import com.tdp.ms.sales.model.dto.ProductInstanceType;
+import com.tdp.ms.sales.model.dto.RelatedParty;
+import com.tdp.ms.sales.model.dto.TimePeriod;
 import com.tdp.ms.sales.model.dto.businessparameter.BusinessParameterDataSeq;
 import com.tdp.ms.sales.model.entity.Sale;
 import com.tdp.ms.sales.model.request.GetSalesRequest;
-import com.tdp.ms.sales.model.request.SalesRequest;
 import com.tdp.ms.sales.model.response.BusinessParametersResponse;
 import com.tdp.ms.sales.repository.SalesRepository;
 import org.junit.Assert;
@@ -28,7 +40,12 @@ import reactor.test.StepVerifier;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import static org.mockito.ArgumentMatchers.any;
 
@@ -41,6 +58,9 @@ public class SalesServiceTest {
 
     @MockBean
     private SalesRepository salesRepository;
+
+    @MockBean
+    private ReactiveCosmosTemplate reactiveCosmosTemplate;
 
     @Autowired
     private SalesServiceImpl salesServiceImpl;
@@ -335,12 +355,12 @@ public class SalesServiceTest {
 
     @Test
     void getSaleListTest(){
-        Mockito.when(salesRepository.findByStatusNot("NEGOCIACION")).thenReturn(Flux.just(sale));
+        Mockito.when(reactiveCosmosTemplate.find(any(), any(), any())).thenReturn(Flux.just(sale));
 
         Flux<Sale> result = salesService.getSaleList("1","bc12",
-                "1", "1", "Peru", "DNI",
-                "s", "1", "s", "orderId", "24/09/2020T12:43:00",
-                "24/09/2020T12:43:21", "size", "pageCount", "page",
+                "1", "1", "79764312", "DNI",
+                "s", "1", "s", "orderId", "2021-02-15T00:00:00",
+                "2021-02-16T23:59:59", "size", "pageCount", "page",
                 "maxResultCount");
 
         StepVerifier.create(result)
@@ -348,61 +368,80 @@ public class SalesServiceTest {
     }
 
     @Test
+    void criteriaSaleId_whenSaleIdIsNull() {
+        salesServiceImpl.criteriaSaleId(new ArrayList<>(), null);
+    }
+
+    @Test
+    void criteriaSaleId_whenSaleIdIsEmpty() {
+        salesServiceImpl.criteriaSaleId(new ArrayList<>(), "");
+    }
+
+    @Test
+    void criteriaDealerId_whenDealerIdIsNull() {
+        salesServiceImpl.criteriaDealerId(new ArrayList<>(), null);
+    }
+
+    @Test
+    void criteriaDealerId_whenDealerIdIsEmpty() {
+        salesServiceImpl.criteriaDealerId(new ArrayList<>(), "");
+    }
+
+    @Test
+    void criteriaIdAgent_whenIdAgentIsNull() {
+        salesServiceImpl.criteriaIdAgent(new ArrayList<>(), null);
+    }
+
+    @Test
+    void criteriaIdAgent_whenIdAgentIsEmpty() {
+        salesServiceImpl.criteriaIdAgent(new ArrayList<>(), "");
+    }
+
+    @Test
+    void criteriaStatus_whenStatusIsNull() {
+        salesServiceImpl.criteriaStatus(new ArrayList<>(), null);
+    }
+
+    @Test
+    void criteriaStatus_whenStatusIsEmpty() {
+        salesServiceImpl.criteriaStatus(new ArrayList<>(), "");
+    }
+
+    @Test
+    void criteriaChannelId_whenChannelIdIsNull() {
+        salesServiceImpl.criteriaChannelId(new ArrayList<>(), null);
+    }
+
+    @Test
+    void criteriaChannelId_whenChannelIdIsEmpty() {
+        salesServiceImpl.criteriaChannelId(new ArrayList<>(), "");
+    }
+
+    @Test
+    void criteriaStoreId_whenStoreIdIsNull() {
+        salesServiceImpl.criteriaStoreId(new ArrayList<>(), null);
+    }
+
+    @Test
+    void criteriaStoreId_whenStoreIdIsEmpty() {
+        salesServiceImpl.criteriaStoreId(new ArrayList<>(), "");
+    }
+
+    @Test
+    void criteriaDateTime_whenDateTimeIsNull() {
+        salesServiceImpl.criteriaDateTime(new ArrayList<>(), null, null);
+    }
+
+    @Test
+    void criteriaDateTime_whenDateTimeIsEmpty() {
+        salesServiceImpl.criteriaDateTime(new ArrayList<>(), null, "");
+        salesServiceImpl.criteriaDateTime(new ArrayList<>(), "", null);
+        salesServiceImpl.criteriaDateTime(new ArrayList<>(), "", "");
+    }
+
+    @Test
     void filterSalesWithParamsTest() {
-        salesServiceImpl.filterSalesWithParams(sale, "1","bc12",
-                "1", "1", "Peru", "DNI",
-                "s", "1", "s", "orderId", "24/09/2020T12:43:00",
-                "24/09/2020T12:43:21");
-    }
-
-    @Test
-    void filterChannelIdTest() {
-        salesServiceImpl.filterChannelId(sale, "930686A");
-    }
-
-    @Test
-    void filterChannelId_Null_Test() {
-        salesServiceImpl.filterChannelId(sale, null);
-    }
-
-    @Test
-    void filterDealerIdTest() {
-        salesServiceImpl.filterDealerId(sale, "930686A");
-    }
-
-    @Test
-    void filterDealerId_Null_Test() {
-        salesServiceImpl.filterDealerId(sale, null);
-    }
-
-    @Test
-    void filterAgentIdTest() {
-        salesServiceImpl.filterAgentId(sale, "930686A");
-    }
-
-    @Test
-    void filterAgentId_Null_Test() {
-        salesServiceImpl.filterAgentId(sale, null);
-    }
-
-    @Test
-    void filterStoreIdTest() {
-        salesServiceImpl.filterStoreId(sale, "930686A");
-    }
-
-    @Test
-    void filterStoreId_Null_Test() {
-        salesServiceImpl.filterStoreId(sale, null);
-    }
-
-    @Test
-    void filterStatusTest() {
-        salesServiceImpl.filterStatus(sale, "930686A");
-    }
-
-    @Test
-    void filterStatus_Null_Test() {
-        salesServiceImpl.filterStatus(sale, null);
+        salesServiceImpl.filterSalesWithParams(sale, "", "79764312", "DNI", "orderId");
     }
 
     @Test
@@ -433,39 +472,6 @@ public class SalesServiceTest {
     @Test
     void filterCustomerId_NullTest() {
         salesServiceImpl.filterCustomerId(sale, null);
-    }
-
-    @Test
-    void filterSaleCreationDateTest() {
-        salesServiceImpl.filterSaleCreationDate(sale, "24/09/2020T12:43:00",
-                "24/09/2020T12:43:21");
-    }
-
-    @Test
-    void filterSaleCreationDate_nullDateTest() {
-        sale.setSaleCreationDate(null);
-        salesServiceImpl.filterSaleCreationDate(sale, "24/09/2020T12:43:00",
-                "24/09/2020T12:43:21");
-    }
-
-    @Test
-    void filterSaleCreationDate_nullStartDate_nullEndDateTest() {
-        salesServiceImpl.filterSaleCreationDate(sale, null, null);
-    }
-
-    @Test
-    void filterSalesIdTest() {
-        salesServiceImpl.filterSalesId(sale, "FE-0000000486");
-    }
-
-    @Test
-    void filterSalesId_salesIdNullTest() {
-        salesServiceImpl.filterSalesId(sale, null);
-    }
-
-    @Test
-    void filterSalesId_salesIdEmptyTest() {
-        salesServiceImpl.filterSalesId(sale, "");
     }
 
     @Test
