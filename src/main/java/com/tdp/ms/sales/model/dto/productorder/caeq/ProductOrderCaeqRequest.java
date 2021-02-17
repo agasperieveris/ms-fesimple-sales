@@ -1,6 +1,7 @@
 package com.tdp.ms.sales.model.dto.productorder.caeq;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.gson.annotations.SerializedName;
 import com.tdp.ms.sales.model.dto.productorder.Customer;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -32,6 +33,7 @@ public class ProductOrderCaeqRequest {
     private String salesChannel;
     private CaeqRequest request;
     private Customer customer = new Customer();
+    @SerializedName("productOfferingID")
     @JsonProperty("productOfferingID")
     private String productOfferingId;
     private String onlyValidationIndicator;
