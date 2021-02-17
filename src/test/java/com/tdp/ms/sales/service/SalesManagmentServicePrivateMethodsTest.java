@@ -43,6 +43,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.test.StepVerifier;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -296,7 +297,7 @@ public class SalesManagmentServicePrivateMethodsTest {
                 CreateProductOrderGeneralRequest.class, HashMap.class);
         method.setAccessible(true);
 
-        Mockito.when(getSkuWebClient.createSku("string", "default","string",1.00,"Provide","","string","2","string","string","1.00",headersMap))
+        Mockito.when(getSkuWebClient.createSku("string", "default","",0.00,"Provide","","string","2","string","123456","1000.00",headersMap))
                 .thenReturn(Flux.just(GetSkuResponse.builder().deviceType("mobile_phone").sku("31024026").build(),
                         GetSkuResponse.builder().deviceType("sim").sku("32004482").build()));
 
@@ -310,18 +311,24 @@ public class SalesManagmentServicePrivateMethodsTest {
                         .salesChannel("string")
                         .build()).build();
 
+        DeviceOffering deviceOfferingSmartphone = new DeviceOffering();
+        deviceOfferingSmartphone.setId("123456");
+        deviceOfferingSmartphone.setCostoPromedioSinIgvSoles("1000.00");
+        deviceOfferingSmartphone.setDeviceType(Constants.DEVICE_TYPE_SMARTPHONE);
+        deviceOfferingSmartphone.setSimSpecifications(Arrays.asList(SimSpecification.builder()
+                .sapid("string").price(Arrays.asList(MoneyAmount.builder()
+                        .value(1.00).build())).build()));
+
+        List<DeviceOffering> deviceOfferingList = new ArrayList<>();
+        deviceOfferingList.add(deviceOfferingSmartphone);
+
         Sale saleRequest = Sale.builder()
                 .additionalData(Arrays.asList(KeyValueType.builder().key("flowSale").value("Retail").build()))
                 .status("NEGOCIACION")
                 .channel(ChannelRef.builder().storeId("string").dealerId("string").href("string").id("string")
                         .name("string").storeName("string").build())
                 .commercialOperation(Arrays.asList(CommercialOperationType.builder().reason("ALTA")
-                        .deviceOffering(Arrays.asList(DeviceOffering.builder()
-                                .displayName("smarthpone")
-                                .sapid("string").costoPromedioSinIgvSoles("1.00")
-                                .simSpecifications(Arrays.asList(SimSpecification.builder()
-                                        .sapid("string").price(Arrays.asList(MoneyAmount.builder()
-                                                .value(1.00).build())).build())).build())).build()))
+                        .deviceOffering(deviceOfferingList).build()))
                 .build();
 
         method.invoke(salesManagmentServiceImpl, saleRequest, createProductOrderGeneralRequest, headersMap);
@@ -333,7 +340,7 @@ public class SalesManagmentServicePrivateMethodsTest {
                 CreateProductOrderGeneralRequest.class, HashMap.class);
         method.setAccessible(true);
 
-        Mockito.when(getSkuWebClient.createSku("string", "default","string",1.00,"Provide","","string","2","string","string","1.00",headersMap))
+        Mockito.when(getSkuWebClient.createSku("string", "default","",0.00,"Provide","","string","2","string","123456","1000.00",headersMap))
                 .thenReturn(Flux.just(GetSkuResponse.builder().deviceType("mobile_phone").sku("31024026").build(),
                         GetSkuResponse.builder().deviceType("sim").sku("32004482").build()));
 
@@ -346,18 +353,24 @@ public class SalesManagmentServicePrivateMethodsTest {
                         .productOfferingId("string").salesChannel("string")
                         .request(CaeqRequest.builder().build()).build()).build();
 
+        DeviceOffering deviceOfferingSmartphone = new DeviceOffering();
+        deviceOfferingSmartphone.setId("123456");
+        deviceOfferingSmartphone.setCostoPromedioSinIgvSoles("1000.00");
+        deviceOfferingSmartphone.setDeviceType(Constants.DEVICE_TYPE_SMARTPHONE);
+        deviceOfferingSmartphone.setSimSpecifications(Arrays.asList(SimSpecification.builder()
+                .sapid("string").price(Arrays.asList(MoneyAmount.builder()
+                        .value(1.00).build())).build()));
+
+        List<DeviceOffering> deviceOfferingList = new ArrayList<>();
+        deviceOfferingList.add(deviceOfferingSmartphone);
+
         Sale saleRequest = Sale.builder()
                 .additionalData(Arrays.asList(KeyValueType.builder().key("flowSale").value("Retail").build()))
                 .status("NEGOCIACION")
                 .channel(ChannelRef.builder().storeId("string").dealerId("string").href("string").id("string")
                         .name("string").storeName("string").build())
                 .commercialOperation(Arrays.asList(CommercialOperationType.builder().reason("ALTA")
-                        .deviceOffering(Arrays.asList(DeviceOffering.builder()
-                                .displayName("smartphone")
-                                .sapid("string").costoPromedioSinIgvSoles("1.00")
-                                .simSpecifications(Arrays.asList(SimSpecification.builder()
-                                        .sapid("string").price(Arrays.asList(MoneyAmount.builder()
-                                                .value(1.00).build())).build())).build())).build()))
+                        .deviceOffering(deviceOfferingList).build()))
                 .build();
 
         method.invoke(salesManagmentServiceImpl, saleRequest, createProductOrderGeneralRequest, headersMap);
@@ -369,7 +382,7 @@ public class SalesManagmentServicePrivateMethodsTest {
                 CreateProductOrderGeneralRequest.class, HashMap.class);
         method.setAccessible(true);
 
-        Mockito.when(getSkuWebClient.createSku("string", "default","string",1.00,"Provide","","string","2","string","string","1.00",headersMap))
+        Mockito.when(getSkuWebClient.createSku("string", "default","",0.00,"Provide","","string","2","string","123456","1000.00",headersMap))
                 .thenReturn(Flux.just(GetSkuResponse.builder().deviceType("mobile_phone").sku("31024026").build(),
                         GetSkuResponse.builder().deviceType("sim").sku("32004482").build()));
 
@@ -381,18 +394,24 @@ public class SalesManagmentServicePrivateMethodsTest {
                         .actionType("string").customer(Customer.builder().customerId("string").build()).onlyValidationIndicator("false")
                         .productOfferingId("string").salesChannel("string").request(CaeqCaplRequest.builder().build()).build()).build();
 
+        DeviceOffering deviceOfferingSmartphone = new DeviceOffering();
+        deviceOfferingSmartphone.setId("123456");
+        deviceOfferingSmartphone.setCostoPromedioSinIgvSoles("1000.00");
+        deviceOfferingSmartphone.setDeviceType(Constants.DEVICE_TYPE_SMARTPHONE);
+        deviceOfferingSmartphone.setSimSpecifications(Arrays.asList(SimSpecification.builder()
+                .sapid("string").price(Arrays.asList(MoneyAmount.builder()
+                        .value(1.00).build())).build()));
+
+        List<DeviceOffering> deviceOfferingList = new ArrayList<>();
+        deviceOfferingList.add(deviceOfferingSmartphone);
+
         Sale saleRequest = Sale.builder()
                 .additionalData(Arrays.asList(KeyValueType.builder().key("flowSale").value("Retail").build()))
                 .status("NEGOCIACION")
                 .channel(ChannelRef.builder().storeId("string").dealerId("string").href("string").id("string")
                         .name("string").storeName("string").build())
                 .commercialOperation(Arrays.asList(CommercialOperationType.builder().reason("ALTA")
-                        .deviceOffering(Arrays.asList(DeviceOffering.builder()
-                                .displayName("smartphone")
-                                .sapid("string").costoPromedioSinIgvSoles("1.00")
-                                .simSpecifications(Arrays.asList(SimSpecification.builder()
-                                        .sapid("string").price(Arrays.asList(MoneyAmount.builder()
-                                                .value(1.00).build())).build())).build())).build()))
+                        .deviceOffering(deviceOfferingList).build()))
                 .build();
 
         method.invoke(salesManagmentServiceImpl, saleRequest, createProductOrderGeneralRequest, headersMap);
@@ -404,7 +423,7 @@ public class SalesManagmentServicePrivateMethodsTest {
                 CreateProductOrderGeneralRequest.class, HashMap.class);
         method.setAccessible(true);
 
-        Mockito.when(getSkuWebClient.createSku("string", "default","string",1.00,"Provide","","string","2","string","string","1.00",headersMap))
+        Mockito.when(getSkuWebClient.createSku("string", "default","",0.00,"Provide","","string","2","string","123456","1000.00",headersMap))
                 .thenReturn(Flux.just(GetSkuResponse.builder().deviceType("mobile_phone").sku("31024026").build(),
                         GetSkuResponse.builder().deviceType("sim").sku("32004482").build()));
 
@@ -416,30 +435,37 @@ public class SalesManagmentServicePrivateMethodsTest {
                         .actionType("string").customer(new Customer("123456")).onlyValidationIndicator("false")
                         .productOfferingId("string").salesChannel("string").request(new AltaFijaRequest()).build()).build();
 
+        DeviceOffering deviceOfferingSmartphone = new DeviceOffering();
+        deviceOfferingSmartphone.setId("123456");
+        deviceOfferingSmartphone.setCostoPromedioSinIgvSoles("1000.00");
+        deviceOfferingSmartphone.setDeviceType(Constants.DEVICE_TYPE_SMARTPHONE);
+        deviceOfferingSmartphone.setSimSpecifications(Arrays.asList(SimSpecification.builder()
+                .sapid("string").price(Arrays.asList(MoneyAmount.builder()
+                        .value(1.00).build())).build()));
+
+        List<DeviceOffering> deviceOfferingList = new ArrayList<>();
+        deviceOfferingList.add(deviceOfferingSmartphone);
+
         Sale saleRequest = Sale.builder()
                 .additionalData(Arrays.asList(KeyValueType.builder().key("flowSale").value("Retail").build()))
                 .status("NEGOCIACION")
                 .channel(ChannelRef.builder().storeId("string").dealerId("string").href("string").id("string")
                         .name("string").storeName("string").build())
                 .commercialOperation(Arrays.asList(CommercialOperationType.builder().reason("ALTA")
-                        .deviceOffering(Arrays.asList(DeviceOffering.builder()
-                                .displayName("smartphone")
-                                .sapid("string").costoPromedioSinIgvSoles("1.00")
-                                .simSpecifications(Arrays.asList(SimSpecification.builder()
-                                        .sapid("string").price(Arrays.asList(MoneyAmount.builder()
-                                                .value(1.00).build())).build())).build())).build()))
+                        .deviceOffering(deviceOfferingList).build()))
                 .build();
 
         method.invoke(salesManagmentServiceImpl, saleRequest, createProductOrderGeneralRequest, headersMap);
     }
 
     @Test
-    void creationOrderValidation_status_AltaMobile_Negociacion_test() throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
+    void creationOrderValidation_status_AltaMobile_Negociacion_test() throws NoSuchMethodException,
+                                                                InvocationTargetException, IllegalAccessException {
         Method method = SalesManagmentServiceImpl.class.getDeclaredMethod("creationOrderValidation", Sale.class,
                 CreateProductOrderGeneralRequest.class, HashMap.class);
         method.setAccessible(true);
 
-        Mockito.when(getSkuWebClient.createSku("string", "default","string",1.00,"Change","","string","2","string","string","1.00",headersMap))
+        Mockito.when(getSkuWebClient.createSku("string", "default","123456",1.00,"Change","","string","2","string","123456","1000.00",headersMap))
                 .thenReturn(Flux.just(GetSkuResponse.builder().deviceType("mobile_phone").sku("31024026").build(),
                         GetSkuResponse.builder().deviceType("sim").sku("32004482").build()));
 
@@ -452,18 +478,182 @@ public class SalesManagmentServicePrivateMethodsTest {
                         .actionType("string").customer(customer).onlyValidationIndicator("false")
                         .productOfferingId("string").salesChannel("string").request(new AltaMobileRequest()).build()).build();
 
+        DeviceOffering deviceOfferingSim = new DeviceOffering();
+        deviceOfferingSim.setId("123456");
+        deviceOfferingSim.setCostoPromedioSinIgvSoles("1.00");
+        deviceOfferingSim.setDeviceType(Constants.DEVICE_TYPE_SIM);
+        deviceOfferingSim.setSimSpecifications(Arrays.asList(SimSpecification.builder()
+                .sapid("string").price(Arrays.asList(MoneyAmount.builder()
+                        .value(1.00).build())).build()));
+
+        DeviceOffering deviceOfferingSmartphone = new DeviceOffering();
+        deviceOfferingSmartphone.setId("123456");
+        deviceOfferingSmartphone.setCostoPromedioSinIgvSoles("1000.00");
+        deviceOfferingSmartphone.setDeviceType(Constants.DEVICE_TYPE_SMARTPHONE);
+        deviceOfferingSmartphone.setSimSpecifications(Arrays.asList(SimSpecification.builder()
+                .sapid("string").price(Arrays.asList(MoneyAmount.builder()
+                        .value(1.00).build())).build()));
+
+        List<DeviceOffering> deviceOfferingList = new ArrayList<>();
+        deviceOfferingList.add(deviceOfferingSim);
+        deviceOfferingList.add(deviceOfferingSmartphone);
+
         Sale saleRequest = Sale.builder()
                 .additionalData(Arrays.asList(KeyValueType.builder().key("flowSale").value("Retail").build()))
                 .status("NEGOCIACION")
                 .channel(ChannelRef.builder().storeId("string").dealerId("string").href("string").id("string")
                         .name("string").storeName("string").build())
                 .commercialOperation(Arrays.asList(CommercialOperationType.builder().reason("CAPL")
-                        .deviceOffering(Arrays.asList(DeviceOffering.builder()
-                                .displayName("smartphone")
-                                .sapid("string").costoPromedioSinIgvSoles("1.00")
-                                .simSpecifications(Arrays.asList(SimSpecification.builder()
-                                        .sapid("string").price(Arrays.asList(MoneyAmount.builder()
-                                                .value(1.00).build())).build())).build())).build()))
+                        .deviceOffering(deviceOfferingList)
+                        .build()))
+                .build();
+
+        method.invoke(salesManagmentServiceImpl, saleRequest, createProductOrderGeneralRequest, headersMap);
+    }
+
+    @Test
+    void creationOrderValidation_status_AltaMobile_Negociacion_BadRequest_Id_Sim_test() throws NoSuchMethodException,
+            InvocationTargetException, IllegalAccessException {
+        Method method = SalesManagmentServiceImpl.class.getDeclaredMethod("creationOrderValidation", Sale.class,
+                CreateProductOrderGeneralRequest.class, HashMap.class);
+        method.setAccessible(true);
+
+        Customer customer = Customer.builder().customerId("C0001").build();
+        CreateProductOrderGeneralRequest createProductOrderGeneralRequest = CreateProductOrderGeneralRequest
+                .builder().createProductOrderRequest(ProductOrderAltaMobileRequest.builder()
+                        .actionType("string").customer(customer).onlyValidationIndicator("false")
+                        .productOfferingId("string").salesChannel("string").request(new AltaMobileRequest()).build()).build();
+
+        DeviceOffering deviceOfferingSim = new DeviceOffering();
+        deviceOfferingSim.setId("");
+        deviceOfferingSim.setCostoPromedioSinIgvSoles("1.00");
+        deviceOfferingSim.setDeviceType(Constants.DEVICE_TYPE_SIM);
+        deviceOfferingSim.setSimSpecifications(Arrays.asList(SimSpecification.builder()
+                .sapid("string").price(Arrays.asList(MoneyAmount.builder()
+                        .value(1.00).build())).build()));
+
+        List<DeviceOffering> deviceOfferingList = new ArrayList<>();
+        deviceOfferingList.add(deviceOfferingSim);
+
+        Sale saleRequest = Sale.builder()
+                .additionalData(Arrays.asList(KeyValueType.builder().key("flowSale").value("Retail").build()))
+                .status("NEGOCIACION")
+                .channel(ChannelRef.builder().storeId("string").dealerId("string").href("string").id("string")
+                        .name("string").storeName("string").build())
+                .commercialOperation(Arrays.asList(CommercialOperationType.builder().reason("CAPL")
+                        .deviceOffering(deviceOfferingList)
+                        .build()))
+                .build();
+
+        method.invoke(salesManagmentServiceImpl, saleRequest, createProductOrderGeneralRequest, headersMap);
+    }
+
+    @Test
+    void creationOrderValidation_status_AltaMobile_Negociacion_BadRequest1_Costo_Sim_test() throws NoSuchMethodException,
+            InvocationTargetException, IllegalAccessException {
+        Method method = SalesManagmentServiceImpl.class.getDeclaredMethod("creationOrderValidation", Sale.class,
+                CreateProductOrderGeneralRequest.class, HashMap.class);
+        method.setAccessible(true);
+
+        Customer customer = Customer.builder().customerId("C0001").build();
+        CreateProductOrderGeneralRequest createProductOrderGeneralRequest = CreateProductOrderGeneralRequest
+                .builder().createProductOrderRequest(ProductOrderAltaMobileRequest.builder()
+                        .actionType("string").customer(customer).onlyValidationIndicator("false")
+                        .productOfferingId("string").salesChannel("string").request(new AltaMobileRequest()).build()).build();
+
+        DeviceOffering deviceOfferingSim = new DeviceOffering();
+        deviceOfferingSim.setId("123456");
+        deviceOfferingSim.setCostoPromedioSinIgvSoles("");
+        deviceOfferingSim.setDeviceType(Constants.DEVICE_TYPE_SIM);
+        deviceOfferingSim.setSimSpecifications(Arrays.asList(SimSpecification.builder()
+                .sapid("string").price(Arrays.asList(MoneyAmount.builder()
+                        .value(1.00).build())).build()));
+
+        List<DeviceOffering> deviceOfferingList = new ArrayList<>();
+        deviceOfferingList.add(deviceOfferingSim);
+
+        Sale saleRequest = Sale.builder()
+                .additionalData(Arrays.asList(KeyValueType.builder().key("flowSale").value("Retail").build()))
+                .status("NEGOCIACION")
+                .channel(ChannelRef.builder().storeId("string").dealerId("string").href("string").id("string")
+                        .name("string").storeName("string").build())
+                .commercialOperation(Arrays.asList(CommercialOperationType.builder().reason("CAPL")
+                        .deviceOffering(deviceOfferingList)
+                        .build()))
+                .build();
+
+        method.invoke(salesManagmentServiceImpl, saleRequest, createProductOrderGeneralRequest, headersMap);
+    }
+
+    @Test
+    void creationOrderValidation_status_AltaMobile_Negociacion_BadRequest_Id_Smatphone_test() throws NoSuchMethodException,
+            InvocationTargetException, IllegalAccessException {
+        Method method = SalesManagmentServiceImpl.class.getDeclaredMethod("creationOrderValidation", Sale.class,
+                CreateProductOrderGeneralRequest.class, HashMap.class);
+        method.setAccessible(true);
+
+        Customer customer = Customer.builder().customerId("C0001").build();
+        CreateProductOrderGeneralRequest createProductOrderGeneralRequest = CreateProductOrderGeneralRequest
+                .builder().createProductOrderRequest(ProductOrderAltaMobileRequest.builder()
+                        .actionType("string").customer(customer).onlyValidationIndicator("false")
+                        .productOfferingId("string").salesChannel("string").request(new AltaMobileRequest()).build()).build();
+
+        DeviceOffering deviceOfferingSim = new DeviceOffering();
+        deviceOfferingSim.setId("");
+        deviceOfferingSim.setCostoPromedioSinIgvSoles("1.00");
+        deviceOfferingSim.setDeviceType(Constants.DEVICE_TYPE_SMARTPHONE);
+        deviceOfferingSim.setSimSpecifications(Arrays.asList(SimSpecification.builder()
+                .sapid("string").price(Arrays.asList(MoneyAmount.builder()
+                        .value(1.00).build())).build()));
+
+        List<DeviceOffering> deviceOfferingList = new ArrayList<>();
+        deviceOfferingList.add(deviceOfferingSim);
+
+        Sale saleRequest = Sale.builder()
+                .additionalData(Arrays.asList(KeyValueType.builder().key("flowSale").value("Retail").build()))
+                .status("NEGOCIACION")
+                .channel(ChannelRef.builder().storeId("string").dealerId("string").href("string").id("string")
+                        .name("string").storeName("string").build())
+                .commercialOperation(Arrays.asList(CommercialOperationType.builder().reason("CAPL")
+                        .deviceOffering(deviceOfferingList)
+                        .build()))
+                .build();
+
+        method.invoke(salesManagmentServiceImpl, saleRequest, createProductOrderGeneralRequest, headersMap);
+    }
+
+    @Test
+    void creationOrderValidation_status_AltaMobile_Negociacion_BadRequest1_Costo_Smartphone_test() throws NoSuchMethodException,
+            InvocationTargetException, IllegalAccessException {
+        Method method = SalesManagmentServiceImpl.class.getDeclaredMethod("creationOrderValidation", Sale.class,
+                CreateProductOrderGeneralRequest.class, HashMap.class);
+        method.setAccessible(true);
+
+        Customer customer = Customer.builder().customerId("C0001").build();
+        CreateProductOrderGeneralRequest createProductOrderGeneralRequest = CreateProductOrderGeneralRequest
+                .builder().createProductOrderRequest(ProductOrderAltaMobileRequest.builder()
+                        .actionType("string").customer(customer).onlyValidationIndicator("false")
+                        .productOfferingId("string").salesChannel("string").request(new AltaMobileRequest()).build()).build();
+
+        DeviceOffering deviceOfferingSim = new DeviceOffering();
+        deviceOfferingSim.setId("123456");
+        deviceOfferingSim.setCostoPromedioSinIgvSoles("");
+        deviceOfferingSim.setDeviceType(Constants.DEVICE_TYPE_SMARTPHONE);
+        deviceOfferingSim.setSimSpecifications(Arrays.asList(SimSpecification.builder()
+                .sapid("string").price(Arrays.asList(MoneyAmount.builder()
+                        .value(1.00).build())).build()));
+
+        List<DeviceOffering> deviceOfferingList = new ArrayList<>();
+        deviceOfferingList.add(deviceOfferingSim);
+
+        Sale saleRequest = Sale.builder()
+                .additionalData(Arrays.asList(KeyValueType.builder().key("flowSale").value("Retail").build()))
+                .status("NEGOCIACION")
+                .channel(ChannelRef.builder().storeId("string").dealerId("string").href("string").id("string")
+                        .name("string").storeName("string").build())
+                .commercialOperation(Arrays.asList(CommercialOperationType.builder().reason("CAPL")
+                        .deviceOffering(deviceOfferingList)
+                        .build()))
                 .build();
 
         method.invoke(salesManagmentServiceImpl, saleRequest, createProductOrderGeneralRequest, headersMap);
@@ -601,6 +791,20 @@ public class SalesManagmentServicePrivateMethodsTest {
         List<ServiceabilityOfferType> serviceabilityOffersList = new ArrayList<>();
         Sale sale = CommonsMocks.createSaleMock();
 
+        ServiceType serviceType1 = new ServiceType();
+        serviceType1.setType("landline");
+        serviceType1.setAllocationId("0036");
+        ServiceType serviceType2 = new ServiceType();
+        serviceType2.setType("broadband");
+        ServiceType serviceType3 = new ServiceType();
+        serviceType3.setType("tv");
+        List<ServiceType> servicesList = new ArrayList<>();
+        servicesList.add(serviceType1);
+        servicesList.add(serviceType2);
+        servicesList.add(serviceType3);
+
+        sale.getCommercialOperation().get(0).getServiceAvailability().getOffers().get(0).setServices(servicesList);
+
         method.invoke(salesManagmentServiceImpl,sale, serviceabilityOffersList);
     }
 
@@ -684,9 +888,14 @@ public class SalesManagmentServicePrivateMethodsTest {
         List<NewAssignedBillingOffers> newAssignedBillingOffersBroadbandList =  new ArrayList<>();
         List<NewAssignedBillingOffers> newAssignedBillingOffersLandlineList =  new ArrayList<>();
 
+        ComponentProdOfferPriceType productPrice1 =  new ComponentProdOfferPriceType();
+        productPrice1.setProductSpecContainmentId("123123");
+        List<ComponentProdOfferPriceType> productPriceList = new ArrayList<>();
+        productPriceList.add(productPrice1);
 
         ComposingProductType composingProductType1 = new ComposingProductType();
         composingProductType1.setProductType("sva");
+        composingProductType1.setProductPrice(productPriceList);
         List<ComposingProductType> productSpecificationList = new ArrayList<>();
         productSpecificationList.add(composingProductType1);
 
@@ -742,6 +951,24 @@ public class SalesManagmentServicePrivateMethodsTest {
         sale.getAdditionalData().add(KeyValueType.builder().key("NUMERO_CAJA").value("123456").build());
         sale.getAdditionalData().remove(3);
         sale.getAdditionalData().add(KeyValueType.builder().key(Constants.FLOWSALE).value(Constants.RETAIL).build());
+
+        method.invoke(salesManagmentServiceImpl, caeqOrderAttributesList, sale, true);
+    }
+
+    @Test
+    void addCaeqOderAttributesTest() throws NoSuchMethodException, InvocationTargetException,
+            IllegalAccessException {
+        Method method = SalesManagmentServiceImpl.class.getDeclaredMethod("addCaeqOderAttributes",
+                List.class, Sale.class, Boolean.class);
+
+        method.setAccessible(true);
+
+        List<FlexAttrType> caeqOrderAttributesList = new ArrayList<>();
+        Sale sale = CommonsMocks.createSaleMock();
+
+        RelatedParty relatedParty2 = new RelatedParty();
+        relatedParty2.setNationalId("1503761783461661");
+        sale.getRelatedParty().add(relatedParty2);
 
         method.invoke(salesManagmentServiceImpl, caeqOrderAttributesList, sale, true);
     }
