@@ -155,6 +155,7 @@ public class CommonsMocks {
         OfferingType offeringType1= new OfferingType();
         offeringType1.setId("s");
         offeringType1.setProductOfferingProductSpecId("s");
+        offeringType1.setType("BROADBAND");
 
         MoneyType maxPrice = MoneyType
                 .builder()
@@ -264,6 +265,17 @@ public class CommonsMocks {
         serviceAvailability.setOffers(offersServicesList);
         serviceAvailability.setAdditionalData(additionalDatas);
 
+        serviceAvailability.getAdditionalData().add(KeyValueType.builder()
+                .key("networkAccessTechnologyLandline").value("FTTH").build());
+        serviceAvailability.getAdditionalData().add(KeyValueType.builder()
+                .key("serviceTechnologyLandline").value("HFC").build());
+        serviceAvailability.getAdditionalData().add(KeyValueType.builder()
+                .key("maxSpeed").value("1000Mbps").build());
+        serviceAvailability.getAdditionalData().add(KeyValueType.builder()
+                .key("networkAccessTechnologyBroadband").value("FTTH").build());
+        serviceAvailability.getAdditionalData().add(KeyValueType.builder()
+                .key("serviceTechnologyBroadband").value("HFC").build());
+
         PortabilityType portability =  new PortabilityType();
         portability.setReceipt("test");
         portability.setProductType("test");
@@ -353,10 +365,13 @@ public class CommonsMocks {
 
         relatedParties.add(relatedParty);
 
+        List<KeyValueType> paymentAdditionalData = new ArrayList<>();
+        paymentAdditionalData.add(KeyValueType.builder().key("paymentDocument").value("Boleta").build());
         PaymentType paymentType = PaymentType
                 .builder()
                 .paymentType("EX")
                 .cid("string")
+                .additionalData(paymentAdditionalData)
                 .build();
 
         IdentityValidationType identityValidationType = IdentityValidationType.builder()
@@ -433,6 +448,9 @@ public class CommonsMocks {
         additionalData4.setValue("PAGO EFECTIVO");
         additionalDatas.add(additionalData4);
 
+        additionalDatas.add(KeyValueType.builder().key("SIM_ICCID").value("123123123").build());
+        additionalDatas.add(KeyValueType.builder().key("MOVILE_IMEI").value("123123123").build());
+
         EntityRefType entityRefType = new EntityRefType();
         entityRefType.setHref("s");
         entityRefType.setId("s");
@@ -456,6 +474,7 @@ public class CommonsMocks {
         place.setAddress(addressType);
         places.add(place);
         DeviceOffering deviceOffering = new DeviceOffering();
+        DeviceOffering deviceOffering2 = new DeviceOffering();
 
         deviceOffering.setAdditionalData(additionalDatas);
         deviceOffering.setId("s");
@@ -472,11 +491,27 @@ public class CommonsMocks {
                         .build()))
                 .build())).build()));
 
+        deviceOffering2.setAdditionalData(additionalDatas);
+        deviceOffering2.setId("s");
+        deviceOffering2.setDeviceType("SIM");
+        deviceOffering2.setSapid("SAD123PID");
+        deviceOffering2.setOffers(Arrays.asList(Offer.builder().billingOfferings(Arrays.asList(BillingOffering.builder()
+                .commitmentPeriods(Arrays.asList(CommitmentPeriod.builder()
+                        .financingInstalments(Arrays.asList(FinancingInstalment.builder()
+                                .instalments(Instalments.builder()
+                                        .openingQuota(MoneyAmount.builder().value(1).build())
+                                        .totalAmount(MoneyAmount.builder().value(1).build())
+                                        .build())
+                                .build()))
+                        .build()))
+                .build())).build()));
+
         StockType stockType = StockType
                 .builder()
                 .reservationId("")
                 .build();
         deviceOffering.setStock(stockType);
+        deviceOffering2.setStock(stockType);
 
 
         MoneyAmount moneyAmount1 = MoneyAmount
@@ -525,9 +560,11 @@ public class CommonsMocks {
         List<SimSpecification> simSpecificationsList = new ArrayList<>();
         simSpecificationsList.add(simSpecification1);
         deviceOffering.setSimSpecifications(simSpecificationsList);
+        deviceOffering2.setSimSpecifications(simSpecificationsList);
 
         deviceOfferings.add(deviceOffering);
-        deviceOfferings.add(deviceOffering);
+        deviceOfferings.add(deviceOffering2);
+        deviceOfferings.get(0).setDeviceType("Smartphone");
         ProductInstanceType product= new ProductInstanceType();
         product.setId("s");
         product.setProductSpec(entityRefType);

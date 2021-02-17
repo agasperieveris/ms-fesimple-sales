@@ -33,11 +33,14 @@ public class Constants {
     public static final String PRODUCT_TYPE_LANDLINE = "landline";
     public static final String PRODUCT_TYPE_SHEQ = "ShEq";
     public static final String PRODUCT_TYPE_DEVICE = "device";
+    public static final String PRODUCT_TYPE_SVA = "sva";
     public static final String PENDIENTE = "PENDIENTE";
     public static final String NEGOCIACION = "NEGOCIACION";
     public static final String VALIDADO = "VALIDADO";
     public static final String WIRELESS = "WIRELESS";
     public static final String DEVICE_SKU = "DEVICE_SKU";
+    public static final String DEVICE_TYPE_SIM = "SIM";
+    public static final String DEVICE_TYPE_SMARTPHONE = "Smartphone";
     public static final String SIM_SKU = "SIM_SKU";
     public static final String SIM_DEVICE = "SimDevice";
     public static final String DELIVERY_METHOD = "DELIVERY_METHOD";
@@ -47,4 +50,7 @@ public class Constants {
     public static final String UFX_AUTHORIZATION = "ufxauthorization";
     public static final String STRING_FALSE = "false";
     public static final String STRING_DATE_TIME_FORMATTER = "dd/MM/yyyy'T'HH:mm:ss";
+    public static final String STATUS_VALIDADO = "VALIDADO";
+    public static final String MEDIUM_TYPE_EMAIL_ADDRESS = "email address";
+    public static final String KEY_DELIVERY_METHOD = "deliveryMethod";
 }
