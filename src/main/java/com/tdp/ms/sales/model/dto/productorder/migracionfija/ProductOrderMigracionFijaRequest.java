@@ -1,6 +1,7 @@
 package com.tdp.ms.sales.model.dto.productorder.migracionfija;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.gson.annotations.SerializedName;
 import com.tdp.ms.sales.model.dto.productorder.Customer;
 import lombok.*;
 
@@ -31,6 +32,7 @@ public class ProductOrderMigracionFijaRequest {
     private String salesChannel;
     private MigracionFijaRequest request;
     private Customer customer = new Customer();
+    @SerializedName("productOfferingID")
     @JsonProperty("productOfferingID")
     private String productOfferingId;
     private String onlyValidationIndicator;
