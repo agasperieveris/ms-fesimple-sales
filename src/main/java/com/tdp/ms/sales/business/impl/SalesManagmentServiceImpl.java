@@ -870,7 +870,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
 
         // ALTA FIJA
         if (commercialOperationReason.equalsIgnoreCase("ALTA")
-                && mainProductType.equalsIgnoreCase("WIRELINE")
+                && mainProductType.equalsIgnoreCase(Constants.WIRELINE)
                 && saleRequest.getCommercialOperation().get(0).getAction().equalsIgnoreCase("PROVIDE"))
         {
             // Fija Commercial Operations
@@ -886,7 +886,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
 
         } else if ((commercialOperationReason.equalsIgnoreCase("CAPL")
                 || commercialOperationReason.equalsIgnoreCase("REPLACEOFFER"))
-                && mainProductType.equalsIgnoreCase("WIRELINE")
+                && mainProductType.equalsIgnoreCase(Constants.WIRELINE)
                 && saleRequest.getCommercialOperation().get(0).getAction().equalsIgnoreCase("MODIFY")) {
             LOG.info("Migration Sales Case");
 
@@ -1156,11 +1156,13 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                                    Sale saleRequest, PostSalesRequest request, final Boolean[] flgFinanciamiento,
                                    Boolean isRetail) {
         // Building Create Quotation Request to use into Create Order Request
+        LOG.info("Building Create Quotation Fija Request...");
         CreateQuotationRequest createQuotationFijaRequest = new CreateQuotationRequest();
         if (flgFinanciamiento[0]) {
             this.buildCreateQuotationFijaRequest(createQuotationFijaRequest, request,
                     parametersFinanciamientoFija);
         }
+        LOG.info("Create Quotation Fija Request: ".concat(new Gson().toJson(createQuotationFijaRequest)));
 
         // Identifying New Assigned Billing Offers SVAs
         List<NewAssignedBillingOffers> newAssignedBillingOffersCableTvList = new ArrayList<>();
@@ -1248,6 +1250,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
     private Mono<Sale> createOrderFija(CreateProductOrderGeneralRequest mainRequestProductOrder,
                                        PostSalesRequest request, Sale saleRequest, final Boolean[] flgFinanciamiento,
                                        CreateQuotationRequest createQuotationFijaRequest, Boolean isRetail) {
+        LOG.info("Create Order Request: ".concat(new Gson().toJson(mainRequestProductOrder)));
 
         if (saleRequest.getCommercialOperation().get(0).getDeviceOffering() != null
                 && !saleRequest.getCommercialOperation().get(0).getDeviceOffering().isEmpty()
@@ -1317,6 +1320,9 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
 
         return stringValue[0];
     }
+
+    // This method must be called to Alta Fija (productType = WIRELINE)
+    // and MT (productType = MT && additionalData.key[productType].value = WIRELINE)
     private void buildCreateQuotationFijaRequest(CreateQuotationRequest createQuotationRequest,
                                                  PostSalesRequest salesRequest,
                                                  List<BusinessParameterFinanciamientoFijaExt> bpFinanciamiento) {
@@ -1329,6 +1335,22 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                 .filter(item -> item.getMediumType().equalsIgnoreCase(Constants.MEDIUM_TYPE_EMAIL_ADDRESS))
                 .findFirst()
                 .ifPresent(item -> email[0] = item.getCharacteristic().getEmailAddress());
+        CommercialOperationType mainCommercialOperation =  new CommercialOperationType();
+        if (sale.getProductType().equalsIgnoreCase(Constants.WIRELINE)) {
+            mainCommercialOperation = sale.getCommercialOperation().get(0);
+        } else if (sale.getProductType().equalsIgnoreCase("MT")) {
+            mainCommercialOperation = sale.getCommercialOperation().stream()
+                    .filter(item -> this.getStringValueByKeyFromAdditionalDataList(item.getAdditionalData(),
+                            "productType").equalsIgnoreCase("WIRELINE"))
+                    .findFirst()
+                    .orElse(new CommercialOperationType());
+        }
+
+        TimePeriod validFor = TimePeriod
+                .builder()
+                .endDateTime(Commons.getDatetimeNow())
+                .startDateTime(Commons.getDatetimeNow())
+                .build();
         com.tdp.ms.sales.model.dto.quotation.ContactMedium contactMedium1 = com.tdp.ms.sales.model.dto.quotation
                 .ContactMedium
                 .builder()
@@ -1352,21 +1374,21 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         /* Se borra el campo a pedido de Lincoln
         Address address = Address
                 .builder()
-                .streetNr(sale.getCommercialOperation().get(0).getWorkOrDeliveryType().getPlace().get(0).getAddress()
+                .streetNr(mainCommercialOperation.getWorkOrDeliveryType().getPlace().get(0).getAddress()
                         .getStreetNr())
-                .streetName(sale.getCommercialOperation().get(0).getWorkOrDeliveryType().getPlace().get(0).getAddress()
+                .streetName(mainCommercialOperation.getWorkOrDeliveryType().getPlace().get(0).getAddress()
                         .getStreetName())
-                .streetType(sale.getCommercialOperation().get(0).getWorkOrDeliveryType().getPlace().get(0).getAddress()
+                .streetType(mainCommercialOperation.getWorkOrDeliveryType().getPlace().get(0).getAddress()
                         .getStreetType())
-                .locality(this.getStringValueByKeyFromAdditionalDataList(sale.getCommercialOperation().get(0)
+                .locality(this.getStringValueByKeyFromAdditionalDataList(mainCommercialOperation
                         .getWorkOrDeliveryType().getPlace().get(0).getAdditionalData(), "locality"))
-                .city(sale.getCommercialOperation().get(0).getWorkOrDeliveryType().getPlace().get(0).getAddress()
+                .city(mainCommercialOperation.getWorkOrDeliveryType().getPlace().get(0).getAddress()
                         .getCity())
-                .stateOrProvince(sale.getCommercialOperation().get(0).getWorkOrDeliveryType().getPlace().get(0)
+                .stateOrProvince(mainCommercialOperation.getWorkOrDeliveryType().getPlace().get(0)
                         .getAddress().getStateOrProvince())
-                .region(sale.getCommercialOperation().get(0).getWorkOrDeliveryType().getPlace().get(0)
+                .region(mainCommercialOperation.getWorkOrDeliveryType().getPlace().get(0)
                         .getAddress().getRegion())
-                .country(sale.getCommercialOperation().get(0).getWorkOrDeliveryType().getPlace().get(0)
+                .country(mainCommercialOperation.getWorkOrDeliveryType().getPlace().get(0)
                         .getAddress().getCountry())
                 .build();*/
 
@@ -1385,18 +1407,6 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                 .creditLimit(sale.getRelatedParty().get(0).getScore().getFinancingCapacity())
                 .build();
 
-        Number amountTotalAmount = sale.getCommercialOperation().get(0).getDeviceOffering().get(0).getOffers().get(0)
-                .getBillingOfferings().get(0).getCommitmentPeriods().get(0).getFinancingInstalments().get(0)
-                .getInstalments().getTotalAmount().getValue().doubleValue() - sale.getCommercialOperation().get(0)
-                .getDeviceOffering().get(1).getSimSpecifications().get(0)
-                .getPrice().get(0).getValue().doubleValue();
-
-        MoneyAmount totalAmount = MoneyAmount
-                .builder()
-                .amount(amountTotalAmount.toString())
-                .units("")
-                .build();
-
         MoneyAmount associatedPlanRecurrentCost = MoneyAmount
                 .builder()
                 .amount("0.00")
@@ -1405,15 +1415,13 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
 
         MoneyAmount totalCustomerRecurrentCost = MoneyAmount
                 .builder()
-                .amount(sale.getCommercialOperation().get(0).getProductOfferings().get(0).getProductOfferingPrice()
+                .amount(mainCommercialOperation.getProductOfferings().get(0).getProductOfferingPrice()
                         .get(0).getMaxPrice().getAmount().toString())
                 .units("PEN").build();
 
         MoneyAmount downPayment = MoneyAmount
                 .builder()
-                .amount(sale.getCommercialOperation().get(0).getDeviceOffering().get(0).getOffers().get(0)
-                        .getBillingOfferings().get(0).getCommitmentPeriods().get(0).getFinancingInstalments()
-                        .get(0).getInstalments().getOpeningQuota().getValue().toString())
+                .amount("0.00")
                 .units("PEN")
                 .build();
 
@@ -1431,97 +1439,151 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         List<com.tdp.ms.sales.model.dto.quotation.Item> itemsList = new ArrayList<>();
         String salesId = sale.getSalesId();
 
-        if (sale.getCommercialOperation().get(0).getProductOfferings().get(0).getUpFront().getIndicator()
-                                                                                .equalsIgnoreCase("N")) {
-            String offeringId = this.getStringValueByKeyFromAdditionalDataList(sale.getCommercialOperation().get(0)
-                    .getProductOfferings().get(0).getAdditionalData(), "PRODUCT_FOR_INST_FEE")
+        OfferingType offeringType1 = mainCommercialOperation.getProductOfferings().stream()
+                .filter(item -> item.getUpFront().getIndicator().equalsIgnoreCase("N"))
+                .findFirst()
+                .orElse(null);
+
+        if (offeringType1 != null) {
+            String productForInstFee = this.getStringValueByKeyFromAdditionalDataList(offeringType1
+                    .getAdditionalData(), "PRODUCT_FOR_INST_FEE");
+            String offeringId = productForInstFee
                     .concat("_")
                     .concat(salesId);
+            MoneyAmount totalCostAmount = MoneyAmount
+                    .builder()
+                    .amount(offeringType1.getUpFront().getPrice().getAmount().toString())
+                    .build();
 
             com.tdp.ms.sales.model.dto.quotation.Item itemInstallation = com.tdp.ms.sales.model.dto.quotation.Item
                     .builder()
                     .offeringId(offeringId)
-                    .orderActionId(org.apache.commons.lang3.StringUtils.chop(sale.getCommercialOperation().get(0)
+                    .orderActionId(org.apache.commons.lang3.StringUtils.chop(mainCommercialOperation
                             .getOrder().getProductOrderReferenceNumber()))
+                    .type(productForInstFee)
                     .itemChargeCode(this.getStringValueFromBpExtListByParameterName(
                                                             "chargeCodeInstallation", bpFinanciamiento))
-                    .orderActionId(org.apache.commons.lang3.StringUtils.chop(sale.getCommercialOperation().get(0).getOrder()
-                            .getProductOrderReferenceNumber()))
+                    .totalCost(totalCostAmount)
                     .build();
             itemsList.add(itemInstallation);
         }
         // Upgrade de Modem Premium
-        if (this.getStringValueByKeyFromAdditionalDataList(sale.getCommercialOperation().get(0).getProductOfferings()
-                            .get(0).getAdditionalData(), "modemPremium").equalsIgnoreCase("true")) {
+        OfferingType offeringType2 = mainCommercialOperation.getProductOfferings().stream()
+                .filter(item -> this.getStringValueByKeyFromAdditionalDataList(item
+                        .getAdditionalData(), "modemPremium").equalsIgnoreCase("true"))
+                .findFirst()
+                .orElse(null);
+        if (offeringType2 != null) {
             String offeringId = "EQUP"
                     .concat("_")
                     .concat(salesId);
 
+            MoneyAmount totalCostAmount = MoneyAmount
+                    .builder()
+                    .amount(offeringType2.getProductSpecification().get(0).getProductPrice().get(0).getPrice()
+                            .getAmount().toString())
+                    .build();
+
             com.tdp.ms.sales.model.dto.quotation.Item itemModemPremium = com.tdp.ms.sales.model.dto.quotation.Item
                     .builder()
                     .offeringId(offeringId)
-                    .orderActionId(org.apache.commons.lang3.StringUtils.chop(sale.getCommercialOperation().get(0)
+                    .orderActionId(org.apache.commons.lang3.StringUtils.chop(mainCommercialOperation
                             .getOrder().getProductOrderReferenceNumber()))
+                    .type("EQUP")
                     .itemChargeCode(this.getStringValueFromBpExtListByParameterName(
                                                             "chargeCodeDevicePremium", bpFinanciamiento))
-                    .orderActionId(org.apache.commons.lang3.StringUtils.chop(sale.getCommercialOperation().get(0).getOrder()
-                            .getProductOrderReferenceNumber()))
+                    .totalCost(totalCostAmount)
                     .build();
             itemsList.add(itemModemPremium);
         }
         // Ultra Wifi
-        if (this.getStringValueByKeyFromAdditionalDataList(sale.getCommercialOperation().get(0).getProductOfferings()
-                .get(0).getAdditionalData(), "ultraWifi").equalsIgnoreCase("true")) {
+        OfferingType offeringType3 = mainCommercialOperation.getProductOfferings().stream()
+                .filter(item -> this.getStringValueByKeyFromAdditionalDataList(item
+                        .getAdditionalData(), "ultraWifi").equalsIgnoreCase("true"))
+                .findFirst()
+                .orElse(null);
+        if (offeringType3 != null) {
             String offeringId = "BB"
                     .concat("_")
                     .concat(salesId);
 
+            MoneyAmount totalCostAmount = MoneyAmount
+                    .builder()
+                    .amount(offeringType2.getProductSpecification().get(0).getProductPrice().get(0).getPrice()
+                            .getAmount().toString())
+                    .build();
+
             com.tdp.ms.sales.model.dto.quotation.Item itemUltraWifi = com.tdp.ms.sales.model.dto.quotation.Item
                     .builder()
                     .offeringId(offeringId)
-                    .orderActionId(org.apache.commons.lang3.StringUtils.chop(sale.getCommercialOperation().get(0)
+                    .orderActionId(org.apache.commons.lang3.StringUtils.chop(mainCommercialOperation
                             .getOrder().getProductOrderReferenceNumber()))
+                    .type("BB")
                     .itemChargeCode(this.getStringValueFromBpExtListByParameterName(
                                                             "chargeCodeUltraWifi", bpFinanciamiento))
+                    .totalCost(totalCostAmount)
                     .build();
             itemsList.add(itemUltraWifi);
         }
 
+        final Double[] amountTotalAmount = {0.0};
+        itemsList.forEach(item -> {
+            amountTotalAmount[0] = amountTotalAmount[0] + Double.parseDouble(item.getTotalCost().getAmount());
+        });
+        MoneyAmount totalAmount = MoneyAmount
+                .builder()
+                .amount(amountTotalAmount[0].toString())
+                .units("")
+                .build();
+
         // Attributes only to Fija
         final String[] serviceIdLobConcat = {""};
 
-        sale.getCommercialOperation().get(0).getProductOfferings().stream()
+        CommercialOperationType finalMainCommercialOperation = mainCommercialOperation;
+        mainCommercialOperation.getProductOfferings().stream()
                 .forEach(productOffering -> {
-                    String productSpecificationName = productOffering.getProductSpecification().get(0).getName();
-                    if (productSpecificationName.equalsIgnoreCase("TV")) {
-                        serviceIdLobConcat[0] = serviceIdLobConcat[0].concat("TV=").concat(productOffering
-                                .getProductSpecification().get(0).getRefinedProduct()
-                                .getProductCharacteristics().get(0).getId()).concat(";");
-                    } else if (productSpecificationName.equalsIgnoreCase(Constants.PRODUCT_TYPE_BROADBAND)) {
-                        serviceIdLobConcat[0] = serviceIdLobConcat[0].concat("INT=").concat(productOffering
-                                .getProductSpecification().get(0).getRefinedProduct()
-                                .getProductCharacteristics().get(0).getId()).concat(";");
-                    } else if (productSpecificationName.equalsIgnoreCase("ShEq")) {
-                        serviceIdLobConcat[0] = serviceIdLobConcat[0].concat("EQUP=").concat(productOffering
-                                .getProductSpecification().get(0).getRefinedProduct()
-                                .getProductCharacteristics().get(0).getId());
+                    String productSpecificationType = productOffering.getProductSpecification().get(0).getProductType();
+                    if (productSpecificationType.equalsIgnoreCase("cableTv")) {
+                        serviceIdLobConcat[0] = serviceIdLobConcat[0].concat("TV=").concat(
+                                this.getServiceIdFromProductConfigurationByLineOfBussinessType(finalMainCommercialOperation,
+                                        "cableTv")).concat(";");
+                    } else if (productSpecificationType.equalsIgnoreCase(Constants.PRODUCT_TYPE_BROADBAND)) {
+                        serviceIdLobConcat[0] = serviceIdLobConcat[0].concat("INT=").concat(
+                                this.getServiceIdFromProductConfigurationByLineOfBussinessType(finalMainCommercialOperation,
+                                        Constants.PRODUCT_TYPE_BROADBAND)).concat(";");
+                    } else if (productSpecificationType.equalsIgnoreCase("landline")) {
+                        serviceIdLobConcat[0] = serviceIdLobConcat[0].concat("VOIC=").concat(
+                                this.getServiceIdFromProductConfigurationByLineOfBussinessType(finalMainCommercialOperation,
+                                        "landline")).concat(";");
+                    } else if (productSpecificationType.equalsIgnoreCase("device")) {
+                        serviceIdLobConcat[0] = serviceIdLobConcat[0].concat("EQUP=").concat(
+                                this.getServiceIdFromProductConfigurationByLineOfBussinessType(finalMainCommercialOperation,
+                                "device"));
                     }
                 });
 
         String financialEntity = this.getStringValueFromBpExtListByParameterName("financialEntity",
                                                                                                     bpFinanciamiento);
 
+        String operationType = "";
+        if (mainCommercialOperation.getAction().equalsIgnoreCase("Provide")
+                && sale.getProductType().equalsIgnoreCase("WIRELINE")) {
+            operationType = "Alta";
+        } else if (!mainCommercialOperation.getAction().equalsIgnoreCase("Provide")
+                && sale.getProductType().equalsIgnoreCase("WIRELINE")) {
+            operationType = "CAEQ";
+        }
+
         CreateQuotationRequestBody body = CreateQuotationRequestBody
                 .builder()
-                .orderId("TEF" + String.format("%012d", new BigInteger(sale.getCommercialOperation().get(0).getOrder()
+                .orderId("TEF" + String.format("%012d", new BigInteger(mainCommercialOperation.getOrder()
                         .getProductOrderId())))
                 .accountId(sale.getRelatedParty().get(0).getAccountId())
                 .billingAgreement(sale.getRelatedParty().get(0).getBillingArragmentId())
                 .commercialAgreement("N")
                 .serviceIdLobConcat(serviceIdLobConcat[0])
                 .customer(customerQuotation)
-                .operationType(getOperationTypeForQuotationRequest(sale.getCommercialOperation().get(0)
-                                .getAdditionalData(), sale.getCommercialOperation().get(0).getReason()))
+                .operationType(operationType)
                 .totalAmount(totalAmount)
                 .associatedPlanRecurrentCost(associatedPlanRecurrentCost)
                 .totalCustomerRecurrentCost(totalCustomerRecurrentCost)
@@ -1549,6 +1611,26 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                 .getValue();
 
         return Boolean.parseBoolean(isCapl) && Boolean.parseBoolean(isCaeq) ? Constants.CAEQ : reason;
+    }
+        
+    private String getServiceIdFromProductConfigurationByLineOfBussinessType(
+            CommercialOperationType commercialOperation, String lineOfBusinessType) {
+        NewProductInNewOfferingInstanceConfigurationType emptyProduct =
+                NewProductInNewOfferingInstanceConfigurationType
+                        .builder()
+                        .productConfiguration(TopLevelProductConfigurationType.builder().serviceId("").build())
+                        .build();
+
+        String serviceId = commercialOperation.getOrder()
+                .getNewProductsInNewOfferings()
+                .stream()
+                .filter(item -> item.getProductConfiguration()
+                        .getLineOfBusinessType().equalsIgnoreCase(lineOfBusinessType))
+                .findFirst()
+                .orElse(emptyProduct)
+                .getProductConfiguration().getServiceId();
+
+        return serviceId;
     }
 
     private Mono<Sale> creationOrderValidation(Sale saleRequest, CreateProductOrderGeneralRequest productOrderRequest,
