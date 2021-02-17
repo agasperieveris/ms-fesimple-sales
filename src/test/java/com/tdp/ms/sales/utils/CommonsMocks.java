@@ -146,6 +146,16 @@ public class CommonsMocks {
                         .build())
                 .build()));
 
+        TopLevelProductConfigurationType productConfiguration = new TopLevelProductConfigurationType();
+        productConfiguration.setLineOfBusinessType("cableTv");
+        productConfiguration.setServiceId("123456");
+
+        NewProductInNewOfferingInstanceConfigurationType newProducts1 = new NewProductInNewOfferingInstanceConfigurationType();
+        newProducts1.setProductConfiguration(productConfiguration);
+
+        List<NewProductInNewOfferingInstanceConfigurationType> newProductsInNewOfferingsList = new ArrayList<>();
+        newProductsInNewOfferingsList.add(newProducts1);
+
         CreateProductOrderResponseType order = CreateProductOrderResponseType
                 .builder()
                 .productOrderId("930686")
@@ -173,6 +183,7 @@ public class CommonsMocks {
                 .builder()
                 .maxPrice(maxPrice)
                 .benefits(benefitsList)
+                .price(MoneyType.builder().amount(100.00).build())
                 .build();
         List<ComponentProdOfferPriceType> productOfferingPricesList = new ArrayList<>();
         productOfferingPricesList.add(componentProdOfferPriceType1);
@@ -188,6 +199,7 @@ public class CommonsMocks {
         ComposingProductType productSpecification1 = new ComposingProductType();
         productSpecification1.setProductType("landline");
         productSpecification1.setRefinedProduct(refinedProduct);
+        productSpecification1.setProductPrice(productOfferingPricesList);
 
         ComposingProductType productSpecification2 = new ComposingProductType();
         productSpecification2.setProductType("broadband");
@@ -216,8 +228,23 @@ public class CommonsMocks {
         productSpecificationList.add(productSpecification5);
         offeringType1.setProductSpecification(productSpecificationList);
 
+        KeyValueType keyValueModemPremium = KeyValueType.builder().key("modemPremium").value("true").build();
+        KeyValueType keyValueUltraWifi = KeyValueType.builder().key("ultraWifi").value("true").build();
+        List<KeyValueType> additionalDataOfferingTypeList = new ArrayList<>();
+        additionalDataOfferingTypeList.add(keyValueModemPremium);
+        additionalDataOfferingTypeList.add(keyValueUltraWifi);
+        offeringType1.setAdditionalData(additionalDataOfferingTypeList);
+
         List<OfferingType> productOfferings = new ArrayList<>();
         productOfferings.add(offeringType1);
+        productOfferings.add(offeringType1);
+        productOfferings.add(offeringType1);
+        productOfferings.add(offeringType1);
+
+        productOfferings.get(0).getProductSpecification().get(0).setProductType("cableTv");
+        productOfferings.get(1).getProductSpecification().get(0).setProductType(Constants.PRODUCT_TYPE_BROADBAND);
+        productOfferings.get(3).getProductSpecification().get(0).setProductType("device");
+        productOfferings.get(2).getProductSpecification().get(0).setProductType("landline");
 
 
         List<KeyValueType> additionalDataCommercialOperation = new ArrayList<>();
