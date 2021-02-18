@@ -696,6 +696,11 @@ public class SalesManagmentServicePrivateMethodsTest {
         upFront.setPrice(moneyTypeUpfront);
         sale.getCommercialOperation().get(0).getProductOfferings().get(0).setUpFront(upFront);
 
+        CreateProductOrderResponseType order = new CreateProductOrderResponseType();
+        order.setProductOrderId("123123");
+        order.setNewProductsInNewOfferings(CommonsMocks.createOrderNewProductsInNewOfferingsList());
+        sale.getCommercialOperation().get(0).setOrder(order);
+
         method.invoke(salesManagmentServiceImpl,createQuotationRequest, postSalesRequest, bpFinanciamiento);
     }
 
@@ -998,10 +1003,15 @@ public class SalesManagmentServicePrivateMethodsTest {
 
         Sale sale = CommonsMocks.createSaleMock();
 
+        CreateProductOrderResponseType order = new CreateProductOrderResponseType();
+        order.setProductOrderId("123123");
+        order.setNewProductsInNewOfferings(CommonsMocks.createOrderNewProductsInNewOfferingsList());
+        sale.getCommercialOperation().get(0).setOrder(order);
+
         String serviceId = (String) method.invoke(salesManagmentServiceImpl,
                 sale.getCommercialOperation().get(0), "cableTv");
 
-        Assert.assertEquals(serviceId, "123456");
+        Assert.assertEquals(serviceId, "123123");
     }
 
 }
