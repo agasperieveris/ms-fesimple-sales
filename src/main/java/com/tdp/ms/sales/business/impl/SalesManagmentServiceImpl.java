@@ -1558,7 +1558,32 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
 
         if (flgFinanciamiento) {
             CreateQuotationRequest createQuotationRequest = new CreateQuotationRequest();
-            this.buildCreateQuotationRequest(createQuotationRequest, request, flgCasi);
+            if (sale.getProductType().equalsIgnoreCase(Constants.WIRELESS)) {
+                this.buildCreateQuotationRequest(createQuotationRequest, request, flgCasi);
+            } else if (sale.getProductType().equalsIgnoreCase(Constants.WIRELINE)) {
+                return businessParameterWebClient
+                        .getParametersFinanciamientoFija(request.getHeadersMap())
+                        .map(BusinessParametersFinanciamientoFijaResponse::getData)
+                        .map(bpFinanciamientoFijaData -> bpFinanciamientoFijaData.get(0))
+                        .map(BusinessParameterFinanciamientoFijaData::getExt)
+                        .flatMap(parametersFinanciamientoFija -> {
+                            this.buildCreateQuotationFijaRequest(createQuotationRequest, request,
+                                    parametersFinanciamientoFija);
+
+                            return quotationWebClient.createQuotation(createQuotationRequest, sale)
+                                    .flatMap(createQuotationResponse -> {
+                                        this.setQuotationResponseInSales(createQuotationResponse,
+                                                sale);
+                                        return salesRepository.save(sale)
+                                                .map(r -> {
+                                                    this.postSalesEventFlow(request);
+                                                    return r;
+                                                });
+                                    });
+                        });
+
+            }
+
             return quotationWebClient.createQuotation(createQuotationRequest, sale)
                     .flatMap(createQuotationResponse -> {
                         this.setQuotationResponseInSales(createQuotationResponse,
