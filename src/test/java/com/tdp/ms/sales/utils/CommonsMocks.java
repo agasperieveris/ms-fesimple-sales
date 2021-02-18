@@ -838,6 +838,44 @@ public class CommonsMocks {
         return sale;
     }
 
+    public static List<NewProductInNewOfferingInstanceConfigurationType> createOrderNewProductsInNewOfferingsList() {
+        TopLevelProductConfigurationType productConfiguration1 = new TopLevelProductConfigurationType();
+        productConfiguration1.setLineOfBusinessType("cableTv");
+        productConfiguration1.setServiceId("123123");
+        NewProductInNewOfferingInstanceConfigurationType newOfferingInstanceConfigurationType1 =
+                new NewProductInNewOfferingInstanceConfigurationType();
+        newOfferingInstanceConfigurationType1.setProductConfiguration(productConfiguration1);
+
+        TopLevelProductConfigurationType productConfiguration2 = new TopLevelProductConfigurationType();
+        productConfiguration2.setLineOfBusinessType(Constants.PRODUCT_TYPE_BROADBAND);
+        productConfiguration2.setServiceId("123123");
+        NewProductInNewOfferingInstanceConfigurationType newOfferingInstanceConfigurationType2 =
+                new NewProductInNewOfferingInstanceConfigurationType();
+        newOfferingInstanceConfigurationType2.setProductConfiguration(productConfiguration2);
+
+        TopLevelProductConfigurationType productConfiguration3 = new TopLevelProductConfigurationType();
+        productConfiguration3.setLineOfBusinessType("landline");
+        productConfiguration3.setServiceId("123123");
+        NewProductInNewOfferingInstanceConfigurationType newOfferingInstanceConfigurationType3 =
+                new NewProductInNewOfferingInstanceConfigurationType();
+        newOfferingInstanceConfigurationType3.setProductConfiguration(productConfiguration3);
+
+        TopLevelProductConfigurationType productConfiguration4 = new TopLevelProductConfigurationType();
+        productConfiguration4.setLineOfBusinessType("device");
+        productConfiguration4.setServiceId("123123");
+        NewProductInNewOfferingInstanceConfigurationType newOfferingInstanceConfigurationType4 =
+                new NewProductInNewOfferingInstanceConfigurationType();
+        newOfferingInstanceConfigurationType4.setProductConfiguration(productConfiguration4);
+
+        List<NewProductInNewOfferingInstanceConfigurationType> newProductsInNewOfferingsList = new ArrayList<>();
+        newProductsInNewOfferingsList.add(newOfferingInstanceConfigurationType1);
+        newProductsInNewOfferingsList.add(newOfferingInstanceConfigurationType2);
+        newProductsInNewOfferingsList.add(newOfferingInstanceConfigurationType3);
+        newProductsInNewOfferingsList.add(newOfferingInstanceConfigurationType4);
+
+        return newProductsInNewOfferingsList;
+    }
+
     public static HashMap<String,String> createHeadersMock() {
         HashMap<String,String> headersMap = new HashMap();
         headersMap.put(HttpHeadersKey.UNICA_SERVICE_ID, ConstantsTest.RH_UNICA_SERVICE_ID);
