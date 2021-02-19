@@ -226,7 +226,7 @@ public class SalesServiceTest {
                 .statusChangeReason("s")
                 .audioStatus("s")
                 .validFor(validFor)
-                .saleCreationDate("24/09/2020T12:43:03")
+                .saleCreationDate("2021-02-15T11:08:21")
                 .additionalData(additionalDatas)
                 .build();
 
