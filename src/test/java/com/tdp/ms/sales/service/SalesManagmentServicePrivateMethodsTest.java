@@ -25,6 +25,7 @@ import com.tdp.ms.sales.model.dto.productorder.capl.CaplRequest;
 import com.tdp.ms.sales.model.dto.productorder.capl.NewAssignedBillingOffers;
 import com.tdp.ms.sales.model.dto.productorder.capl.ProductOrderCaplRequest;
 import com.tdp.ms.sales.model.dto.quotation.CreateQuotationRequestBody;
+import com.tdp.ms.sales.model.dto.quotation.Item;
 import com.tdp.ms.sales.model.dto.reservestock.StockItem;
 import com.tdp.ms.sales.model.entity.Sale;
 import com.tdp.ms.sales.model.request.CreateQuotationRequest;
@@ -748,7 +749,7 @@ public class SalesManagmentServicePrivateMethodsTest {
     void buildOrderAttributesListAltaFijaTest() throws NoSuchMethodException, InvocationTargetException,
                                                                                             IllegalAccessException {
         Method method = SalesManagmentServiceImpl.class.getDeclaredMethod("buildOrderAttributesListAltaFija",
-                List.class, Sale.class, CreateQuotationRequest.class, Boolean.class);
+                List.class, Sale.class, CreateQuotationRequest.class);
 
         method.setAccessible(true);
 
@@ -778,7 +779,7 @@ public class SalesManagmentServicePrivateMethodsTest {
         createQuotationRequest.setBody(body);
 
 
-        method.invoke(salesManagmentServiceImpl, altaFijaOrderAttributesList, sale, createQuotationRequest, true);
+        method.invoke(salesManagmentServiceImpl, altaFijaOrderAttributesList, sale, createQuotationRequest);
     }
 
     @Test
@@ -1012,6 +1013,38 @@ public class SalesManagmentServicePrivateMethodsTest {
                 sale.getCommercialOperation().get(0), "cableTv");
 
         Assert.assertEquals(serviceId, "123123");
+    }
+
+    @Test
+    void addOrderInfoToCreateQuotationFijaRequestTest() throws NoSuchMethodException,
+            InvocationTargetException, IllegalAccessException {
+        Method method = SalesManagmentServiceImpl.class.getDeclaredMethod(
+                "addOrderInfoToCreateQuotationFijaRequest", CreateQuotationRequest.class, Sale.class);
+
+        method.setAccessible(true);
+
+        Item itemQuotation1 = new Item();
+        itemQuotation1.setOfferingId("123123");
+        itemQuotation1.setPublicId("123123");
+        List<Item> itemsQuotationList = new ArrayList<>();
+        itemsQuotationList.add(itemQuotation1);
+
+        CreateQuotationRequestBody createQuotationRequestBody = new CreateQuotationRequestBody();
+        createQuotationRequestBody.setItems(itemsQuotationList);
+
+        CreateQuotationRequest createQuotationRequest = new CreateQuotationRequest();
+        createQuotationRequest.setBody(createQuotationRequestBody);
+
+        Sale sale = CommonsMocks.createSaleMock();
+
+        CreateProductOrderResponseType order = new CreateProductOrderResponseType();
+        order.setProductOrderId("123123");
+        order.setProductOrderReferenceNumber("123123");
+        order.setNewProductsInNewOfferings(CommonsMocks.createOrderNewProductsInNewOfferingsList());
+        sale.getCommercialOperation().get(0).setOrder(order);
+        sale.setProductType(Constants.WIRELINE);
+
+        method.invoke(salesManagmentServiceImpl,createQuotationRequest, sale);
     }
 
 }
