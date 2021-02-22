@@ -941,10 +941,16 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
 
                 // Añadir llamada a get businessParameters - ReasonCode
                 return Mono.zip(getRiskDomain, salesCharsByCot, getBonificacionSim, getParametersSimCard, getParametersReasonCode)
-                        .flatMap(tuple -> validationsAndBuildings(tuple.getT1(), tuple.getT2(), tuple.getT3(),
-                                tuple.getT4(), tuple.getT5(), saleRequest, request, sapidSimcard,
-                                commercialOperationReason, flgCapl, flgCaeq, flgCasi, flgAlta, flgFinanciamiento,
-                                channelIdRequest, customerIdRequest, productOfferingIdRequest, isRetail));
+                        .flatMap(tuple -> {
+                            try {
+                                return validationsAndBuildings(tuple.getT1(), tuple.getT2(), tuple.getT3(),
+                                        tuple.getT4(), tuple.getT5(), saleRequest, request, sapidSimcard,
+                                        commercialOperationReason, flgCapl, flgCaeq, flgCasi, flgAlta, flgFinanciamiento,
+                                        channelIdRequest, customerIdRequest, productOfferingIdRequest, isRetail);
+                            } catch (ParseException e) {
+                                return Mono.error(e);
+                            }
+                        });
 
             } else {
                 return salesRepository.save(saleRequest)
@@ -988,7 +994,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                                                final Boolean[] flgCaeq, final Boolean[] flgCasi,
                                                final Boolean[] flgAlta, final Boolean[] flgFinanciamiento,
                                                String channelIdRequest, String customerIdRequest,
-                                               String productOfferingIdRequest, Boolean isRetail) {
+                                               String productOfferingIdRequest, Boolean isRetail) throws ParseException {
 
         if (!getRiskDomain.getData().isEmpty() && getRiskDomain.getData().get(0).getActive()) {
             // if it is a risk domain, cancel operation
@@ -1065,6 +1071,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
             CreateProductOrderGeneralRequest finalMainRequestProdOrder = mainRequestProductOrder;
             return productOrderWebClient.createProductOrder(finalMainRequestProdOrder, request.getHeadersMap(),
                     saleRequest).flatMap(createOrderResponse -> {
+                        LOG.info("Create order response: ".concat(new Gson().toJson(createOrderResponse)));
                         saleRequest.getCommercialOperation().get(0).setOrder(createOrderResponse
                                 .getCreateProductOrderResponse());
 
@@ -2097,15 +2104,24 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         return stringValue[0];
     }
 
-    private PortabilityDetailsType buildMobilePortabilityType(Sale saleRequest) {
+    private PortabilityDetailsType buildMobilePortabilityType(Sale saleRequest) throws ParseException {
         PortabilityDetailsType portabilityDetailsType =  new PortabilityDetailsType();
+        PortabilityType portabilityType = saleRequest.getCommercialOperation().get(0).getPortability();
+
+        // Changing format date for donorActivationDate
+        String donorActivationDate = portabilityType.getDonorActivationDate();
+        // Original date format from donorActivationDate yyyy-MM-dd-HH:mm, example given 2021-02-19-05:00
+        SimpleDateFormat input = new SimpleDateFormat("yyyy-MM-dd-HH:mm");
+        Date dateValue = input.parse(donorActivationDate);
+        // Format changed to yyyy-MM-dd to send into portability details to create order
+        SimpleDateFormat output = new SimpleDateFormat("yyyy-MM-dd");
+        String donorActivationDateWithNewFormat = output.format(dateValue);
 
         // Throw 400 status for mandatory parameters
-        PortabilityType portabilityType = saleRequest.getCommercialOperation().get(0).getPortability();
         portabilityDetailsType.setSourceOperator(portabilityType.getReceipt());
-        portabilityDetailsType.setServiceType(portabilityType.getProductType());
+        portabilityDetailsType.setServiceType("01");
         portabilityDetailsType.setPlanType(portabilityType.getPlanType());
-        portabilityDetailsType.setActivationDate(portabilityType.getDonorActivationDate());
+        portabilityDetailsType.setActivationDate(donorActivationDateWithNewFormat);
         portabilityDetailsType.setEquipmentCommitmentEndDate(portabilityType.getDonorEquipmentContractEndDate());
         portabilityDetailsType.setSalesDepartment("15");
         portabilityDetailsType.setConsultationId(portabilityType.getIdProcess());
@@ -2114,11 +2130,18 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         portabilityDetailsType.setDocumentNumber(saleRequest.getRelatedParty().get(0).getNationalId());
         portabilityDetailsType.setCustomerName(saleRequest.getRelatedParty().get(0).getFullName());
 
-        String customerEmail = StringUtils.isEmpty(saleRequest.getProspectContact().get(0).getCharacteristic()
-                .getEmailAddress()) ? "" : saleRequest.getProspectContact().get(0).getCharacteristic()
+        String customerEmail = saleRequest.getProspectContact().stream()
+                .filter(item -> item.getMediumType().equalsIgnoreCase("email address"))
+                .findFirst()
+                .orElse(ContactMedium
+                        .builder()
+                        .characteristic(MediumCharacteristic.builder().emailAddress(null).build())
+                        .build())
+                .getCharacteristic()
                 .getEmailAddress();
         portabilityDetailsType.setCustomerEmail(customerEmail);
-        portabilityDetailsType.setCustomerContactPhone(portabilityType.getCustomerContactPhone());
+        portabilityDetailsType.setCustomerContactPhone(StringUtils.isEmpty(portabilityType.getCustomerContactPhone()) ?
+                                                                    null : portabilityType.getCustomerContactPhone());
 
         return portabilityDetailsType;
     }
@@ -2127,7 +2150,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                                  CreateProductOrderGeneralRequest mainRequestProductOrder, String channelIdRequest,
                                  String customerIdRequest, String productOfferingIdRequest, String cipCode,
                                  BusinessParametersResponseObjectExt bonificacionSimcardResponse, String sapidSimcardBp,
-                                 Boolean isMobilePortability, Boolean flagCasi) {
+                                 Boolean isMobilePortability, Boolean flagCasi) throws ParseException {
 
         // Building request for ALTA CommercialTypeOperation
         ProductOrderAltaMobileRequest altaRequestProductOrder = new ProductOrderAltaMobileRequest();
@@ -2144,6 +2167,10 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         // Identifying if is Alta Only Simcard or Alta Combo (Equipment + Simcard)
         Boolean altaCombo = saleRequest.getCommercialOperation().get(0).getDeviceOffering() != null
                 && saleRequest.getCommercialOperation().get(0).getDeviceOffering().size() > 1;
+        Boolean altaSoloSimcard = saleRequest.getCommercialOperation().get(0).getDeviceOffering() != null
+                && saleRequest.getCommercialOperation().get(0).getDeviceOffering().size() == 1
+                && saleRequest.getCommercialOperation().get(0).getDeviceOffering().get(0).getDeviceType()
+                                                                        .equalsIgnoreCase(Constants.DEVICE_TYPE_SIM);
 
         // ALTA Product Changes
         ProductChangeAltaMobile altaProductChanges = new ProductChangeAltaMobile();
@@ -2161,10 +2188,13 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                 .build();
         altaNewBoList.add(altaNewBo1);
 
-        if (saleRequest.getChannel().getId().equalsIgnoreCase("CC")) {
+        String deliveryMethod = this.getStringValueByKeyFromAdditionalDataList(saleRequest.getAdditionalData(),
+                Constants.KEY_DELIVERY_METHOD);
+
+        if (altaSoloSimcard && !deliveryMethod.equalsIgnoreCase("IS")) { // FEMS-5081 new conditional only simcard and delivery
             // NewAssignedBillingOffer SIM
-            String productSpecPricingId = bonificacionSimcardResponse.getData().get(0).getValue(); // "34572615"
-            String parentProductCatalogId = bonificacionSimcardResponse.getData().get(0).getExt().toString(); // "7431"
+            String productSpecPricingId = bonificacionSimcardResponse.getData().get(0).getValue(); // Old "34572615", New "4442848" FEMS-5081
+            String parentProductCatalogId = bonificacionSimcardResponse.getData().get(0).getExt().toString(); // Old "7431", New "7491" FEMS-5081
 
             NewAssignedBillingOffers altaNewBo2 = NewAssignedBillingOffers
                     .builder()
@@ -2327,8 +2357,6 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
             altaOrderAttributesList.add(cashierRegisterAttr);
         }
 
-        String deliveryMethod = this.getStringValueByKeyFromAdditionalDataList(saleRequest.getAdditionalData(),
-                Constants.KEY_DELIVERY_METHOD);
         AltaMobileRequest altaRequest = AltaMobileRequest
                 .builder()
                 .newProducts(altaNewProductsList)
@@ -2899,7 +2927,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                 .changedCharacteristics(changedCharacteristicList)
                 .build();
 
-        if (!saleRequest.getCommercialOperation().get(0).getReason().equalsIgnoreCase("PORTA")
+        if (!saleRequest.getCommercialOperation().get(0).getReason().equalsIgnoreCase(Constants.PORTABILIDAD)
                 && !saleRequest.getCommercialOperation().get(0).getReason().equalsIgnoreCase("ALTA")
                 && saleRequest.getProductType().equalsIgnoreCase(Constants.WIRELESS)
                 && saleRequest.getCommercialOperation().get(0).getProduct().getProductRelationShip() != null) {
