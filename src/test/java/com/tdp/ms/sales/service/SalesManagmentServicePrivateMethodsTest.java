@@ -1,6 +1,7 @@
 package com.tdp.ms.sales.service;
 
 import com.tdp.genesis.core.constants.HttpHeadersKey;
+import com.tdp.ms.commons.util.MapperUtils;
 import com.tdp.ms.sales.business.impl.SalesManagmentServiceImpl;
 import com.tdp.ms.sales.client.GetSkuWebClient;
 import com.tdp.ms.sales.client.ProductOrderWebClient;
@@ -971,5 +972,23 @@ public class SalesManagmentServicePrivateMethodsTest {
         sale.getRelatedParty().add(relatedParty2);
 
         method.invoke(salesManagmentServiceImpl, caeqOrderAttributesList, sale, true);
+    }
+
+    @Test
+    void validationToAddSimcardBonusTest() throws NoSuchMethodException, InvocationTargetException,
+            IllegalAccessException {
+        Method method = SalesManagmentServiceImpl.class.getDeclaredMethod("validationToAddSimcardBonus",
+                Sale.class, BusinessParametersResponseObjectExt.class, List.class);
+
+        method.setAccessible(true);
+
+        BusinessParametersResponseObjectExt getBonificacionSim = MapperUtils.mapper(BusinessParametersResponseObjectExt.class, "{\"metadata\":{\"info\":\"Códigos de bonificación\",\"type\":\"KeyValueActiveExt\",\"label\":{\"key\":\"channel\",\"value\":\"productSpecPricingID\",\"active\":\"active\",\"ext\":\"parentProductCatalogID\"}},\"data\":[{\"key\":\"CC\",\"value\":\"34572615\",\"active\":true,\"ext\":\"7431\"}]}");
+        List<NewAssignedBillingOffers> newBoList = new ArrayList<>();
+        Sale sale = CommonsMocks.createSaleMock();
+        sale.getCommercialOperation().get(0).getDeviceOffering().get(0).setDeviceType(Constants.DEVICE_TYPE_SIM);
+        sale.getCommercialOperation().get(0).getAdditionalData().add(KeyValueType.builder()
+                .key(Constants.KEY_DELIVERY_METHOD).value("SP").build());
+
+        method.invoke(salesManagmentServiceImpl, sale, getBonificacionSim, newBoList);
     }
 }
