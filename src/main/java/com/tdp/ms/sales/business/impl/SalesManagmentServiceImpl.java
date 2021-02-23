@@ -1035,21 +1035,21 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
             LOG.info("CAPL Sales Case");
 
             mainRequestProductOrder = this.caplCommercialOperation(saleRequest, mainRequestProductOrder,
-                    channelIdRequest, customerIdRequest, productOfferingIdRequest, cipCode);
+                    channelIdRequest, customerIdRequest, productOfferingIdRequest, cipCode, getBonificacionSim);
 
         } else if (!flgCapl[0] && flgCaeq[0] && !flgAlta[0]) { // Recognizing CAEQ Commercial Operation Type
             LOG.info("CAEQ Sales Case");
 
             mainRequestProductOrder = this.caeqCommercialOperation(saleRequest, mainRequestProductOrder, flgCasi[0],
                     channelIdRequest, customerIdRequest, productOfferingIdRequest, cipCode, sapidSimcard[0],
-                    getParameterReasonCode);
+                    getParameterReasonCode, getBonificacionSim);
 
         } else if (flgCapl[0] && flgCaeq[0] && !flgAlta[0]) { // Recognizing CAEQ+CAPL Commercial Operation Type
             LOG.info("CAEQ + CAPL Sales Case");
 
             mainRequestProductOrder = this.caeqCaplCommercialOperation(saleRequest, mainRequestProductOrder, flgCasi[0],
                     channelIdRequest, customerIdRequest, productOfferingIdRequest, cipCode, sapidSimcard[0],
-                    getParameterReasonCode);
+                    getParameterReasonCode, getBonificacionSim);
         } else if (!flgCapl[0] && !flgCaeq[0] && flgAlta[0] || isMobilePortability) {
             LOG.info("ALTA or Mobile Portability Sales Case");
 
@@ -2167,10 +2167,6 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         // Identifying if is Alta Only Simcard or Alta Combo (Equipment + Simcard)
         Boolean altaCombo = saleRequest.getCommercialOperation().get(0).getDeviceOffering() != null
                 && saleRequest.getCommercialOperation().get(0).getDeviceOffering().size() > 1;
-        Boolean altaSoloSimcard = saleRequest.getCommercialOperation().get(0).getDeviceOffering() != null
-                && saleRequest.getCommercialOperation().get(0).getDeviceOffering().size() == 1
-                && saleRequest.getCommercialOperation().get(0).getDeviceOffering().get(0).getDeviceType()
-                                                                        .equalsIgnoreCase(Constants.DEVICE_TYPE_SIM);
 
         // ALTA Product Changes
         ProductChangeAltaMobile altaProductChanges = new ProductChangeAltaMobile();
@@ -2188,21 +2184,8 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                 .build();
         altaNewBoList.add(altaNewBo1);
 
-        String deliveryMethod = this.getStringValueByKeyFromAdditionalDataList(saleRequest.getAdditionalData(),
-                Constants.KEY_DELIVERY_METHOD);
-
-        if (altaSoloSimcard && !deliveryMethod.equalsIgnoreCase("IS")) { // FEMS-5081 new conditional only simcard and delivery
-            // NewAssignedBillingOffer SIM
-            String productSpecPricingId = bonificacionSimcardResponse.getData().get(0).getValue(); // Old "34572615", New "4442848" FEMS-5081
-            String parentProductCatalogId = bonificacionSimcardResponse.getData().get(0).getExt().toString(); // Old "7431", New "7491" FEMS-5081
-
-            NewAssignedBillingOffers altaNewBo2 = NewAssignedBillingOffers
-                    .builder()
-                    .productSpecPricingId(productSpecPricingId)
-                    .parentProductCatalogId(parentProductCatalogId)
-                    .build();
-            altaNewBoList.add(altaNewBo2);
-        }
+        // Simcard bonus conditional
+        this.validationToAddSimcardBonus(saleRequest, bonificacionSimcardResponse, altaNewBoList);
 
         altaProductChanges.setNewAssignedBillingOffers(altaNewBoList);
 
@@ -2357,6 +2340,9 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
             altaOrderAttributesList.add(cashierRegisterAttr);
         }
 
+        String deliveryMethod = this.getStringValueByKeyFromAdditionalDataList(saleRequest.getAdditionalData(),
+                Constants.KEY_DELIVERY_METHOD);
+
         AltaMobileRequest altaRequest = AltaMobileRequest
                 .builder()
                 .newProducts(altaNewProductsList)
@@ -2376,18 +2362,50 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         return mainRequestProductOrder;
     }
 
+    public void validationToAddSimcardBonus(Sale sale, BusinessParametersResponseObjectExt bonificacionSimcardResponse,
+                                            List<NewAssignedBillingOffers> altaNewBoList) {
+        if (sale.getCommercialOperation().get(0).getDeviceOffering() != null) {
+            // Simcard bonus conditional
+            DeviceOffering deviceOfferingSimcard = sale.getCommercialOperation().get(0).getDeviceOffering().stream()
+                    .filter(item -> item.getDeviceType().equalsIgnoreCase(Constants.DEVICE_TYPE_SIM))
+                    .findFirst()
+                    .orElse(null);
+            String deliveryMethod = this.getStringValueByKeyFromAdditionalDataList(sale.getAdditionalData(),
+                    Constants.KEY_DELIVERY_METHOD);
+
+            if (deviceOfferingSimcard != null
+                    && deliveryMethod.equalsIgnoreCase("SP")) { // FEMS-5081 new conditional only simcard and delivery
+                // NewAssignedBillingOffer SIM
+                String productSpecPricingId = bonificacionSimcardResponse.getData()
+                        .get(0).getValue(); // Old "34572615", New "4442848" FEMS-5081
+                String parentProductCatalogId = bonificacionSimcardResponse.getData()
+                        .get(0).getExt().toString(); // Old "7431", New "7491" FEMS-5081
+
+                NewAssignedBillingOffers altaNewBo2 = NewAssignedBillingOffers
+                        .builder()
+                        .productSpecPricingId(productSpecPricingId)
+                        .parentProductCatalogId(parentProductCatalogId)
+                        .build();
+                altaNewBoList.add(altaNewBo2);
+            }
+        }
+    }
+
     public CreateProductOrderGeneralRequest caplCommercialOperation(Sale saleRequest,
                                     CreateProductOrderGeneralRequest mainRequestProductOrder, String channelIdRequest,
-                                    String customerIdRequest, String productOfferingIdRequest, String cipCode) {
+                                    String customerIdRequest, String productOfferingIdRequest, String cipCode,
+                                    BusinessParametersResponseObjectExt bonificacionSimcardResponse) {
         Boolean flgOnlyCapl = true;
-        LOG.info("Flag is only CAPL: " + flgOnlyCapl);
 
         // Recognizing Capl into same plan or Capl with new plan
-        if (!saleRequest.getCommercialOperation().get(0).getProduct().getProductOffering().getId().equals(saleRequest
+        if (saleRequest.getCommercialOperation().get(0).getProduct().getProductOffering() != null
+                || !saleRequest.getCommercialOperation().get(0).getProduct().getProductOffering().getId().equals(saleRequest
                 .getCommercialOperation().get(0).getProductOfferings().get(0).getId())
         ) {
             flgOnlyCapl = false;
         }
+
+        LOG.info("Flag is only CAPL: " + flgOnlyCapl);
 
         // Building request for CAPL CommercialTypeOperation
         ProductOrderCaplRequest caplRequestProductOrder = new ProductOrderCaplRequest();
@@ -2413,6 +2431,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
             caplRequestProductOrder.setActionType("CH");
         }
 
+        List<NewAssignedBillingOffers> caplNewBoList = new ArrayList<>();
         NewAssignedBillingOffers caplNewBo1 = NewAssignedBillingOffers
                 .builder()
                 .productSpecPricingId(saleRequest.getCommercialOperation().get(0)
@@ -2420,8 +2439,10 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                 .parentProductCatalogId(saleRequest.getCommercialOperation().get(0)
                         .getProductOfferings().get(0).getProductOfferingPrice().get(0).getProductSpecContainmentId())
                 .build();
-        List<NewAssignedBillingOffers> caplNewBoList = new ArrayList<>();
         caplNewBoList.add(caplNewBo1);
+
+        // Simcard bonus conditional
+        this.validationToAddSimcardBonus(saleRequest, bonificacionSimcardResponse, caplNewBoList);
 
         // Setting RemoveAssignedBillingOffers if commercial operation type is Capl into same plan
         ProductChangeCapl caplProductChanges = new ProductChangeCapl();
@@ -2514,8 +2535,13 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                                     CreateProductOrderGeneralRequest mainRequestProductOrder, Boolean flgCasi,
                                     String channelIdRequest, String customerIdRequest, String productOfferingIdRequest,
                                     String cipCode, String sapidSimcardBp,
-                                    BusinessParametersReasonCode getParameterReasonCode) {
+                                    BusinessParametersReasonCode getParameterReasonCode,
+                                    BusinessParametersResponseObjectExt bonificacionSimcardResponse) {
         // Building request for CAEQ CommercialTypeOperation
+
+        List<NewAssignedBillingOffers> caeqNewBoList = new ArrayList<>();
+        // Simcard bonus conditional
+        this.validationToAddSimcardBonus(saleRequest, bonificacionSimcardResponse, caeqNewBoList);
 
         // Refactored Code from CAEQ
         List<ChangedContainedProduct> changedContainedProductList = this.changedContainedCaeqList(saleRequest,
@@ -2524,6 +2550,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         ProductChangeCaeq productChangeCaeq = ProductChangeCaeq
                 .builder()
                 .changedContainedProducts(changedContainedProductList)
+                .newAssignedBillingOffers(caeqNewBoList.isEmpty() ? null : caeqNewBoList)
                 .build();
 
         NewProductCaeq newProductCaeq1 = NewProductCaeq
@@ -2584,17 +2611,20 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                                     CreateProductOrderGeneralRequest mainRequestProductOrder, Boolean flgCasi,
                                     String channelIdRequest, String customerIdRequest, String productOfferingIdRequest,
                                     String cipCode, String sapidSimcardBp,
-                                    BusinessParametersReasonCode getParameterReasonCode) {
+                                    BusinessParametersReasonCode getParameterReasonCode,
+                                    BusinessParametersResponseObjectExt bonificacionSimcardResponse) {
         // Building request for CAEQ+CAPL CommercialTypeOperation
 
         Boolean flgOnlyCapl = true;
 
         // Recognizing Capl into same plan or Capl with new plan
-        if (!saleRequest.getCommercialOperation().get(0).getProduct().getProductOffering().getId().equals(saleRequest
+        if (saleRequest.getCommercialOperation().get(0).getProduct().getProductOffering() == null
+                || !saleRequest.getCommercialOperation().get(0).getProduct().getProductOffering().getId().equals(saleRequest
                 .getCommercialOperation().get(0).getProductOfferings().get(0).getId())
         ) {
             flgOnlyCapl = false;
         }
+        LOG.info("Flag is only CAPL: " + flgOnlyCapl);
 
         // Code from CAPL
         ProductOrderCaeqCaplRequest caeqCaplRequestProductOrder = new ProductOrderCaeqCaplRequest();
@@ -2626,6 +2656,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         } else {
             caeqCaplRequestProductOrder.setActionType("CH");
         }
+        List<NewAssignedBillingOffers> caeqCaplNewBoList = new ArrayList<>();
 
         NewAssignedBillingOffers caplNewBo1 = NewAssignedBillingOffers
                 .builder()
@@ -2634,8 +2665,10 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                 .parentProductCatalogId(saleRequest.getCommercialOperation().get(0)
                         .getProductOfferings().get(0).getProductOfferingPrice().get(0).getProductSpecContainmentId())
                 .build();
-        List<NewAssignedBillingOffers> caeqCaplNewBoList = new ArrayList<>();
         caeqCaplNewBoList.add(caplNewBo1);
+
+        // Simcard bonus validation
+        this.validationToAddSimcardBonus(saleRequest, bonificacionSimcardResponse, caeqCaplNewBoList);
 
         // Setting RemoveAssignedBillingOffers if commercial operation type is Capl into same plan
         ProductChangeCaeqCapl caeqCaplProductChanges = new ProductChangeCaeqCapl();
@@ -3075,22 +3108,29 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         List<StockItem> itemsList =  new ArrayList<>();
 
         // Equipment Item
-        Item item1 = Item
-                .builder()
-                .id(sale.getCommercialOperation().get(0).getDeviceOffering().stream()
-                        .filter(item -> !item.getDeviceType().equalsIgnoreCase("SIM"))
-                        .findFirst()
-                        .orElse(DeviceOffering.builder().sapid(null).build())
-                        .getSapid())
-                .type("IMEI")
-                .build();
-        StockItem stockItem1 = StockItem
-                .builder()
-                .item(item1)
-                .build();
-        itemsList.add(stockItem1);
+        DeviceOffering deviceOfferingSmartphone = sale.getCommercialOperation().get(0).getDeviceOffering().stream()
+                .filter(item -> item.getDeviceType().equalsIgnoreCase(Constants.DEVICE_TYPE_SMARTPHONE))
+                .findFirst()
+                .orElse(null);
+        if (deviceOfferingSmartphone != null) {
+            Item item1 = Item
+                    .builder()
+                    .id(deviceOfferingSmartphone.getSapid())
+                    .type("IMEI")
+                    .build();
+            StockItem stockItem1 = StockItem
+                    .builder()
+                    .item(item1)
+                    .build();
+            itemsList.add(stockItem1);
+        }
 
-        if (sale.getCommercialOperation().get(0).getDeviceOffering().size() > 1) {
+        DeviceOffering deviceOfferingSimcard = sale.getCommercialOperation().get(0).getDeviceOffering().stream()
+                .filter(item -> item.getDeviceType().equalsIgnoreCase(Constants.DEVICE_TYPE_SIM))
+                .findFirst()
+                .orElse(null);
+
+        if (deviceOfferingSimcard != null) {
             // SIM Item
             Item item2 = Item
                     .builder()
