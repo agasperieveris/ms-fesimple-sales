@@ -2187,6 +2187,28 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         altaProductChanges.setChangedContainedProducts(altaChangedContainedProductList);
 
         if (isMobilePortability) {
+            // Portability Characteristic
+            List<ChangedCharacteristic> changedCharacteristicPortabilityList = new ArrayList<>();
+            ChangedCharacteristic changedCharacteristicPortability1 = ChangedCharacteristic
+                    .builder()
+                    .characteristicId("7601")
+                    .characteristicValue(saleRequest.getCommercialOperation().get(0).getPortability().getPublicId())
+                    .build();
+            changedCharacteristicPortabilityList.add(changedCharacteristicPortability1);
+            ChangedCharacteristic changedCharacteristicPortability2 = ChangedCharacteristic
+                    .builder()
+                    .characteristicId("9211")
+                    .characteristicValue("Y")
+                    .build();
+            changedCharacteristicPortabilityList.add(changedCharacteristicPortability2);
+            ChangedContainedProduct changedContainedProductPortability = ChangedContainedProduct
+                    .builder()
+                    .temporaryId("tempPortingNumber")
+                    .productCatalogId("7101")
+                    .changedCharacteristics(changedCharacteristicPortabilityList)
+                    .build();
+            altaProductChanges.getChangedContainedProducts().add(changedContainedProductPortability);
+
             PortabilityDetailsType portabilityDetailsType = this.buildMobilePortabilityType(saleRequest);
 
             altaProductChanges.setPortabilityDetails(portabilityDetailsType);
