@@ -280,7 +280,7 @@ public class CommonsMocks {
         portability.setReceipt("test");
         portability.setProductType("test");
         portability.setPlanType("test");
-        portability.setDonorActivationDate("test");
+        portability.setDonorActivationDate("2021-02-19-05:00");
         portability.setDonorEquipmentContractEndDate("test");
         portability.setIdProcess("test");
         portability.setIdProcessGroup("test");

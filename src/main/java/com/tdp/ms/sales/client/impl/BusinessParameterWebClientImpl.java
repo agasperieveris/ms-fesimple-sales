@@ -103,11 +103,10 @@ public class BusinessParameterWebClientImpl implements BusinessParameterWebClien
     }
 
     @Override
-    public Mono<BusinessParametersResponseObjectExt> getBonificacionSimcard(String channelId,
-                                                                            HashMap<String,String> headersMap) {
+    public Mono<BusinessParametersResponseObjectExt> getBonificacionSimcard(HashMap<String,String> headersMap) {
         return webClientInsecure
                 .get()
-                .uri(getBonificacionSimcardUrl, channelId)
+                .uri(getBonificacionSimcardUrl)
                 .header(HttpHeadersKey.UNICA_APPLICATION, headersMap.get(HttpHeadersKey.UNICA_APPLICATION))
                 .header(HttpHeadersKey.UNICA_PID, headersMap.get(HttpHeadersKey.UNICA_PID))
                 .header(HttpHeadersKey.UNICA_SERVICE_ID, headersMap.get(HttpHeadersKey.UNICA_SERVICE_ID))
