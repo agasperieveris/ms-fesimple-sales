@@ -930,7 +930,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
 
                 // Get Bonificacion Simcard
                 Mono<BusinessParametersResponseObjectExt> getBonificacionSim = businessParameterWebClient
-                        .getBonificacionSimcard(saleRequest.getChannel().getId(), request.getHeadersMap());
+                        .getBonificacionSimcard(request.getHeadersMap());
 
                 // Get Parameters Simcard
                 Mono<BusinessParametersResponseObjectExt> getParametersSimCard = businessParameterWebClient
