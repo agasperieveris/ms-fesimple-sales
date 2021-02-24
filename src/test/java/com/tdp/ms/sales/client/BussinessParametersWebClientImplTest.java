@@ -119,7 +119,7 @@ public class BussinessParametersWebClientImplTest {
                 .addHeader(HttpHeadersKey.UNICA_PID, ConstantsTest.RH_UNICA_PID)
                 .addHeader(HttpHeadersKey.UNICA_USER, ConstantsTest.RH_UNICA_USER));
 
-        businessParameterWebClientImpl.getBonificacionSimcard("CC", headersMap);
+        businessParameterWebClientImpl.getBonificacionSimcard(headersMap);
     }
 
     @Test
