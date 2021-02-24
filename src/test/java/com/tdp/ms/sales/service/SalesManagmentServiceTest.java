@@ -634,22 +634,27 @@ public class SalesManagmentServiceTest {
 
     @Test
     void caplCommercialOperationTest() {
+        BusinessParametersResponseObjectExt getBonificacionSim = MapperUtils.mapper(BusinessParametersResponseObjectExt.class, "{\"metadata\":{\"info\":\"Códigos de bonificación\",\"type\":\"KeyValueActiveExt\",\"label\":{\"key\":\"channel\",\"value\":\"productSpecPricingID\",\"active\":\"active\",\"ext\":\"parentProductCatalogID\"}},\"data\":[{\"key\":\"CC\",\"value\":\"34572615\",\"active\":true,\"ext\":\"7431\"}]}");
+
         CreateProductOrderGeneralRequest mainCaplRequestProductOrder = new CreateProductOrderGeneralRequest();
 
         CreateProductOrderGeneralRequest result = salesManagmentServiceImpl
                 .caplCommercialOperation(sale, mainCaplRequestProductOrder,
-                        "CC", "CS465", "OF824", "A83HD345DS");
+                        "CC", "CS465", "OF824", "A83HD345DS",
+                        getBonificacionSim);
 
     }
 
     @Test
     void caeqCommercialOperationTest() {
+        BusinessParametersResponseObjectExt getBonificacionSim = MapperUtils.mapper(BusinessParametersResponseObjectExt.class, "{\"metadata\":{\"info\":\"Códigos de bonificación\",\"type\":\"KeyValueActiveExt\",\"label\":{\"key\":\"channel\",\"value\":\"productSpecPricingID\",\"active\":\"active\",\"ext\":\"parentProductCatalogID\"}},\"data\":[{\"key\":\"CC\",\"value\":\"34572615\",\"active\":true,\"ext\":\"7431\"}]}");
+
         CreateProductOrderGeneralRequest mainCaeqRequestProductOrder = new CreateProductOrderGeneralRequest();
         sale.getCommercialOperation().get(0).setReason("CAEQ");
         CreateProductOrderGeneralRequest result = salesManagmentServiceImpl
                 .caeqCommercialOperation(sale, mainCaeqRequestProductOrder, false,
                         "CEC", "CS920", "OF201", "JSG423DE6H",
-                        "string", businessParametersReasonCode);
+                        "string", businessParametersReasonCode, getBonificacionSim);
 
         /*CreateProductOrderGeneralRequest mainCaeqRequestProductOrderCaeqCasi = new CreateProductOrderGeneralRequest();
         salesManagmentServiceImpl.caeqCommercialOperation(saleCaeqCaplCasi, mainCaeqRequestProductOrderCaeqCasi,
@@ -661,10 +666,12 @@ public class SalesManagmentServiceTest {
         CreateProductOrderGeneralRequest mainCaeqCaplRequestProductOrder = new CreateProductOrderGeneralRequest();
         sale.getCommercialOperation().get(0).setReason("CAEQ");
 
+        BusinessParametersResponseObjectExt getBonificacionSim = MapperUtils.mapper(BusinessParametersResponseObjectExt.class, "{\"metadata\":{\"info\":\"Códigos de bonificación\",\"type\":\"KeyValueActiveExt\",\"label\":{\"key\":\"channel\",\"value\":\"productSpecPricingID\",\"active\":\"active\",\"ext\":\"parentProductCatalogID\"}},\"data\":[{\"key\":\"CC\",\"value\":\"34572615\",\"active\":true,\"ext\":\"7431\"}]}");
+
         CreateProductOrderGeneralRequest result = salesManagmentServiceImpl
                 .caeqCaplCommercialOperation(sale, mainCaeqCaplRequestProductOrder, false,
                         "CC", "CS158", "OF486", "K3BD9EN349",
-                        "string", businessParametersReasonCode);
+                        "string", businessParametersReasonCode, getBonificacionSim);
     }
 
     @Test
