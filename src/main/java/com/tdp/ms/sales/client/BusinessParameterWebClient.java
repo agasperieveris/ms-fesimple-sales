@@ -33,8 +33,7 @@ public interface BusinessParameterWebClient {
 
     Mono<BusinessParametersResponse> getRiskDomain(String domain, HashMap<String, String> headersMap);
 
-    Mono<BusinessParametersResponseObjectExt> getBonificacionSimcard(String channelId,
-                                                                     HashMap<String,String> headersMap);
+    Mono<BusinessParametersResponseObjectExt> getBonificacionSimcard(HashMap<String,String> headersMap);
 
     Mono<BusinessParametersResponseObjectExt> getParametersSimcard(HashMap<String, String> headersMap);
 

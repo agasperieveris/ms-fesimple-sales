@@ -1,6 +1,9 @@
 package com.tdp.ms.sales.model.dto.productorder.caeq;
 
 import java.util.List;
+
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.tdp.ms.sales.model.dto.productorder.capl.NewAssignedBillingOffers;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -29,4 +32,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class ProductChangeCaeq {
     private List<ChangedContainedProduct> changedContainedProducts;
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private List<NewAssignedBillingOffers> newAssignedBillingOffers;
 }

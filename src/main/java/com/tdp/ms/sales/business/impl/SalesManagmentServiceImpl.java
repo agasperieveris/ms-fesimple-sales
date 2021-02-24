@@ -930,7 +930,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
 
                 // Get Bonificacion Simcard
                 Mono<BusinessParametersResponseObjectExt> getBonificacionSim = businessParameterWebClient
-                        .getBonificacionSimcard(saleRequest.getChannel().getId(), request.getHeadersMap());
+                        .getBonificacionSimcard(request.getHeadersMap());
 
                 // Get Parameters Simcard
                 Mono<BusinessParametersResponseObjectExt> getParametersSimCard = businessParameterWebClient
@@ -941,10 +941,16 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
 
                 // Añadir llamada a get businessParameters - ReasonCode
                 return Mono.zip(getRiskDomain, salesCharsByCot, getBonificacionSim, getParametersSimCard, getParametersReasonCode)
-                        .flatMap(tuple -> validationsAndBuildings(tuple.getT1(), tuple.getT2(), tuple.getT3(),
-                                tuple.getT4(), tuple.getT5(), saleRequest, request, sapidSimcard,
-                                commercialOperationReason, flgCapl, flgCaeq, flgCasi, flgAlta, flgFinanciamiento,
-                                channelIdRequest, customerIdRequest, productOfferingIdRequest, isRetail));
+                        .flatMap(tuple -> {
+                            try {
+                                return validationsAndBuildings(tuple.getT1(), tuple.getT2(), tuple.getT3(),
+                                        tuple.getT4(), tuple.getT5(), saleRequest, request, sapidSimcard,
+                                        commercialOperationReason, flgCapl, flgCaeq, flgCasi, flgAlta, flgFinanciamiento,
+                                        channelIdRequest, customerIdRequest, productOfferingIdRequest, isRetail);
+                            } catch (ParseException e) {
+                                return Mono.error(e);
+                            }
+                        });
 
             } else {
                 return salesRepository.save(saleRequest)
@@ -988,7 +994,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                                                final Boolean[] flgCaeq, final Boolean[] flgCasi,
                                                final Boolean[] flgAlta, final Boolean[] flgFinanciamiento,
                                                String channelIdRequest, String customerIdRequest,
-                                               String productOfferingIdRequest, Boolean isRetail) {
+                                               String productOfferingIdRequest, Boolean isRetail) throws ParseException {
 
         if (!getRiskDomain.getData().isEmpty() && getRiskDomain.getData().get(0).getActive()) {
             // if it is a risk domain, cancel operation
@@ -1029,21 +1035,21 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
             LOG.info("CAPL Sales Case");
 
             mainRequestProductOrder = this.caplCommercialOperation(saleRequest, mainRequestProductOrder,
-                    channelIdRequest, customerIdRequest, productOfferingIdRequest, cipCode);
+                    channelIdRequest, customerIdRequest, productOfferingIdRequest, cipCode, getBonificacionSim);
 
         } else if (!flgCapl[0] && flgCaeq[0] && !flgAlta[0]) { // Recognizing CAEQ Commercial Operation Type
             LOG.info("CAEQ Sales Case");
 
             mainRequestProductOrder = this.caeqCommercialOperation(saleRequest, mainRequestProductOrder, flgCasi[0],
                     channelIdRequest, customerIdRequest, productOfferingIdRequest, cipCode, sapidSimcard[0],
-                    getParameterReasonCode);
+                    getParameterReasonCode, getBonificacionSim);
 
         } else if (flgCapl[0] && flgCaeq[0] && !flgAlta[0]) { // Recognizing CAEQ+CAPL Commercial Operation Type
             LOG.info("CAEQ + CAPL Sales Case");
 
             mainRequestProductOrder = this.caeqCaplCommercialOperation(saleRequest, mainRequestProductOrder, flgCasi[0],
                     channelIdRequest, customerIdRequest, productOfferingIdRequest, cipCode, sapidSimcard[0],
-                    getParameterReasonCode);
+                    getParameterReasonCode, getBonificacionSim);
         } else if (!flgCapl[0] && !flgCaeq[0] && flgAlta[0] || isMobilePortability) {
             LOG.info("ALTA or Mobile Portability Sales Case");
 
@@ -1065,6 +1071,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
             CreateProductOrderGeneralRequest finalMainRequestProdOrder = mainRequestProductOrder;
             return productOrderWebClient.createProductOrder(finalMainRequestProdOrder, request.getHeadersMap(),
                     saleRequest).flatMap(createOrderResponse -> {
+                        LOG.info("Create order response: ".concat(new Gson().toJson(createOrderResponse)));
                         saleRequest.getCommercialOperation().get(0).setOrder(createOrderResponse
                                 .getCreateProductOrderResponse());
 
@@ -2097,15 +2104,24 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         return stringValue[0];
     }
 
-    private PortabilityDetailsType buildMobilePortabilityType(Sale saleRequest) {
+    private PortabilityDetailsType buildMobilePortabilityType(Sale saleRequest) throws ParseException {
         PortabilityDetailsType portabilityDetailsType =  new PortabilityDetailsType();
+        PortabilityType portabilityType = saleRequest.getCommercialOperation().get(0).getPortability();
+
+        // Changing format date for donorActivationDate
+        String donorActivationDate = portabilityType.getDonorActivationDate();
+        // Original date format from donorActivationDate yyyy-MM-dd-HH:mm, example given 2021-02-19-05:00
+        SimpleDateFormat input = new SimpleDateFormat("yyyy-MM-dd-HH:mm");
+        Date dateValue = input.parse(donorActivationDate);
+        // Format changed to yyyy-MM-dd to send into portability details to create order
+        SimpleDateFormat output = new SimpleDateFormat("yyyy-MM-dd");
+        String donorActivationDateWithNewFormat = output.format(dateValue);
 
         // Throw 400 status for mandatory parameters
-        PortabilityType portabilityType = saleRequest.getCommercialOperation().get(0).getPortability();
         portabilityDetailsType.setSourceOperator(portabilityType.getReceipt());
-        portabilityDetailsType.setServiceType(portabilityType.getProductType());
+        portabilityDetailsType.setServiceType("01");
         portabilityDetailsType.setPlanType(portabilityType.getPlanType());
-        portabilityDetailsType.setActivationDate(portabilityType.getDonorActivationDate());
+        portabilityDetailsType.setActivationDate(donorActivationDateWithNewFormat);
         portabilityDetailsType.setEquipmentCommitmentEndDate(portabilityType.getDonorEquipmentContractEndDate());
         portabilityDetailsType.setSalesDepartment("15");
         portabilityDetailsType.setConsultationId(portabilityType.getIdProcess());
@@ -2114,11 +2130,18 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         portabilityDetailsType.setDocumentNumber(saleRequest.getRelatedParty().get(0).getNationalId());
         portabilityDetailsType.setCustomerName(saleRequest.getRelatedParty().get(0).getFullName());
 
-        String customerEmail = StringUtils.isEmpty(saleRequest.getProspectContact().get(0).getCharacteristic()
-                .getEmailAddress()) ? "" : saleRequest.getProspectContact().get(0).getCharacteristic()
+        String customerEmail = saleRequest.getProspectContact().stream()
+                .filter(item -> item.getMediumType().equalsIgnoreCase("email address"))
+                .findFirst()
+                .orElse(ContactMedium
+                        .builder()
+                        .characteristic(MediumCharacteristic.builder().emailAddress(null).build())
+                        .build())
+                .getCharacteristic()
                 .getEmailAddress();
         portabilityDetailsType.setCustomerEmail(customerEmail);
-        portabilityDetailsType.setCustomerContactPhone(portabilityType.getCustomerContactPhone());
+        portabilityDetailsType.setCustomerContactPhone(StringUtils.isEmpty(portabilityType.getCustomerContactPhone()) ?
+                                                                    null : portabilityType.getCustomerContactPhone());
 
         return portabilityDetailsType;
     }
@@ -2127,7 +2150,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                                  CreateProductOrderGeneralRequest mainRequestProductOrder, String channelIdRequest,
                                  String customerIdRequest, String productOfferingIdRequest, String cipCode,
                                  BusinessParametersResponseObjectExt bonificacionSimcardResponse, String sapidSimcardBp,
-                                 Boolean isMobilePortability, Boolean flagCasi) {
+                                 Boolean isMobilePortability, Boolean flagCasi) throws ParseException {
 
         // Building request for ALTA CommercialTypeOperation
         ProductOrderAltaMobileRequest altaRequestProductOrder = new ProductOrderAltaMobileRequest();
@@ -2161,18 +2184,8 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                 .build();
         altaNewBoList.add(altaNewBo1);
 
-        if (saleRequest.getChannel().getId().equalsIgnoreCase("CC")) {
-            // NewAssignedBillingOffer SIM
-            String productSpecPricingId = bonificacionSimcardResponse.getData().get(0).getValue(); // "34572615"
-            String parentProductCatalogId = bonificacionSimcardResponse.getData().get(0).getExt().toString(); // "7431"
-
-            NewAssignedBillingOffers altaNewBo2 = NewAssignedBillingOffers
-                    .builder()
-                    .productSpecPricingId(productSpecPricingId)
-                    .parentProductCatalogId(parentProductCatalogId)
-                    .build();
-            altaNewBoList.add(altaNewBo2);
-        }
+        // Simcard bonus conditional
+        this.validationToAddSimcardBonus(saleRequest, bonificacionSimcardResponse, altaNewBoList);
 
         altaProductChanges.setNewAssignedBillingOffers(altaNewBoList);
 
@@ -2226,6 +2239,28 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         altaProductChanges.setChangedContainedProducts(altaChangedContainedProductList);
 
         if (isMobilePortability) {
+            // Portability Characteristic
+            List<ChangedCharacteristic> changedCharacteristicPortabilityList = new ArrayList<>();
+            ChangedCharacteristic changedCharacteristicPortability1 = ChangedCharacteristic
+                    .builder()
+                    .characteristicId("7601")
+                    .characteristicValue(saleRequest.getCommercialOperation().get(0).getPortability().getPublicId())
+                    .build();
+            changedCharacteristicPortabilityList.add(changedCharacteristicPortability1);
+            ChangedCharacteristic changedCharacteristicPortability2 = ChangedCharacteristic
+                    .builder()
+                    .characteristicId("9211")
+                    .characteristicValue("Y")
+                    .build();
+            changedCharacteristicPortabilityList.add(changedCharacteristicPortability2);
+            ChangedContainedProduct changedContainedProductPortability = ChangedContainedProduct
+                    .builder()
+                    .temporaryId("tempPortingNumber")
+                    .productCatalogId("7101")
+                    .changedCharacteristics(changedCharacteristicPortabilityList)
+                    .build();
+            altaProductChanges.getChangedContainedProducts().add(changedContainedProductPortability);
+
             PortabilityDetailsType portabilityDetailsType = this.buildMobilePortabilityType(saleRequest);
 
             altaProductChanges.setPortabilityDetails(portabilityDetailsType);
@@ -2329,6 +2364,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
 
         String deliveryMethod = this.getStringValueByKeyFromAdditionalDataList(saleRequest.getAdditionalData(),
                 Constants.KEY_DELIVERY_METHOD);
+
         AltaMobileRequest altaRequest = AltaMobileRequest
                 .builder()
                 .newProducts(altaNewProductsList)
@@ -2348,18 +2384,50 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         return mainRequestProductOrder;
     }
 
+    public void validationToAddSimcardBonus(Sale sale, BusinessParametersResponseObjectExt bonificacionSimcardResponse,
+                                            List<NewAssignedBillingOffers> altaNewBoList) {
+        if (sale.getCommercialOperation().get(0).getDeviceOffering() != null) {
+            // Simcard bonus conditional
+            DeviceOffering deviceOfferingSimcard = sale.getCommercialOperation().get(0).getDeviceOffering().stream()
+                    .filter(item -> item.getDeviceType().equalsIgnoreCase(Constants.DEVICE_TYPE_SIM))
+                    .findFirst()
+                    .orElse(null);
+            String deliveryMethod = this.getStringValueByKeyFromAdditionalDataList(sale.getAdditionalData(),
+                    Constants.KEY_DELIVERY_METHOD);
+
+            if (deviceOfferingSimcard != null
+                    && deliveryMethod.equalsIgnoreCase("SP")) { // FEMS-5081 new conditional only simcard and delivery
+                // NewAssignedBillingOffer SIM
+                String productSpecPricingId = bonificacionSimcardResponse.getData()
+                        .get(0).getValue(); // Old "34572615", New "4442848" FEMS-5081
+                String parentProductCatalogId = bonificacionSimcardResponse.getData()
+                        .get(0).getExt().toString(); // Old "7431", New "7491" FEMS-5081
+
+                NewAssignedBillingOffers altaNewBo2 = NewAssignedBillingOffers
+                        .builder()
+                        .productSpecPricingId(productSpecPricingId)
+                        .parentProductCatalogId(parentProductCatalogId)
+                        .build();
+                altaNewBoList.add(altaNewBo2);
+            }
+        }
+    }
+
     public CreateProductOrderGeneralRequest caplCommercialOperation(Sale saleRequest,
                                     CreateProductOrderGeneralRequest mainRequestProductOrder, String channelIdRequest,
-                                    String customerIdRequest, String productOfferingIdRequest, String cipCode) {
+                                    String customerIdRequest, String productOfferingIdRequest, String cipCode,
+                                    BusinessParametersResponseObjectExt bonificacionSimcardResponse) {
         Boolean flgOnlyCapl = true;
-        LOG.info("Flag is only CAPL: " + flgOnlyCapl);
 
         // Recognizing Capl into same plan or Capl with new plan
-        if (!saleRequest.getCommercialOperation().get(0).getProduct().getProductOffering().getId().equals(saleRequest
+        if (saleRequest.getCommercialOperation().get(0).getProduct().getProductOffering() != null
+                || !saleRequest.getCommercialOperation().get(0).getProduct().getProductOffering().getId().equals(saleRequest
                 .getCommercialOperation().get(0).getProductOfferings().get(0).getId())
         ) {
             flgOnlyCapl = false;
         }
+
+        LOG.info("Flag is only CAPL: " + flgOnlyCapl);
 
         // Building request for CAPL CommercialTypeOperation
         ProductOrderCaplRequest caplRequestProductOrder = new ProductOrderCaplRequest();
@@ -2385,6 +2453,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
             caplRequestProductOrder.setActionType("CH");
         }
 
+        List<NewAssignedBillingOffers> caplNewBoList = new ArrayList<>();
         NewAssignedBillingOffers caplNewBo1 = NewAssignedBillingOffers
                 .builder()
                 .productSpecPricingId(saleRequest.getCommercialOperation().get(0)
@@ -2392,8 +2461,10 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                 .parentProductCatalogId(saleRequest.getCommercialOperation().get(0)
                         .getProductOfferings().get(0).getProductOfferingPrice().get(0).getProductSpecContainmentId())
                 .build();
-        List<NewAssignedBillingOffers> caplNewBoList = new ArrayList<>();
         caplNewBoList.add(caplNewBo1);
+
+        // Simcard bonus conditional
+        this.validationToAddSimcardBonus(saleRequest, bonificacionSimcardResponse, caplNewBoList);
 
         // Setting RemoveAssignedBillingOffers if commercial operation type is Capl into same plan
         ProductChangeCapl caplProductChanges = new ProductChangeCapl();
@@ -2486,8 +2557,13 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                                     CreateProductOrderGeneralRequest mainRequestProductOrder, Boolean flgCasi,
                                     String channelIdRequest, String customerIdRequest, String productOfferingIdRequest,
                                     String cipCode, String sapidSimcardBp,
-                                    BusinessParametersReasonCode getParameterReasonCode) {
+                                    BusinessParametersReasonCode getParameterReasonCode,
+                                    BusinessParametersResponseObjectExt bonificacionSimcardResponse) {
         // Building request for CAEQ CommercialTypeOperation
+
+        List<NewAssignedBillingOffers> caeqNewBoList = new ArrayList<>();
+        // Simcard bonus conditional
+        this.validationToAddSimcardBonus(saleRequest, bonificacionSimcardResponse, caeqNewBoList);
 
         // Refactored Code from CAEQ
         List<ChangedContainedProduct> changedContainedProductList = this.changedContainedCaeqList(saleRequest,
@@ -2496,6 +2572,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         ProductChangeCaeq productChangeCaeq = ProductChangeCaeq
                 .builder()
                 .changedContainedProducts(changedContainedProductList)
+                .newAssignedBillingOffers(caeqNewBoList.isEmpty() ? null : caeqNewBoList)
                 .build();
 
         NewProductCaeq newProductCaeq1 = NewProductCaeq
@@ -2556,17 +2633,20 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                                     CreateProductOrderGeneralRequest mainRequestProductOrder, Boolean flgCasi,
                                     String channelIdRequest, String customerIdRequest, String productOfferingIdRequest,
                                     String cipCode, String sapidSimcardBp,
-                                    BusinessParametersReasonCode getParameterReasonCode) {
+                                    BusinessParametersReasonCode getParameterReasonCode,
+                                    BusinessParametersResponseObjectExt bonificacionSimcardResponse) {
         // Building request for CAEQ+CAPL CommercialTypeOperation
 
         Boolean flgOnlyCapl = true;
 
         // Recognizing Capl into same plan or Capl with new plan
-        if (!saleRequest.getCommercialOperation().get(0).getProduct().getProductOffering().getId().equals(saleRequest
+        if (saleRequest.getCommercialOperation().get(0).getProduct().getProductOffering() == null
+                || !saleRequest.getCommercialOperation().get(0).getProduct().getProductOffering().getId().equals(saleRequest
                 .getCommercialOperation().get(0).getProductOfferings().get(0).getId())
         ) {
             flgOnlyCapl = false;
         }
+        LOG.info("Flag is only CAPL: " + flgOnlyCapl);
 
         // Code from CAPL
         ProductOrderCaeqCaplRequest caeqCaplRequestProductOrder = new ProductOrderCaeqCaplRequest();
@@ -2598,6 +2678,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         } else {
             caeqCaplRequestProductOrder.setActionType("CH");
         }
+        List<NewAssignedBillingOffers> caeqCaplNewBoList = new ArrayList<>();
 
         NewAssignedBillingOffers caplNewBo1 = NewAssignedBillingOffers
                 .builder()
@@ -2606,8 +2687,10 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                 .parentProductCatalogId(saleRequest.getCommercialOperation().get(0)
                         .getProductOfferings().get(0).getProductOfferingPrice().get(0).getProductSpecContainmentId())
                 .build();
-        List<NewAssignedBillingOffers> caeqCaplNewBoList = new ArrayList<>();
         caeqCaplNewBoList.add(caplNewBo1);
+
+        // Simcard bonus validation
+        this.validationToAddSimcardBonus(saleRequest, bonificacionSimcardResponse, caeqCaplNewBoList);
 
         // Setting RemoveAssignedBillingOffers if commercial operation type is Capl into same plan
         ProductChangeCaeqCapl caeqCaplProductChanges = new ProductChangeCaeqCapl();
@@ -2899,7 +2982,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                 .changedCharacteristics(changedCharacteristicList)
                 .build();
 
-        if (!saleRequest.getCommercialOperation().get(0).getReason().equalsIgnoreCase("PORTA")
+        if (!saleRequest.getCommercialOperation().get(0).getReason().equalsIgnoreCase(Constants.PORTABILIDAD)
                 && !saleRequest.getCommercialOperation().get(0).getReason().equalsIgnoreCase("ALTA")
                 && saleRequest.getProductType().equalsIgnoreCase(Constants.WIRELESS)
                 && saleRequest.getCommercialOperation().get(0).getProduct().getProductRelationShip() != null) {
@@ -3047,22 +3130,29 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         List<StockItem> itemsList =  new ArrayList<>();
 
         // Equipment Item
-        Item item1 = Item
-                .builder()
-                .id(sale.getCommercialOperation().get(0).getDeviceOffering().stream()
-                        .filter(item -> !item.getDeviceType().equalsIgnoreCase("SIM"))
-                        .findFirst()
-                        .orElse(DeviceOffering.builder().sapid(null).build())
-                        .getSapid())
-                .type("IMEI")
-                .build();
-        StockItem stockItem1 = StockItem
-                .builder()
-                .item(item1)
-                .build();
-        itemsList.add(stockItem1);
+        DeviceOffering deviceOfferingSmartphone = sale.getCommercialOperation().get(0).getDeviceOffering().stream()
+                .filter(item -> item.getDeviceType().equalsIgnoreCase(Constants.DEVICE_TYPE_SMARTPHONE))
+                .findFirst()
+                .orElse(null);
+        if (deviceOfferingSmartphone != null) {
+            Item item1 = Item
+                    .builder()
+                    .id(deviceOfferingSmartphone.getSapid())
+                    .type("IMEI")
+                    .build();
+            StockItem stockItem1 = StockItem
+                    .builder()
+                    .item(item1)
+                    .build();
+            itemsList.add(stockItem1);
+        }
 
-        if (sale.getCommercialOperation().get(0).getDeviceOffering().size() > 1) {
+        DeviceOffering deviceOfferingSimcard = sale.getCommercialOperation().get(0).getDeviceOffering().stream()
+                .filter(item -> item.getDeviceType().equalsIgnoreCase(Constants.DEVICE_TYPE_SIM))
+                .findFirst()
+                .orElse(null);
+
+        if (deviceOfferingSimcard != null) {
             // SIM Item
             Item item2 = Item
                     .builder()
