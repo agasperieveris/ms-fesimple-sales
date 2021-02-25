@@ -306,15 +306,15 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                 && !saleRequest.getCommercialOperation().get(0).getWorkOrDeliveryType().getScheduleDelivery()
                 .equalsIgnoreCase("SLA")) {
 
-            FlexAttrValueType downPaymentAttrValue = FlexAttrValueType
+            FlexAttrValueType schedulingAttrValue = FlexAttrValueType
                     .builder()
-                    .stringValue(createQuotationFijaRequest.getBody().getDownPayment().getAmount())
-                    .valueType("TC")
+                    .stringValue("TC")
+                    .valueType("STRING")
                     .build();
             FlexAttrType downPaymentAttr = FlexAttrType
                     .builder()
                     .attrName(Constants.DELIVERY_METHOD)
-                    .flexAttrValue(downPaymentAttrValue)
+                    .flexAttrValue(schedulingAttrValue)
                     .build();
             altaFijaOrderAttributesList.add(downPaymentAttr);
         }
@@ -1287,6 +1287,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
     private Mono<Sale> addOrderIntoSale(PostSalesRequest request, Sale saleRequest,
                                         CreateQuotationRequest createQuotationFijaRequest,
                                         ProductorderResponse createOrderResponse) {
+        LOG.info("Create Order Response: " + new Gson().toJson(createOrderResponse));
         // Adding Order info to sales
         saleRequest.getCommercialOperation().get(0)
                 .setOrder(createOrderResponse.getCreateProductOrderResponse()); // Pending evaluate this setter for MT
@@ -1397,7 +1398,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                     .name(email[0])
                     .preferred("true")
                     .isActive("true")
-                    .validFor(validFor)
+                    //.validFor(validFor) // Ya no se envia a solicitud del LT, FEMS-4419
                     .build();
 
             List<com.tdp.ms.sales.model.dto.quotation.ContactMedium> contactMediumList = new ArrayList<>();
