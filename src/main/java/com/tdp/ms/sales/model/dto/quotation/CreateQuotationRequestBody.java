@@ -3,6 +3,9 @@ package com.tdp.ms.sales.model.dto.quotation;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import java.util.ArrayList;
 import java.util.List;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.gson.annotations.SerializedName;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -37,6 +40,8 @@ public class CreateQuotationRequestBody {
     private String billingAgreement;
     private String commercialAgreement;
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    @SerializedName("serviceIDLobConcat")
+    @JsonProperty("serviceIDLobConcat")
     private String serviceIdLobConcat = "";
     private Customer customer;
     private String operationType;
