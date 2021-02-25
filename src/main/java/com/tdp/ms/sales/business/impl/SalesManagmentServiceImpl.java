@@ -1386,11 +1386,12 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                     .findFirst()
                     .ifPresent(item -> email[0] = item.getCharacteristic().getEmailAddress());
 
-            TimePeriod validFor = TimePeriod
+            /*TimePeriod validFor = TimePeriod
                     .builder()
                     .endDateTime(Commons.getDatetimeNow())
                     .startDateTime(Commons.getDatetimeNow())
-                    .build();
+                    .build();*/
+            
             com.tdp.ms.sales.model.dto.quotation.ContactMedium contactMedium1 = com.tdp.ms.sales.model.dto.quotation
                     .ContactMedium
                     .builder()
