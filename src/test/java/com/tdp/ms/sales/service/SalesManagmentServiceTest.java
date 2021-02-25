@@ -29,6 +29,7 @@ import java.lang.reflect.Method;
 import java.util.*;
 
 import com.tdp.ms.sales.utils.CommonsMocks;
+import com.tdp.ms.sales.utils.Constants;
 import org.junit.Assert;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -243,11 +244,12 @@ public class SalesManagmentServiceTest {
         salesManagmentService.post(salesRequest);
 
         Method method = SalesManagmentServiceImpl.class.getDeclaredMethod("processFija", List.class, Sale.class,
-                PostSalesRequest.class, Boolean[].class, Boolean.class);
+                PostSalesRequest.class, Boolean.class);
         method.setAccessible(true);
-        final Boolean[] flgFinanciamiento = {false};
-        method.invoke(salesManagmentServiceImpl, bpFinanciamientoFijaResponseList, salesRequest.getSale(), salesRequest, flgFinanciamiento, false);
+        salesRequest.getSale().setProductType(Constants.WIRELINE);
+        method.invoke(salesManagmentServiceImpl, bpFinanciamientoFijaResponseList, salesRequest.getSale(), salesRequest, false);
 
+        salesRequest.getSale().setProductType("WIRELESS");
         /* validationsAndBuildings method */
         Method method2 = SalesManagmentServiceImpl.class.getDeclaredMethod("validationsAndBuildings",
                 BusinessParametersResponse.class, List.class, BusinessParametersResponseObjectExt.class,
@@ -943,12 +945,11 @@ public class SalesManagmentServiceTest {
         salesRequest.getSale().getCommercialOperation().get(0).setAction("MODIFY");
 
         Method method = SalesManagmentServiceImpl.class.getDeclaredMethod("wirelineMigrations", List.class,
-                PostSalesRequest.class, Boolean[].class, String.class, Boolean.class);
+                PostSalesRequest.class, String.class, Boolean.class);
         method.setAccessible(true);
 
-        final Boolean[] flgFinanciamiento = {true};
         method.invoke(salesManagmentServiceImpl, bpFinanciamientoFijaResponseList.get(0).getData().get(0).getExt(),
-                salesRequest, flgFinanciamiento, "CH", false);
+                salesRequest, "CH", false);
 
         /*Method methodFillProductOfferingProductSpecId = SalesManagmentServiceImpl.class.getDeclaredMethod("fillProductOfferingProductSpecId", List.class, List.class);
         methodFillProductOfferingProductSpecId.setAccessible(true);
@@ -1001,16 +1002,16 @@ public class SalesManagmentServiceTest {
         Mockito.when(quotationWebClient.createQuotation(any(), any())).thenReturn(Mono.just(createQuotationResponse));
 
         Method method = SalesManagmentServiceImpl.class.getDeclaredMethod("addOrderIntoSale", PostSalesRequest.class,
-                Sale.class, Boolean[].class, CreateQuotationRequest.class, ProductorderResponse.class);
+                Sale.class, CreateQuotationRequest.class, ProductorderResponse.class);
         method.setAccessible(true);
-        final Boolean[] flgFinanciamiento = {false};
-        method.invoke(salesManagmentServiceImpl, salesRequest, sale, flgFinanciamiento,
+
+        method.invoke(salesManagmentServiceImpl, salesRequest, sale,
                 new CreateQuotationRequest(), ProductorderResponse.builder().createProductOrderResponse(CreateProductOrderResponseType.builder().productOrderId("string").build()).build());
-        flgFinanciamiento[0] = true;
+
         sale.setIdentityValidations(null);
-        method.invoke(salesManagmentServiceImpl, salesRequest, sale, flgFinanciamiento,
+        method.invoke(salesManagmentServiceImpl, salesRequest, sale,
                 new CreateQuotationRequest(), ProductorderResponse.builder().createProductOrderResponse(CreateProductOrderResponseType.builder().productOrderId("string").build()).build());
-        method.invoke(salesManagmentServiceImpl, salesRequest, sale, flgFinanciamiento,
+        method.invoke(salesManagmentServiceImpl, salesRequest, sale,
                 new CreateQuotationRequest(), ProductorderResponse.builder().createProductOrderResponse(CreateProductOrderResponseType.builder().productOrderId("").build()).build());
     }
 
