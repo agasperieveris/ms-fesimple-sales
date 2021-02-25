@@ -351,7 +351,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                 .forEach(serviceOffer -> {
                     String serviceAbilityType = serviceOffer.getType();
 
-                    if (serviceAbilityType.equalsIgnoreCase("landline") && flgProductLandline[0]) {
+                    if (serviceAbilityType.equalsIgnoreCase(Constants.PRODUCT_TYPE_LANDLINE) && flgProductLandline[0]) {
 
                         // Serviceability Landline
                         CharacteristicOfferType describeByLandline1 =  CharacteristicOfferType
@@ -583,7 +583,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
 
                             newProductsAltaFijaList.add(newProductAltaFijaCableTv);
 
-                        } else if (productType.equalsIgnoreCase("device")) {
+                        } else if (productType.equalsIgnoreCase(Constants.PRODUCT_TYPE_DEVICE)) {
                             NewProductAltaFija newProductAltaFijaShareEquipment = NewProductAltaFija
                                     .builder()
                                     .productCatalogId(productSpecification.getRefinedProduct()
@@ -596,7 +596,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                             newProductsAltaFijaList.add(newProductAltaFijaShareEquipment);
                             cont[0]++;
 
-                        } else if (productType.equalsIgnoreCase("Accessories")) {
+                        } else if (productType.equalsIgnoreCase(Constants.PRODUCT_TYPE_ACCESSORIES)) {
                             NewProductAltaFija newProductAltaFijaAccesories = NewProductAltaFija
                                     .builder()
                                     .productCatalogId(productSpecification.getRefinedProduct()
@@ -671,7 +671,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
 
     private Mono<Sale> retryRequest(PostSalesRequest request, Sale sale, Boolean flgCaeq, Boolean flgAlta,
                                        Boolean flgCasi, Boolean flgFinanciamiento, String sapidSimcard) {
-        sale.setStatus("NUEVO");
+        sale.setStatus(Constants.SALES_STATUS_NUEVO);
         LOG.info("Sales Retry");
         if (sale.getCommercialOperation().get(0).getOrder() != null
                 && (sale.getCommercialOperation().get(0).getDeviceOffering() == null
@@ -1112,7 +1112,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                             saleRequest.setStatus(Constants.NEGOCIACION);
                         } else if (!StringUtils.isEmpty(createOrderResponse.getCreateProductOrderResponse()
                                 .getProductOrderId())) {
-                            saleRequest.setStatus("NUEVO");
+                            saleRequest.setStatus(Constants.SALES_STATUS_NUEVO);
                         } else {
                             saleRequest.setStatus(Constants.PENDIENTE);
                         }
@@ -1162,7 +1162,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
             String productTypeSva = productOfferings.get(i).getProductSpecification().get(0)
                     .getProductType();
             String productTypeComponent = this.getStringValueByKeyFromAdditionalDataList(
-                    productOfferings.get(i).getAdditionalData(), "productType");
+                    productOfferings.get(i).getAdditionalData(), Constants.PRODUCT_TYPE);
 
             if (productTypeSva.equalsIgnoreCase(Constants.PRODUCT_TYPE_SVA)) {
 
@@ -1326,7 +1326,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         } else if (!StringUtils.isEmpty(createOrderResponse.getCreateProductOrderResponse()
                 .getProductOrderId())) {
             // When All is OK
-            saleRequest.setStatus("NUEVO");
+            saleRequest.setStatus(Constants.SALES_STATUS_NUEVO);
         } else {
             // When Create Product Order Service fail or doesnt respond with an Order Id
             saleRequest.setStatus(Constants.PENDIENTE);
@@ -1382,7 +1382,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         } else if (sale.getProductType().equalsIgnoreCase("MT")) {
             mainCommercialOperation = sale.getCommercialOperation().stream()
                     .filter(item -> this.getStringValueByKeyFromAdditionalDataList(item.getAdditionalData(),
-                            "productType").equalsIgnoreCase("WIRELINE"))
+                            Constants.PRODUCT_TYPE).equalsIgnoreCase(Constants.WIRELINE))
                     .findFirst()
                     .orElse(new CommercialOperationType());
         }
@@ -1599,7 +1599,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
             String operationType = "";
             if (mainCommercialOperation.getReason().equalsIgnoreCase("ALTA")
                     && mainCommercialOperation.getAction().equalsIgnoreCase("Provide")
-                    && sale.getProductType().equalsIgnoreCase("WIRELINE")) {
+                    && sale.getProductType().equalsIgnoreCase(Constants.WIRELINE)) {
                 operationType = "Alta";
             } else {
                 operationType = "CAEQ";
@@ -1637,7 +1637,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         } else if (sale.getProductType().equalsIgnoreCase("MT")) {
             mainCommercialOperation = sale.getCommercialOperation().stream()
                     .filter(item -> this.getStringValueByKeyFromAdditionalDataList(item.getAdditionalData(),
-                            "productType").equalsIgnoreCase("WIRELINE"))
+                            Constants.PRODUCT_TYPE).equalsIgnoreCase(Constants.WIRELINE))
                     .findFirst()
                     .orElse(new CommercialOperationType());
         }
@@ -1649,22 +1649,22 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         mainCommercialOperation.getProductOfferings().get(0).getProductSpecification().stream() // Pending evaluate productOffering for Alta only SVAs case
                 .forEach(productSpecification -> {
                     String productSpecificationType = productSpecification.getProductType();
-                    if (productSpecificationType.equalsIgnoreCase("cableTv")) {
+                    if (productSpecificationType.equalsIgnoreCase(Constants.PRODUCT_TYPE_CABLE_TV)) {
                         serviceIdLobConcat[0] = serviceIdLobConcat[0].concat("TV=").concat(
                                 this.getServiceIdFromProductConfigurationByLineOfBussinessType(
-                                        finalMainCommercialOperation,"cableTv")).concat(";");
+                                        finalMainCommercialOperation,Constants.PRODUCT_TYPE_CABLE_TV)).concat(";");
                     } else if (productSpecificationType.equalsIgnoreCase(Constants.PRODUCT_TYPE_BROADBAND)) {
                         serviceIdLobConcat[0] = serviceIdLobConcat[0].concat("INT=").concat(
                                 this.getServiceIdFromProductConfigurationByLineOfBussinessType(
                                         finalMainCommercialOperation, Constants.PRODUCT_TYPE_BROADBAND)).concat(";");
-                    } else if (productSpecificationType.equalsIgnoreCase("landline")) {
+                    } else if (productSpecificationType.equalsIgnoreCase(Constants.PRODUCT_TYPE_LANDLINE)) {
                         serviceIdLobConcat[0] = serviceIdLobConcat[0].concat("VOIC=").concat(
                                 this.getServiceIdFromProductConfigurationByLineOfBussinessType(
-                                        finalMainCommercialOperation,"landline")).concat(";");
-                    } else if (productSpecificationType.equalsIgnoreCase("device")) {
+                                        finalMainCommercialOperation,Constants.PRODUCT_TYPE_LANDLINE)).concat(";");
+                    } else if (productSpecificationType.equalsIgnoreCase(Constants.PRODUCT_TYPE_DEVICE)) {
                         serviceIdLobConcat[0] = serviceIdLobConcat[0].concat("EQUP=").concat(
                                 this.getServiceIdFromProductConfigurationByLineOfBussinessType(
-                                        finalMainCommercialOperation,"device"));
+                                        finalMainCommercialOperation,Constants.PRODUCT_TYPE_DEVICE));
                     }
                 });
 
@@ -3213,7 +3213,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                 .filter(item -> item.getProduct().getDescription().equalsIgnoreCase(Constants.SIM_DEVICE))
                 .findFirst()
                 .ifPresent(item -> item.getProduct().getProductRelationship().stream()
-                        .filter(pr -> pr.getProduct().getDescription().equalsIgnoreCase("Device"))
+                        .filter(pr -> pr.getProduct().getDescription().equalsIgnoreCase(Constants.PRODUCT_TYPE_DEVICE))
                         .findFirst()
                         .ifPresent(pr -> changedContainedProduct.setProductId(pr.getProduct().getId()))
                 );
@@ -3350,10 +3350,10 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
 
     private Boolean compareComponents(String productTypeName) {
         return productTypeName.equalsIgnoreCase(Constants.PRODUCT_TYPE_BROADBAND)
-                || productTypeName.equalsIgnoreCase("cableTv")
-                || productTypeName.equalsIgnoreCase("device")
-                || productTypeName.equalsIgnoreCase("landline")
-                || productTypeName.equalsIgnoreCase("accessories");
+                || productTypeName.equalsIgnoreCase(Constants.PRODUCT_TYPE_CABLE_TV)
+                || productTypeName.equalsIgnoreCase(Constants.PRODUCT_TYPE_DEVICE)
+                || productTypeName.equalsIgnoreCase(Constants.PRODUCT_TYPE_LANDLINE)
+                || productTypeName.equalsIgnoreCase(Constants.PRODUCT_TYPE_ACCESSORIES);
     }
 
     private Mono<Sale> wirelineMigrations(List<BusinessParameterFinanciamientoFijaExt> parametersFinanciamientoFija,
@@ -3517,7 +3517,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         productOfferings.forEach(productOffering -> {
             if (productOffering.getProductSpecification().get(0).getProductType().equalsIgnoreCase(Constants.PRODUCT_TYPE_SVA)) {
                 String productType = getStringValueByKeyFromAdditionalDataList(productOffering.getAdditionalData(),
-                        "productType");
+                        Constants.PRODUCT_TYPE);
                 if (productType.equalsIgnoreCase(Constants.PRODUCT_TYPE_CABLE_TV)
                         || productType.equalsIgnoreCase(Constants.PRODUCT_TYPE_CHANNEL_TV)
                         || productType.equalsIgnoreCase(Constants.PRODUCT_TYPE_DEVICE)
