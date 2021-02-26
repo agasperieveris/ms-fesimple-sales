@@ -84,34 +84,30 @@ public class ProductOrderWebClientImpl implements ProductOrderWebClient {
 
     @Override
     public Mono<ProductorderResponse> throwExceptionCreateProductOrder(Throwable error) throws GenesisException {
+        GenesisExceptionBuilder builder = GenesisException.builder();
         if (error instanceof WebClientResponseException) {
             WebClientResponseException responseException = (WebClientResponseException) error;
             HttpStatus statusException = responseException.getStatusCode();
-
-            String responseBodyExceptionAsString = responseException.getResponseBodyAsString();
-            GenesisException responseGenesisException = MapperUtils.mapper(GenesisException.class,
-                    responseBodyExceptionAsString);
-            GenesisExceptionBuilder builder = GenesisException.builder();
-
-            String[] wildcardsException = responseGenesisException.getWildcards();
 
             if (statusException.equals(HttpStatus.BAD_REQUEST)) {
                 // Throw 400 status code
                 return Mono.error(builder
                         .exceptionId("SVC0001")
-                        .userMessage("Bad Request from Create Product Order FE+Simple Service")
-                        .wildcards(wildcardsException)
+                        .wildcards(new String[]{"Bad Request from Create Product Order FE+Simple Service"})
                         .build());
             } else {
                 // Throw 500 status code
                 return Mono.error(builder
                         .exceptionId("SVR1000")
-                        .userMessage("There was a problem from Create Product Order FE+Simple Service")
-                        .wildcards(wildcardsException)
+                        .wildcards(new String[]{"There was a problem from Create Product Order FE+Simple Service"})
                         .build());
             }
         } else {
-            return Mono.error(error);
+            // Throw 500 status code
+            return Mono.error(builder
+                    .exceptionId("SVR1000")
+                    .wildcards(new String[]{"There was a problem from Create Product Order FE+Simple Service"})
+                    .build());
         }
     }
 
