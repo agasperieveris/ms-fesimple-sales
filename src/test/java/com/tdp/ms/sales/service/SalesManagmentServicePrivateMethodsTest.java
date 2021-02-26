@@ -25,6 +25,7 @@ import com.tdp.ms.sales.model.dto.productorder.capl.CaplRequest;
 import com.tdp.ms.sales.model.dto.productorder.capl.NewAssignedBillingOffers;
 import com.tdp.ms.sales.model.dto.productorder.capl.ProductOrderCaplRequest;
 import com.tdp.ms.sales.model.dto.quotation.CreateQuotationRequestBody;
+import com.tdp.ms.sales.model.dto.quotation.Item;
 import com.tdp.ms.sales.model.dto.reservestock.StockItem;
 import com.tdp.ms.sales.model.entity.Sale;
 import com.tdp.ms.sales.model.request.CreateQuotationRequest;
@@ -661,21 +662,15 @@ public class SalesManagmentServicePrivateMethodsTest {
     }
 
     @Test
-    void buildCreateQuotationFijaRequestTest() throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
+    void buildCreateQuotationFijaRequestTest() throws NoSuchMethodException, InvocationTargetException,
+                                                                                                IllegalAccessException {
 
         Method method = SalesManagmentServiceImpl.class.getDeclaredMethod("buildCreateQuotationFijaRequest",
                 CreateQuotationRequest.class, PostSalesRequest.class, List.class);
         method.setAccessible(true);
 
         Sale sale = CommonsMocks.createSaleMock();
-
-        ComposingProductType composingProductType1 = new ComposingProductType();
-        composingProductType1.setId("test");
-        composingProductType1.setName("TV");
-        List<ComposingProductType> productSpecificationList = new ArrayList<>();
-        productSpecificationList.add(composingProductType1);
-
-        sale.getCommercialOperation().get(0).getProductOfferings().get(0).setProductSpecification(productSpecificationList);
+        sale.setProductType(Constants.WIRELINE);
 
         RefinedProductType refinedProduct = new RefinedProductType();
         ProductSpecCharacteristicType productSpecCharacteristicType1 = new ProductSpecCharacteristicType();
@@ -696,10 +691,16 @@ public class SalesManagmentServicePrivateMethodsTest {
         ext1.setCodParameterValue("TEST0001");
         List<BusinessParameterFinanciamientoFijaExt> bpFinanciamiento = new ArrayList<>();
 
-
+        MoneyType moneyTypeUpfront = MoneyType.builder().amount(100.00).build();
         UpFrontType upFront = new UpFrontType();
         upFront.setIndicator("N");
+        upFront.setPrice(moneyTypeUpfront);
         sale.getCommercialOperation().get(0).getProductOfferings().get(0).setUpFront(upFront);
+
+        CreateProductOrderResponseType order = new CreateProductOrderResponseType();
+        order.setProductOrderId("123123");
+        order.setNewProductsInNewOfferings(CommonsMocks.createOrderNewProductsInNewOfferingsList());
+        sale.getCommercialOperation().get(0).setOrder(order);
 
         method.invoke(salesManagmentServiceImpl,createQuotationRequest, postSalesRequest, bpFinanciamiento);
     }
@@ -748,7 +749,7 @@ public class SalesManagmentServicePrivateMethodsTest {
     void buildOrderAttributesListAltaFijaTest() throws NoSuchMethodException, InvocationTargetException,
                                                                                             IllegalAccessException {
         Method method = SalesManagmentServiceImpl.class.getDeclaredMethod("buildOrderAttributesListAltaFija",
-                List.class, Sale.class, CreateQuotationRequest.class, Boolean.class);
+                List.class, Sale.class, CreateQuotationRequest.class);
 
         method.setAccessible(true);
 
@@ -778,7 +779,7 @@ public class SalesManagmentServicePrivateMethodsTest {
         createQuotationRequest.setBody(body);
 
 
-        method.invoke(salesManagmentServiceImpl, altaFijaOrderAttributesList, sale, createQuotationRequest, true);
+        method.invoke(salesManagmentServiceImpl, altaFijaOrderAttributesList, sale, createQuotationRequest);
     }
 
     @Test
@@ -991,4 +992,59 @@ public class SalesManagmentServicePrivateMethodsTest {
 
         method.invoke(salesManagmentServiceImpl, sale, getBonificacionSim, newBoList);
     }
+
+    @Test
+    void getServiceIdFromProductConfigurationByLineOfBussinessTypeTest() throws NoSuchMethodException,
+                                                                InvocationTargetException, IllegalAccessException {
+        Method method = SalesManagmentServiceImpl.class.getDeclaredMethod(
+                "getServiceIdFromProductConfigurationByLineOfBussinessType",
+                CommercialOperationType.class, String.class);
+
+        method.setAccessible(true);
+
+        Sale sale = CommonsMocks.createSaleMock();
+
+        CreateProductOrderResponseType order = new CreateProductOrderResponseType();
+        order.setProductOrderId("123123");
+        order.setNewProductsInNewOfferings(CommonsMocks.createOrderNewProductsInNewOfferingsList());
+        sale.getCommercialOperation().get(0).setOrder(order);
+
+        String serviceId = (String) method.invoke(salesManagmentServiceImpl,
+                sale.getCommercialOperation().get(0), "cableTv");
+
+        Assert.assertEquals(serviceId, "123123");
+    }
+
+    @Test
+    void addOrderInfoToCreateQuotationFijaRequestTest() throws NoSuchMethodException,
+            InvocationTargetException, IllegalAccessException {
+        Method method = SalesManagmentServiceImpl.class.getDeclaredMethod(
+                "addOrderInfoToCreateQuotationFijaRequest", CreateQuotationRequest.class, Sale.class);
+
+        method.setAccessible(true);
+
+        Item itemQuotation1 = new Item();
+        itemQuotation1.setOfferingId("123123");
+        itemQuotation1.setPublicId("123123");
+        List<Item> itemsQuotationList = new ArrayList<>();
+        itemsQuotationList.add(itemQuotation1);
+
+        CreateQuotationRequestBody createQuotationRequestBody = new CreateQuotationRequestBody();
+        createQuotationRequestBody.setItems(itemsQuotationList);
+
+        CreateQuotationRequest createQuotationRequest = new CreateQuotationRequest();
+        createQuotationRequest.setBody(createQuotationRequestBody);
+
+        Sale sale = CommonsMocks.createSaleMock();
+
+        CreateProductOrderResponseType order = new CreateProductOrderResponseType();
+        order.setProductOrderId("123123");
+        order.setProductOrderReferenceNumber("123123");
+        order.setNewProductsInNewOfferings(CommonsMocks.createOrderNewProductsInNewOfferingsList());
+        sale.getCommercialOperation().get(0).setOrder(order);
+        sale.setProductType(Constants.WIRELINE);
+
+        method.invoke(salesManagmentServiceImpl,createQuotationRequest, sale);
+    }
+
 }

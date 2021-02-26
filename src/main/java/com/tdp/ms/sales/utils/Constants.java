@@ -33,11 +33,13 @@ public class Constants {
     public static final String PRODUCT_TYPE_LANDLINE = "landline";
     public static final String PRODUCT_TYPE_SHEQ = "ShEq";
     public static final String PRODUCT_TYPE_DEVICE = "device";
+    public static final String PRODUCT_TYPE_ACCESSORIES = "accessories";
     public static final String PRODUCT_TYPE_SVA = "sva";
     public static final String PENDIENTE = "PENDIENTE";
     public static final String NEGOCIACION = "NEGOCIACION";
     public static final String VALIDADO = "VALIDADO";
     public static final String WIRELESS = "WIRELESS";
+    public static final String WIRELINE = "WIRELINE";
     public static final String DEVICE_SKU = "DEVICE_SKU";
     public static final String DEVICE_TYPE_SIM = "SIM";
     public static final String DEVICE_TYPE_SMARTPHONE = "Smartphone";
@@ -53,4 +55,6 @@ public class Constants {
     public static final String STATUS_VALIDADO = "VALIDADO";
     public static final String MEDIUM_TYPE_EMAIL_ADDRESS = "email address";
     public static final String KEY_DELIVERY_METHOD = "deliveryMethod";
+    public static final String SALES_STATUS_NUEVO = "NUEVO";
+    public static final String PRODUCT_TYPE = "productType";
 }
