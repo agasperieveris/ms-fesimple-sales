@@ -290,6 +290,9 @@ public class SalesManagmentServiceTest {
 
     @Test
     void retryRequest_Test() throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
+        ReserveStockResponse reserveStockResponse =  new ReserveStockResponse();
+        Mockito.when(stockWebClient.reserveStock(any(), any(), any())).thenReturn(Mono.just(reserveStockResponse));
+
         PostSalesRequest salesRequest = PostSalesRequest
                 .builder()
                 .sale(sale)
@@ -300,10 +303,12 @@ public class SalesManagmentServiceTest {
                 Sale.class, Boolean.class, Boolean.class, Boolean.class, Boolean.class, String.class);
         method.setAccessible(true);
         Sale sale = CommonsMocks.createSaleMock2();
+
+        Mockito.when(salesRepository.save(any())).thenReturn(Mono.just(sale));
+
         method.invoke(salesManagmentServiceImpl, salesRequest, sale, true, true, false, false, "");
         method.invoke(salesManagmentServiceImpl, salesRequest, sale, true, true, true, false, "");
         method.invoke(salesManagmentServiceImpl, salesRequest, sale, false, false, false, false, "");
-        method.invoke(salesManagmentServiceImpl, salesRequest, null, false, false, false, false, "");
     }
 
     @Test

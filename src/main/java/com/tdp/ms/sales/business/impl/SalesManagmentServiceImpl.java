@@ -88,6 +88,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import reactor.core.publisher.Mono;
 
+import static java.lang.Math.round;
+
 /**
  * Class: SalesManagmentServiceImpl. <br/>
  * <b>Copyright</b>: &copy; 2020 Telef&oacute;nica del Per&uacute;<br/>
@@ -614,11 +616,12 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
 
     private Mono<Sale> retryRequest(PostSalesRequest request, Sale sale, Boolean flgCaeq, Boolean flgAlta,
                                        Boolean flgCasi, Boolean flgFinanciamiento, String sapidSimcard) {
-        if (sale != null && sale.getCommercialOperation().get(0).getOrder() != null
-                && sale.getCommercialOperation().get(0).getDeviceOffering() == null
-                && sale.getCommercialOperation().get(0).getDeviceOffering().get(0).getStock() == null
-                && StringUtils.isEmpty(sale.getCommercialOperation().get(0).getDeviceOffering().get(0)
-                .getStock().getReservationId())) { // Retry from Reservation
+        sale.setStatus("NUEVO");
+        if (sale.getCommercialOperation().get(0).getOrder() != null
+                && (sale.getCommercialOperation().get(0).getDeviceOffering() == null
+                || sale.getCommercialOperation().get(0).getDeviceOffering().get(0).getStock() == null
+                || StringUtils.isEmpty(sale.getCommercialOperation().get(0).getDeviceOffering().get(0).getStock()
+                .getReservationId()))) { // Retry from Reservation
 
             // Call to Reserve Stock Service When Commercial Operation include CAEQ
             if (flgCaeq || flgAlta) {
@@ -645,11 +648,11 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                 }
             }
 
-        } else if (sale != null && sale.getCommercialOperation().get(0).getOrder() != null
+        } else if (sale.getCommercialOperation().get(0).getOrder() != null
                 && sale.getCommercialOperation().get(0).getDeviceOffering() != null
                 && sale.getCommercialOperation().get(0).getDeviceOffering().get(0).getStock() != null
-                && !StringUtils.isEmpty(sale.getCommercialOperation().get(0).getDeviceOffering().get(0)
-                .getStock().getReservationId())) { // Retry from Create Quotation
+                && !StringUtils.isEmpty(sale.getCommercialOperation().get(0).getDeviceOffering().get(0).getStock()
+                .getReservationId())) { // Retry from Create Quotation
 
             // Call to Create Quotation Service When CommercialOperation Contains CAEQ
             return this.callToCreateQuotation(PostSalesRequest.builder()
@@ -768,10 +771,11 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         // Validate if it is a retry from Frontend
         return salesRepository.findBySalesId(saleRequest.getSalesId())
                 // Main function
-                .defaultIfEmpty(Sale.builder().build())
+                .defaultIfEmpty(Sale.builder().salesId(null).build())
                 // Validate existing sale
                 .flatMap(saleItem -> {
-                    if (saleItem.getSalesId() == null || saleItem.getCommercialOperation().get(0).getOrder() == null) {
+                    if (saleItem.getSalesId() == null || saleItem.getCommercialOperation() == null
+                            || saleItem.getCommercialOperation().get(0).getOrder() == null) {
                         return mainFunction(saleRequest, request, flgAlta, flgCapl, flgCaeq, flgCasi,
                                 flgFinanciamiento, isRetail, sapidSimcard);
                     }
@@ -1318,12 +1322,10 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
             com.tdp.ms.sales.model.dto.quotation.Item itemInstallation = com.tdp.ms.sales.model.dto.quotation.Item
                     .builder()
                     .offeringId(offeringId)
-                    .orderActionId(org.apache.commons.lang3.StringUtils.chop(sale.getCommercialOperation().get(0)
-                            .getOrder().getProductOrderReferenceNumber()))
                     .itemChargeCode(this.getStringValueFromBpExtListByParameterName(
                                                             "chargeCodeInstallation", bpFinanciamiento))
-                    .orderActionId(org.apache.commons.lang3.StringUtils.chop(sale.getCommercialOperation().get(0).getOrder()
-                            .getProductOrderReferenceNumber()))
+                    .orderActionId(org.apache.commons.lang3.StringUtils.chop(sale.getCommercialOperation().get(0)
+                            .getOrder().getNewProductsInNewOfferings().get(0).getProductOrderItemReferenceNumber()))
                     .build();
             itemsList.add(itemInstallation);
         }
@@ -1337,12 +1339,10 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
             com.tdp.ms.sales.model.dto.quotation.Item itemModemPremium = com.tdp.ms.sales.model.dto.quotation.Item
                     .builder()
                     .offeringId(offeringId)
-                    .orderActionId(org.apache.commons.lang3.StringUtils.chop(sale.getCommercialOperation().get(0)
-                            .getOrder().getProductOrderReferenceNumber()))
                     .itemChargeCode(this.getStringValueFromBpExtListByParameterName(
                                                             "chargeCodeDevicePremium", bpFinanciamiento))
-                    .orderActionId(org.apache.commons.lang3.StringUtils.chop(sale.getCommercialOperation().get(0).getOrder()
-                            .getProductOrderReferenceNumber()))
+                    .orderActionId(org.apache.commons.lang3.StringUtils.chop(sale.getCommercialOperation().get(0)
+                            .getOrder().getNewProductsInNewOfferings().get(0).getProductOrderItemReferenceNumber()))
                     .build();
             itemsList.add(itemModemPremium);
         }
@@ -1357,7 +1357,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                     .builder()
                     .offeringId(offeringId)
                     .orderActionId(org.apache.commons.lang3.StringUtils.chop(sale.getCommercialOperation().get(0)
-                            .getOrder().getProductOrderReferenceNumber()))
+                            .getOrder().getNewProductsInNewOfferings().get(0).getProductOrderItemReferenceNumber()))
                     .itemChargeCode(this.getStringValueFromBpExtListByParameterName(
                                                             "chargeCodeUltraWifi", bpFinanciamiento))
                     .build();
@@ -1558,7 +1558,32 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
 
         if (flgFinanciamiento) {
             CreateQuotationRequest createQuotationRequest = new CreateQuotationRequest();
-            this.buildCreateQuotationRequest(createQuotationRequest, request, flgCasi);
+            if (sale.getProductType().equalsIgnoreCase(Constants.WIRELESS)) {
+                this.buildCreateQuotationRequest(createQuotationRequest, request, flgCasi);
+            } else if (sale.getProductType().equalsIgnoreCase(Constants.WIRELINE)) {
+                return businessParameterWebClient
+                        .getParametersFinanciamientoFija(request.getHeadersMap())
+                        .map(BusinessParametersFinanciamientoFijaResponse::getData)
+                        .map(bpFinanciamientoFijaData -> bpFinanciamientoFijaData.get(0))
+                        .map(BusinessParameterFinanciamientoFijaData::getExt)
+                        .flatMap(parametersFinanciamientoFija -> {
+                            this.buildCreateQuotationFijaRequest(createQuotationRequest, request,
+                                    parametersFinanciamientoFija);
+
+                            return quotationWebClient.createQuotation(createQuotationRequest, sale)
+                                    .flatMap(createQuotationResponse -> {
+                                        this.setQuotationResponseInSales(createQuotationResponse,
+                                                sale);
+                                        return salesRepository.save(sale)
+                                                .map(r -> {
+                                                    this.postSalesEventFlow(request);
+                                                    return r;
+                                                });
+                                    });
+                        });
+
+            }
+
             return quotationWebClient.createQuotation(createQuotationRequest, sale)
                     .flatMap(createQuotationResponse -> {
                         this.setQuotationResponseInSales(createQuotationResponse,
@@ -1708,9 +1733,9 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
 
         double taxExcludedAmountDouble = sale.getCommercialOperation().get(0).getDeviceOffering().get(0).getOffers()
                 .get(0).getBillingOfferings().get(0).getCommitmentPeriods().get(0).getFinancingInstalments().get(0)
-                .getInstalments().getTotalAmount().getValue().doubleValue() * 0.82;
+                .getInstalments().getTotalAmount().getValue().doubleValue() / 1.18;
         MoneyAmount taxExcludedAmount = MoneyAmount.builder()
-                .amount(Double.toString(taxExcludedAmountDouble))
+                .amount(Double.toString(round(taxExcludedAmountDouble * 100.0) / 100.0))
                 .units("PEN")
                 .build();
 
@@ -1718,11 +1743,12 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         com.tdp.ms.sales.model.dto.quotation.Item itemEquipment = com.tdp.ms.sales.model.dto.quotation.Item
                 .builder()
                 .taxExcludedAmount(taxExcludedAmount)
+                .model(sale.getCommercialOperation().get(0).getDeviceOffering().get(0).getDisplayName())
                 .type("mobile phone")
                 .offeringId("EQUIP_FE".concat(sale.getCommercialOperation().get(0).getProduct().getPublicId()))
                 .totalCost(totalCost)
                 .orderActionId(org.apache.commons.lang3.StringUtils.chop(sale.getCommercialOperation().get(0).getOrder()
-                        .getProductOrderReferenceNumber()))
+                        .getNewProductsInNewOfferings().get(0).getProductOrderItemReferenceNumber()))
                 .publicId(sale.getCommercialOperation().get(0).getProduct().getPublicId())
                 .build();
         itemsList.add(itemEquipment);
@@ -1740,8 +1766,8 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                     .offeringId("SIM_FE".concat(sale.getCommercialOperation().get(0).getProduct().getPublicId()))
                     .type("simcard")
                     .publicId(sale.getCommercialOperation().get(0).getProduct().getPublicId())
-                    .orderActionId(org.apache.commons.lang3.StringUtils.chop(sale.getCommercialOperation().get(0).getOrder()
-                            .getProductOrderReferenceNumber()))
+                    .orderActionId(org.apache.commons.lang3.StringUtils.chop(sale.getCommercialOperation().get(0)
+                            .getOrder().getNewProductsInNewOfferings().get(0).getProductOrderItemReferenceNumber()))
                     .totalCost(totalCostSim)
                     .build();
             itemsList.add(itemSim);
