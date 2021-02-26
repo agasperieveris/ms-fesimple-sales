@@ -1486,6 +1486,8 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
             MoneyAmount totalCustomerRecurrentCost = MoneyAmount
                     .builder()
                     .amount(mainCommercialOperation.getProductOfferings().get(0).getProductOfferingPrice()
+                            .get(0).getMaxPrice().getAmount() == null ? "0" :
+                            mainCommercialOperation.getProductOfferings().get(0).getProductOfferingPrice()
                             .get(0).getMaxPrice().getAmount().toString())
                     .units("PEN").build();
 
@@ -1589,7 +1591,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
             MoneyAmount totalAmount = MoneyAmount
                     .builder()
                     .amount(amountTotalAmount[0].toString())
-                    .units("")
+                    .units("PEN")
                     .build();
 
 
@@ -2055,8 +2057,11 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                 .build();
 
         MoneyAmount totalCustomerRecurrentCost = MoneyAmount.builder()
-                .units("PEN").amount(sale.getCommercialOperation().get(0).getProductOfferings().get(0)
-                                                .getProductOfferingPrice().get(0).getMaxPrice().getAmount().toString())
+                .units("PEN")
+                .amount(sale.getCommercialOperation().get(0).getProductOfferings().get(0)
+                        .getProductOfferingPrice().get(0).getMaxPrice().getAmount() == null ? "0" :
+                        sale.getCommercialOperation().get(0).getProductOfferings().get(0)
+                        .getProductOfferingPrice().get(0).getMaxPrice().getAmount().toString())
                 .build();
 
         MoneyAmount downPayment = MoneyAmount

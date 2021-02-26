@@ -27,6 +27,6 @@ public interface QuotationWebClient {
 
     Mono<CreateQuotationResponse> createQuotation(CreateQuotationRequest request, Sale sale);
 
-    Mono<CreateQuotationResponse> throwExceptionCreateQuotation(Sale sale) throws GenesisException;
+    Mono<CreateQuotationResponse> throwExceptionCreateQuotation(Sale sale, Throwable error) throws GenesisException;
 
 }
