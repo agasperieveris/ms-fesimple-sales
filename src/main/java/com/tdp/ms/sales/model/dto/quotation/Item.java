@@ -39,4 +39,6 @@ public class Item {
     private MoneyAmount totalCost;
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private MoneyAmount taxExcludedAmount;
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private String model;
 }
