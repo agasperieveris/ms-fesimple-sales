@@ -28,6 +28,6 @@ public interface StockWebClient {
 
     Mono<ReserveStockResponse> reserveStock(ReserveStockRequest request, HashMap<String,String> headersMap, Sale sale);
 
-    Mono<ReserveStockResponse> throwExceptionReserveStock(Sale sale) throws GenesisException;
+    Mono<ReserveStockResponse> throwExceptionReserveStock(Sale sale, Throwable error) throws GenesisException;
 
 }
