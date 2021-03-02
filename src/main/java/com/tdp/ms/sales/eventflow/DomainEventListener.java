@@ -1,5 +1,6 @@
 package com.tdp.ms.sales.eventflow;
 
+import com.google.gson.Gson;
 import com.tdp.genesis.core.constants.HttpHeadersKey;
 import com.tdp.ms.commons.util.MapperUtils;
 import com.tdp.ms.sales.eventflow.client.SalesWebClient;
@@ -81,6 +82,7 @@ public class DomainEventListener {
                 orquestador.setCodStatus(EstadosOrquestador.PROCESADO_ERROR.getCodEstado());
                 orquestador.setLog(eventLog);
             }
+            orquestador.setMsgPayload(new Gson().toJson(sale));
 
         } catch (Exception e) {
             LOGGER.info("...............ORQUESTADOR_INBOX  Mensaje recibido: '{}'", orquestador);
