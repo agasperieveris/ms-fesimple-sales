@@ -102,22 +102,7 @@ public class SalesWebClientImpl implements SalesWebClient {
 
         } else if (eventFlow.equals("06")) {
             // Flujo 6: Cuando se cancela la venta
-            switch (stepFlow) {
-                case "02":
-                    additionalData.add(KeyValueType.builder()
-                            .key("orderCancellationDate")
-                            .value(Commons.getDatetimeNow())
-                            .build());
-                    return "";
-                case "04":
-                    additionalData.add(KeyValueType.builder()
-                            .key("reservationCancellationDate")
-                            .value(Commons.getDatetimeNow())
-                            .build());
-                    return "";
-                default:
-                    return "";
-            }
+            return "";
         } else {
             return "Se ha obtenido un eventFlow que no corresponde. eventFlow = " + eventFlow;
         }
