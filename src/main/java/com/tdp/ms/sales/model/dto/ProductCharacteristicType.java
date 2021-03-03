@@ -30,6 +30,8 @@ import lombok.NoArgsConstructor;
 @Builder
 public class ProductCharacteristicType {
     private String valueType;
+    private String name;
+    private String value;
     @JsonProperty("@type")
     private String type;
 }
