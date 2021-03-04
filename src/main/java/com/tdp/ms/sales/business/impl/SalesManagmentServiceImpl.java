@@ -2204,12 +2204,16 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
     public Boolean validateNegotiation(List<KeyValueType> additionalData,
                                        List<IdentityValidationType> identityValidationTypes) {
         final Boolean[] isPresencial = {false};
+        final Boolean[] isRetail = {false};
         final Boolean[] isBiometric = {true};
 
-        additionalData.stream().forEach(kv -> {
-            if (kv.getKey().equalsIgnoreCase(Constants.FLOWSALE)
-                    && kv.getValue().equalsIgnoreCase("Presencial")) {
-                isPresencial[0] = true;
+        additionalData.forEach(kv -> {
+            if (kv.getKey().equalsIgnoreCase(Constants.FLOWSALE)) {
+                if (kv.getValue().equalsIgnoreCase(Constants.PRESENCIAL)) {
+                    isPresencial[0] = true;
+                } else if (kv.getValue().equalsIgnoreCase(Constants.RETAIL)) {
+                    isRetail[0] = true;
+                }
             }
         });
 
@@ -2217,7 +2221,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         final Date[] latestDate = {null};
         final int[] cont = {0};
         if (identityValidationTypes != null && !identityValidationTypes.isEmpty()) {
-            identityValidationTypes.stream().forEach(ivt -> {
+            identityValidationTypes.forEach(ivt -> {
                 // convert String date to Date
                 DateFormat format = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSSSSSZ");
                 try {
@@ -2237,7 +2241,20 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
             isBiometric[0] = false;
         }
 
-        return isPresencial[0] && !isBiometric[0];
+        final boolean[] isRemotoAndContigenciaReniec = {false};
+        additionalData.stream().filter(kv -> kv.getKey().equalsIgnoreCase(Constants.FLOWSALE)
+                && kv.getValue().equalsIgnoreCase(Constants.REMOTO))
+                .findFirst()
+                .flatMap(kv -> identityValidationTypes.stream()
+                        .filter(item -> item.getValidationType().equalsIgnoreCase("NoBiometric"))
+                        .findFirst())
+                .flatMap(item -> item.getAdditionalData().stream()
+                        .filter(ad -> ad.getKey().equalsIgnoreCase("noBiometricIdType")
+                                && ad.getValue().equalsIgnoreCase("3"))
+                        .findFirst())
+                .ifPresent(ad -> isRemotoAndContigenciaReniec[0] = true);
+
+        return ((isPresencial[0] || isRetail[0]) && !isBiometric[0]) || isRemotoAndContigenciaReniec[0];
     }
 
     private String getStringValueFromBusinessParameterDataListByKeyAndActiveTrue(
