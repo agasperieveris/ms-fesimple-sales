@@ -47,4 +47,6 @@ public class ProductInstanceType {
     private List<ComponentProdPriceType> productPrice;
     private List<EntityRefType> place;
     private List<KeyValueType> additionalData;
+    private String startDate;
+    private String status;
 }
