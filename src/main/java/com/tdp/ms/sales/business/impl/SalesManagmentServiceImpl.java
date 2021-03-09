@@ -1,10 +1,7 @@
 package com.tdp.ms.sales.business.impl;
 
-import com.azure.core.annotation.Post;
-import com.google.gson.Gson;
 import com.tdp.genesis.core.exception.GenesisException;
 import com.tdp.ms.commons.util.DateUtils;
-import com.tdp.ms.commons.util.MapperUtils;
 import com.tdp.ms.sales.business.SalesManagmentService;
 import com.tdp.ms.sales.client.BusinessParameterWebClient;
 import com.tdp.ms.sales.client.GetSkuWebClient;
@@ -51,7 +48,6 @@ import com.tdp.ms.sales.model.dto.productorder.migracionfija.MigracionFijaReques
 import com.tdp.ms.sales.model.dto.productorder.migracionfija.NewProductMigracionFija;
 import com.tdp.ms.sales.model.dto.productorder.migracionfija.ProductOrderMigracionFijaRequest;
 import com.tdp.ms.sales.model.dto.productorder.portability.PortabilityDetailsType;
-import com.tdp.ms.sales.model.dto.quotation.Address;
 import com.tdp.ms.sales.model.dto.quotation.Channel;
 import com.tdp.ms.sales.model.dto.quotation.CreateQuotationRequestBody;
 import com.tdp.ms.sales.model.dto.quotation.Customer;
@@ -163,7 +159,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         final String[] stringValue = {""};
 
         if (additionalData != null && !additionalData.isEmpty()) {
-            additionalData.stream().forEach(kv -> {
+            additionalData.forEach(kv -> {
                 if (kv.getKey().equalsIgnoreCase(key)) {
                     stringValue[0] = kv.getValue();
                 }
@@ -792,6 +788,10 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         String commercialOperationReason = saleRequest.getCommercialOperation().get(0).getReason();
         String mainProductType = saleRequest.getProductType();
 
+        boolean sendIndicator =
+                isNecessaryToSendVariablesInOrderCreation(request.getSale().getCommercialOperation().get(0));
+        String cipCode = getCipCode(saleRequest.getPaymenType(), sendIndicator, flgFinanciamiento[0]);
+
         // ALTA FIJA
         if (commercialOperationReason.equalsIgnoreCase("ALTA")
                 && mainProductType.equalsIgnoreCase("WIRELINE")
@@ -805,7 +805,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                     .map(bpFinanciamientoFijaData -> bpFinanciamientoFijaData.get(0))
                     .map(BusinessParameterFinanciamientoFijaData::getExt)
                     .flatMap(parametersFinanciamientoFija -> processFija(parametersFinanciamientoFija, saleRequest,
-                            request, flgFinanciamiento));
+                            request, flgFinanciamiento, cipCode));
 
         } else if ((commercialOperationReason.equalsIgnoreCase("CAPL")
                 || commercialOperationReason.equalsIgnoreCase("REPLACEOFFER"))
@@ -819,7 +819,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                     .map(bpFinanciamientoFijaData -> bpFinanciamientoFijaData.get(0))
                     .map(BusinessParameterFinanciamientoFijaData::getExt)
                     .flatMap(parametersFinanciamientoFija -> wirelineMigrations(parametersFinanciamientoFija, request,
-                            flgFinanciamiento, actionType));
+                            flgFinanciamiento, actionType, cipCode));
 
         } else if (mainProductType.equalsIgnoreCase(Constants.WIRELESS)) {
             // Mobile Commercial Operations
@@ -865,7 +865,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                         .flatMap(tuple -> validationsAndBuildings(tuple.getT1(), tuple.getT2(), tuple.getT3(),
                                 tuple.getT4(), tuple.getT5(), saleRequest, request, sapidSimcard,
                                 commercialOperationReason, flgCapl, flgCaeq, flgCasi, flgAlta, flgFinanciamiento,
-                                channelIdRequest, customerIdRequest, productOfferingIdRequest));
+                                channelIdRequest, customerIdRequest, productOfferingIdRequest, cipCode));
 
             } else {
                 return salesRepository.save(saleRequest)
@@ -898,6 +898,33 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         return false;
     }
 
+    private String getCipCode(PaymentType paymentType, boolean sendIndicator, final boolean flgFinanciamiento) {
+        if (!sendIndicator) {
+            return null;
+        } else if (!flgFinanciamiento) {
+            return null;
+        } else if (paymentType == null || paymentType.getAdditionalData() == null
+                || paymentType.getAdditionalData().isEmpty()) {
+            throw buildGenesisError(Constants.BAD_REQUEST_EXCEPTION_ID,
+                    "Campos sale.paymentType o sale.paymentType.additional data está vació o nulo");
+        }
+
+        String paymentMediumLabelValue = this.getStringValueByKeyFromAdditionalDataList(paymentType.getAdditionalData(),
+                "paymentMediumLabel");
+        if (paymentMediumLabelValue.equalsIgnoreCase("Pago Efectivo")) {
+
+            if (StringUtils.isEmpty(paymentType.getCid())) {
+                throw buildGenesisError(Constants.BAD_REQUEST_EXCEPTION_ID,
+                        "Falta campo sale.paymentType.cid");
+            } else {
+                return paymentType.getCid();
+            }
+        } else {
+            throw buildGenesisError(Constants.BAD_REQUEST_EXCEPTION_ID,
+                    "Falta key paymentMediumLabel en sale.paymentType.additionalData");
+        }
+    }
+
     private Mono<Sale> validationsAndBuildings(BusinessParametersResponse getRiskDomain,
                                                List<BusinessParameterExt> salesCharsByCot,
                                                BusinessParametersResponseObjectExt getBonificacionSim,
@@ -909,7 +936,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                                                final Boolean[] flgCaeq, final Boolean[] flgCasi,
                                                final Boolean[] flgAlta, final Boolean[] flgFinanciamiento,
                                                String channelIdRequest, String customerIdRequest,
-                                               String productOfferingIdRequest) {
+                                               String productOfferingIdRequest, String cipCode) {
 
         if (!getRiskDomain.getData().isEmpty() && getRiskDomain.getData().get(0).getActive()) {
             // if it is a risk domain, cancel operation
@@ -924,20 +951,6 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         sapidSimcard[0] = getStringValueFromBusinessParameterDataListByKeyAndActiveTrue(getParametersSimCard.getData(),
                 "sapid");
 
-        // Getting CIP Code
-        String cipCode = "";
-        if (saleRequest.getCommercialOperation().get(0).getWorkOrDeliveryType() != null
-                && !StringUtils.isEmpty(saleRequest.getCommercialOperation().get(0).getWorkOrDeliveryType()
-                .getMediumDelivery())
-                && saleRequest.getCommercialOperation().get(0).getWorkOrDeliveryType().getMediumDelivery()
-                .equalsIgnoreCase("DELIVERY")
-                && saleRequest.getPaymenType().getPaymentType().equalsIgnoreCase("EX")
-                && this.getStringValueByKeyFromAdditionalDataList(saleRequest.getAdditionalData(),
-                "paymentTypeLabel").equals("PAGO EFECTIVO")) {
-
-            cipCode = saleRequest.getPaymenType().getCid(); // Validate if cipCode is empty
-        }
-
         // Building Main Request to send to Create Product Order Service
         CreateProductOrderGeneralRequest mainRequestProductOrder = new CreateProductOrderGeneralRequest();
 
@@ -948,24 +961,24 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         if (flgCapl[0] && !flgCaeq[0] && !flgCasi[0] && !flgAlta[0]) {
 
             mainRequestProductOrder = this.caplCommercialOperation(saleRequest, mainRequestProductOrder,
-                    channelIdRequest, customerIdRequest, productOfferingIdRequest, cipCode);
+                    channelIdRequest, customerIdRequest, productOfferingIdRequest, cipCode, flgFinanciamiento[0]);
 
         } else if (!flgCapl[0] && flgCaeq[0] && !flgAlta[0]) { // Recognizing CAEQ Commercial Operation Type
 
             mainRequestProductOrder = this.caeqCommercialOperation(saleRequest, mainRequestProductOrder, flgCasi[0],
                     channelIdRequest, customerIdRequest, productOfferingIdRequest, cipCode, sapidSimcard[0],
-                    getParameterReasonCode);
+                    getParameterReasonCode, flgFinanciamiento[0]);
 
         } else if (flgCapl[0] && flgCaeq[0] && !flgAlta[0]) { // Recognizing CAEQ+CAPL Commercial Operation Type
 
             mainRequestProductOrder = this.caeqCaplCommercialOperation(saleRequest, mainRequestProductOrder, flgCasi[0],
                     channelIdRequest, customerIdRequest, productOfferingIdRequest, cipCode, sapidSimcard[0],
-                    getParameterReasonCode);
+                    getParameterReasonCode, flgFinanciamiento[0]);
         } else if (!flgCapl[0] && !flgCaeq[0] && !flgCasi[0] && flgAlta[0] || isMobilePortability) {
 
             mainRequestProductOrder = this.altaCommercialOperation(saleRequest, mainRequestProductOrder,
                     channelIdRequest, customerIdRequest, productOfferingIdRequest, cipCode, getBonificacionSim,
-                    sapidSimcard[0], isMobilePortability, flgCasi[0]);
+                    sapidSimcard[0], isMobilePortability, flgCasi[0], flgFinanciamiento[0]);
         }
 
         // FEMS-1514 Validación de creación Orden
@@ -1059,8 +1072,29 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         }
     }
 
+    private boolean isNecessaryToSendVariablesInOrderCreation(CommercialOperationType commercialOperationType) {
+        String reason = commercialOperationType.getReason();
+        final boolean[] haveCaeqKeyInAdditionalData = {false};
+        commercialOperationType.getAdditionalData().stream()
+                .filter(kv -> kv.getKey().equalsIgnoreCase(Constants.CAEQ)
+                        && kv.getValue().equalsIgnoreCase(Constants.STRING_TRUE))
+                .findFirst()
+                .ifPresent(kv -> haveCaeqKeyInAdditionalData[0] = true);
+
+        if ((reason.equalsIgnoreCase(Constants.CAEQ) || reason.equalsIgnoreCase(Constants.CAPL)
+                || reason.equalsIgnoreCase(Constants.CASI) && haveCaeqKeyInAdditionalData[0])) {
+            return true;
+        }
+        return false;
+    }
+
+    private String setUpFrontIndicator(String productType) {
+        return productType.equalsIgnoreCase(Constants.WIRELESS) ? "N" : "Y";
+    }
+
     private Mono<Sale> processFija(List<BusinessParameterFinanciamientoFijaExt> parametersFinanciamientoFija,
-                                   Sale saleRequest, PostSalesRequest request, final Boolean[] flgFinanciamiento) {
+                                   Sale saleRequest, PostSalesRequest request, final Boolean[] flgFinanciamiento,
+                                   String cipCode) {
         // Building Create Quotation Request to use into Create Order Request
         CreateQuotationRequest createQuotationFijaRequest = new CreateQuotationRequest();
         if (flgFinanciamiento[0]) {
@@ -1105,11 +1139,10 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         altaFijaRequest.setServiceabilityInfo(serviceabilityInfo);
         altaFijaRequest.setSourceApp(saleRequest.getSalesId());
         altaFijaRequest.setOrderAttributes(altaFijaOrderAttributesList);
-        if (saleRequest.getPaymenType() != null && !StringUtils.isEmpty(saleRequest.getPaymenType().getCid())) {
-            altaFijaRequest.setCip(saleRequest.getPaymenType().getCid());
-        }
-        altaFijaRequest.setUpfrontIndicator(saleRequest.getCommercialOperation().get(0)
-                .getProductOfferings().get(0).getUpFront().getIndicator());
+        altaFijaRequest.setCip(cipCode);
+
+        boolean sendInd = isNecessaryToSendVariablesInOrderCreation(request.getSale().getCommercialOperation().get(0));
+        altaFijaRequest.setUpfrontIndicator(sendInd ? setUpFrontIndicator(saleRequest.getProductType()) : null);
 
         // Alta Fija Customize Request
         ProductOrderAltaFijaRequest productOrderAltaFijaRequest = ProductOrderAltaFijaRequest
@@ -1956,7 +1989,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                                  CreateProductOrderGeneralRequest mainRequestProductOrder, String channelIdRequest,
                                  String customerIdRequest, String productOfferingIdRequest, String cipCode,
                                  BusinessParametersResponseObjectExt bonificacionSimcardResponse, String sapidSimcardBp,
-                                 Boolean isMobilePortability, Boolean flagCasi) {
+                                 Boolean isMobilePortability, Boolean flagCasi, final Boolean flgFinanciamiento) {
 
         // Building request for ALTA CommercialTypeOperation
         ProductOrderAltaMobileRequest altaRequestProductOrder = new ProductOrderAltaMobileRequest();
@@ -2073,8 +2106,11 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         List<NewProductAltaMobile> altaNewProductsList = new ArrayList<>();
         altaNewProductsList.add(newProductAlta1);
 
+        boolean sendInd = isNecessaryToSendVariablesInOrderCreation(saleRequest.getCommercialOperation().get(0));
+
         // Building Order Attributes
-        List<FlexAttrType> altaOrderAttributesList = this.commonOrderAttributes(saleRequest);
+        List<FlexAttrType> altaOrderAttributesList = this.commonOrderAttributes(saleRequest, flgFinanciamiento,
+                sendInd);
 
         // Order Attributes when channel is retail
         if (Boolean.TRUE.equals(isRetail) && saleRequest.getStatus().equalsIgnoreCase(Constants.VALIDADO)) {
@@ -2151,8 +2187,9 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                 .orderAttributes(altaOrderAttributesList)
                 .shipmentDetails(saleRequest.getCommercialOperation().get(0).getWorkOrDeliveryType() != null
                         ? createShipmentDetail(saleRequest): null)
+                .cip(cipCode)
+                .upfrontIndicator(sendInd ? setUpFrontIndicator(saleRequest.getProductType()) : null)
                 .build();
-        //if (!StringUtils.isEmpty(cipCode)) altaRequest.setCip(cipCode);
 
         // Building Main Alta Request
         altaRequestProductOrder.setRequest(altaRequest);
@@ -2165,7 +2202,8 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
 
     public CreateProductOrderGeneralRequest caplCommercialOperation(Sale saleRequest,
                                     CreateProductOrderGeneralRequest mainRequestProductOrder, String channelIdRequest,
-                                    String customerIdRequest, String productOfferingIdRequest, String cipCode) {
+                                    String customerIdRequest, String productOfferingIdRequest, String cipCode,
+                                    final Boolean flgFinanciamiento) {
         Boolean flgOnlyCapl = true;
 
         // Recognizing Capl into same plan or Capl with new plan
@@ -2223,8 +2261,10 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         }
         newProductCapl1.setProductChanges(caplProductChanges);
 
+        boolean sendInd = isNecessaryToSendVariablesInOrderCreation(saleRequest.getCommercialOperation().get(0));
+
         // Refactored Code from CAPL
-        List<FlexAttrType> caplOrderAttributes = this.commonOrderAttributes(saleRequest);
+        List<FlexAttrType> caplOrderAttributes = this.commonOrderAttributes(saleRequest, flgFinanciamiento, sendInd);
 
         List<NewProductCapl> caplNewProductsList = new ArrayList<>();
         caplNewProductsList.add(newProductCapl1);
@@ -2297,7 +2337,8 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                                     CreateProductOrderGeneralRequest mainRequestProductOrder, Boolean flgCasi,
                                     String channelIdRequest, String customerIdRequest, String productOfferingIdRequest,
                                     String cipCode, String sapidSimcardBp,
-                                    BusinessParametersReasonCode getParameterReasonCode) {
+                                    BusinessParametersReasonCode getParameterReasonCode,
+                                    final Boolean flgFinanciamiento) {
         // Building request for CAEQ CommercialTypeOperation
 
         // Refactored Code from CAEQ
@@ -2318,8 +2359,11 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         List<NewProductCaeq> newProductCaeqList = new ArrayList<>();
         newProductCaeqList.add(newProductCaeq1);
 
+        boolean sendInd = isNecessaryToSendVariablesInOrderCreation(saleRequest.getCommercialOperation().get(0));
+
         // Refactored Code from CAPL
-        List<FlexAttrType> caeqCaplOrderAttributes = this.commonOrderAttributes(saleRequest);
+        List<FlexAttrType> caeqCaplOrderAttributes =
+                this.commonOrderAttributes(saleRequest, flgFinanciamiento, sendInd);
 
         // Order Attributes
         //List<FlexAttrType> caeqOrderAttributes = new ArrayList<>();
@@ -2332,10 +2376,9 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                 .orderAttributes(caeqCaplOrderAttributes.isEmpty() ? null : caeqCaplOrderAttributes)
                 .shipmentDetails(saleRequest.getCommercialOperation().get(0).getWorkOrDeliveryType() != null
                         ? createShipmentDetail(saleRequest): null)
+                .upfrontIndicator(sendInd ? setUpFrontIndicator(saleRequest.getProductType()) : null)
+                .cip(cipCode)
                 .build();
-        if (!StringUtils.isEmpty(cipCode)) {
-            caeqRequest.setCip(cipCode);
-        }
 
         ProductOrderCaeqRequest caeqProductOrderRequest = new ProductOrderCaeqRequest();
         caeqProductOrderRequest.setSalesChannel(channelIdRequest);
@@ -2362,7 +2405,8 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                                     CreateProductOrderGeneralRequest mainRequestProductOrder, Boolean flgCasi,
                                     String channelIdRequest, String customerIdRequest, String productOfferingIdRequest,
                                     String cipCode, String sapidSimcardBp,
-                                    BusinessParametersReasonCode getParameterReasonCode) {
+                                    BusinessParametersReasonCode getParameterReasonCode,
+                                    final Boolean flgFinanciamiento) {
         // Building request for CAEQ+CAPL CommercialTypeOperation
 
         Boolean flgOnlyCapl = true;
@@ -2438,8 +2482,11 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         List<NewProductCaeqCapl> caeqCaplNewProductList = new ArrayList<>();
         caeqCaplNewProductList.add(newProductCaeqCapl1);
 
+        boolean sendInd = isNecessaryToSendVariablesInOrderCreation(saleRequest.getCommercialOperation().get(0));
+
         // Refactored Code from CAPL
-        List<FlexAttrType> caeqCaplOrderAttributes = this.commonOrderAttributes(saleRequest);
+        List<FlexAttrType> caeqCaplOrderAttributes = this.commonOrderAttributes(saleRequest, flgFinanciamiento,
+                sendInd);
         // Adding Caeq Order Attributes
         this.addCaeqOderAttributes(caeqCaplOrderAttributes, saleRequest);
 
@@ -2450,8 +2497,9 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                 .orderAttributes(caeqCaplOrderAttributes)
                 .shipmentDetails(saleRequest.getCommercialOperation().get(0).getWorkOrDeliveryType() != null
                         ? createShipmentDetail(saleRequest): null)
+                .cip(cipCode)
+                .upfrontIndicator(sendInd ? setUpFrontIndicator(saleRequest.getProductType()) : null)
                 .build();
-        //if (!StringUtils.isEmpty(cipCode)) caeqCaplRequest.setCip(cipCode);
 
         caeqCaplRequestProductOrder.setRequest(caeqCaplRequest);
 
@@ -2461,7 +2509,8 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         return mainRequestProductOrder;
     }
 
-    public List<FlexAttrType> commonOrderAttributes(Sale saleRequest) {
+    public List<FlexAttrType> commonOrderAttributes(Sale saleRequest, final Boolean flgFinanciamiento,
+                                                    final boolean sendIndicator) {
         // Building Common Order Attributes
         List<FlexAttrType> commonOrderAttributes = new ArrayList<>();
 
@@ -2509,6 +2558,83 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                     .flexAttrValue(paymentAttrValue)
                     .build();
             commonOrderAttributes.add(paymentAttr);
+        }
+
+        if (sendIndicator && flgFinanciamiento) {
+            // FEMS-5497
+            FinancingInstalment financingInstalment = saleRequest.getCommercialOperation().get(0).getDeviceOffering()
+                    .get(0).getOffers().get(0).getBillingOfferings().get(0).getCommitmentPeriods().get(0)
+                    .getFinancingInstalments().get(0);
+
+            // FINANCING_AMOUNT
+            Number financingAmount = financingInstalment.getInstalments().getTotalAmount().getValue().doubleValue()
+                    - financingInstalment.getInstalments().getOpeningQuota().getValue().doubleValue();
+            FlexAttrValueType financingAmountAttrValue = FlexAttrValueType
+                    .builder()
+                    .stringValue(financingAmount.toString())
+                    .valueType(Constants.STRING)
+                    .build();
+            FlexAttrType financingAmountAttr = FlexAttrType
+                    .builder()
+                    .attrName("FINANCING_AMOUNT")
+                    .flexAttrValue(financingAmountAttrValue)
+                    .build();
+            commonOrderAttributes.add(financingAmountAttr);
+
+            // IS_EXTERNAL_FINANCING -> true
+            FlexAttrValueType externalFinancialAttrValue =  FlexAttrValueType
+                    .builder()
+                    .stringValue("true")
+                    .valueType(Constants.STRING)
+                    .build();
+            FlexAttrType externalFinancialAttr = FlexAttrType
+                    .builder()
+                    .attrName("IS_EXTERNAL_FINANCING")
+                    .flexAttrValue(externalFinancialAttrValue)
+                    .build();
+            commonOrderAttributes.add(externalFinancialAttr);
+
+            // FINANFING_PLAN
+            String codigo = financingInstalment.getCodigo();
+            FlexAttrValueType financingPlanAttrValue = FlexAttrValueType
+                    .builder()
+                    .stringValue(codigo)
+                    .valueType(Constants.STRING)
+                    .build();
+            FlexAttrType financingPlanAttr = FlexAttrType
+                    .builder()
+                    .attrName("FINANCING_PLAN")
+                    .flexAttrValue(financingPlanAttrValue)
+                    .build();
+            commonOrderAttributes.add(financingPlanAttr);
+
+            // DOWN_PAYMENT_AMOUNT
+            Number downPaymentAmount = financingInstalment.getInstalments().getOpeningQuota().getValue().doubleValue();
+            FlexAttrValueType downPaymentAttrValue = FlexAttrValueType
+                    .builder()
+                    .stringValue(downPaymentAmount.toString())
+                    .valueType(Constants.STRING)
+                    .build();
+            FlexAttrType downPaymentAttr = FlexAttrType
+                    .builder()
+                    .attrName("DOWN_PAYMENT_AMOUNT")
+                    .flexAttrValue(downPaymentAttrValue)
+                    .build();
+            commonOrderAttributes.add(downPaymentAttr);
+
+        } else if (sendIndicator) {
+            // IS_EXTERNAL_FINANCING -> false
+            FlexAttrValueType externalFinancialAttrValue =  FlexAttrValueType
+                    .builder()
+                    .stringValue("false")
+                    .valueType(Constants.STRING)
+                    .build();
+            FlexAttrType externalFinancialAttr = FlexAttrType
+                    .builder()
+                    .attrName("IS_EXTERNAL_FINANCING")
+                    .flexAttrValue(externalFinancialAttrValue)
+                    .build();
+            commonOrderAttributes.add(externalFinancialAttr);
         }
 
         return commonOrderAttributes;
@@ -2795,7 +2921,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
 
     private Mono<Sale> wirelineMigrations(List<BusinessParameterFinanciamientoFijaExt> parametersFinanciamientoFija,
                                           PostSalesRequest request, final Boolean[] flgFinanciamiento,
-                                          String actionType) {
+                                          String actionType, String cipCode) {
 
         // Building Create Quotation Request to use into Create Order Request
         CreateQuotationRequest createQuotationFijaRequest = new CreateQuotationRequest();
@@ -2851,10 +2977,11 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         migracionFijaRequest.setServiceabilityInfo(serviceabilityInfo);
         migracionFijaRequest.setSourceApp(request.getSale().getSalesId());
         migracionFijaRequest.setOrderAttributes(migracionFijaOrderAttributesList);
-        migracionFijaRequest.setCip(!StringUtils.isEmpty(request.getSale().getPaymenType().getCid()) ?
-                request.getSale().getPaymenType().getCid() : null);
-        migracionFijaRequest.setUpfrontIndicator(request.getSale().getCommercialOperation().get(0).getProductOfferings()
-                .get(0).getUpFront().getIndicator());
+        migracionFijaRequest.setCip(cipCode);
+
+        boolean sendInd = isNecessaryToSendVariablesInOrderCreation(request.getSale().getCommercialOperation().get(0));
+        migracionFijaRequest.setUpfrontIndicator(sendInd ? setUpFrontIndicator(request.getSale().getProductType())
+                : null);
 
         ProductOrderMigracionFijaRequest productOrderMigracionFijaRequest = ProductOrderMigracionFijaRequest.builder()
                 .actionType(actionType)

@@ -1,5 +1,6 @@
 package com.tdp.ms.sales.model.dto.productorder.altafija;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.tdp.ms.sales.model.dto.productorder.FlexAttrType;
 import java.util.List;
@@ -35,6 +36,8 @@ public class AltaFijaRequest {
     private ServiceabilityInfoType serviceabilityInfo;
     private String sourceApp;
     private List<FlexAttrType> orderAttributes;
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     private String cip;
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     private String upfrontIndicator;
 }

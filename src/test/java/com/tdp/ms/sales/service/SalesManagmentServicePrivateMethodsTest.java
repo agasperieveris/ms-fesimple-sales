@@ -208,7 +208,7 @@ public class SalesManagmentServicePrivateMethodsTest {
     void altaCommercialOperationTest() throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
         Method method = SalesManagmentServiceImpl.class.getDeclaredMethod("altaCommercialOperation", Sale.class,
                 CreateProductOrderGeneralRequest.class, String.class, String.class, String.class, String.class,
-                BusinessParametersResponseObjectExt.class, String.class, Boolean.class, Boolean.class);
+                BusinessParametersResponseObjectExt.class, String.class, Boolean.class, Boolean.class, Boolean.class);
 
         method.setAccessible(true);
 
@@ -229,7 +229,7 @@ public class SalesManagmentServicePrivateMethodsTest {
         sale.getCommercialOperation().get(0).setReason("ALTA");
 
         method.invoke(salesManagmentServiceImpl,sale, altaRequest, "CC", "C0001", "OF0001", "CIP0001",
-                businessParametersResponseObjectExt, "SAPID0001", false, false);
+                businessParametersResponseObjectExt, "SAPID0001", false, false, false);
     }
 
     @Test
@@ -237,7 +237,7 @@ public class SalesManagmentServicePrivateMethodsTest {
                                                                                                 IllegalAccessException {
         Method method = SalesManagmentServiceImpl.class.getDeclaredMethod("altaCommercialOperation", Sale.class,
                 CreateProductOrderGeneralRequest.class, String.class, String.class, String.class, String.class,
-                BusinessParametersResponseObjectExt.class, String.class, Boolean.class, Boolean.class);
+                BusinessParametersResponseObjectExt.class, String.class, Boolean.class, Boolean.class, Boolean.class);
 
         method.setAccessible(true);
 
@@ -258,7 +258,7 @@ public class SalesManagmentServicePrivateMethodsTest {
         sale.getCommercialOperation().get(0).setReason("ALTA");
 
         method.invoke(salesManagmentServiceImpl,sale, altaRequest, "CC", "C0001", "OF0001", "CIP0001",
-                businessParametersResponseObjectExt, "SAPID0001", false, false);
+                businessParametersResponseObjectExt, "SAPID0001", false, false, false);
     }
 
     @Test
