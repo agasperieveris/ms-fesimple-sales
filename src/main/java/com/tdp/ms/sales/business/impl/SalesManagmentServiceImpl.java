@@ -214,7 +214,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                 .build();
         FlexAttrType externalFinancialAttr = FlexAttrType
                 .builder()
-                .attrName("IS_EXTERNAL_FINANCING")
+                .attrName(Constants.IS_EXTERNAL_FINANCING)
                 .flexAttrValue(externalFinancialAttrValue)
                 .build();
 
@@ -612,7 +612,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
 
     private Mono<Sale> retryRequest(PostSalesRequest request, Sale sale, Boolean flgCaeq, Boolean flgAlta,
                                        Boolean flgCasi, Boolean flgFinanciamiento, String sapidSimcard) {
-        sale.setStatus("NUEVO");
+        sale.setStatus(Constants.NUEVO);
         if (sale.getCommercialOperation().get(0).getOrder() != null
                 && (sale.getCommercialOperation().get(0).getDeviceOffering() == null
                 || sale.getCommercialOperation().get(0).getDeviceOffering().get(0).getStock() == null
@@ -696,7 +696,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
 
         // Validation if is retail
         String flowSaleValue = saleRequest.getAdditionalData().stream()
-                .filter(keyValueType -> keyValueType.getKey().equalsIgnoreCase("flowSale"))
+                .filter(keyValueType -> keyValueType.getKey().equalsIgnoreCase(Constants.FLOWSALE))
                 .findFirst()
                 .orElse(KeyValueType.builder().value(null).build())
                 .getValue();
@@ -997,11 +997,11 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                         saleItem.setStatus(Constants.NEGOCIACION);
                     } else if (!StringUtils.isEmpty(createOrderResponse.getCreateProductOrderResponse()
                             .getProductOrderId())) {
-                        saleItem.setStatus("NUEVO");
+                        saleItem.setStatus(Constants.NUEVO);
                     } else {
-                        saleItem.setStatus("PENDIENTE");
+                        saleItem.setStatus(Constants.PENDIENTE);
                     }
-                    saleItem.setAudioStatus("PENDIENTE");
+                    saleItem.setAudioStatus(Constants.PENDIENTE);
 
                     // Ship Delivery logic (tambo) - SERGIO
                     if (saleItem.getCommercialOperation().get(0).getWorkOrDeliveryType() != null
@@ -1193,12 +1193,12 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         } else if (!StringUtils.isEmpty(createOrderResponse.getCreateProductOrderResponse()
                 .getProductOrderId())) {
             // When All is OK
-            saleRequest.setStatus("NUEVO");
+            saleRequest.setStatus(Constants.NUEVO);
         } else {
             // When Create Product Order Service fail or doesnt respond with an Order Id
-            saleRequest.setStatus("PENDIENTE");
+            saleRequest.setStatus(Constants.PENDIENTE);
         }
-        saleRequest.setAudioStatus("PENDIENTE");
+        saleRequest.setAudioStatus(Constants.PENDIENTE);
 
         if (flgFinanciamiento[0]) {
             return quotationWebClient.createQuotation(createQuotationFijaRequest,
@@ -1449,13 +1449,13 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         String isCapl = additionalData.stream()
                 .filter(item -> item.getKey().equalsIgnoreCase(Constants.CAPL))
                 .findFirst()
-                .orElse(KeyValueType.builder().value("false").build())
+                .orElse(KeyValueType.builder().value(Constants.STRING_FALSE).build())
                 .getValue();
 
         String isCaeq = additionalData.stream()
                 .filter(item -> item.getKey().equalsIgnoreCase(Constants.CAEQ))
                 .findFirst()
-                .orElse(KeyValueType.builder().value("false").build())
+                .orElse(KeyValueType.builder().value(Constants.STRING_FALSE).build())
                 .getValue();
 
         return Boolean.parseBoolean(isCapl) && Boolean.parseBoolean(isCaeq) ? Constants.CAEQ : reason;
@@ -1464,7 +1464,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
     private Mono<Sale> creationOrderValidation(Sale saleRequest, CreateProductOrderGeneralRequest productOrderRequest,
                                          HashMap<String, String> headersMap) {
         KeyValueType keyValueType = saleRequest.getAdditionalData().stream()
-                .filter(item -> item.getKey().equalsIgnoreCase("flowSale"))
+                .filter(item -> item.getKey().equalsIgnoreCase(Constants.FLOWSALE))
                 .findFirst()
                 .orElse(null);
 
@@ -1909,7 +1909,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         final Boolean[] isBiometric = {true};
 
         additionalData.stream().forEach(kv -> {
-            if (kv.getKey().equalsIgnoreCase("flowSale")
+            if (kv.getKey().equalsIgnoreCase(Constants.FLOWSALE)
                     && kv.getValue().equalsIgnoreCase("Presencial")) {
                 isPresencial[0] = true;
             }
@@ -2061,7 +2061,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
 
         // ICCID Characteristic
         String flowSaleValue = saleRequest.getAdditionalData().stream()
-                .filter(keyValueType -> keyValueType.getKey().equalsIgnoreCase("flowSale"))
+                .filter(keyValueType -> keyValueType.getKey().equalsIgnoreCase(Constants.FLOWSALE))
                 .findFirst()
                 .orElse(KeyValueType.builder().value(null).build())
                 .getValue();
@@ -2522,7 +2522,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
             }
         }
         String flowSaleValue = saleRequest.getAdditionalData().stream()
-                .filter(keyValueType -> keyValueType.getKey().equalsIgnoreCase("flowSale"))
+                .filter(keyValueType -> keyValueType.getKey().equalsIgnoreCase(Constants.FLOWSALE))
                 .findFirst()
                 .orElse(KeyValueType.builder().value(null).build())
                 .getValue();
@@ -2589,7 +2589,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                     .build();
             FlexAttrType externalFinancialAttr = FlexAttrType
                     .builder()
-                    .attrName("IS_EXTERNAL_FINANCING")
+                    .attrName(Constants.IS_EXTERNAL_FINANCING)
                     .flexAttrValue(externalFinancialAttrValue)
                     .build();
             commonOrderAttributes.add(externalFinancialAttr);
@@ -2626,12 +2626,12 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
             // IS_EXTERNAL_FINANCING -> false
             FlexAttrValueType externalFinancialAttrValue =  FlexAttrValueType
                     .builder()
-                    .stringValue("false")
+                    .stringValue(Constants.STRING_FALSE)
                     .valueType(Constants.STRING)
                     .build();
             FlexAttrType externalFinancialAttr = FlexAttrType
                     .builder()
-                    .attrName("IS_EXTERNAL_FINANCING")
+                    .attrName(Constants.IS_EXTERNAL_FINANCING)
                     .flexAttrValue(externalFinancialAttrValue)
                     .build();
             commonOrderAttributes.add(externalFinancialAttr);
