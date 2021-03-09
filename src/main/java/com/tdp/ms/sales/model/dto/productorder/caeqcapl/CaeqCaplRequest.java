@@ -36,5 +36,8 @@ public class CaeqCaplRequest {
     private String sourceApp;
     private List<FlexAttrType> orderAttributes;
     private ShipmentDetailsType shipmentDetails;
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     private String cip;
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private String upfrontIndicator;
 }
