@@ -36,5 +36,8 @@ public class AltaMobileRequest {
     private String sourceApp;
     private List<FlexAttrType> orderAttributes;
     private ShipmentDetailsType shipmentDetails;
-    //private String cip; // Consultar cuando estará solucionado el envío de cip
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private String cip;
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private String upfrontIndicator;
 }

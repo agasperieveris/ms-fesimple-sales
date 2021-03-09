@@ -26,6 +26,7 @@ public class Constants {
     public static final String PRESENCIAL = "Presencial";
     public static final String CAEQ = "CAEQ";
     public static final String CAPL = "CAPL";
+    public static final String CASI = "CASI";
     public static final String PORTABILIDAD = "PORTABILIDAD";
     public static final String NUMERO_CAJA = "NUMERO_CAJA";
     public static final String BAD_REQUEST_EXCEPTION_ID = "SVC1000";
@@ -59,4 +60,5 @@ public class Constants {
     public static final String KEY_DELIVERY_METHOD = "deliveryMethod";
     public static final String SALES_STATUS_NUEVO = "NUEVO";
     public static final String PRODUCT_TYPE = "productType";
+    public static final String STRING_TRUE = "true";
 }
