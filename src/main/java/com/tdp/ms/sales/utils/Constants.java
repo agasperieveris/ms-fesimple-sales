@@ -37,12 +37,14 @@ public class Constants {
     public static final String PENDIENTE = "PENDIENTE";
     public static final String NEGOCIACION = "NEGOCIACION";
     public static final String VALIDADO = "VALIDADO";
+    public static final String NUEVO = "NUEVO";
     public static final String WIRELESS = "WIRELESS";
     public static final String WIRELINE = "WIRELINE";
     public static final String DEVICE_SKU = "DEVICE_SKU";
     public static final String SIM_SKU = "SIM_SKU";
     public static final String SIM_DEVICE = "SimDevice";
     public static final String DELIVERY_METHOD = "DELIVERY_METHOD";
+    public static final String IS_EXTERNAL_FINANCING = "IS_EXTERNAL_FINANCING";
     public static final String TEMP1 = "temp1";
     public static final String EMAIL_ADDRESS = "email address";
     public static final String DELIVERY_METHOD_CAMEL_CASE = "deliveryMethod";
