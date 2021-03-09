@@ -1,5 +1,6 @@
 package com.tdp.ms.sales.model.dto.productorder.caeq;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.tdp.ms.sales.model.dto.productorder.Customer;
 import lombok.AllArgsConstructor;

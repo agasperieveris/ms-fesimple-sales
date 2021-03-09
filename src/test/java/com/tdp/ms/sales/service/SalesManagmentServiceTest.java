@@ -1,6 +1,7 @@
 package com.tdp.ms.sales.service;
 
 import com.tdp.genesis.core.constants.HttpHeadersKey;
+import com.tdp.genesis.core.exception.GenesisException;
 import com.tdp.ms.commons.util.MapperUtils;
 import com.tdp.ms.sales.business.SalesManagmentService;
 import com.tdp.ms.sales.business.impl.SalesManagmentServiceImpl;
@@ -257,15 +258,15 @@ public class SalesManagmentServiceTest {
         methodMainFuntion.invoke(salesManagmentServiceImpl, sale, salesRequest, flagTrue, flag, flag, flag, flag, false, sapidSimcard);
 
         Method method = SalesManagmentServiceImpl.class.getDeclaredMethod("processFija", List.class, Sale.class,
-                PostSalesRequest.class, Boolean[].class);
+                PostSalesRequest.class, Boolean[].class, String.class);
         method.setAccessible(true);
-        method.invoke(salesManagmentServiceImpl, bpFinanciamientoFijaResponseList, salesRequest.getSale(), salesRequest, flgFinanciamiento);
+        method.invoke(salesManagmentServiceImpl, bpFinanciamientoFijaResponseList, salesRequest.getSale(), salesRequest, flgFinanciamiento, null);
 
         /* validationsAndBuildings method */
         Method method2 = SalesManagmentServiceImpl.class.getDeclaredMethod("validationsAndBuildings",
                 BusinessParametersResponse.class, List.class, BusinessParametersResponseObjectExt.class,
                 BusinessParametersResponseObjectExt.class, BusinessParametersReasonCode.class, Sale.class, PostSalesRequest.class, String[].class, String.class,
-                Boolean[].class, Boolean[].class, Boolean[].class, Boolean[].class, Boolean[].class, String.class, String.class, String.class);
+                Boolean[].class, Boolean[].class, Boolean[].class, Boolean[].class, Boolean[].class, String.class, String.class, String.class, String.class);
         method2.setAccessible(true);
 
         BusinessParametersResponse getRiskDomain = MapperUtils.mapper(BusinessParametersResponse.class, "{\"metadata\":{\"info\":\"Dominios de Riesgos SPAN\",\"type\":\"KeyValueActive\",\"label\":{\"key\":\"id\",\"value\":\"nombreDominio\",\"active\":\"estado\",\"ext\":\"-\"}},\"data\":[{\"key\":\"430\",\"value\":\"plusmail.cf\",\"active\":false,\"ext\":\"-\"}]}");
@@ -280,12 +281,12 @@ public class SalesManagmentServiceTest {
                 .get(0).getProductOfferings().get(0).getId();
         method2.invoke(salesManagmentServiceImpl, getRiskDomainTrue, Arrays.asList(BusinessParameterExt.builder().build()),
                 getBonificacionSim, getParametersSimCard, businessParametersReasonCode, salesRequest.getSale(), salesRequest, sapidSimcard, commercialOperationReason,
-                flag, flag, flag, flag, flag, channelIdRequest, customerIdRequest, productOfferingIdRequest);
+                flag, flag, flag, flag, flag, channelIdRequest, customerIdRequest, productOfferingIdRequest, null);
         Sale sale1 = CommonsMocks.createSaleMock();
         salesRequest.setSale(sale1);
         method2.invoke(salesManagmentServiceImpl, getRiskDomain, Arrays.asList(BusinessParameterExt.builder().build()),
                 getBonificacionSim, getParametersSimCard, businessParametersReasonCode, salesRequest.getSale(), salesRequest, sapidSimcard, commercialOperationReason,
-                flag, flag, flag, flag, flag, channelIdRequest, customerIdRequest, productOfferingIdRequest);
+                flag, flag, flag, flag, flag, channelIdRequest, customerIdRequest, productOfferingIdRequest, null);
     }
 
     @Test
@@ -637,7 +638,7 @@ public class SalesManagmentServiceTest {
 
         CreateProductOrderGeneralRequest result = salesManagmentServiceImpl
                 .caplCommercialOperation(sale, mainCaplRequestProductOrder,
-                        "CC", "CS465", "OF824", "A83HD345DS");
+                        "CC", "CS465", "OF824", "A83HD345DS", false);
 
     }
 
@@ -648,7 +649,7 @@ public class SalesManagmentServiceTest {
         CreateProductOrderGeneralRequest result = salesManagmentServiceImpl
                 .caeqCommercialOperation(sale, mainCaeqRequestProductOrder, false,
                         "CEC", "CS920", "OF201", "JSG423DE6H",
-                        "string", businessParametersReasonCode);
+                        "string", businessParametersReasonCode, false);
 
     }
 
@@ -660,14 +661,15 @@ public class SalesManagmentServiceTest {
         CreateProductOrderGeneralRequest result = salesManagmentServiceImpl
                 .caeqCaplCommercialOperation(sale, mainCaeqCaplRequestProductOrder, false,
                         "CC", "CS158", "OF486", "K3BD9EN349",
-                        "string", businessParametersReasonCode);
+                        "string", businessParametersReasonCode, false);
     }
 
     @Test
     void getCommonOrderAttributesTest() {
         List<FlexAttrType> operationOrderAttributes = new ArrayList<>();
 
-        List<FlexAttrType> result = salesManagmentServiceImpl.commonOrderAttributes(sale);
+        salesManagmentServiceImpl.commonOrderAttributes(sale, false, false);
+        salesManagmentServiceImpl.commonOrderAttributes(sale, true, true);
 
     }
 
@@ -962,12 +964,12 @@ public class SalesManagmentServiceTest {
         salesRequest.getSale().getCommercialOperation().get(0).setAction("MODIFY");
 
         Method method = SalesManagmentServiceImpl.class.getDeclaredMethod("wirelineMigrations", List.class,
-                PostSalesRequest.class, Boolean[].class, String.class);
+                PostSalesRequest.class, Boolean[].class, String.class, String.class);
         method.setAccessible(true);
 
         final Boolean[] flgFinanciamiento = {true};
         method.invoke(salesManagmentServiceImpl, bpFinanciamientoFijaResponseList.get(0).getData().get(0).getExt(),
-                salesRequest, flgFinanciamiento, "CH");
+                salesRequest, flgFinanciamiento, "CH", null);
 
         /*Method methodFillProductOfferingProductSpecId = SalesManagmentServiceImpl.class.getDeclaredMethod("fillProductOfferingProductSpecId", List.class, List.class);
         methodFillProductOfferingProductSpecId.setAccessible(true);
@@ -1031,5 +1033,26 @@ public class SalesManagmentServiceTest {
                 new CreateQuotationRequest(), ProductorderResponse.builder().createProductOrderResponse(CreateProductOrderResponseType.builder().productOrderId("string").build()).build());
         method.invoke(salesManagmentServiceImpl, salesRequest, sale, flgFinanciamiento,
                 new CreateQuotationRequest(), ProductorderResponse.builder().createProductOrderResponse(CreateProductOrderResponseType.builder().productOrderId("").build()).build());
+    }
+
+    @Test
+    void getCipCode_flgFinanciamiento_Test() throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
+        Method method = SalesManagmentServiceImpl.class.getDeclaredMethod("getCipCode", PaymentType.class,
+                boolean.class, boolean.class);
+        method.setAccessible(true);
+        method.invoke(salesManagmentServiceImpl, null, true, false);
+    }
+
+    @Test
+    void getCipCode_paymentType_Test() throws GenesisException, NoSuchMethodException, InvocationTargetException, IllegalAccessException {
+        Method method = SalesManagmentServiceImpl.class.getDeclaredMethod("getCipCode", PaymentType.class,
+                boolean.class, boolean.class);
+        method.setAccessible(true);;
+        method.invoke(salesManagmentServiceImpl, PaymentType.builder()
+                .additionalData(Collections.singletonList(KeyValueType.builder()
+                        .key("paymentMediumLabel").value("Pago Efectivo")
+                        .build()))
+                .cid("string")
+                .build(), true, true);
     }
 }
