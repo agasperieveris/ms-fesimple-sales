@@ -671,4 +671,17 @@ public class SalesManagmentServicePrivateMethodsTest {
                 new ArrayList<ChangedContainedProduct>(), true);
     }
 
+    @Test
+    void casiAndRetailOrderAttributes_Test() throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
+        Method method = SalesManagmentServiceImpl.class.getDeclaredMethod("casiAndRetailOrderAttributes",
+                List.class, Sale.class, Boolean.class);
+        method.setAccessible(true);
+        List<KeyValueType> list = new ArrayList<>();
+        list.add(KeyValueType.builder().key("flowsale").value("Retail").build());
+        list.add(KeyValueType.builder().key("DEVICE_SKU").value("DEVICE_SKU").build());
+        list.add(KeyValueType.builder().key("SIM_SKU").value("SIM_SKU").build());
+        list.add(KeyValueType.builder().key("CASHIER_REGISTER_NUMBER").value("CASHIER_REGISTER_NUMBER").build());
+        sale.setAdditionalData(list);
+        method.invoke(salesManagmentServiceImpl, new ArrayList<>(), sale, true);
+    }
 }

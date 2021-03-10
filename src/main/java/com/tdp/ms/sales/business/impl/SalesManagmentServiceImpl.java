@@ -2,7 +2,6 @@ package com.tdp.ms.sales.business.impl;
 
 import com.tdp.genesis.core.exception.GenesisException;
 import com.tdp.ms.commons.util.DateUtils;
-import com.tdp.ms.commons.util.MapperUtils;
 import com.tdp.ms.sales.business.SalesManagmentService;
 import com.tdp.ms.sales.client.BusinessParameterWebClient;
 import com.tdp.ms.sales.client.GetSkuWebClient;
@@ -708,7 +707,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                 .getValue();
         Boolean isRetail = flowSaleValue.equalsIgnoreCase(Constants.RETAIL);
         Boolean statusValidado = saleRequest.getStatus().equalsIgnoreCase(Constants.VALIDADO);
-        if (Boolean.TRUE.equals(isRetail) && statusValidado) {
+        if (Boolean.TRUE.equals(isRetail) && Boolean.TRUE.equals(statusValidado)) {
             if (StringUtils.isEmpty(this.getStringValueByKeyFromAdditionalDataList(saleRequest.getAdditionalData(),
                     "MOVILE_IMEI"))) {
                 return Mono.error(GenesisException
@@ -898,33 +897,6 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
             return true;
         }
         return false;
-    }
-
-    private String getCipCode(PaymentType paymentType, boolean sendIndicator, final boolean flgFinanciamiento) {
-        if (!sendIndicator) {
-            return null;
-        } else if (!flgFinanciamiento) {
-            return null;
-        } else if (paymentType == null || paymentType.getAdditionalData() == null
-                || paymentType.getAdditionalData().isEmpty()) {
-            throw buildGenesisError(Constants.BAD_REQUEST_EXCEPTION_ID,
-                    "Campos sale.paymentType o sale.paymentType.additional data está vació o nulo");
-        }
-
-        String paymentMediumLabelValue = this.getStringValueByKeyFromAdditionalDataList(paymentType.getAdditionalData(),
-                "paymentMediumLabel");
-        if (paymentMediumLabelValue.equalsIgnoreCase("Pago Efectivo")) {
-
-            if (StringUtils.isEmpty(paymentType.getCid())) {
-                throw buildGenesisError(Constants.BAD_REQUEST_EXCEPTION_ID,
-                        "Falta campo sale.paymentType.cid");
-            } else {
-                return paymentType.getCid();
-            }
-        } else {
-            throw buildGenesisError(Constants.BAD_REQUEST_EXCEPTION_ID,
-                    "Falta key paymentMediumLabel en sale.paymentType.additionalData");
-        }
     }
 
     private Mono<Sale> validationsAndBuildings(BusinessParametersResponse getRiskDomain,
@@ -1471,7 +1443,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
 
             // set onlyValidatonIndicator == true
             String classObjectName = productOrderRequest.getCreateProductOrderRequest().getClass().getName();
-            int index = classObjectName.lastIndexOf(".");
+            int index = classObjectName.lastIndexOf('.');
             classObjectName = classObjectName.substring(index + 1);
             if (classObjectName.equalsIgnoreCase("ProductOrderCaplRequest")) {
                 ProductOrderCaplRequest productOrderCaplRequest =
@@ -1518,7 +1490,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                         .build());
 
                 // cambiar status a "VALIDADO"
-                saleRequest.setStatus("VALIDADO");
+                saleRequest.setStatus(Constants.VALIDADO);
                 return saleRequest;
             });
         } else {
@@ -2044,7 +2016,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                 .orElse(KeyValueType.builder().value(null).build())
                 .getValue();
         Boolean isRetail = flowSaleValue.equalsIgnoreCase(Constants.RETAIL);
-        if (Boolean.TRUE.equals(isRetail) && saleRequest.getStatus().equalsIgnoreCase("VALIDADO")) {
+        if (Boolean.TRUE.equals(isRetail) && saleRequest.getStatus().equalsIgnoreCase(Constants.VALIDADO)) {
             String iccidSim = this.getStringValueByKeyFromAdditionalDataList(saleRequest.getAdditionalData(),
                     "SIM_ICCID");
             ChangedCharacteristic changedCharacteristic2 = ChangedCharacteristic
@@ -2088,7 +2060,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         List<FlexAttrType> altaOrderAttributesList = this.commonOrderAttributes(saleRequest);
 
         // Order Attributes when channel is retail
-        if (Boolean.TRUE.equals(isRetail) && saleRequest.getStatus().equalsIgnoreCase("VALIDADO")) {
+        if (Boolean.TRUE.equals(isRetail) && saleRequest.getStatus().equalsIgnoreCase(Constants.VALIDADO)) {
             //  RETAIL PAYMENT NUMBER ATTRIBUTE
             String paymentNumber = this.getStringValueByKeyFromAdditionalDataList(saleRequest.getAdditionalData(),
                     "NUMERO_TICKET");
@@ -3154,7 +3126,8 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                         .orElse(null);
 
                 if (migrationComponent != null) {
-                    // TODO: validar qué campo es productCharacteristics.productSpecCharacteristicValue.value. Por ahora se usa roductCharacteristics.id
+                    // validar qué campo es productCharacteristics.productSpecCharacteristicValue.value. Por ahora se
+                    // usa roductCharacteristics.id
                     migrationComponent.setProductOfferingProductSpecId(productCharacteristic.getId());
                 } else {
                     migrationComponentList.add(MigrationComponent.builder()

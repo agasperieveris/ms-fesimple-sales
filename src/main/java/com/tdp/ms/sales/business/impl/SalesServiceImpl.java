@@ -12,7 +12,6 @@ import com.tdp.ms.sales.model.request.GetSalesRequest;
 import com.tdp.ms.sales.model.request.ReceptorRequest;
 import com.tdp.ms.sales.model.response.BusinessParametersResponse;
 import com.tdp.ms.sales.repository.SalesRepository;
-import com.tdp.ms.sales.utils.Commons;
 import com.tdp.ms.sales.utils.Constants;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
