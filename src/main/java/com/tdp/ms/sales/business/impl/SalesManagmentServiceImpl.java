@@ -616,6 +616,55 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         return false;
     }
 
+    private Mono<Sale> retryRequest(PostSalesRequest request, Sale sale, Boolean flgCaeq, Boolean flgAlta,
+                                    Boolean flgCasi, Boolean flgFinanciamiento, String sapidSimcard) {
+        sale.setStatus(Constants.NUEVO);
+        if (sale.getCommercialOperation().get(0).getOrder() != null
+                && (sale.getCommercialOperation().get(0).getDeviceOffering() == null
+                || sale.getCommercialOperation().get(0).getDeviceOffering().get(0).getStock() == null
+                || StringUtils.isEmpty(sale.getCommercialOperation().get(0).getDeviceOffering().get(0).getStock()
+                .getReservationId()))) { // Retry from Reservation
+
+            // Call to Reserve Stock Service When Commercial Operation include CAEQ
+            if (flgCaeq || flgAlta) {
+
+                return this.callToReserveStockAndCreateQuotation(PostSalesRequest.builder()
+                        .sale(sale).headersMap(request.getHeadersMap())
+                        .build(), sale, flgCasi, flgFinanciamiento, sapidSimcard);
+            } else {
+                if (Boolean.TRUE.equals(flgCasi)) {
+
+                    // Call to Create Quotation Service When CommercialOperation Contains CASI
+                    return this.callToCreateQuotation(PostSalesRequest.builder()
+                            .sale(sale).headersMap(request.getHeadersMap())
+                            .build(), sale, true, flgFinanciamiento);
+                } else {
+                    // Case when is Only CAPL
+                    return salesRepository.save(sale)
+                            .map(r -> {
+                                this.postSalesEventFlow(PostSalesRequest.builder()
+                                        .sale(sale).headersMap(request.getHeadersMap())
+                                        .build());
+                                return r;
+                            });
+                }
+            }
+
+        } else if (sale.getCommercialOperation().get(0).getOrder() != null
+                && sale.getCommercialOperation().get(0).getDeviceOffering() != null
+                && sale.getCommercialOperation().get(0).getDeviceOffering().get(0).getStock() != null
+                && !StringUtils.isEmpty(sale.getCommercialOperation().get(0).getDeviceOffering().get(0).getStock()
+                .getReservationId())) { // Retry from Create Quotation
+
+            // Call to Create Quotation Service When CommercialOperation Contains CAEQ
+            return this.callToCreateQuotation(PostSalesRequest.builder()
+                    .sale(sale)
+                    .headersMap(request.getHeadersMap())
+                    .build(), sale, flgCasi, flgFinanciamiento);
+        }
+        return Mono.justOrEmpty(sale);
+    }
+
     @Override
     public Mono<Sale> post(PostSalesRequest request) {
 
@@ -658,7 +707,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                 .orElse(KeyValueType.builder().value(null).build())
                 .getValue();
         Boolean isRetail = flowSaleValue.equalsIgnoreCase(Constants.RETAIL);
-        Boolean statusValidado = saleRequest.getStatus().equalsIgnoreCase("VALIDADO");
+        Boolean statusValidado = saleRequest.getStatus().equalsIgnoreCase(Constants.VALIDADO);
         if (Boolean.TRUE.equals(isRetail) && statusValidado) {
             if (StringUtils.isEmpty(this.getStringValueByKeyFromAdditionalDataList(saleRequest.getAdditionalData(),
                     "MOVILE_IMEI"))) {
@@ -669,7 +718,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                                 + "with 'MOVILE_IMEI' key value."})
                         .build());
             } else if (StringUtils.isEmpty(this.getStringValueByKeyFromAdditionalDataList(saleRequest
-                            .getAdditionalData(),"SIM_ICCID"))) {
+                    .getAdditionalData(),"SIM_ICCID"))) {
                 return Mono.error(GenesisException
                         .builder()
                         .exceptionId(Constants.BAD_REQUEST_EXCEPTION_ID)
@@ -677,7 +726,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                                 + "with 'SIM_ICCID' key value."})
                         .build());
             } else if (StringUtils.isEmpty(this.getStringValueByKeyFromAdditionalDataList(saleRequest
-                            .getAdditionalData(),Constants.NUMERO_CAJA))) {
+                    .getAdditionalData(),"NUMERO_CAJA"))) {
                 return Mono.error(GenesisException
                         .builder()
                         .exceptionId(Constants.BAD_REQUEST_EXCEPTION_ID)
@@ -685,7 +734,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                                 + "with 'NUMERO_CAJA' key value."})
                         .build());
             } else if (StringUtils.isEmpty(this.getStringValueByKeyFromAdditionalDataList(saleRequest
-                            .getAdditionalData(),"NUMERO_TICKET"))) {
+                    .getAdditionalData(),"NUMERO_TICKET"))) {
                 return Mono.error(GenesisException
                         .builder()
                         .exceptionId(Constants.BAD_REQUEST_EXCEPTION_ID)
@@ -721,54 +770,26 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
 
         flgFinanciamiento[0] = setFinancingFlag(saleRequest.getCommercialOperation().get(0).getDeviceOffering());
 
-        // Validar si es que es un reintento
-        final Sale[] saleRetry = {null};
-        salesRepository.findBySalesId(saleRequest.getSalesId()).map(saleItem -> saleRetry[0] = saleItem);
+        // Validate if it is a retry from Frontend
+        return salesRepository.findBySalesId(saleRequest.getSalesId())
+                // Main function
+                .defaultIfEmpty(Sale.builder().salesId(null).build())
+                // Validate existing sale
+                .flatMap(saleItem -> {
+                    if (saleItem.getSalesId() == null || saleItem.getCommercialOperation() == null
+                            || saleItem.getCommercialOperation().get(0).getOrder() == null) {
+                        return mainFunction(saleRequest, request, flgAlta, flgCapl, flgCaeq, flgCasi,
+                                flgFinanciamiento, isRetail, sapidSimcard);
+                    }
+                    return retryRequest(request, saleItem, flgCaeq[0], flgAlta[0], flgCasi[0],
+                            flgFinanciamiento[0], sapidSimcard[0]);
+                });
 
-        if (saleRetry[0] != null && saleRetry[0].getCommercialOperation().get(0).getOrder() != null
-                && saleRetry[0].getCommercialOperation().get(0).getDeviceOffering() == null
-                && saleRetry[0].getCommercialOperation().get(0).getDeviceOffering().get(0).getStock() == null
-                && StringUtils.isEmpty(saleRetry[0].getCommercialOperation().get(0).getDeviceOffering().get(0)
-                .getStock().getReservationId())) { // Retry from Reservation
+    }
 
-            // Call to Reserve Stock Service When Commercial Operation include CAEQ
-            if (flgCaeq[0] || flgAlta[0]) {
-
-                return this.callToReserveStockAndCreateQuotation(PostSalesRequest.builder()
-                                .sale(saleRetry[0]).headersMap(request.getHeadersMap())
-                                .build(), saleRetry[0], flgCasi[0],
-                        flgFinanciamiento[0], sapidSimcard[0]);
-            } else {
-                if (Boolean.TRUE.equals(flgCasi[0])) {
-
-                    // Call to Create Quotation Service When CommercialOperation Contains CASI
-                    return this.callToCreateQuotation(PostSalesRequest.builder()
-                            .sale(saleRetry[0]).headersMap(request.getHeadersMap())
-                            .build(), saleRetry[0], true, flgFinanciamiento[0]);
-                } else {
-                    // Case when is Only CAPL
-                    return salesRepository.save(saleRetry[0])
-                            .map(r -> {
-                                this.postSalesEventFlow(PostSalesRequest.builder()
-                                        .sale(saleRetry[0]).headersMap(request.getHeadersMap())
-                                        .build());
-                                return r;
-                            });
-                }
-            }
-
-        } else if (saleRetry[0] != null && saleRetry[0].getCommercialOperation().get(0).getOrder() != null
-                && saleRetry[0].getCommercialOperation().get(0).getDeviceOffering() != null
-                && saleRetry[0].getCommercialOperation().get(0).getDeviceOffering().get(0).getStock() != null
-                && !StringUtils.isEmpty(saleRetry[0].getCommercialOperation().get(0).getDeviceOffering().get(0)
-                .getStock().getReservationId())) { // Retry from Create Quotation
-
-            // Call to Create Quotation Service When CommercialOperation Contains CAEQ
-            return this.callToCreateQuotation(PostSalesRequest.builder()
-                            .sale(saleRetry[0]).headersMap(request.getHeadersMap()).build(),
-                    saleRetry[0], flgCasi[0], flgFinanciamiento[0]);
-        }
-
+    private Mono<Sale> mainFunction(Sale saleRequest, PostSalesRequest request, final Boolean[] flgAlta,
+                                    final Boolean[] flgCapl, final Boolean[] flgCaeq, final Boolean[] flgCasi,
+                                    final Boolean[] flgFinanciamiento, Boolean isRetail, final String[] sapidSimcard) {
         // Getting Main CommercialTypeOperation value
         String commercialOperationReason = saleRequest.getCommercialOperation().get(0).getReason();
         String mainProductType = saleRequest.getProductType();
@@ -841,7 +862,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                 Mono<BusinessParametersReasonCode> getParametersReasonCode = businessParameterWebClient
                         .getParametersReasonCode(request.getHeadersMap());
 
-                // TODO: Añadir llamada a get businessParameters - ReasonCode
+                // Añadir llamada a get businessParameters - ReasonCode
                 return Mono.zip(getRiskDomain, salesCharsByCot, getBonificacionSim, getParametersSimCard, getParametersReasonCode)
                         .flatMap(tuple -> validationsAndBuildings(tuple.getT1(), tuple.getT2(), tuple.getT3(),
                                 tuple.getT4(), tuple.getT5(), saleRequest, request, sapidSimcard,
@@ -877,6 +898,33 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
             return true;
         }
         return false;
+    }
+
+    private String getCipCode(PaymentType paymentType, boolean sendIndicator, final boolean flgFinanciamiento) {
+        if (!sendIndicator) {
+            return null;
+        } else if (!flgFinanciamiento) {
+            return null;
+        } else if (paymentType == null || paymentType.getAdditionalData() == null
+                || paymentType.getAdditionalData().isEmpty()) {
+            throw buildGenesisError(Constants.BAD_REQUEST_EXCEPTION_ID,
+                    "Campos sale.paymentType o sale.paymentType.additional data está vació o nulo");
+        }
+
+        String paymentMediumLabelValue = this.getStringValueByKeyFromAdditionalDataList(paymentType.getAdditionalData(),
+                "paymentMediumLabel");
+        if (paymentMediumLabelValue.equalsIgnoreCase("Pago Efectivo")) {
+
+            if (StringUtils.isEmpty(paymentType.getCid())) {
+                throw buildGenesisError(Constants.BAD_REQUEST_EXCEPTION_ID,
+                        "Falta campo sale.paymentType.cid");
+            } else {
+                return paymentType.getCid();
+            }
+        } else {
+            throw buildGenesisError(Constants.BAD_REQUEST_EXCEPTION_ID,
+                    "Falta key paymentMediumLabel en sale.paymentType.additionalData");
+        }
     }
 
     private Mono<Sale> validationsAndBuildings(BusinessParametersResponse getRiskDomain,

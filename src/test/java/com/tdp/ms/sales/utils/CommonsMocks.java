@@ -459,6 +459,7 @@ public class CommonsMocks {
 
         deviceOffering.setAdditionalData(additionalDatas);
         deviceOffering.setId("s");
+        deviceOffering.setDeviceType("Smartphone");
         deviceOffering.setSapid("SAD123PID");
         deviceOffering.setOffers(Arrays.asList(Offer.builder().billingOfferings(Arrays.asList(BillingOffering.builder()
                 .commitmentPeriods(Arrays.asList(CommitmentPeriod.builder()

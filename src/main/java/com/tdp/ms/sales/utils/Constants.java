@@ -26,6 +26,7 @@ public class Constants {
     public static final String PRESENCIAL = "Presencial";
     public static final String CAEQ = "CAEQ";
     public static final String CAPL = "CAPL";
+    public static final String CASI = "CASI";
     public static final String PORTABILIDAD = "PORTABILIDAD";
     public static final String NUMERO_CAJA = "NUMERO_CAJA";
     public static final String BAD_REQUEST_EXCEPTION_ID = "SVC1000";
@@ -38,6 +39,7 @@ public class Constants {
     public static final String PENDIENTE = "PENDIENTE";
     public static final String NEGOCIACION = "NEGOCIACION";
     public static final String VALIDADO = "VALIDADO";
+    public static final String NUEVO = "NUEVO";
     public static final String WIRELESS = "WIRELESS";
     public static final String DEVICE_SKU = "DEVICE_SKU";
     public static final String SIM_SKU = "SIM_SKU";
@@ -46,5 +48,6 @@ public class Constants {
     public static final String TEMP1 = "temp1";
     public static final String UFX_AUTHORIZATION = "ufxauthorization";
     public static final String STRING_FALSE = "false";
+    public static final String STRING_TRUE = "true";
     public static final String STRING_DATE_TIME_FORMATTER = "dd/MM/yyyy'T'HH:mm:ss";
 }
