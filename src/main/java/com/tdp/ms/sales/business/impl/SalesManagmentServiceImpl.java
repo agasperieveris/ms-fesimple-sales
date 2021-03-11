@@ -911,7 +911,11 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
 
         String paymentMediumLabelValue = this.getStringValueByKeyFromAdditionalDataList(paymentType.getAdditionalData(),
                 "paymentMediumLabel");
-        if (paymentMediumLabelValue.equalsIgnoreCase("Pago Efectivo")) {
+        if (StringUtils.isEmpty(paymentMediumLabelValue)) {
+            throw buildGenesisError(Constants.BAD_REQUEST_EXCEPTION_ID,
+                    "Falta key paymentMediumLabel en sale.paymentType.additionalData");
+        }
+        else if (paymentMediumLabelValue.equalsIgnoreCase("Pago Efectivo")) {
 
             if (StringUtils.isEmpty(paymentType.getCid())) {
                 throw buildGenesisError(Constants.BAD_REQUEST_EXCEPTION_ID,
@@ -919,10 +923,8 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
             } else {
                 return paymentType.getCid();
             }
-        } else {
-            throw buildGenesisError(Constants.BAD_REQUEST_EXCEPTION_ID,
-                    "Falta key paymentMediumLabel en sale.paymentType.additionalData");
         }
+        return null;
     }
 
     private Mono<Sale> validationsAndBuildings(BusinessParametersResponse getRiskDomain,
