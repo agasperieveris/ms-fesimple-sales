@@ -13,6 +13,7 @@ import com.tdp.ms.sales.client.WebClientReceptor;
 import com.tdp.ms.sales.model.dto.KeyValueType;
 import com.tdp.ms.sales.model.entity.Sale;
 import com.tdp.ms.sales.model.request.GetSalesRequest;
+import com.tdp.ms.sales.model.request.PostSalesRequest;
 import com.tdp.ms.sales.model.request.ReceptorRequest;
 import com.tdp.ms.sales.repository.SalesRepository;
 import com.tdp.ms.sales.utils.Constants;
@@ -67,6 +68,8 @@ public class SalesServiceImpl implements SalesService {
     Logger logger = LoggerFactory.getLogger(SalesServiceImpl.class);
 
     private static final String FLOW_SALE_PUT = "02";
+    private static final String FLOW_SALE_POST = "01";
+    private static final String FLOW_SALE_INVITATION = "03";
 
     @Value("${application.endpoints.url.business_parameters.seq_number}")
     private String seqNumber;
@@ -114,6 +117,16 @@ public class SalesServiceImpl implements SalesService {
                 .flatMap(item -> {
                     request.setSalesId(item.getSalesId());
                     return salesRepository.save(request);
+                })
+                .map(saleUpdated -> {
+                    if (this.getStringValueByKeyFromAdditionalDataList(saleUpdated.getAdditionalData(),
+                            "salesApprove").equalsIgnoreCase("true")) {
+                        this.postSalesEventFlow(PostSalesRequest.builder()
+                                .sale(saleUpdated)
+                                .headersMap(headersMap)
+                                .build());
+                    }
+                    return saleUpdated;
                 });
 
     }
@@ -278,5 +291,54 @@ public class SalesServiceImpl implements SalesService {
         }
         // No se hace el filtro
         return true;
+    }
+
+    private void postSalesEventFlow(PostSalesRequest request) {
+        request.getSale().getAdditionalData().add(
+                KeyValueType
+                        .builder()
+                        .key("initialProcessDate")
+                        .value(DateUtils.getDatetimeNowCosmosDbFormat())
+                        .build());
+
+        callReceptors(request);
+    }
+
+    private void callReceptors(PostSalesRequest request) {
+        callWebClientReceptor(request, FLOW_SALE_POST);
+
+        String reason = request.getSale().getCommercialOperation().get(0).getReason();
+        if (reason.equalsIgnoreCase("CAPL") || reason.equalsIgnoreCase("CAEQ")) {
+            callWebClientReceptor(request, FLOW_SALE_INVITATION);
+        }
+    }
+
+    private void callWebClientReceptor(PostSalesRequest request, String eventFlowCode) {
+        // Llamada a receptor
+        webClientReceptor
+                .register(
+                        ReceptorRequest
+                                .builder()
+                                .businessId(request.getSale().getSalesId())
+                                .typeEventFlow(eventFlowCode)
+                                .message(request.getSale())
+                                .build(),
+                        request.getHeadersMap()
+                )
+                .subscribe();
+    }
+
+    private String getStringValueByKeyFromAdditionalDataList(List<KeyValueType> additionalData, String key) {
+        final String[] stringValue = {""};
+
+        if (additionalData != null && !additionalData.isEmpty()) {
+            additionalData.forEach(kv -> {
+                if (kv.getKey().equalsIgnoreCase(key)) {
+                    stringValue[0] = kv.getValue();
+                }
+            });
+        }
+
+        return stringValue[0];
     }
 }
