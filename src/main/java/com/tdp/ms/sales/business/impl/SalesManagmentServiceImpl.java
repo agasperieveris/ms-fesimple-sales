@@ -170,18 +170,53 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         return stringValue[0];
     }
 
-    private void postSalesEventFlow(PostSalesRequest request) {
-        if (request.getSale().getAdditionalData() == null) {
-            request.getSale().setAdditionalData(new ArrayList<>());
-        }
-        request.getSale().getAdditionalData().add(
-                KeyValueType
-                        .builder()
-                        .key("initialProcessDate")
-                        .value(DateUtils.getDatetimeNowCosmosDbFormat())
-                        .build());
+    private Boolean isValidToCallSalesEventFLow(Sale sale) {
+        Boolean isValidSalesRequest = true;
 
-        callReceptors(request);
+        String flowSale = this.getStringValueByKeyFromAdditionalDataList(sale.getCommercialOperation().get(0)
+                .getAdditionalData(), Constants.FLOWSALE);
+
+        Boolean hasNoBiometricValidation = false;
+        if (sale.getIdentityValidations() != null && !sale.getIdentityValidations().isEmpty()) {
+            IdentityValidationType identityValidationNoBiometric = sale.getIdentityValidations().stream()
+                    .filter(item -> item.getValidationType().equalsIgnoreCase(Constants.VALIDATION_TYPE_NO_BIOMETRIC))
+                    .findFirst()
+                    .orElse(null);
+            if (identityValidationNoBiometric != null) {
+                String noBiometricValidationType = identityValidationNoBiometric.getAdditionalData().stream()
+                        .filter(item -> item.getKey().equalsIgnoreCase(Constants.VALIDATION_TYPE_NO_BIOMETRIC_ID_TYPE))
+                        .findFirst()
+                        .orElse(KeyValueType.builder().value("0").build())
+                        .getValue();
+                hasNoBiometricValidation = (noBiometricValidationType.equals("1") || noBiometricValidationType.equals("2")
+                        || noBiometricValidationType.equals("3") || noBiometricValidationType.equals("4"));
+            }
+        }
+
+
+        if (flowSale.equalsIgnoreCase(Constants.FLOWSALE_REMOTO)
+                || (hasNoBiometricValidation && (flowSale.equalsIgnoreCase(Constants.FLOWSALE_RETAIL)
+                                                            || flowSale.equalsIgnoreCase(Constants.FLOWSALE_PRESENCIAL)))) {
+            isValidSalesRequest = false;
+        }
+
+        return isValidSalesRequest;
+    }
+
+    private void postSalesEventFlow(PostSalesRequest request) {
+        if (this.isValidToCallSalesEventFLow(request.getSale())) {
+            if (request.getSale().getAdditionalData() == null) {
+                request.getSale().setAdditionalData(new ArrayList<>());
+            }
+            request.getSale().getAdditionalData().add(
+                    KeyValueType
+                            .builder()
+                            .key("initialProcessDate")
+                            .value(DateUtils.getDatetimeNowCosmosDbFormat())
+                            .build());
+
+            callReceptors(request);
+        }
     }
 
     private void callReceptors(PostSalesRequest request) {
@@ -759,7 +794,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                 .findFirst()
                 .orElse(KeyValueType.builder().value(null).build())
                 .getValue();
-        Boolean isRetail = flowSaleValue.equalsIgnoreCase(Constants.RETAIL);
+        Boolean isRetail = flowSaleValue.equalsIgnoreCase(Constants.FLOWSALE_RETAIL);
         Boolean statusValidado = saleRequest.getStatus().equalsIgnoreCase(Constants.STATUS_VALIDADO);
         if (Boolean.TRUE.equals(isRetail) && statusValidado) {
             if (saleRequest.getCommercialOperation().get(0).getDeviceOffering() != null
@@ -1731,7 +1766,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         String operationType =
                 saleRequest.getCommercialOperation().get(0).getReason().equals("ALTA") ? "Provide" : "Change";
 
-        if (keyValueType != null && keyValueType.getValue().equalsIgnoreCase(Constants.RETAIL)
+        if (keyValueType != null && keyValueType.getValue().equalsIgnoreCase(Constants.FLOWSALE_RETAIL)
                 && saleRequest.getStatus().equalsIgnoreCase(Constants.NEGOCIACION)) {
 
             DeviceOffering saleDeviceOfferingSim = saleRequest.getCommercialOperation().get(0)
@@ -2232,9 +2267,9 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
 
         additionalData.forEach(kv -> {
             if (kv.getKey().equalsIgnoreCase(Constants.FLOWSALE)) {
-                if (kv.getValue().equalsIgnoreCase(Constants.PRESENCIAL)) {
+                if (kv.getValue().equalsIgnoreCase(Constants.FLOWSALE_PRESENCIAL)) {
                     isPresencial[0] = true;
-                } else if (kv.getValue().equalsIgnoreCase(Constants.RETAIL)) {
+                } else if (kv.getValue().equalsIgnoreCase(Constants.FLOWSALE_RETAIL)) {
                     isRetail[0] = true;
                 }
             }
@@ -2266,7 +2301,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
 
         final boolean[] isRemotoAndContigenciaReniec = {false};
         additionalData.stream().filter(kv -> kv.getKey().equalsIgnoreCase(Constants.FLOWSALE)
-                && kv.getValue().equalsIgnoreCase(Constants.REMOTO))
+                && kv.getValue().equalsIgnoreCase(Constants.FLOWSALE_REMOTO))
                 .findFirst()
                 .flatMap(kv -> identityValidationTypes.stream()
                         .filter(item -> item.getValidationType().equalsIgnoreCase("NoBiometric"))
@@ -2409,7 +2444,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                 .findFirst()
                 .orElse(KeyValueType.builder().value(null).build())
                 .getValue();
-        Boolean isRetail = flowSaleValue.equalsIgnoreCase(Constants.RETAIL);
+        Boolean isRetail = flowSaleValue.equalsIgnoreCase(Constants.FLOWSALE_RETAIL);
         if (Boolean.TRUE.equals(isRetail) && saleRequest.getStatus().equalsIgnoreCase(Constants.STATUS_VALIDADO)) {
             String iccidSim = this.getStringValueByKeyFromAdditionalDataList(saleRequest.getAdditionalData(),
                     "SIM_ICCID");
@@ -2947,7 +2982,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                 .findFirst()
                 .orElse(KeyValueType.builder().value(null).build())
                 .getValue();
-        Boolean isRetail = flowSaleValue.equalsIgnoreCase(Constants.RETAIL);
+        Boolean isRetail = flowSaleValue.equalsIgnoreCase(Constants.FLOWSALE_RETAIL);
         if (isRetail) {
             deliveryCode = "IS";
         }
@@ -3100,7 +3135,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                 .findFirst()
                 .orElse(KeyValueType.builder().value("NotRetail").build())
                 .getValue();
-        return flowSaleValue.equalsIgnoreCase(Constants.RETAIL);
+        return flowSaleValue.equalsIgnoreCase(Constants.FLOWSALE_RETAIL);
     }
 
     public List<ChangedContainedProduct> changedContainedCaeqList(Sale saleRequest, String tempNum,

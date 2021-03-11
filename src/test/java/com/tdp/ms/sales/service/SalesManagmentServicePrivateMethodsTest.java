@@ -952,7 +952,7 @@ public class SalesManagmentServicePrivateMethodsTest {
         sale.getAdditionalData().add(KeyValueType.builder().key("SIM_SKU").value("123456").build());
         sale.getAdditionalData().add(KeyValueType.builder().key("NUMERO_CAJA").value("123456").build());
         sale.getAdditionalData().remove(3);
-        sale.getAdditionalData().add(KeyValueType.builder().key(Constants.FLOWSALE).value(Constants.RETAIL).build());
+        sale.getAdditionalData().add(KeyValueType.builder().key(Constants.FLOWSALE).value(Constants.FLOWSALE_RETAIL).build());
 
         method.invoke(salesManagmentServiceImpl, caeqOrderAttributesList, sale, true);
     }
@@ -1045,6 +1045,21 @@ public class SalesManagmentServicePrivateMethodsTest {
         sale.setProductType(Constants.WIRELINE);
 
         method.invoke(salesManagmentServiceImpl,createQuotationRequest, sale);
+    }
+
+    @Test
+    void isValidToCallSalesEventFLowTest() throws NoSuchMethodException,
+            InvocationTargetException, IllegalAccessException {
+        Method method = SalesManagmentServiceImpl.class.getDeclaredMethod(
+                "isValidToCallSalesEventFLow", Sale.class);
+
+        method.setAccessible(true);
+
+        Sale sale = CommonsMocks.createSaleMock();
+
+        Boolean result = (Boolean) method.invoke(salesManagmentServiceImpl,sale);
+
+        Assert.assertEquals(true, result);
     }
 
 }
