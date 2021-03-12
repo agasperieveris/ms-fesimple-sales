@@ -2764,6 +2764,18 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                 .changedCharacteristics(changedCharacteristicList)
                 .build();
 
+        String caeqValue = getStringValueByKeyFromAdditionalDataList(saleRequest.getCommercialOperation().get(0)
+                .getAdditionalData(), Constants.CAEQ);
+        if (caeqValue.equalsIgnoreCase(Constants.STRING_TRUE)) {
+            ChangedCharacteristic changedCharacteristicOnlyWhenCaeq = ChangedCharacteristic
+                    .builder()
+                    .characteristicId("10011")
+                    .characteristicValue(saleRequest.getCommercialOperation().get(0).getDeviceOffering().get(0)
+                            .getOffers().get(0).getBillingOfferings().get(0).getCommitmentPeriods().get(0).getName())
+                    .build();
+            changedCharacteristicList.add(changedCharacteristicOnlyWhenCaeq);
+        }
+
         if (!saleRequest.getCommercialOperation().get(0).getReason().equalsIgnoreCase("PORTA")
                 && !saleRequest.getCommercialOperation().get(0).getReason().equalsIgnoreCase("ALTA")
                 && saleRequest.getProductType().equalsIgnoreCase(Constants.WIRELESS)
