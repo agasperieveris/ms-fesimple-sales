@@ -1,5 +1,6 @@
 package com.tdp.ms.sales.business.impl;
 
+import com.google.gson.Gson;
 import com.tdp.genesis.core.exception.GenesisException;
 import com.tdp.ms.commons.util.DateUtils;
 import com.tdp.ms.sales.business.SalesManagmentService;
@@ -69,6 +70,8 @@ import com.tdp.ms.sales.model.response.*;
 import com.tdp.ms.sales.repository.SalesRepository;
 import com.tdp.ms.sales.utils.Commons;
 import com.tdp.ms.sales.utils.Constants;
+
+import java.math.BigInteger;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -206,8 +209,9 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
     }
 
     private void buildOrderAttributesListAltaFija(List<FlexAttrType> altaFijaOrderAttributesList, Sale saleRequest,
-                                                  CreateQuotationRequest createQuotationFijaRequest,
-                                                  Boolean flgFinanciamiento) {
+                                                  CreateQuotationRequest createQuotationFijaRequest) {
+
+        Boolean flgFinanciamiento = createQuotationFijaRequest.getBody() != null;
 
         FlexAttrValueType externalFinancialAttrValue =  FlexAttrValueType
                 .builder()
@@ -220,10 +224,15 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                 .flexAttrValue(externalFinancialAttrValue)
                 .build();
 
+        String upFrontIndAttrStringValue = saleRequest.getCommercialOperation().get(0).getProductOfferings() != null
+                && !StringUtils.isEmpty(saleRequest.getCommercialOperation().get(0).getProductOfferings()
+                .get(0).getUpFront().getIndicator()) ?
+                saleRequest.getCommercialOperation().get(0).getProductOfferings().get(0).getUpFront().getIndicator() :
+                "N";
+
         FlexAttrValueType upFrontIndAttrValue =  FlexAttrValueType
                 .builder()
-                .stringValue(saleRequest.getCommercialOperation().get(0).getProductOfferings().get(0)
-                        .getUpFront().getIndicator())
+                .stringValue(upFrontIndAttrStringValue)
                 .valueType(Constants.STRING)
                 .build();
         FlexAttrType upFrontIndAttr = FlexAttrType
@@ -287,21 +296,22 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         }
 
         // Order Attributes if is Scheduling
-        if (flgFinanciamiento && saleRequest.getCommercialOperation() != null
+        if (flgFinanciamiento
+                && saleRequest.getCommercialOperation() != null
                 && saleRequest.getCommercialOperation().get(0).getWorkOrDeliveryType() != null
                 && saleRequest.getCommercialOperation().get(0).getWorkOrDeliveryType().getScheduleDelivery() != null
                 && !saleRequest.getCommercialOperation().get(0).getWorkOrDeliveryType().getScheduleDelivery()
                 .equalsIgnoreCase("SLA")) {
 
-            FlexAttrValueType downPaymentAttrValue = FlexAttrValueType
+            FlexAttrValueType schedulingAttrValue = FlexAttrValueType
                     .builder()
-                    .stringValue(createQuotationFijaRequest.getBody().getDownPayment().getAmount())
-                    .valueType("TC")
+                    .stringValue("TC")
+                    .valueType("STRING")
                     .build();
             FlexAttrType downPaymentAttr = FlexAttrType
                     .builder()
                     .attrName(Constants.DELIVERY_METHOD)
-                    .flexAttrValue(downPaymentAttrValue)
+                    .flexAttrValue(schedulingAttrValue)
                     .build();
             altaFijaOrderAttributesList.add(downPaymentAttr);
         }
@@ -309,17 +319,45 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
 
     private void buildServiceAvailabilityAltaFija(Sale saleRequest,
                                                   List<ServiceabilityOfferType> serviceabilityOffersList) {
-        saleRequest.getCommercialOperation().get(0).getServiceAvailability().getOffers().stream()
-                .forEach(availabilityOffer -> {
-                    String serviceAbilityType = availabilityOffer.getServices().get(0).getType();
 
-                    if (serviceAbilityType.equalsIgnoreCase("VOICE")) {
+        OfferingType mainOffering = saleRequest.getCommercialOperation().get(0).getProductOfferings().stream()
+                .filter(item -> item.getType() != null && !item.getType().equalsIgnoreCase(Constants.PRODUCT_TYPE_SVA))
+                .findFirst()
+                .orElse(null);
+
+        final Boolean[] flgProductLandline = {false};
+        final Boolean[] flgProductBroadband = {false};
+        final Boolean[] flgProductCabletv = {false};
+        if (mainOffering != null) {
+            mainOffering.getProductSpecification().stream()
+                    .forEach(item -> {
+                        if (item.getProductType().equalsIgnoreCase(Constants.PRODUCT_TYPE_LANDLINE)) {
+                            flgProductLandline[0] = true;
+                        } else if (item.getProductType().equalsIgnoreCase(Constants.PRODUCT_TYPE_BROADBAND)) {
+                            flgProductBroadband[0] = true;
+                        } else if (item.getProductType().equalsIgnoreCase(Constants.PRODUCT_TYPE_CABLE_TV)
+                                || item.getProductType().equalsIgnoreCase(Constants.PRODUCT_TYPE_CHANNEL_TV)) {
+                            flgProductCabletv[0] = true;
+                        }
+                    });
+        }
+        LOG.info("Sales has landline product: " + flgProductLandline[0]);
+        LOG.info("Sales has broadband product: " + flgProductBroadband[0]);
+        LOG.info("Sales has cableTv product: " + flgProductCabletv[0]);
+
+        Number offerPriority = saleRequest.getCommercialOperation().get(0).getServiceAvailability()
+                                                                        .getOffers().get(0).getPriority();
+        saleRequest.getCommercialOperation().get(0).getServiceAvailability().getOffers().get(0).getServices().stream()
+                .forEach(serviceOffer -> {
+                    String serviceAbilityType = serviceOffer.getType();
+
+                    if (serviceAbilityType.equalsIgnoreCase(Constants.PRODUCT_TYPE_LANDLINE) && flgProductLandline[0]) {
 
                         // Serviceability Landline
                         CharacteristicOfferType describeByLandline1 =  CharacteristicOfferType
                                 .builder()
                                 .characteristicName("ALLOCATION_ID")
-                                .characteristicValue(availabilityOffer.getServices().get(0).getAllocationId())
+                                .characteristicValue(serviceOffer.getAllocationId())
                                 .build();
 
                         List<CharacteristicOfferType> describeByLandlineList = new ArrayList<>();
@@ -327,7 +365,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
 
                         ProductLineType productOfferLandline1 = ProductLineType
                                 .builder()
-                                .type(serviceAbilityType)
+                                .type("VOICE")
                                 .description("Servicio de Voz")
                                 .networkTechnology(this.getStringValueByKeyFromAdditionalDataList(saleRequest
                                         .getCommercialOperation().get(0).getServiceAvailability()
@@ -342,12 +380,12 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
 
                         ServiceabilityOfferType serviceabilityOfferLandline = ServiceabilityOfferType
                                 .builder()
-                                .idOfferPriority(availabilityOffer.getPriority().toString())
+                                .idOfferPriority(offerPriority)
                                 .productOffer(productOfferLandlineList)
                                 .build();
                         serviceabilityOffersList.add(serviceabilityOfferLandline);
 
-                    } else if (serviceAbilityType.equalsIgnoreCase("BB")) {
+                    } else if (serviceAbilityType.equalsIgnoreCase("broadband") && flgProductBroadband[0]) {
 
                         // Serviceability Broadband
                         CharacteristicOfferType describeByBroadband1 =  CharacteristicOfferType
@@ -363,7 +401,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
 
                         ProductLineType productOfferBroadband1 = ProductLineType
                                 .builder()
-                                .type(serviceAbilityType)
+                                .type("BB")
                                 .description("Servicio de banda ancha")
                                 .networkTechnology(this.getStringValueByKeyFromAdditionalDataList(saleRequest
                                         .getCommercialOperation().get(0).getServiceAvailability()
@@ -378,17 +416,17 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
 
                         ServiceabilityOfferType serviceabilityOfferBroadband = ServiceabilityOfferType
                                 .builder()
-                                .idOfferPriority(availabilityOffer.getPriority().toString())
+                                .idOfferPriority(offerPriority)
                                 .productOffer(productOfferBroadbandList)
                                 .build();
                         serviceabilityOffersList.add(serviceabilityOfferBroadband);
 
-                    } else if (serviceAbilityType.equalsIgnoreCase("TV")) {
+                    } else if (serviceAbilityType.equalsIgnoreCase("tv") && flgProductCabletv[0]) {
 
                         // Serviceability CableTv
                         ProductLineType productOfferCableTv1 = ProductLineType
                                 .builder()
-                                .type(serviceAbilityType)
+                                .type("TV")
                                 .description("Servicio de Television")
                                 .networkTechnology(this.getStringValueByKeyFromAdditionalDataList(saleRequest
                                         .getCommercialOperation().get(0).getServiceAvailability()
@@ -402,7 +440,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
 
                         ServiceabilityOfferType serviceabilityOfferCableTv = ServiceabilityOfferType
                                 .builder()
-                                .idOfferPriority(availabilityOffer.getPriority().toString())
+                                .idOfferPriority(offerPriority)
                                 .productOffer(productOfferCableTvList)
                                 .build();
                         serviceabilityOffersList.add(serviceabilityOfferCableTv);
@@ -414,178 +452,194 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                                                   List<NewAssignedBillingOffers> newAssignedBillingOffersLandlineList,
                                                   List<NewAssignedBillingOffers> newAssignedBillingOffersBroadbandList,
                                                   List<NewAssignedBillingOffers> newAssignedBillingOffersCableTvList) {
+        LOG.info("SVAs Landline: ".concat(new Gson().toJson(newAssignedBillingOffersLandlineList)));
+        LOG.info("SVAs Broadband: ".concat(new Gson().toJson(newAssignedBillingOffersBroadbandList)));
+        LOG.info("SVAs CableTv: ".concat(new Gson().toJson(newAssignedBillingOffersCableTvList)));
         List<NewProductAltaFija> newProductsAltaFijaList = new ArrayList<>();
+        final Integer[] cont = {1};
 
         String baId = saleRequest.getRelatedParty().get(0).getBillingArragmentId();
         String accountId = saleRequest.getRelatedParty().get(0).getAccountId();
 
-        saleRequest.getCommercialOperation().get(0).getProductOfferings().get(0).getProductSpecification()
-                .stream()
-                .forEach(productSpecification -> {
+        if (saleRequest.getCommercialOperation().get(0).getProductOfferings() != null
+                && !saleRequest.getCommercialOperation().get(0).getProductOfferings().isEmpty()
+                && saleRequest.getCommercialOperation().get(0).getProductOfferings().get(0)
+                    .getProductSpecification() != null
+                && !saleRequest.getCommercialOperation().get(0).getProductOfferings().get(0)
+                .getProductSpecification().isEmpty()) {
+            saleRequest.getCommercialOperation().get(0).getProductOfferings().get(0).getProductSpecification()
+                    .stream()
+                    .forEach(productSpecification -> {
 
-                    String productType = productSpecification.getProductType();
-                    if (productType.equalsIgnoreCase(Constants.PRODUCT_TYPE_LANDLINE)) {
-
-                        NewProductAltaFija newProductAltaFijaLandline = NewProductAltaFija
-                                .builder()
-                                .productCatalogId(productSpecification.getRefinedProduct()
-                                        .getProductCharacteristics().get(0).getId())
-                                .temporaryId("temp")
-                                .baId(baId)
-                                .accountId(accountId)
-                                .invoiceCompany("TDP")
-                                .build();
-
-                        //Adding Landline SVAs
-                        if (!newAssignedBillingOffersLandlineList.isEmpty()) {
-
-                            ProductChangeAltaFija productChangesLandline = ProductChangeAltaFija
+                        String productType = productSpecification.getProductType();
+                        if (productType.equalsIgnoreCase(Constants.PRODUCT_TYPE_LANDLINE)) {
+                            NewProductAltaFija newProductAltaFijaLandline = NewProductAltaFija
                                     .builder()
-                                    .newAssignedBillingOffers(newAssignedBillingOffersLandlineList)
+                                    .productCatalogId(productSpecification.getRefinedProduct()
+                                            .getProductCharacteristics().get(0).getId())
+                                    .temporaryId("temp".concat(cont[0].toString()))
+                                    .baId(baId)
+                                    .accountId(accountId)
+                                    .invoiceCompany("TDP")
                                     .build();
-                            newProductAltaFijaLandline.setProductChanges(productChangesLandline);
-                        }
+                            cont[0]++;
 
-                        newProductsAltaFijaList.add(newProductAltaFijaLandline);
+                            //Adding Landline SVAs
+                            if (!newAssignedBillingOffersLandlineList.isEmpty()) {
 
-                    } else if (productType.equalsIgnoreCase("broadband")) {
+                                ProductChangeAltaFija productChangesLandline = ProductChangeAltaFija
+                                        .builder()
+                                        .newAssignedBillingOffers(newAssignedBillingOffersLandlineList)
+                                        .build();
+                                newProductAltaFijaLandline.setProductChanges(productChangesLandline);
+                            }
 
-                        List<ChangedCharacteristic> changedCharacteristicsBroadbandList = new ArrayList<>();
+                            newProductsAltaFijaList.add(newProductAltaFijaLandline);
 
-                        ChangedCharacteristic changedCharacteristicBroadband1 = ChangedCharacteristic
-                                .builder()
-                                .characteristicId("3241482")
-                                .characteristicValue(productSpecification.getProductPrice().get(2)
-                                        .getAdditionalData().stream()
-                                        .filter(item -> item.getKey().equalsIgnoreCase("downloadSpeed"))
-                                        .findFirst()
-                                        .orElse(KeyValueType.builder().value(null).build())
-                                        .getValue())
-                                .build();
-                        changedCharacteristicsBroadbandList.add(changedCharacteristicBroadband1);
-
-                        try {
-                            ChangedCharacteristic changedCharacteristicBroadband2 = ChangedCharacteristic
+                        } else if (productType.equalsIgnoreCase("broadband")) {
+                            NewProductAltaFija newProductAltaFijaBroadband = NewProductAltaFija
                                     .builder()
-                                    .characteristicId("3241532")
-                                    .characteristicValue(Commons.getTimeNowInMillis())
+                                    .productCatalogId(productSpecification.getRefinedProduct()
+                                            .getProductCharacteristics().get(0).getId())
+                                    .temporaryId("temp".concat(cont[0].toString()))
+                                    .baId(baId)
+                                    .accountId(accountId)
+                                    .invoiceCompany("TDP")
                                     .build();
-                            changedCharacteristicsBroadbandList.add(changedCharacteristicBroadband2);
-                        } catch (ParseException e) {
-                            LOG.error("Post Sales Exception Getting Time at Now in Milliseconds");
-                        }
+                            cont[0]++;
 
-                        ChangedContainedProduct changedContainedProductBroadband1 = ChangedContainedProduct
-                                .builder()
-                                .temporaryId("temp")
-                                .productCatalogId("3241312")
-                                .changedCharacteristics(changedCharacteristicsBroadbandList)
-                                .build();
+                            List<ChangedCharacteristic> changedCharacteristicsBroadbandList = new ArrayList<>();
 
-                        List<ChangedContainedProduct> changedContainedProductsBroadbandList =
-                                new ArrayList<>();
-                        changedContainedProductsBroadbandList.add(changedContainedProductBroadband1);
-
-                        ProductChangeAltaFija productChangesBroadband = ProductChangeAltaFija
-                                .builder()
-                                .changedContainedProducts(changedContainedProductsBroadbandList)
-                                .build();
-                        //Adding Broadband SVAs
-                        if (!newAssignedBillingOffersBroadbandList.isEmpty()) {
-                            productChangesBroadband.setNewAssignedBillingOffers(
-                                    newAssignedBillingOffersBroadbandList);
-                        }
-
-                        NewProductAltaFija newProductAltaFijaBroadband = NewProductAltaFija
-                                .builder()
-                                .productCatalogId(productSpecification.getRefinedProduct()
-                                        .getProductCharacteristics().get(0).getId())
-                                .temporaryId("temp")
-                                .baId(baId)
-                                .accountId(accountId)
-                                .invoiceCompany("TDP")
-                                .productChanges(productChangesBroadband)
-                                .build();
-                        newProductsAltaFijaList.add(newProductAltaFijaBroadband);
-
-                    } else if (productType.equalsIgnoreCase(Constants.PRODUCT_TYPE_CABLE_TV)) {
-
-                        NewProductAltaFija newProductAltaFijaCableTv = NewProductAltaFija
-                                .builder()
-                                .productCatalogId(productSpecification.getRefinedProduct()
-                                        .getProductCharacteristics().get(0).getId())
-                                .temporaryId("temp")
-                                .baId(baId)
-                                .accountId(accountId)
-                                .invoiceCompany("TDP")
-                                .build();
-
-                        //Adding CableTv SVAs
-                        if (!newAssignedBillingOffersCableTvList.isEmpty()) {
-
-                            ProductChangeAltaFija productChangesCableTv = ProductChangeAltaFija
+                            ChangedCharacteristic changedCharacteristicBroadband1 = ChangedCharacteristic
                                     .builder()
-                                    .newAssignedBillingOffers(newAssignedBillingOffersCableTvList)
+                                    .characteristicId("3241482")
+                                    .characteristicValue(productSpecification.getProductPrice().get(2)
+                                            .getAdditionalData().stream()
+                                            .filter(item -> item.getKey().equalsIgnoreCase("downloadSpeed"))
+                                            .findFirst()
+                                            .orElse(KeyValueType.builder().value(null).build())
+                                            .getValue())
                                     .build();
-                            newProductAltaFijaCableTv.setProductChanges(productChangesCableTv);
+                            changedCharacteristicsBroadbandList.add(changedCharacteristicBroadband1);
+
+                            try {
+                                ChangedCharacteristic changedCharacteristicBroadband2 = ChangedCharacteristic
+                                        .builder()
+                                        .characteristicId("3241532")
+                                        .characteristicValue(Commons.getTimeNowInMillis())
+                                        .build();
+                                changedCharacteristicsBroadbandList.add(changedCharacteristicBroadband2);
+                            } catch (ParseException e) {
+                                LOG.error("Post Sales Exception Getting Time at Now in Milliseconds");
+                            }
+
+                            ChangedContainedProduct changedContainedProductBroadband1 = ChangedContainedProduct
+                                    .builder()
+                                    .temporaryId("temp".concat(cont[0].toString()))
+                                    .productCatalogId("3241312")
+                                    .changedCharacteristics(changedCharacteristicsBroadbandList)
+                                    .build();
+                            cont[0]++;
+
+                            List<ChangedContainedProduct> changedContainedProductsBroadbandList =
+                                    new ArrayList<>();
+                            changedContainedProductsBroadbandList.add(changedContainedProductBroadband1);
+
+                            ProductChangeAltaFija productChangesBroadband = ProductChangeAltaFija
+                                    .builder()
+                                    .changedContainedProducts(changedContainedProductsBroadbandList)
+                                    .build();
+                            //Adding Broadband SVAs
+                            if (!newAssignedBillingOffersBroadbandList.isEmpty()) {
+                                productChangesBroadband.setNewAssignedBillingOffers(
+                                        newAssignedBillingOffersBroadbandList);
+                            }
+
+                            newProductAltaFijaBroadband.setProductChanges(productChangesBroadband);
+
+                            newProductsAltaFijaList.add(newProductAltaFijaBroadband);
+
+                        } else if (productType.equalsIgnoreCase(Constants.PRODUCT_TYPE_CABLE_TV)) {
+                            NewProductAltaFija newProductAltaFijaCableTv = NewProductAltaFija
+                                    .builder()
+                                    .productCatalogId(productSpecification.getRefinedProduct()
+                                            .getProductCharacteristics().get(0).getId())
+                                    .temporaryId("temp".concat(cont[0].toString()))
+                                    .baId(baId)
+                                    .accountId(accountId)
+                                    .invoiceCompany("TDP")
+                                    .build();
+                            cont[0]++;
+
+                            //Adding CableTv SVAs
+                            if (!newAssignedBillingOffersCableTvList.isEmpty()) {
+
+                                ProductChangeAltaFija productChangesCableTv = ProductChangeAltaFija
+                                        .builder()
+                                        .newAssignedBillingOffers(newAssignedBillingOffersCableTvList)
+                                        .build();
+                                newProductAltaFijaCableTv.setProductChanges(productChangesCableTv);
+                            }
+
+                            newProductsAltaFijaList.add(newProductAltaFijaCableTv);
+
+                        } else if (productType.equalsIgnoreCase(Constants.PRODUCT_TYPE_DEVICE)) {
+                            NewProductAltaFija newProductAltaFijaShareEquipment = NewProductAltaFija
+                                    .builder()
+                                    .productCatalogId(productSpecification.getRefinedProduct()
+                                            .getProductCharacteristics().get(0).getId())
+                                    .temporaryId("temp".concat(cont[0].toString()))
+                                    .baId(baId)
+                                    .accountId(accountId)
+                                    .invoiceCompany("TDP")
+                                    .build();
+                            newProductsAltaFijaList.add(newProductAltaFijaShareEquipment);
+                            cont[0]++;
+
+                        } else if (productType.equalsIgnoreCase(Constants.PRODUCT_TYPE_ACCESSORIES)) {
+                            NewProductAltaFija newProductAltaFijaAccesories = NewProductAltaFija
+                                    .builder()
+                                    .productCatalogId(productSpecification.getRefinedProduct()
+                                            .getProductCharacteristics().get(0).getId())
+                                    .temporaryId("temp".concat(cont[0].toString()))
+                                    .baId(baId)
+                                    .accountId(accountId)
+                                    .invoiceCompany("TDP")
+                                    .build();
+                            cont[0]++;
+
+                            ChangedCharacteristic changedCharacteristicAccesories1 = ChangedCharacteristic
+                                    .builder()
+                                    .characteristicId("15734")
+                                    .characteristicValue("34203411")
+                                    .build();
+
+                            List<ChangedCharacteristic> changedCharacteristicsAccesoriesList =
+                                    new ArrayList<>();
+                            changedCharacteristicsAccesoriesList.add(changedCharacteristicAccesories1);
+
+                            ChangedContainedProduct changedContainedProductAccesories1 = ChangedContainedProduct
+                                    .builder()
+                                    .temporaryId("temp".concat(cont[0].toString()))
+                                    .productCatalogId("34134811")
+                                    .changedCharacteristics(changedCharacteristicsAccesoriesList)
+                                    .build();
+                            cont[0]++;
+
+                            List<ChangedContainedProduct> changedContainedProductsAccesoriesList =
+                                    new ArrayList<>();
+                            changedContainedProductsAccesoriesList.add(changedContainedProductAccesories1);
+
+                            ProductChangeAltaFija productChangesAccesories = ProductChangeAltaFija
+                                    .builder()
+                                    .changedContainedProducts(changedContainedProductsAccesoriesList)
+                                    .build();
+
+                            newProductAltaFijaAccesories.setProductChanges(productChangesAccesories);
+                            newProductsAltaFijaList.add(newProductAltaFijaAccesories);
                         }
-
-                        newProductsAltaFijaList.add(newProductAltaFijaCableTv);
-
-                    } else if (productType.equalsIgnoreCase("ShEq")) {
-
-                        NewProductAltaFija newProductAltaFijaShareEquipment = NewProductAltaFija
-                                .builder()
-                                .productCatalogId(productSpecification.getRefinedProduct()
-                                        .getProductCharacteristics().get(0).getId())
-                                .temporaryId("temp")
-                                .baId(baId)
-                                .accountId(accountId)
-                                .invoiceCompany("TDP")
-                                .build();
-                        newProductsAltaFijaList.add(newProductAltaFijaShareEquipment);
-
-                    } else if (productType.equalsIgnoreCase("Accessories")) {
-
-                        ChangedCharacteristic changedCharacteristicAccesories1 = ChangedCharacteristic
-                                .builder()
-                                .characteristicId("15734")
-                                .characteristicValue("34203411")
-                                .build();
-
-                        List<ChangedCharacteristic> changedCharacteristicsAccesoriesList =
-                                new ArrayList<>();
-                        changedCharacteristicsAccesoriesList.add(changedCharacteristicAccesories1);
-
-                        ChangedContainedProduct changedContainedProductAccesories1 = ChangedContainedProduct
-                                .builder()
-                                .temporaryId("temp")
-                                .productCatalogId("34134811")
-                                .changedCharacteristics(changedCharacteristicsAccesoriesList)
-                                .build();
-
-                        List<ChangedContainedProduct> changedContainedProductsAccesoriesList =
-                                new ArrayList<>();
-                        changedContainedProductsAccesoriesList.add(changedContainedProductAccesories1);
-
-                        ProductChangeAltaFija productChangesAccesories = ProductChangeAltaFija
-                                .builder()
-                                .changedContainedProducts(changedContainedProductsAccesoriesList)
-                                .build();
-
-                        NewProductAltaFija newProductAltaFijaAccesories = NewProductAltaFija
-                                .builder()
-                                .productCatalogId(productSpecification.getRefinedProduct()
-                                        .getProductCharacteristics().get(0).getId())
-                                .temporaryId("temp")
-                                .baId(baId)
-                                .accountId(accountId)
-                                .invoiceCompany("TDP")
-                                .productChanges(productChangesAccesories)
-                                .build();
-                        newProductsAltaFijaList.add(newProductAltaFijaAccesories);
-                    }
-                });
+                    });
+        }
 
         return newProductsAltaFijaList;
     }
@@ -616,8 +670,9 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
     }
 
     private Mono<Sale> retryRequest(PostSalesRequest request, Sale sale, Boolean flgCaeq, Boolean flgAlta,
-                                    Boolean flgCasi, Boolean flgFinanciamiento, String sapidSimcard) {
-        sale.setStatus(Constants.NUEVO);
+                                       Boolean flgCasi, Boolean flgFinanciamiento, String sapidSimcard) {
+        sale.setStatus(Constants.SALES_STATUS_NUEVO);
+        LOG.info("Sales Retry");
         if (sale.getCommercialOperation().get(0).getOrder() != null
                 && (sale.getCommercialOperation().get(0).getDeviceOffering() == null
                 || sale.getCommercialOperation().get(0).getDeviceOffering().get(0).getStock() == null
@@ -628,8 +683,8 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
             if (flgCaeq || flgAlta) {
 
                 return this.callToReserveStockAndCreateQuotation(PostSalesRequest.builder()
-                        .sale(sale).headersMap(request.getHeadersMap())
-                        .build(), sale, flgCasi, flgFinanciamiento, sapidSimcard);
+                                .sale(sale).headersMap(request.getHeadersMap())
+                                .build(), sale, flgCasi, flgFinanciamiento, sapidSimcard);
             } else {
                 if (Boolean.TRUE.equals(flgCasi)) {
 
@@ -698,7 +753,6 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         } else {
             request.getHeadersMap().put(Constants.UFX_AUTHORIZATION, tokenMcss);
         }
-
         // Validation if is retail
         String flowSaleValue = saleRequest.getAdditionalData().stream()
                 .filter(keyValueType -> keyValueType.getKey().equalsIgnoreCase(Constants.FLOWSALE))
@@ -706,26 +760,43 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                 .orElse(KeyValueType.builder().value(null).build())
                 .getValue();
         Boolean isRetail = flowSaleValue.equalsIgnoreCase(Constants.RETAIL);
-        Boolean statusValidado = saleRequest.getStatus().equalsIgnoreCase(Constants.VALIDADO);
-        if (Boolean.TRUE.equals(isRetail) && Boolean.TRUE.equals(statusValidado)) {
-            if (StringUtils.isEmpty(this.getStringValueByKeyFromAdditionalDataList(saleRequest.getAdditionalData(),
-                    "MOVILE_IMEI"))) {
-                return Mono.error(GenesisException
-                        .builder()
-                        .exceptionId(Constants.BAD_REQUEST_EXCEPTION_ID)
-                        .wildcards(new String[]{"MOVILE_IMEI is mandatory. Must be sent into Additional Data Property "
-                                + "with 'MOVILE_IMEI' key value."})
-                        .build());
-            } else if (StringUtils.isEmpty(this.getStringValueByKeyFromAdditionalDataList(saleRequest
-                    .getAdditionalData(),"SIM_ICCID"))) {
-                return Mono.error(GenesisException
-                        .builder()
-                        .exceptionId(Constants.BAD_REQUEST_EXCEPTION_ID)
-                        .wildcards(new String[]{"SIM_ICCID is mandatory. Must be sent into Additional Data Property "
-                                + "with 'SIM_ICCID' key value."})
-                        .build());
-            } else if (StringUtils.isEmpty(this.getStringValueByKeyFromAdditionalDataList(saleRequest
-                    .getAdditionalData(),"NUMERO_CAJA"))) {
+        Boolean statusValidado = saleRequest.getStatus().equalsIgnoreCase(Constants.STATUS_VALIDADO);
+        if (Boolean.TRUE.equals(isRetail) && statusValidado) {
+            if (saleRequest.getCommercialOperation().get(0).getDeviceOffering() != null
+                    && !saleRequest.getCommercialOperation().get(0).getDeviceOffering().isEmpty()) {
+                DeviceOffering deviceOfferingSim = saleRequest.getCommercialOperation().get(0).getDeviceOffering().stream()
+                        .filter(item -> item.getDeviceType().equalsIgnoreCase(Constants.DEVICE_TYPE_SIM))
+                        .findFirst()
+                        .orElse(null);
+                if (deviceOfferingSim != null
+                        && StringUtils.isEmpty(this.getStringValueByKeyFromAdditionalDataList(saleRequest
+                        .getAdditionalData(), "SIM_ICCID"))) {
+                    return Mono.error(GenesisException
+                            .builder()
+                            .exceptionId(Constants.BAD_REQUEST_EXCEPTION_ID)
+                            .wildcards(new String[]{"SIM_ICCID is mandatory. Must be sent into Additional Data Property "
+                                    + "with 'SIM_ICCID' key value."})
+                            .build());
+                }
+
+                DeviceOffering deviceOfferingSmartphone = saleRequest.getCommercialOperation().get(0).getDeviceOffering().stream()
+                        .filter(item -> !item.getDeviceType().equalsIgnoreCase(Constants.DEVICE_TYPE_SIM))
+                        .findFirst()
+                        .orElse(null);
+                if (deviceOfferingSmartphone != null
+                        && StringUtils.isEmpty(this.getStringValueByKeyFromAdditionalDataList(saleRequest.getAdditionalData(),
+                        "MOVILE_IMEI"))) {
+                    return Mono.error(GenesisException
+                            .builder()
+                            .exceptionId(Constants.BAD_REQUEST_EXCEPTION_ID)
+                            .wildcards(new String[]{"MOVILE_IMEI is mandatory. Must be sent into Additional Data Property "
+                                    + "with 'MOVILE_IMEI' key value."})
+                            .build());
+                }
+            }
+
+            if (StringUtils.isEmpty(this.getStringValueByKeyFromAdditionalDataList(saleRequest
+                            .getAdditionalData(),Constants.NUMERO_CAJA))) {
                 return Mono.error(GenesisException
                         .builder()
                         .exceptionId(Constants.BAD_REQUEST_EXCEPTION_ID)
@@ -766,8 +837,13 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                 flgAlta[0] = booleanValue;
             }
         }
+        LOG.info("CAPL: " + flgCapl[0]);
+        LOG.info("CAEQ: " + flgCaeq[0]);
+        LOG.info("CASI: " + flgCasi[0]);
+        LOG.info("ALTA: " + flgAlta[0]);
 
         flgFinanciamiento[0] = setFinancingFlag(saleRequest.getCommercialOperation().get(0).getDeviceOffering());
+        LOG.info("Sales product type mobile has financing: " + flgFinanciamiento[0]);
 
         // Validate if it is a retry from Frontend
         return salesRepository.findBySalesId(saleRequest.getSalesId())
@@ -795,10 +871,11 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
 
         // ALTA FIJA
         if (commercialOperationReason.equalsIgnoreCase("ALTA")
-                && mainProductType.equalsIgnoreCase("WIRELINE")
+                && mainProductType.equalsIgnoreCase(Constants.WIRELINE)
                 && saleRequest.getCommercialOperation().get(0).getAction().equalsIgnoreCase("PROVIDE"))
         {
             // Fija Commercial Operations
+            LOG.info("Alta Fija Sales Case");
 
             return businessParameterWebClient
                     .getParametersFinanciamientoFija(request.getHeadersMap())
@@ -806,12 +883,13 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                     .map(bpFinanciamientoFijaData -> bpFinanciamientoFijaData.get(0))
                     .map(BusinessParameterFinanciamientoFijaData::getExt)
                     .flatMap(parametersFinanciamientoFija -> processFija(parametersFinanciamientoFija, saleRequest,
-                            request, flgFinanciamiento, isRetail));
+                            request, isRetail));
 
         } else if ((commercialOperationReason.equalsIgnoreCase("CAPL")
                 || commercialOperationReason.equalsIgnoreCase("REPLACEOFFER"))
-                && mainProductType.equalsIgnoreCase("WIRELINE")
+                && mainProductType.equalsIgnoreCase(Constants.WIRELINE)
                 && saleRequest.getCommercialOperation().get(0).getAction().equalsIgnoreCase("MODIFY")) {
+            LOG.info("Migration Sales Case");
 
             String actionType = commercialOperationReason.equalsIgnoreCase("CAPL") ? "CW" : "CH";
             return businessParameterWebClient
@@ -819,10 +897,11 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                     .map(BusinessParametersFinanciamientoFijaResponse::getData)
                     .map(bpFinanciamientoFijaData -> bpFinanciamientoFijaData.get(0))
                     .map(BusinessParameterFinanciamientoFijaData::getExt)
-                    .flatMap(parametersFinanciamientoFija -> wirelineMigrations(parametersFinanciamientoFija, request,
-                            flgFinanciamiento, actionType, isRetail));
+                    .flatMap(parametersFinanciamientoFija -> wirelineMigrations(parametersFinanciamientoFija, request
+                            , actionType, isRetail));
 
         } else if (mainProductType.equalsIgnoreCase(Constants.WIRELESS)) {
+            LOG.info("Wireless Sales Case");
             // Mobile Commercial Operations
             Boolean deviceOfferingIsNullOrEmpty = deviceOfferingIsNullOrEmpty(saleRequest);
 
@@ -852,7 +931,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
 
                 // Get Bonificacion Simcard
                 Mono<BusinessParametersResponseObjectExt> getBonificacionSim = businessParameterWebClient
-                        .getBonificacionSimcard(saleRequest.getChannel().getId(), request.getHeadersMap());
+                        .getBonificacionSimcard(request.getHeadersMap());
 
                 // Get Parameters Simcard
                 Mono<BusinessParametersResponseObjectExt> getParametersSimCard = businessParameterWebClient
@@ -863,10 +942,16 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
 
                 // Añadir llamada a get businessParameters - ReasonCode
                 return Mono.zip(getRiskDomain, salesCharsByCot, getBonificacionSim, getParametersSimCard, getParametersReasonCode)
-                        .flatMap(tuple -> validationsAndBuildings(tuple.getT1(), tuple.getT2(), tuple.getT3(),
-                                tuple.getT4(), tuple.getT5(), saleRequest, request, sapidSimcard,
-                                commercialOperationReason, flgCapl, flgCaeq, flgCasi, flgAlta, flgFinanciamiento,
-                                channelIdRequest, customerIdRequest, productOfferingIdRequest, isRetail));
+                        .flatMap(tuple -> {
+                            try {
+                                return validationsAndBuildings(tuple.getT1(), tuple.getT2(), tuple.getT3(),
+                                        tuple.getT4(), tuple.getT5(), saleRequest, request, sapidSimcard,
+                                        commercialOperationReason, flgCapl, flgCaeq, flgCasi, flgAlta, flgFinanciamiento,
+                                        channelIdRequest, customerIdRequest, productOfferingIdRequest, isRetail);
+                            } catch (ParseException e) {
+                                return Mono.error(e);
+                            }
+                        });
 
             } else {
                 return salesRepository.save(saleRequest)
@@ -910,7 +995,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                                                final Boolean[] flgCaeq, final Boolean[] flgCasi,
                                                final Boolean[] flgAlta, final Boolean[] flgFinanciamiento,
                                                String channelIdRequest, String customerIdRequest,
-                                               String productOfferingIdRequest, Boolean isRetail) {
+                                               String productOfferingIdRequest, Boolean isRetail) throws ParseException {
 
         if (!getRiskDomain.getData().isEmpty() && getRiskDomain.getData().get(0).getActive()) {
             // if it is a risk domain, cancel operation
@@ -943,42 +1028,51 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         CreateProductOrderGeneralRequest mainRequestProductOrder = new CreateProductOrderGeneralRequest();
 
         // Recognizing Mobile Portability
-        Boolean isMobilePortability = commercialOperationReason.equalsIgnoreCase("PORTABILIDAD");
+        Boolean isMobilePortability = commercialOperationReason.equalsIgnoreCase(Constants.PORTABILIDAD);
+        LOG.info("Sales contain Mobile Portability: " + isMobilePortability);
 
         // Recognizing CAPL Commercial Operation Type
         if (flgCapl[0] && !flgCaeq[0] && !flgCasi[0] && !flgAlta[0]) {
+            LOG.info("CAPL Sales Case");
 
             mainRequestProductOrder = this.caplCommercialOperation(saleRequest, mainRequestProductOrder,
-                    channelIdRequest, customerIdRequest, productOfferingIdRequest, cipCode);
+                    channelIdRequest, customerIdRequest, productOfferingIdRequest, cipCode, getBonificacionSim);
 
         } else if (!flgCapl[0] && flgCaeq[0] && !flgAlta[0]) { // Recognizing CAEQ Commercial Operation Type
+            LOG.info("CAEQ Sales Case");
 
             mainRequestProductOrder = this.caeqCommercialOperation(saleRequest, mainRequestProductOrder, flgCasi[0],
                     channelIdRequest, customerIdRequest, productOfferingIdRequest, cipCode, sapidSimcard[0],
-                    getParameterReasonCode);
+                    getParameterReasonCode, getBonificacionSim);
 
         } else if (flgCapl[0] && flgCaeq[0] && !flgAlta[0]) { // Recognizing CAEQ+CAPL Commercial Operation Type
+            LOG.info("CAEQ + CAPL Sales Case");
 
             mainRequestProductOrder = this.caeqCaplCommercialOperation(saleRequest, mainRequestProductOrder, flgCasi[0],
                     channelIdRequest, customerIdRequest, productOfferingIdRequest, cipCode, sapidSimcard[0],
-                    getParameterReasonCode);
+                    getParameterReasonCode, getBonificacionSim);
         } else if (!flgCapl[0] && !flgCaeq[0] && flgAlta[0] || isMobilePortability) {
+            LOG.info("ALTA or Mobile Portability Sales Case");
 
             mainRequestProductOrder = this.altaCommercialOperation(saleRequest, mainRequestProductOrder,
                     channelIdRequest, customerIdRequest, productOfferingIdRequest, cipCode, getBonificacionSim,
                     sapidSimcard[0], isMobilePortability, flgCasi[0]);
         }
 
-        // FEMS-1514 Validación de creación Orden -> solo cuando es flujo retail se debe hacer validación
-        Mono<Sale> saleRequestValidation = creationOrderValidation(saleRequest, mainRequestProductOrder,
-                request.getHeadersMap());
-
-        if (isRetail && saleRequest.getStatus().equalsIgnoreCase("NEGOCIACION")) {
-            return saleRequestValidation.flatMap(salesRepository::save);
+        if ( saleRequest.getCommercialOperation().get(0).getDeviceOffering() != null
+                && !saleRequest.getCommercialOperation().get(0).getDeviceOffering().isEmpty()
+                && isRetail && saleRequest.getStatus().equalsIgnoreCase("NEGOCIACION")) {
+            LOG.info("Sales flowSale Retail and Status NEGOCIACION, executing Create Order Validation");
+            // FEMS-1514 Validación de creación Orden -> solo cuando es flujo retail, status negociacion
+            // y la venta involucra un equipo, se debe hacer validación
+            return creationOrderValidation(saleRequest, mainRequestProductOrder,
+                    request.getHeadersMap()).flatMap(salesRepository::save);
         } else {
+            LOG.info("Executing Create Order Service");
             CreateProductOrderGeneralRequest finalMainRequestProdOrder = mainRequestProductOrder;
             return productOrderWebClient.createProductOrder(finalMainRequestProdOrder, request.getHeadersMap(),
                     saleRequest).flatMap(createOrderResponse -> {
+                        LOG.info("Create order response: ".concat(new Gson().toJson(createOrderResponse)));
                         saleRequest.getCommercialOperation().get(0).setOrder(createOrderResponse
                                 .getCreateProductOrderResponse());
 
@@ -987,7 +1081,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                             saleRequest.setStatus(Constants.NEGOCIACION);
                         } else if (!StringUtils.isEmpty(createOrderResponse.getCreateProductOrderResponse()
                                 .getProductOrderId())) {
-                            saleRequest.setStatus("NUEVO");
+                            saleRequest.setStatus(Constants.SALES_STATUS_NUEVO);
                         } else {
                             saleRequest.setStatus(Constants.PENDIENTE);
                         }
@@ -995,6 +1089,8 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
 
                         // Ship Delivery logic (tambo) - SERGIO
                         if (saleRequest.getCommercialOperation().get(0).getWorkOrDeliveryType() != null
+                                && !StringUtils.isEmpty(saleRequest.getCommercialOperation().get(0)
+                                .getWorkOrDeliveryType().getMediumDelivery())
                                 && saleRequest.getCommercialOperation().get(0).getWorkOrDeliveryType()
                                 .getMediumDelivery().equalsIgnoreCase("Tienda")) {
                             saleRequest.setAdditionalData(additionalDataAssigments(saleRequest
@@ -1035,23 +1131,24 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
             String productTypeSva = productOfferings.get(i).getProductSpecification().get(0)
                     .getProductType();
             String productTypeComponent = this.getStringValueByKeyFromAdditionalDataList(
-                    productOfferings.get(i).getAdditionalData(), "productType"); // Pendiente confirmación de la ruta de referencia del Additional Data
+                    productOfferings.get(i).getAdditionalData(), Constants.PRODUCT_TYPE);
 
-            if (productTypeSva.equalsIgnoreCase("sva")) {
+            if (productTypeSva.equalsIgnoreCase(Constants.PRODUCT_TYPE_SVA)) {
 
                 if (productTypeComponent.equalsIgnoreCase(Constants.PRODUCT_TYPE_CABLE_TV)
+                        || productTypeComponent.equalsIgnoreCase(Constants.PRODUCT_TYPE_CHANNEL_TV)
                         || productTypeComponent.equalsIgnoreCase(Constants.PRODUCT_TYPE_BROADBAND)
                         || productTypeComponent.equalsIgnoreCase(Constants.PRODUCT_TYPE_LANDLINE)) {
 
                     NewAssignedBillingOffers newAssignedBillingOffers = NewAssignedBillingOffers
                             .builder()
                             .productSpecPricingId(productOfferings.get(i).getId())
-                            .parentProductCatalogId(this.getStringValueByKeyFromAdditionalDataList(
-                                    productOfferings.get(i).getAdditionalData(),
-                                    "parentProductCatalogID"))
+                            .parentProductCatalogId(productOfferings.get(i).getProductSpecification().get(0)
+                                    .getProductPrice().get(0).getProductSpecContainmentId())
                             .build();
 
-                    if (productTypeComponent.equalsIgnoreCase(Constants.PRODUCT_TYPE_CABLE_TV)) {
+                    if (productTypeComponent.equalsIgnoreCase(Constants.PRODUCT_TYPE_CABLE_TV)
+                            || productTypeComponent.equalsIgnoreCase(Constants.PRODUCT_TYPE_CHANNEL_TV)) {
                         newAssignedBillingOffersCableTvList.add(newAssignedBillingOffers);
                     } else if (productTypeComponent.equalsIgnoreCase(Constants.PRODUCT_TYPE_BROADBAND)) {
                         newAssignedBillingOffersBroadbandList.add(newAssignedBillingOffers);
@@ -1064,14 +1161,16 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
     }
 
     private Mono<Sale> processFija(List<BusinessParameterFinanciamientoFijaExt> parametersFinanciamientoFija,
-                                   Sale saleRequest, PostSalesRequest request, final Boolean[] flgFinanciamiento,
-                                   Boolean isRetail) {
+                                   Sale saleRequest, PostSalesRequest request, Boolean isRetail) {
         // Building Create Quotation Request to use into Create Order Request
+        LOG.info("Building Create Quotation Fija Request...");
         CreateQuotationRequest createQuotationFijaRequest = new CreateQuotationRequest();
-        if (flgFinanciamiento[0]) {
-            this.buildCreateQuotationFijaRequest(createQuotationFijaRequest, request,
-                    parametersFinanciamientoFija);
-        }
+        this.buildCreateQuotationFijaRequest(createQuotationFijaRequest, request,
+                parametersFinanciamientoFija);
+
+        LOG.info("Alta Fija Sales has financing: " + (createQuotationFijaRequest.getBody() != null));
+        LOG.info("Create Quotation Fija Request without order info: ".concat(new Gson()
+                                                                        .toJson(createQuotationFijaRequest.getBody())));
 
         // Identifying New Assigned Billing Offers SVAs
         List<NewAssignedBillingOffers> newAssignedBillingOffersCableTvList = new ArrayList<>();
@@ -1092,19 +1191,20 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
 
         // Building ServiceAvailability
         ServiceabilityInfoType serviceabilityInfo = buildServiceabilityInfoType(request);
+        LOG.info("serviceabilityInfo: " + new Gson().toJson(serviceabilityInfo));
 
         // Order Attributes Alta Fija
         List<FlexAttrType> altaFijaOrderAttributesList = new ArrayList<>();
         this.buildOrderAttributesListAltaFija(altaFijaOrderAttributesList, saleRequest,
-                createQuotationFijaRequest, flgFinanciamiento[0]);
+                createQuotationFijaRequest);
 
         AltaFijaRequest altaFijaRequest = new AltaFijaRequest();
         altaFijaRequest.setNewProducts(newProductsAltaFijaList);
         altaFijaRequest.setAppointmentId(saleRequest.getCommercialOperation().get(0).getWorkOrDeliveryType() != null
                 && saleRequest.getCommercialOperation().get(0).getWorkOrDeliveryType().getWorkOrder() != null
                 && saleRequest.getCommercialOperation().get(0).getWorkOrDeliveryType().getWorkOrder()
-                .getWorkForceTeams() != null
-                ? saleRequest.getCommercialOperation().get(0).getWorkOrDeliveryType().getWorkOrder().getWorkForceTeams()
+                .getWorkforceTeams() != null
+                ? saleRequest.getCommercialOperation().get(0).getWorkOrDeliveryType().getWorkOrder().getWorkforceTeams()
                 .get(0).getId() : null);
         altaFijaRequest.setAppointmentNumber(saleRequest.getSalesId());
         altaFijaRequest.setServiceabilityInfo(serviceabilityInfo);
@@ -1113,17 +1213,36 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         if (saleRequest.getPaymenType() != null && !StringUtils.isEmpty(saleRequest.getPaymenType().getCid())) {
             altaFijaRequest.setCip(saleRequest.getPaymenType().getCid());
         }
-        altaFijaRequest.setUpfrontIndicator(saleRequest.getCommercialOperation().get(0)
-                .getProductOfferings().get(0).getUpFront().getIndicator());
+
+        String upFrontIndicatorValue = saleRequest.getCommercialOperation().get(0).getProductOfferings() != null
+                && !saleRequest.getCommercialOperation().get(0).getProductOfferings().isEmpty()
+                && saleRequest.getCommercialOperation().get(0).getProductOfferings().get(0).getUpFront() != null
+                && !StringUtils.isEmpty(saleRequest.getCommercialOperation().get(0).getProductOfferings()
+                .get(0).getUpFront().getIndicator()) ?
+                saleRequest.getCommercialOperation().get(0).getProductOfferings().get(0).getUpFront().getIndicator() :
+                "N";
+
+        altaFijaRequest.setUpfrontIndicator(upFrontIndicatorValue);
+
+        com.tdp.ms.sales.model.dto.productorder.Customer altaFijaCustomer =
+                com.tdp.ms.sales.model.dto.productorder.Customer
+                        .builder()
+                        .customerId(saleRequest.getRelatedParty().get(0).getCustomerId())
+                        .build();
+
+        String productOfferingId = saleRequest.getCommercialOperation().get(0).getProductOfferings() != null
+                && !saleRequest.getCommercialOperation().get(0).getProductOfferings().isEmpty()
+                && !StringUtils.isEmpty(saleRequest.getCommercialOperation().get(0)
+                .getProductOfferings().get(0).getId()) ?
+                saleRequest.getCommercialOperation().get(0).getProductOfferings().get(0).getId() : "";
 
         // Alta Fija Customize Request
         ProductOrderAltaFijaRequest productOrderAltaFijaRequest = ProductOrderAltaFijaRequest
                 .builder()
                 .salesChannel(saleRequest.getChannel().getId())
                 .request(altaFijaRequest)
-                .customerId(saleRequest.getRelatedParty().get(0).getCustomerId())
-                .productOfferingId(saleRequest.getCommercialOperation().get(0)
-                        .getProductOfferings().get(0).getId())
+                .customer(altaFijaCustomer)
+                .productOfferingId(productOfferingId)
                 .onlyValidationIndicator(Constants.STRING_FALSE)
                 .actionType("PR")
                 .build();
@@ -1132,34 +1251,43 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         CreateProductOrderGeneralRequest mainRequestProductOrder = new CreateProductOrderGeneralRequest();
         mainRequestProductOrder.setCreateProductOrderRequest(productOrderAltaFijaRequest);
 
-        return createOrderFija(mainRequestProductOrder, request, saleRequest, flgFinanciamiento,
+        return createOrderFija(mainRequestProductOrder, request, saleRequest,
                 createQuotationFijaRequest, isRetail);
     }
 
     private Mono<Sale> createOrderFija(CreateProductOrderGeneralRequest mainRequestProductOrder,
-                                       PostSalesRequest request, Sale saleRequest, final Boolean[] flgFinanciamiento,
+                                       PostSalesRequest request, Sale saleRequest,
                                        CreateQuotationRequest createQuotationFijaRequest, Boolean isRetail) {
+        LOG.info("Create Order Request: ".concat(new Gson().toJson(mainRequestProductOrder)));
 
-        // FEMS-1514 Validación de creación Orden
-        Mono<Sale> saleRequestValidation = creationOrderValidation(saleRequest, mainRequestProductOrder,
-                request.getHeadersMap());
-        if (isRetail && saleRequest.getStatus().equalsIgnoreCase("NEGOCIACION")) {
-            return saleRequestValidation.flatMap(salesRepository::save);
+        if (saleRequest.getCommercialOperation().get(0).getDeviceOffering() != null
+                && !saleRequest.getCommercialOperation().get(0).getDeviceOffering().isEmpty()
+                && isRetail && saleRequest.getStatus().equalsIgnoreCase("NEGOCIACION")) {
+            // FEMS-1514 Validación de creación Orden -> solo cuando es flujo retail, status negociacion
+            // y la venta involucra un equipo, se debe hacer validación
+            return creationOrderValidation(saleRequest, mainRequestProductOrder,
+                    request.getHeadersMap()).flatMap(salesRepository::save);
         } else {
+            LOG.info("Executing Create Order Service");
             // Call de Create Alta Fija Order
             return productOrderWebClient.createProductOrder(mainRequestProductOrder, request.getHeadersMap(),
-                    saleRequest).flatMap(createOrderResponse -> addOrderIntoSale(PostSalesRequest.builder()
-                                    .sale(saleRequest).headersMap(request.getHeadersMap()).build(), saleRequest,
-                            flgFinanciamiento, createQuotationFijaRequest, createOrderResponse));
+                    saleRequest)
+                    .flatMap(createOrderResponse -> addOrderIntoSale(PostSalesRequest
+                                    .builder()
+                                    .sale(saleRequest)
+                                    .headersMap(request.getHeadersMap())
+                                    .build(),
+                            saleRequest, createQuotationFijaRequest, createOrderResponse));
         }
     }
 
-    private Mono<Sale> addOrderIntoSale(PostSalesRequest request, Sale saleRequest, final Boolean[] flgFinanciamiento,
+    private Mono<Sale> addOrderIntoSale(PostSalesRequest request, Sale saleRequest,
                                         CreateQuotationRequest createQuotationFijaRequest,
                                         ProductorderResponse createOrderResponse) {
+        LOG.info("Create Order Response: " + new Gson().toJson(createOrderResponse));
         // Adding Order info to sales
         saleRequest.getCommercialOperation().get(0)
-                .setOrder(createOrderResponse.getCreateProductOrderResponse());
+                .setOrder(createOrderResponse.getCreateProductOrderResponse()); // Pending evaluate this setter for MT
 
         if (validateNegotiation(saleRequest.getAdditionalData(),
                 saleRequest.getIdentityValidations())) {
@@ -1167,14 +1295,16 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         } else if (!StringUtils.isEmpty(createOrderResponse.getCreateProductOrderResponse()
                 .getProductOrderId())) {
             // When All is OK
-            saleRequest.setStatus("NUEVO");
+            saleRequest.setStatus(Constants.SALES_STATUS_NUEVO);
         } else {
             // When Create Product Order Service fail or doesnt respond with an Order Id
             saleRequest.setStatus(Constants.PENDIENTE);
         }
         saleRequest.setAudioStatus(Constants.PENDIENTE);
 
-        if (flgFinanciamiento[0]) {
+        if (createQuotationFijaRequest.getBody() != null) {
+            this.addOrderInfoToCreateQuotationFijaRequest(createQuotationFijaRequest, saleRequest);
+
             return quotationWebClient.createQuotation(createQuotationFijaRequest,
                     saleRequest)
                     .flatMap(createQuotationResponse -> salesRepository.save(saleRequest)
@@ -1205,6 +1335,9 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
 
         return stringValue[0];
     }
+
+    // This method must be called to Alta Fija (productType = WIRELINE)
+    // and MT (productType = MT && additionalData.key[productType].value = WIRELINE)
     private void buildCreateQuotationFijaRequest(CreateQuotationRequest createQuotationRequest,
                                                  PostSalesRequest salesRequest,
                                                  List<BusinessParameterFinanciamientoFijaExt> bpFinanciamiento) {
@@ -1212,206 +1345,349 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
 
         Sale sale = salesRequest.getSale();
 
-        TimePeriod validFor = TimePeriod
-                .builder()
-                .endDateTime(Commons.getDatetimeNow())
-                .startDateTime(Commons.getDatetimeNow())
-                .build();
-        com.tdp.ms.sales.model.dto.quotation.ContactMedium contactMedium1 = com.tdp.ms.sales.model.dto.quotation
-                .ContactMedium
-                .builder()
-                .type(Constants.EMAIL)
-                .name(sale.getProspectContact().get(0).getCharacteristic().getEmailAddress())
-                .preferred("true")
-                .isActive("true")
-                .validFor(validFor)
-                .build();
-        List<com.tdp.ms.sales.model.dto.quotation.ContactMedium> contactMediumList = new ArrayList<>();
-        contactMediumList.add(contactMedium1);
+        CommercialOperationType mainCommercialOperation =  new CommercialOperationType();
+        if (sale.getProductType().equalsIgnoreCase(Constants.WIRELINE)) {
+            mainCommercialOperation = sale.getCommercialOperation().get(0);
+        } else if (sale.getProductType().equalsIgnoreCase("MT")) {
+            mainCommercialOperation = sale.getCommercialOperation().stream()
+                    .filter(item -> this.getStringValueByKeyFromAdditionalDataList(item.getAdditionalData(),
+                            Constants.PRODUCT_TYPE).equalsIgnoreCase(Constants.WIRELINE))
+                    .findFirst()
+                    .orElse(new CommercialOperationType());
+        }
 
-        LegalId legalId = LegalId
-                .builder()
-                .country("PE")
-                .isPrimary("true")
-                .nationalId(sale.getRelatedParty().get(0).getNationalId())
-                .nationalIdType(sale.getRelatedParty().get(0).getNationalIdType())
-                .build();
+        // Conditional to call Create Quotation
+        // Financiamiento de Instalación
+        OfferingType offeringType1 = mainCommercialOperation.getProductOfferings().stream()
+                .filter(item -> item.getUpFront().getIndicator().equalsIgnoreCase("N"))
+                .findFirst()
+                .orElse(null);
+        // Upgrade de Modem Premium
+        OfferingType offeringType2 = mainCommercialOperation.getProductOfferings().stream()
+                .filter(item -> this.getStringValueByKeyFromAdditionalDataList(item
+                        .getAdditionalData(), "modemPremium").equalsIgnoreCase("true"))
+                .findFirst()
+                .orElse(null);
+        // Ultra Wifi
+        OfferingType offeringType3 = mainCommercialOperation.getProductOfferings().stream()
+                .filter(item -> this.getStringValueByKeyFromAdditionalDataList(item
+                        .getAdditionalData(), "ultraWifi").equalsIgnoreCase("true"))
+                .findFirst()
+                .orElse(null);
+        if (offeringType1 == null && offeringType2 == null && offeringType3 == null) {
+            createQuotationRequest.setBody(null);
+        } else {
+            final String[] email = {null};
+            sale.getProspectContact().stream()
+                    .filter(item -> item.getMediumType().equalsIgnoreCase(Constants.MEDIUM_TYPE_EMAIL_ADDRESS))
+                    .findFirst()
+                    .ifPresent(item -> email[0] = item.getCharacteristic().getEmailAddress());
 
+            /*TimePeriod validFor = TimePeriod
+                    .builder()
+                    .endDateTime(Commons.getDatetimeNow())
+                    .startDateTime(Commons.getDatetimeNow())
+                    .build();*/
+            
+            com.tdp.ms.sales.model.dto.quotation.ContactMedium contactMedium1 = com.tdp.ms.sales.model.dto.quotation
+                    .ContactMedium
+                    .builder()
+                    .type(Constants.EMAIL)
+                    .name(email[0])
+                    .preferred("true")
+                    .isActive("true")
+                    //.validFor(validFor) // Ya no se envia a solicitud del LT, FEMS-4419
+                    .build();
+
+            List<com.tdp.ms.sales.model.dto.quotation.ContactMedium> contactMediumList = new ArrayList<>();
+            contactMediumList.add(contactMedium1);
+
+            LegalId legalId = LegalId
+                    .builder()
+                    .country("PE")
+                    .isPrimary("true")
+                    .nationalId(sale.getRelatedParty().get(0).getNationalId())
+                    .nationalIdType(sale.getRelatedParty().get(0).getNationalIdType())
+                    .build();
+
+        /* Se borra el campo a pedido de Lincoln
         Address address = Address
                 .builder()
-                .streetNr(sale.getCommercialOperation().get(0).getWorkOrDeliveryType().getPlace().get(0).getAddress()
+                .streetNr(mainCommercialOperation.getWorkOrDeliveryType().getPlace().get(0).getAddress()
                         .getStreetNr())
-                .streetName(sale.getCommercialOperation().get(0).getWorkOrDeliveryType().getPlace().get(0).getAddress()
+                .streetName(mainCommercialOperation.getWorkOrDeliveryType().getPlace().get(0).getAddress()
                         .getStreetName())
-                .streetType(sale.getCommercialOperation().get(0).getWorkOrDeliveryType().getPlace().get(0).getAddress()
+                .streetType(mainCommercialOperation.getWorkOrDeliveryType().getPlace().get(0).getAddress()
                         .getStreetType())
-                .locality(this.getStringValueByKeyFromAdditionalDataList(sale.getCommercialOperation().get(0)
+                .locality(this.getStringValueByKeyFromAdditionalDataList(mainCommercialOperation
                         .getWorkOrDeliveryType().getPlace().get(0).getAdditionalData(), "locality"))
-                .city(sale.getCommercialOperation().get(0).getWorkOrDeliveryType().getPlace().get(0).getAddress()
+                .city(mainCommercialOperation.getWorkOrDeliveryType().getPlace().get(0).getAddress()
                         .getCity())
-                .stateOrProvince(sale.getCommercialOperation().get(0).getWorkOrDeliveryType().getPlace().get(0)
+                .stateOrProvince(mainCommercialOperation.getWorkOrDeliveryType().getPlace().get(0)
                         .getAddress().getStateOrProvince())
-                .region(sale.getCommercialOperation().get(0).getWorkOrDeliveryType().getPlace().get(0)
+                .region(mainCommercialOperation.getWorkOrDeliveryType().getPlace().get(0)
                         .getAddress().getRegion())
-                .country(sale.getCommercialOperation().get(0).getWorkOrDeliveryType().getPlace().get(0)
+                .country(mainCommercialOperation.getWorkOrDeliveryType().getPlace().get(0)
                         .getAddress().getCountry())
-                .build();
+                .build();*/
 
-        Customer customerQuotation = Customer
-                .builder()
-                .id(sale.getRelatedParty().get(0).getCustomerId())
-                .creditScore(sale.getRelatedParty().get(0).getScore().getScore())
-                .name(sale.getRelatedParty().get(0).getFirstName())
-                .surname(sale.getRelatedParty().get(0).getLastName())
-                .segment(this.getStringValueByKeyFromAdditionalDataList(sale.getAdditionalData(),
-                        "customerTypeCode"))
-                .subsegment(this.getStringValueByKeyFromAdditionalDataList(sale.getAdditionalData(),
-                        "customerSubTypeCode"))
-                .contactMedia(contactMediumList)
-                .legalId(legalId)
-                .address(address)
-                .creditLimit(sale.getRelatedParty().get(0).getScore().getFinancingCapacity())
-                .build();
-
-        Number amountTotalAmount = sale.getCommercialOperation().get(0).getDeviceOffering().get(0).getOffers().get(0)
-                .getBillingOfferings().get(0).getCommitmentPeriods().get(0).getFinancingInstalments().get(0)
-                .getInstalments().getTotalAmount().getValue().doubleValue() - sale.getCommercialOperation().get(0)
-                .getDeviceOffering().get(1).getSimSpecifications().get(0)
-                .getPrice().get(0).getValue().doubleValue();
-
-        MoneyAmount totalAmount = MoneyAmount
-                .builder()
-                .amount(amountTotalAmount.toString())
-                .units("")
-                .build();
-
-        MoneyAmount associatedPlanRecurrentCost = MoneyAmount
-                .builder()
-                .amount("0.00")
-                .units("PEN")
-                .build();
-
-        MoneyAmount totalCustomerRecurrentCost = MoneyAmount
-                .builder()
-                .amount(sale.getCommercialOperation().get(0).getProductOfferings().get(0).getProductOfferingPrice()
-                        .get(0).getMaxPrice().getAmount().toString())
-                .units("PEN").build();
-
-        MoneyAmount downPayment = MoneyAmount
-                .builder()
-                .amount(sale.getCommercialOperation().get(0).getDeviceOffering().get(0).getOffers().get(0)
-                        .getBillingOfferings().get(0).getCommitmentPeriods().get(0).getFinancingInstalments()
-                        .get(0).getInstalments().getOpeningQuota().getValue().toString())
-                .units("PEN")
-                .build();
-
-        Site site = Site
-                .builder()
-                .id(sale.getChannel().getStoreId())
-                .build();
-
-        Channel channel = Channel
-                .builder()
-                .name(sale.getChannel().getId())
-                .build();
-
-        // Financiamiento de Instalación
-        List<com.tdp.ms.sales.model.dto.quotation.Item> itemsList = new ArrayList<>();
-        String salesId = sale.getSalesId();
-
-        if (sale.getCommercialOperation().get(0).getProductOfferings().get(0).getUpFront().getIndicator()
-                                                                                .equalsIgnoreCase("N")) {
-            String offeringId = this.getStringValueByKeyFromAdditionalDataList(sale.getCommercialOperation().get(0)
-                    .getProductOfferings().get(0).getAdditionalData(), "PRODUCT_FOR_INST_FEE")
-                    .concat("_")
-                    .concat(salesId);
-
-            com.tdp.ms.sales.model.dto.quotation.Item itemInstallation = com.tdp.ms.sales.model.dto.quotation.Item
+            Customer customerQuotation = Customer
                     .builder()
-                    .offeringId(offeringId)
-                    .orderActionId(sale.getCommercialOperation().get(0).getOrder().getProductOrderReferenceNumber())
-                    .itemChargeCode(this.getStringValueFromBpExtListByParameterName(
-                                                            "chargeCodeInstallation", bpFinanciamiento))
+                    .id(sale.getRelatedParty().get(0).getCustomerId())
+                    .creditScore(sale.getRelatedParty().get(0).getScore().getScore())
+                    .name(sale.getRelatedParty().get(0).getFirstName())
+                    .surname(sale.getRelatedParty().get(0).getLastName())
+                    .segment(this.getStringValueByKeyFromAdditionalDataList(sale.getAdditionalData(),
+                            "customerTypeCode"))
+                    .subsegment(this.getStringValueByKeyFromAdditionalDataList(sale.getAdditionalData(),
+                            "customerSubTypeCode"))
+                    .contactMedia(contactMediumList)
+                    .legalId(legalId)
+                    .creditLimit(sale.getRelatedParty().get(0).getScore().getFinancingCapacity())
                     .build();
-            itemsList.add(itemInstallation);
-        }
-        // Upgrade de Modem Premium
-        if (this.getStringValueByKeyFromAdditionalDataList(sale.getCommercialOperation().get(0).getProductOfferings()
-                            .get(0).getAdditionalData(), "modemPremium").equalsIgnoreCase("true")) {
-            String offeringId = "EQUP"
-                    .concat("_")
-                    .concat(salesId);
 
-            com.tdp.ms.sales.model.dto.quotation.Item itemModemPremium = com.tdp.ms.sales.model.dto.quotation.Item
+            MoneyAmount associatedPlanRecurrentCost = MoneyAmount
                     .builder()
-                    .offeringId(offeringId)
-                    .orderActionId(sale.getCommercialOperation().get(0).getOrder().getProductOrderReferenceNumber())
-                    .itemChargeCode(this.getStringValueFromBpExtListByParameterName(
-                                                            "chargeCodeDevicePremium", bpFinanciamiento))
+                    .amount("0.00")
+                    .units("PEN")
                     .build();
-            itemsList.add(itemModemPremium);
-        }
-        // Ultra Wifi
-        if (this.getStringValueByKeyFromAdditionalDataList(sale.getCommercialOperation().get(0).getProductOfferings()
-                .get(0).getAdditionalData(), "ultraWifi").equalsIgnoreCase("true")) {
-            String offeringId = "BB"
-                    .concat("_")
-                    .concat(salesId);
 
-            com.tdp.ms.sales.model.dto.quotation.Item itemUltraWifi = com.tdp.ms.sales.model.dto.quotation.Item
+            MoneyAmount totalCustomerRecurrentCost = MoneyAmount
                     .builder()
-                    .offeringId(offeringId)
-                    .orderActionId(sale.getCommercialOperation().get(0).getOrder().getProductOrderReferenceNumber())
-                    .itemChargeCode(this.getStringValueFromBpExtListByParameterName(
-                                                            "chargeCodeUltraWifi", bpFinanciamiento))
+                    .amount(mainCommercialOperation.getProductOfferings().get(0).getProductOfferingPrice()
+                            .get(0).getMaxPrice().getAmount() == null ? "0" :
+                            mainCommercialOperation.getProductOfferings().get(0).getProductOfferingPrice()
+                            .get(0).getMaxPrice().getAmount().toString())
+                    .units("PEN").build();
+
+            MoneyAmount downPayment = MoneyAmount
+                    .builder()
+                    .amount("0.00")
+                    .units("PEN")
                     .build();
-            itemsList.add(itemUltraWifi);
+
+            Site site = Site
+                    .builder()
+                    .id(sale.getChannel().getStoreId())
+                    .build();
+
+            Channel channel = Channel
+                    .builder()
+                    .name(sale.getChannel().getId())
+                    .build();
+
+            // Quotation Items List
+            List<com.tdp.ms.sales.model.dto.quotation.Item> itemsList = new ArrayList<>();
+            String salesId = sale.getSalesId();
+
+            // Financiamiento de Instalación
+            if (offeringType1 != null) {
+                LOG.info("Create Quotation has Install Financing Item");
+                String productForInstFee = this.getStringValueByKeyFromAdditionalDataList(offeringType1
+                        .getAdditionalData(), "PRODUCT_FOR_INST_FEE");
+                String offeringId = productForInstFee
+                        .concat("_")
+                        .concat(salesId);
+                MoneyAmount totalCostAmount = MoneyAmount
+                        .builder()
+                        .amount(offeringType1.getUpFront().getPrice().getAmount().toString())
+                        .build();
+
+                com.tdp.ms.sales.model.dto.quotation.Item itemInstallation = com.tdp.ms.sales.model.dto.quotation.Item
+                        .builder()
+                        .offeringId(offeringId)
+                        .orderActionId("") // Value mapping moved to addOrderInfoToCreateQuotationFijaRequest method
+                        .type(productForInstFee)
+                        .itemChargeCode(this.getStringValueFromBpExtListByParameterName(
+                                "chargeCodeInstallation", bpFinanciamiento))
+                        .totalCost(totalCostAmount)
+                        .build();
+                itemsList.add(itemInstallation);
+            }
+            // Upgrade de Modem Premium
+            if (offeringType2 != null) {
+                LOG.info("Create Quotation has Upgrade Modem Premium Item");
+                String offeringId = "EQUP"
+                        .concat("_")
+                        .concat(salesId);
+
+                MoneyAmount totalCostAmount = MoneyAmount
+                        .builder()
+                        .amount(offeringType2.getProductSpecification().get(0).getProductPrice().get(0).getPrice()
+                                .getAmount().toString())
+                        .build();
+
+                com.tdp.ms.sales.model.dto.quotation.Item itemModemPremium = com.tdp.ms.sales.model.dto.quotation.Item
+                        .builder()
+                        .offeringId(offeringId)
+                        .orderActionId("") // Value mapping moved to addOrderInfoToCreateQuotationFijaRequest method
+                        .type("EQUP")
+                        .itemChargeCode(this.getStringValueFromBpExtListByParameterName(
+                                "chargeCodeDevicePremium", bpFinanciamiento))
+                        .totalCost(totalCostAmount)
+                        .build();
+                itemsList.add(itemModemPremium);
+            }
+            // Ultra Wifi
+            if (offeringType3 != null) {
+                LOG.info("Create Quotation has Ultra Wifi Item");
+                String offeringId = "BB"
+                        .concat("_")
+                        .concat(salesId);
+
+                MoneyAmount totalCostAmount = MoneyAmount
+                        .builder()
+                        .amount(offeringType2.getProductSpecification().get(0).getProductPrice().get(0).getPrice()
+                                .getAmount().toString())
+                        .build();
+
+                com.tdp.ms.sales.model.dto.quotation.Item itemUltraWifi = com.tdp.ms.sales.model.dto.quotation.Item
+                        .builder()
+                        .offeringId(offeringId)
+                        .orderActionId("") // Value mapping moved to addOrderInfoToCreateQuotationFijaRequest method
+                        .type("BB")
+                        .itemChargeCode(this.getStringValueFromBpExtListByParameterName(
+                                "chargeCodeUltraWifi", bpFinanciamiento))
+                        .totalCost(totalCostAmount)
+                        .build();
+                itemsList.add(itemUltraWifi);
+            }
+
+            final Double[] amountTotalAmount = {0.0};
+            itemsList.forEach(item -> {
+                amountTotalAmount[0] = amountTotalAmount[0] + Double.parseDouble(item.getTotalCost().getAmount());
+            });
+            MoneyAmount totalAmount = MoneyAmount
+                    .builder()
+                    .amount(amountTotalAmount[0].toString())
+                    .units("PEN")
+                    .build();
+
+
+
+            String financialEntity = this.getStringValueFromBpExtListByParameterName("financialEntity",
+                    bpFinanciamiento);
+
+            String operationType = "";
+            if (mainCommercialOperation.getReason().equalsIgnoreCase("ALTA")
+                    && mainCommercialOperation.getAction().equalsIgnoreCase("Provide")
+                    && sale.getProductType().equalsIgnoreCase(Constants.WIRELINE)) {
+                operationType = "Alta";
+            } else {
+                operationType = "CAEQ";
+            }
+
+            CreateQuotationRequestBody body = CreateQuotationRequestBody
+                    .builder()
+                    .orderId("") // Value mapping moved to addOrderInfoToCreateQuotationFijaRequest method
+                    .accountId(sale.getRelatedParty().get(0).getAccountId())
+                    .billingAgreement(sale.getRelatedParty().get(0).getBillingArragmentId())
+                    .commercialAgreement("N")
+                    .serviceIdLobConcat("") // Value mapping moved to addOrderInfoToCreateQuotationFijaRequest method
+                    .customer(customerQuotation)
+                    .operationType(operationType)
+                    .totalAmount(totalAmount)
+                    .associatedPlanRecurrentCost(associatedPlanRecurrentCost)
+                    .totalCustomerRecurrentCost(totalCustomerRecurrentCost)
+                    .downPayment(downPayment)
+                    .site(site)
+                    .financialEntity(financialEntity)
+                    .items(itemsList)
+                    .channel(channel)
+                    .build();
+
+            createQuotationRequest.setBody(body);
+        }
+    }
+
+    private void addOrderInfoToCreateQuotationFijaRequest(CreateQuotationRequest createQuotationRequest,
+                                                          Sale sale) {
+
+        CommercialOperationType mainCommercialOperation = new CommercialOperationType();
+        if (sale.getProductType().equalsIgnoreCase(Constants.WIRELINE)) {
+            mainCommercialOperation = sale.getCommercialOperation().get(0);
+        } else if (sale.getProductType().equalsIgnoreCase("MT")) {
+            mainCommercialOperation = sale.getCommercialOperation().stream()
+                    .filter(item -> this.getStringValueByKeyFromAdditionalDataList(item.getAdditionalData(),
+                            Constants.PRODUCT_TYPE).equalsIgnoreCase(Constants.WIRELINE))
+                    .findFirst()
+                    .orElse(new CommercialOperationType());
         }
 
-        // Attributes only to Fija
+        // Attributes only to Fija FEMS-4419, pending evaluate if Migration Case also apply
         final String[] serviceIdLobConcat = {""};
 
-        sale.getCommercialOperation().get(0).getProductOfferings().stream()
-                .forEach(productOffering -> {
-                    String productSpecificationName = productOffering.getProductSpecification().get(0).getName();
-                    if (productSpecificationName.equalsIgnoreCase("TV")) {
-                        serviceIdLobConcat[0] = serviceIdLobConcat[0].concat("TV=").concat(productOffering
-                                .getProductSpecification().get(0).getRefinedProduct()
-                                .getProductCharacteristics().get(0).getId()).concat(";");
-                    } else if (productSpecificationName.equalsIgnoreCase(Constants.PRODUCT_TYPE_BROADBAND)) {
-                        serviceIdLobConcat[0] = serviceIdLobConcat[0].concat("INT=").concat(productOffering
-                                .getProductSpecification().get(0).getRefinedProduct()
-                                .getProductCharacteristics().get(0).getId()).concat(";");
-                    } else if (productSpecificationName.equalsIgnoreCase("ShEq")) {
-                        serviceIdLobConcat[0] = serviceIdLobConcat[0].concat("EQUP=").concat(productOffering
-                                .getProductSpecification().get(0).getRefinedProduct()
-                                .getProductCharacteristics().get(0).getId());
+        CommercialOperationType finalMainCommercialOperation = mainCommercialOperation;
+        mainCommercialOperation.getProductOfferings().get(0).getProductSpecification().stream() // Pending evaluate productOffering for Alta only SVAs case
+                .forEach(productSpecification -> {
+                    String productSpecificationType = productSpecification.getProductType();
+                    if (productSpecificationType.equalsIgnoreCase(Constants.PRODUCT_TYPE_CABLE_TV)) {
+                        serviceIdLobConcat[0] = serviceIdLobConcat[0].concat("TV=").concat(
+                                this.getServiceIdFromProductConfigurationByLineOfBussinessType(
+                                        finalMainCommercialOperation,Constants.PRODUCT_TYPE_CABLE_TV)).concat(";");
+                    } else if (productSpecificationType.equalsIgnoreCase(Constants.PRODUCT_TYPE_BROADBAND)) {
+                        serviceIdLobConcat[0] = serviceIdLobConcat[0].concat("INT=").concat(
+                                this.getServiceIdFromProductConfigurationByLineOfBussinessType(
+                                        finalMainCommercialOperation, Constants.PRODUCT_TYPE_BROADBAND)).concat(";");
+                    } else if (productSpecificationType.equalsIgnoreCase(Constants.PRODUCT_TYPE_LANDLINE)) {
+                        serviceIdLobConcat[0] = serviceIdLobConcat[0].concat("VOIC=").concat(
+                                this.getServiceIdFromProductConfigurationByLineOfBussinessType(
+                                        finalMainCommercialOperation,Constants.PRODUCT_TYPE_LANDLINE)).concat(";");
+                    } else if (productSpecificationType.equalsIgnoreCase(Constants.PRODUCT_TYPE_DEVICE)) {
+                        serviceIdLobConcat[0] = serviceIdLobConcat[0].concat("EQUP=").concat(
+                                this.getServiceIdFromProductConfigurationByLineOfBussinessType(
+                                        finalMainCommercialOperation,Constants.PRODUCT_TYPE_DEVICE));
                     }
                 });
 
-        String financialEntity = this.getStringValueFromBpExtListByParameterName("financialEntity",
-                                                                                                    bpFinanciamiento);
+        createQuotationRequest.getBody().setServiceIdLobConcat(serviceIdLobConcat[0]);
 
-        CreateQuotationRequestBody body = CreateQuotationRequestBody
-                .builder()
-                .orderId(sale.getCommercialOperation().get(0).getOrder().getProductOrderId())
-                .accountId(sale.getRelatedParty().get(0).getAccountId())
-                .billingAgreement(sale.getRelatedParty().get(0).getBillingArragmentId())
-                .commercialAgreement("N")
-                .serviceIdLobConcat(serviceIdLobConcat[0])
-                .customer(customerQuotation)
-                .operationType(sale.getCommercialOperation().get(0).getReason())
-                .totalAmount(totalAmount)
-                .associatedPlanRecurrentCost(associatedPlanRecurrentCost)
-                .totalCustomerRecurrentCost(totalCustomerRecurrentCost)
-                .downPayment(downPayment)
-                .site(site)
-                .financialEntity(financialEntity)
-                .items(itemsList)
-                .channel(channel)
-                .build();
+        createQuotationRequest.getBody().getItems().stream()
+                .forEach(item -> {
+                    item.setOrderActionId(org.apache.commons.lang3.StringUtils.chop(finalMainCommercialOperation
+                            .getOrder().getProductOrderReferenceNumber()));
+                });
 
-        createQuotationRequest.setBody(body);
+        createQuotationRequest.getBody()
+                .setOrderId("TEF" + String.format("%012d", new BigInteger(mainCommercialOperation.getOrder()
+                        .getProductOrderId())));
+    }
+
+    private String getOperationTypeForQuotationRequest(List<KeyValueType> additionalData, String reason) {
+        String isCapl = additionalData.stream()
+                .filter(item -> item.getKey().equalsIgnoreCase(Constants.CAPL))
+                .findFirst()
+                .orElse(KeyValueType.builder().value("false").build())
+                .getValue();
+
+        String isCaeq = additionalData.stream()
+                .filter(item -> item.getKey().equalsIgnoreCase(Constants.CAEQ))
+                .findFirst()
+                .orElse(KeyValueType.builder().value("false").build())
+                .getValue();
+
+        return Boolean.parseBoolean(isCaeq)
+                || (Boolean.parseBoolean(isCapl) && Boolean.parseBoolean(isCaeq)) ? Constants.CAEQ : reason;
+    }
+        
+    private String getServiceIdFromProductConfigurationByLineOfBussinessType(
+            CommercialOperationType commercialOperation, String lineOfBusinessType) {
+        NewProductInNewOfferingInstanceConfigurationType emptyProduct =
+                NewProductInNewOfferingInstanceConfigurationType
+                        .builder()
+                        .productConfiguration(TopLevelProductConfigurationType.builder().serviceId("").build())
+                        .build();
+
+        String serviceId = commercialOperation.getOrder()
+                .getNewProductsInNewOfferings()
+                .stream()
+                .filter(item -> item.getProductConfiguration()
+                        .getLineOfBusinessType().equalsIgnoreCase(lineOfBusinessType))
+                .findFirst()
+                .orElse(emptyProduct)
+                .getProductConfiguration().getServiceId();
+
+        return serviceId;
     }
 
     private Mono<Sale> creationOrderValidation(Sale saleRequest, CreateProductOrderGeneralRequest productOrderRequest,
@@ -1427,19 +1703,65 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         if (keyValueType != null && keyValueType.getValue().equalsIgnoreCase(Constants.RETAIL)
                 && saleRequest.getStatus().equalsIgnoreCase(Constants.NEGOCIACION)) {
 
-            DeviceOffering saleDeviceOffering = saleRequest.getCommercialOperation().get(0).getDeviceOffering().stream()
-                    .filter(deviceOffering -> !deviceOffering.getDisplayName().equalsIgnoreCase("simcard")
-                            && !deviceOffering.getDisplayName().equalsIgnoreCase(Constants.SIM_DEVICE))
+            DeviceOffering saleDeviceOfferingSim = saleRequest.getCommercialOperation().get(0)
+                    .getDeviceOffering()
+                    .stream()
+                    .filter(deviceOffering -> deviceOffering.getDeviceType()
+                            .equalsIgnoreCase(Constants.DEVICE_TYPE_SIM))
                     .findFirst()
-                    .orElseThrow(() -> buildGenesisError(Constants.BAD_REQUEST_EXCEPTION_ID,
-                            "commercialOperation[].deviceOffering[].simSpecifications[0].sapid is missing."));
+                    .orElse(null);
+
+            DeviceOffering saleDeviceOfferingSmartphone = saleRequest.getCommercialOperation().get(0)
+                    .getDeviceOffering()
+                    .stream()
+                    .filter(deviceOffering -> deviceOffering.getDeviceType()
+                            .equalsIgnoreCase(Constants.DEVICE_TYPE_SMARTPHONE))
+                    .findFirst()
+                    .orElse(null);
+
+            if (saleDeviceOfferingSim == null && saleDeviceOfferingSmartphone == null) {
+                return Mono.error(buildGenesisError(Constants.BAD_REQUEST_EXCEPTION_ID,
+                        "DeviceOffering property must contain at least 1 element with device type " +
+                                "SIM or Smarthpone."));
+            } else if (saleDeviceOfferingSim != null) {
+                if (StringUtils.isEmpty(saleDeviceOfferingSim.getId())) {
+                    return Mono.error(buildGenesisError(Constants.BAD_REQUEST_EXCEPTION_ID,
+                            "DeviceOffering id property value from Device Type Sim is mandatory."));
+                } else if (StringUtils.isEmpty(saleDeviceOfferingSim.getCostoPromedioSinIgvSoles())) {
+                    return Mono.error(buildGenesisError(Constants.BAD_REQUEST_EXCEPTION_ID,
+                        "DeviceOffering costoPromedioSinIGVSoles property value from " +
+                                "Device Type Sim is mandatory."));
+                }
+            } else if (saleDeviceOfferingSmartphone != null) {
+                if (StringUtils.isEmpty(saleDeviceOfferingSmartphone.getId())) {
+                    return Mono.error(buildGenesisError(Constants.BAD_REQUEST_EXCEPTION_ID,
+                            "DeviceOffering id property value from Device Type Smartphone is mandatory."));
+                } else if (StringUtils.isEmpty(saleDeviceOfferingSmartphone.getCostoPromedioSinIgvSoles())) {
+                    return Mono.error(buildGenesisError(Constants.BAD_REQUEST_EXCEPTION_ID,
+                            "DeviceOffering costoPromedioSinIGVSoles property value from " +
+                                    "Device Type Smartphone is mandatory."));
+                }
+            }
+
+            String sapidDeviceOfferingSim = saleDeviceOfferingSim == null ||
+                    StringUtils.isEmpty(saleDeviceOfferingSim.getId()) ? "" : saleDeviceOfferingSim.getId();
+            String costoDeviceOfferingSim = saleDeviceOfferingSim == null ||
+                    StringUtils.isEmpty(saleDeviceOfferingSim.getCostoPromedioSinIgvSoles()) ?
+                    "0.00" : saleDeviceOfferingSim.getCostoPromedioSinIgvSoles();
+
+            String sapidDeviceOfferingSmartphone = saleDeviceOfferingSmartphone == null ||
+                    StringUtils.isEmpty(saleDeviceOfferingSmartphone.getId()) ?
+                    "" : saleDeviceOfferingSmartphone.getId();
+            String costoDeviceOfferingSmartphone = saleDeviceOfferingSmartphone == null ||
+                    StringUtils.isEmpty(saleDeviceOfferingSmartphone.getCostoPromedioSinIgvSoles()) ?
+                    "0.00" : saleDeviceOfferingSmartphone.getCostoPromedioSinIgvSoles();
 
             Mono<List<GetSkuResponse>> getSku = getSkuWebClient.createSku(saleRequest.getChannel().getId(),
-                    "default", saleDeviceOffering.getSapid(),
-                    Double.parseDouble(saleDeviceOffering.getCostoPromedioSinIgvSoles()),
+                    "default", sapidDeviceOfferingSim,
+                    Double.parseDouble(costoDeviceOfferingSim),
                     operationType, "", saleRequest.getChannel().getStoreId(), "2",
-                    saleRequest.getChannel().getDealerId(), saleDeviceOffering.getSapid(),
-                    saleDeviceOffering.getCostoPromedioSinIgvSoles(), headersMap).collectList();
+                    saleRequest.getChannel().getDealerId(), sapidDeviceOfferingSmartphone,
+                    costoDeviceOfferingSmartphone, headersMap).collectList();
 
             // set onlyValidatonIndicator == true
             String classObjectName = productOrderRequest.getCreateProductOrderRequest().getClass().getName();
@@ -1478,19 +1800,36 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
             // Creación del sku
             return Mono.zip(getSku, productOrderResponse).map(tuple -> {
                 // añadir respuesta a sale.additionalData y hacer validación de la orden
-                saleRequest.getAdditionalData().add(KeyValueType.builder()
-                        .key(Constants.DEVICE_SKU)
-                        .value(tuple.getT1().get(0).getDeviceType().equals("mobile_phone")
-                                ? tuple.getT1().get(0).getSku() : tuple.getT1().get(1).getSku())
-                        .build());
-                saleRequest.getAdditionalData().add(KeyValueType.builder()
-                        .key(Constants.SIM_SKU)
-                        .value(tuple.getT1().get(0).getDeviceType().equals("sim")
-                                ? tuple.getT1().get(0).getSku() : tuple.getT1().get(1).getSku())
-                        .build());
+
+                GetSkuResponse deviceSku = tuple.getT1()
+                        .stream()
+                        .filter(item -> item.getDeviceType()
+                                .equalsIgnoreCase("mobile_phone"))
+                        .findFirst()
+                        .orElse(null);
+
+                GetSkuResponse simSku = tuple.getT1()
+                        .stream()
+                        .filter(item -> item.getDeviceType()
+                                .equalsIgnoreCase("sim"))
+                        .findFirst()
+                        .orElse(null);
+
+                if (deviceSku != null) {
+                    saleRequest.getAdditionalData().add(KeyValueType.builder()
+                            .key(Constants.DEVICE_SKU)
+                            .value(deviceSku.getSku())
+                            .build());
+                }
+                if (simSku != null) {
+                    saleRequest.getAdditionalData().add(KeyValueType.builder()
+                            .key(Constants.SIM_SKU)
+                            .value(simSku.getSku())
+                            .build());
+                }
 
                 // cambiar status a "VALIDADO"
-                saleRequest.setStatus(Constants.VALIDADO);
+                saleRequest.setStatus(Constants.STATUS_VALIDADO);
                 return saleRequest;
             });
         } else {
@@ -1556,16 +1895,25 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         if (flgFinanciamiento) {
             CreateQuotationRequest createQuotationRequest = new CreateQuotationRequest();
             this.buildCreateQuotationRequest(createQuotationRequest, request, flgCasi);
-            return quotationWebClient.createQuotation(createQuotationRequest, sale)
-                    .flatMap(createQuotationResponse -> {
-                        this.setQuotationResponseInSales(createQuotationResponse,
-                                sale);
-                        return salesRepository.save(sale)
-                                .map(r -> {
-                                    this.postSalesEventFlow(request);
-                                    return r;
-                                });
-                    });
+            if (createQuotationRequest.getBody() != null) {
+                return quotationWebClient.createQuotation(createQuotationRequest, sale)
+                        .flatMap(createQuotationResponse -> {
+                            this.setQuotationResponseInSales(createQuotationResponse,
+                                    sale);
+                            return salesRepository.save(sale)
+                                    .map(r -> {
+                                        this.postSalesEventFlow(request);
+                                        return r;
+                                    });
+                        });
+            } else {
+                return salesRepository.save(sale)
+                        .map(r -> {
+                            this.postSalesEventFlow(request);
+                            return r;
+                        });
+            }
+
         } else {
             return salesRepository.save(sale)
                     .map(r -> {
@@ -1596,20 +1944,18 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
 
         Sale sale = salesRequest.getSale();
 
-        TimePeriod validFor = TimePeriod
-                .builder()
-                .startDateTime(Commons.getDatetimeNow())
-                .endDateTime(Commons.getDatetimeNow())
-                .build();
-
+        final String[] email = {null};
+        sale.getProspectContact().stream()
+                .filter(item -> item.getMediumType().equalsIgnoreCase(Constants.MEDIUM_TYPE_EMAIL_ADDRESS))
+                .findFirst()
+                .ifPresent(item -> email[0] = item.getCharacteristic().getEmailAddress());
         com.tdp.ms.sales.model.dto.quotation.ContactMedium contactMedium1 = com.tdp.ms.sales.model.dto.quotation
                 .ContactMedium
                 .builder()
-                .validFor(validFor)
-                .preferred("true")
-                .name(sale.getProspectContact().get(0).getCharacteristic().getEmailAddress())
-                .isActive("true")
                 .type(Constants.EMAIL)
+                .name(email[0])
+                .preferred("true")
+                .isActive("true")
                 .build();
         List<com.tdp.ms.sales.model.dto.quotation.ContactMedium> contactMediumList = new ArrayList<>();
         contactMediumList.add(contactMedium1);
@@ -1622,6 +1968,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                 .nationalId(sale.getRelatedParty().get(0).getNationalId())
                 .build();
 
+        /* Se borra el campo address, a pedido de Lincoln
         Address address = Address
                 .builder()
                 .streetName(sale.getCommercialOperation().get(0).getWorkOrDeliveryType().getPlace().get(0).getAddress()
@@ -1642,7 +1989,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                                                                                             .getAddress().getCountry())
                 .region(sale.getCommercialOperation().get(0).getWorkOrDeliveryType().getPlace().get(0)
                                                                                             .getAddress().getRegion())
-                .build();
+                .build();*/
 
         Customer customerQuotation = Customer
                 .builder()
@@ -1651,10 +1998,9 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                 .name(sale.getRelatedParty().get(0).getFirstName())
                 .surname(sale.getRelatedParty().get(0).getLastName())
                 .subsegment(this.getStringValueByKeyFromAdditionalDataList(sale.getAdditionalData(),
-                                                                                        "releatedPartySubSegment"))
+                                                                                        "customerSubTypeCode"))
                 .segment(this.getStringValueByKeyFromAdditionalDataList(sale.getAdditionalData(),
-                                                                                        "releatedPartySegment"))
-                .address(address)
+                                                                                        "customerTypeCode"))
                 .legalId(legalId)
                 .creditLimit(sale.getRelatedParty().get(0).getScore().getFinancingCapacity())
                 .contactMedia(contactMediumList).build();
@@ -1680,8 +2026,11 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                 .build();
 
         MoneyAmount totalCustomerRecurrentCost = MoneyAmount.builder()
-                .units("PEN").amount(sale.getCommercialOperation().get(0).getProductOfferings().get(0)
-                                                .getProductOfferingPrice().get(0).getMaxPrice().getAmount().toString())
+                .units("PEN")
+                .amount(sale.getCommercialOperation().get(0).getProductOfferings().get(0)
+                        .getProductOfferingPrice().get(0).getMaxPrice().getAmount() == null ? "0" :
+                        sale.getCommercialOperation().get(0).getProductOfferings().get(0)
+                        .getProductOfferingPrice().get(0).getMaxPrice().getAmount().toString())
                 .build();
 
         MoneyAmount downPayment = MoneyAmount
@@ -1697,7 +2046,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                 .id(sale.getChannel().getStoreId())
                 .build();
 
-        Channel channel = Channel.builder().name(sale.getChannel().getName()).build();
+        Channel channel = Channel.builder().name(sale.getChannel().getId()).build();
 
         MoneyAmount totalCost = MoneyAmount
                 .builder().units("PEN")
@@ -1705,10 +2054,11 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                         .getBillingOfferings().get(0).getCommitmentPeriods().get(0).getFinancingInstalments().get(0)
                         .getInstalments().getTotalAmount().getValue().toString()).build();
 
+        Double taxExcludedAmountDouble = sale.getCommercialOperation().get(0).getDeviceOffering().get(0).getOffers()
+                .get(0).getBillingOfferings().get(0).getCommitmentPeriods().get(0).getFinancingInstalments().get(0)
+                .getInstalments().getTotalAmount().getValue().doubleValue() * 0.18;
         MoneyAmount taxExcludedAmount = MoneyAmount.builder()
-                .amount(sale.getCommercialOperation().get(0).getDeviceOffering().get(0).getOffers().get(0)
-                        .getBillingOfferings().get(0).getCommitmentPeriods().get(0).getFinancingInstalments().get(0)
-                        .getInstalments().getTotalAmount().getValue().toString())
+                .amount(taxExcludedAmountDouble.toString())
                 .units("PEN")
                 .build();
 
@@ -1741,6 +2091,9 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
             itemsList.add(itemSim);
         }
 
+        String operationType = getOperationTypeForQuotationRequest(sale.getCommercialOperation().get(0)
+                .getAdditionalData(), sale.getCommercialOperation().get(0).getReason());
+
         CreateQuotationRequestBody body = CreateQuotationRequestBody
                 .builder()
                 .items(itemsList)
@@ -1749,7 +2102,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                 .accountId(sale.getRelatedParty().get(0).getAccountId())
                 .commercialAgreement("N")
                 .customer(customerQuotation)
-                .operationType(sale.getCommercialOperation().get(0).getReason()) // Debe llegar para Alta reason = ALTA y para Porta reason = PORTA
+                .operationType(operationType)
                 .totalAmount(totalAmount)
                 .downPayment(downPayment)
                 .totalCustomerRecurrentCost(totalCustomerRecurrentCost)
@@ -1761,7 +2114,11 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                                                                                                         .getCodigo())
                 .build();
 
-        createQuotationRequest.setBody(body);
+        if (operationType.equalsIgnoreCase("CAPL")) {
+            createQuotationRequest.setBody(null);
+        } else {
+            createQuotationRequest.setBody(body);
+        }
     }
 
     public List<KeyValueType> additionalDataAssigments(List<KeyValueType> input, Sale saleRequest) {
@@ -1909,15 +2266,24 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         return stringValue[0];
     }
 
-    private PortabilityDetailsType buildMobilePortabilityType(Sale saleRequest) {
+    private PortabilityDetailsType buildMobilePortabilityType(Sale saleRequest) throws ParseException {
         PortabilityDetailsType portabilityDetailsType =  new PortabilityDetailsType();
+        PortabilityType portabilityType = saleRequest.getCommercialOperation().get(0).getPortability();
+
+        // Changing format date for donorActivationDate
+        String donorActivationDate = portabilityType.getDonorActivationDate();
+        // Original date format from donorActivationDate yyyy-MM-dd-HH:mm, example given 2021-02-19-05:00
+        SimpleDateFormat input = new SimpleDateFormat("yyyy-MM-dd-HH:mm");
+        Date dateValue = input.parse(donorActivationDate);
+        // Format changed to yyyy-MM-dd to send into portability details to create order
+        SimpleDateFormat output = new SimpleDateFormat("yyyy-MM-dd");
+        String donorActivationDateWithNewFormat = output.format(dateValue);
 
         // Throw 400 status for mandatory parameters
-        PortabilityType portabilityType = saleRequest.getCommercialOperation().get(0).getPortability();
         portabilityDetailsType.setSourceOperator(portabilityType.getReceipt());
-        portabilityDetailsType.setServiceType(portabilityType.getProductType());
+        portabilityDetailsType.setServiceType("01");
         portabilityDetailsType.setPlanType(portabilityType.getPlanType());
-        portabilityDetailsType.setActivationDate(portabilityType.getDonorActivationDate());
+        portabilityDetailsType.setActivationDate(donorActivationDateWithNewFormat);
         portabilityDetailsType.setEquipmentCommitmentEndDate(portabilityType.getDonorEquipmentContractEndDate());
         portabilityDetailsType.setSalesDepartment("15");
         portabilityDetailsType.setConsultationId(portabilityType.getIdProcess());
@@ -1926,11 +2292,18 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         portabilityDetailsType.setDocumentNumber(saleRequest.getRelatedParty().get(0).getNationalId());
         portabilityDetailsType.setCustomerName(saleRequest.getRelatedParty().get(0).getFullName());
 
-        String customerEmail = StringUtils.isEmpty(saleRequest.getProspectContact().get(0).getCharacteristic()
-                .getEmailAddress()) ? "" : saleRequest.getProspectContact().get(0).getCharacteristic()
+        String customerEmail = saleRequest.getProspectContact().stream()
+                .filter(item -> item.getMediumType().equalsIgnoreCase("email address"))
+                .findFirst()
+                .orElse(ContactMedium
+                        .builder()
+                        .characteristic(MediumCharacteristic.builder().emailAddress(null).build())
+                        .build())
+                .getCharacteristic()
                 .getEmailAddress();
         portabilityDetailsType.setCustomerEmail(customerEmail);
-        portabilityDetailsType.setCustomerContactPhone(portabilityType.getCustomerContactPhone());
+        portabilityDetailsType.setCustomerContactPhone(StringUtils.isEmpty(portabilityType.getCustomerContactPhone()) ?
+                                                                    null : portabilityType.getCustomerContactPhone());
 
         return portabilityDetailsType;
     }
@@ -1939,7 +2312,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                                  CreateProductOrderGeneralRequest mainRequestProductOrder, String channelIdRequest,
                                  String customerIdRequest, String productOfferingIdRequest, String cipCode,
                                  BusinessParametersResponseObjectExt bonificacionSimcardResponse, String sapidSimcardBp,
-                                 Boolean isMobilePortability, Boolean flagCasi) {
+                                 Boolean isMobilePortability, Boolean flagCasi) throws ParseException {
 
         // Building request for ALTA CommercialTypeOperation
         ProductOrderAltaMobileRequest altaRequestProductOrder = new ProductOrderAltaMobileRequest();
@@ -1973,18 +2346,8 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                 .build();
         altaNewBoList.add(altaNewBo1);
 
-        if (saleRequest.getChannel().getId().equalsIgnoreCase("CC")) {
-            // NewAssignedBillingOffer SIM
-            String productSpecPricingId = bonificacionSimcardResponse.getData().get(0).getValue(); // "34572615"
-            String parentProductCatalogId = bonificacionSimcardResponse.getData().get(0).getExt().toString(); // "7431"
-
-            NewAssignedBillingOffers altaNewBo2 = NewAssignedBillingOffers
-                    .builder()
-                    .productSpecPricingId(productSpecPricingId)
-                    .parentProductCatalogId(parentProductCatalogId)
-                    .build();
-            altaNewBoList.add(altaNewBo2);
-        }
+        // Simcard bonus conditional
+        this.validationToAddSimcardBonus(saleRequest, bonificacionSimcardResponse, altaNewBoList);
 
         altaProductChanges.setNewAssignedBillingOffers(altaNewBoList);
 
@@ -2016,7 +2379,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                 .orElse(KeyValueType.builder().value(null).build())
                 .getValue();
         Boolean isRetail = flowSaleValue.equalsIgnoreCase(Constants.RETAIL);
-        if (Boolean.TRUE.equals(isRetail) && saleRequest.getStatus().equalsIgnoreCase(Constants.VALIDADO)) {
+        if (Boolean.TRUE.equals(isRetail) && saleRequest.getStatus().equalsIgnoreCase(Constants.STATUS_VALIDADO)) {
             String iccidSim = this.getStringValueByKeyFromAdditionalDataList(saleRequest.getAdditionalData(),
                     "SIM_ICCID");
             ChangedCharacteristic changedCharacteristic2 = ChangedCharacteristic
@@ -2038,6 +2401,28 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         altaProductChanges.setChangedContainedProducts(altaChangedContainedProductList);
 
         if (isMobilePortability) {
+            // Portability Characteristic
+            List<ChangedCharacteristic> changedCharacteristicPortabilityList = new ArrayList<>();
+            ChangedCharacteristic changedCharacteristicPortability1 = ChangedCharacteristic
+                    .builder()
+                    .characteristicId("7601")
+                    .characteristicValue(saleRequest.getCommercialOperation().get(0).getPortability().getPublicId())
+                    .build();
+            changedCharacteristicPortabilityList.add(changedCharacteristicPortability1);
+            ChangedCharacteristic changedCharacteristicPortability2 = ChangedCharacteristic
+                    .builder()
+                    .characteristicId("9211")
+                    .characteristicValue("Y")
+                    .build();
+            changedCharacteristicPortabilityList.add(changedCharacteristicPortability2);
+            ChangedContainedProduct changedContainedProductPortability = ChangedContainedProduct
+                    .builder()
+                    .temporaryId("tempPortingNumber")
+                    .productCatalogId("7101")
+                    .changedCharacteristics(changedCharacteristicPortabilityList)
+                    .build();
+            altaProductChanges.getChangedContainedProducts().add(changedContainedProductPortability);
+
             PortabilityDetailsType portabilityDetailsType = this.buildMobilePortabilityType(saleRequest);
 
             altaProductChanges.setPortabilityDetails(portabilityDetailsType);
@@ -2060,7 +2445,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         List<FlexAttrType> altaOrderAttributesList = this.commonOrderAttributes(saleRequest);
 
         // Order Attributes when channel is retail
-        if (Boolean.TRUE.equals(isRetail) && saleRequest.getStatus().equalsIgnoreCase(Constants.VALIDADO)) {
+        if (Boolean.TRUE.equals(isRetail) && saleRequest.getStatus().equalsIgnoreCase(Constants.STATUS_VALIDADO)) {
             //  RETAIL PAYMENT NUMBER ATTRIBUTE
             String paymentNumber = this.getStringValueByKeyFromAdditionalDataList(saleRequest.getAdditionalData(),
                     "NUMERO_TICKET");
@@ -2075,36 +2460,51 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                     .attrName("PAYMENT_REGISTER_NUMBER")
                     .flexAttrValue(paymentRegisterAttrValue)
                     .build();
+            altaOrderAttributesList.add(paymentRegisterAttr);
 
             //  RETAIL DEVICE SKU ATTRIBUTE
-            String deviceSku = this.getStringValueByKeyFromAdditionalDataList(saleRequest.getAdditionalData(),
-                    Constants.DEVICE_SKU);
+            DeviceOffering deviceOfferingSmartphone = saleRequest.getCommercialOperation().get(0).getDeviceOffering().stream()
+                    .filter(item -> !item.getDeviceType().equalsIgnoreCase(Constants.DEVICE_TYPE_SIM))
+                    .findFirst()
+                    .orElse(null);
+            if (deviceOfferingSmartphone != null) {
+                String deviceSku = this.getStringValueByKeyFromAdditionalDataList(saleRequest.getAdditionalData(),
+                        Constants.DEVICE_SKU);
 
-            FlexAttrValueType deviceSkuAttrValue =  FlexAttrValueType
-                    .builder()
-                    .stringValue(deviceSku)
-                    .valueType(Constants.STRING)
-                    .build();
-            FlexAttrType deviceSkuAttr = FlexAttrType
-                    .builder()
-                    .attrName(Constants.DEVICE_SKU)
-                    .flexAttrValue(deviceSkuAttrValue)
-                    .build();
+                FlexAttrValueType deviceSkuAttrValue = FlexAttrValueType
+                        .builder()
+                        .stringValue(deviceSku)
+                        .valueType(Constants.STRING)
+                        .build();
+                FlexAttrType deviceSkuAttr = FlexAttrType
+                        .builder()
+                        .attrName(Constants.DEVICE_SKU)
+                        .flexAttrValue(deviceSkuAttrValue)
+                        .build();
+                altaOrderAttributesList.add(deviceSkuAttr);
+            }
 
             //  RETAIL SIM SKU ATTRIBUTE
-            String simSku = this.getStringValueByKeyFromAdditionalDataList(saleRequest.getAdditionalData(),
-                                                                                                    Constants.SIM_SKU);
+            DeviceOffering deviceOfferingSim = saleRequest.getCommercialOperation().get(0).getDeviceOffering().stream()
+                    .filter(item -> item.getDeviceType().equalsIgnoreCase(Constants.DEVICE_TYPE_SIM))
+                    .findFirst()
+                    .orElse(null);
+            if (deviceOfferingSim != null) {
+                String simSku = this.getStringValueByKeyFromAdditionalDataList(saleRequest.getAdditionalData(),
+                        Constants.SIM_SKU);
 
-            FlexAttrValueType simSkuAttrValue =  FlexAttrValueType
-                    .builder()
-                    .stringValue(simSku)
-                    .valueType(Constants.STRING)
-                    .build();
-            FlexAttrType simSkuAttr = FlexAttrType
-                    .builder()
-                    .attrName(Constants.SIM_SKU)
-                    .flexAttrValue(simSkuAttrValue)
-                    .build();
+                FlexAttrValueType simSkuAttrValue = FlexAttrValueType
+                        .builder()
+                        .stringValue(simSku)
+                        .valueType(Constants.STRING)
+                        .build();
+                FlexAttrType simSkuAttr = FlexAttrType
+                        .builder()
+                        .attrName(Constants.SIM_SKU)
+                        .flexAttrValue(simSkuAttrValue)
+                        .build();
+                altaOrderAttributesList.add(simSkuAttr);
+            }
 
             //  RETAIL CASHIER REGISTER NUMBER ATTRIBUTE
             String cashierRegisterNumber =
@@ -2118,18 +2518,15 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                     .build();
             FlexAttrType cashierRegisterAttr = FlexAttrType
                     .builder()
-                    .attrName(Constants.SIM_SKU)
+                    .attrName("CASHIER_REGISTER_NUMBER")
                     .flexAttrValue(cashierRegisterAttrValue)
                     .build();
-
-            altaOrderAttributesList.add(paymentRegisterAttr);
-            altaOrderAttributesList.add(deviceSkuAttr);
-            altaOrderAttributesList.add(simSkuAttr);
             altaOrderAttributesList.add(cashierRegisterAttr);
         }
 
         String deliveryMethod = this.getStringValueByKeyFromAdditionalDataList(saleRequest.getAdditionalData(),
-                "deliveryMethod");
+                Constants.KEY_DELIVERY_METHOD);
+
         AltaMobileRequest altaRequest = AltaMobileRequest
                 .builder()
                 .newProducts(altaNewProductsList)
@@ -2149,17 +2546,50 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         return mainRequestProductOrder;
     }
 
+    public void validationToAddSimcardBonus(Sale sale, BusinessParametersResponseObjectExt bonificacionSimcardResponse,
+                                            List<NewAssignedBillingOffers> altaNewBoList) {
+        if (sale.getCommercialOperation().get(0).getDeviceOffering() != null) {
+            // Simcard bonus conditional
+            DeviceOffering deviceOfferingSimcard = sale.getCommercialOperation().get(0).getDeviceOffering().stream()
+                    .filter(item -> item.getDeviceType().equalsIgnoreCase(Constants.DEVICE_TYPE_SIM))
+                    .findFirst()
+                    .orElse(null);
+            String deliveryMethod = this.getStringValueByKeyFromAdditionalDataList(sale.getAdditionalData(),
+                    Constants.KEY_DELIVERY_METHOD);
+
+            if (deviceOfferingSimcard != null
+                    && deliveryMethod.equalsIgnoreCase("SP")) { // FEMS-5081 new conditional only simcard and delivery
+                // NewAssignedBillingOffer SIM
+                String productSpecPricingId = bonificacionSimcardResponse.getData()
+                        .get(0).getValue(); // Old "34572615", New "4442848" FEMS-5081
+                String parentProductCatalogId = bonificacionSimcardResponse.getData()
+                        .get(0).getExt().toString(); // Old "7431", New "7491" FEMS-5081
+
+                NewAssignedBillingOffers altaNewBo2 = NewAssignedBillingOffers
+                        .builder()
+                        .productSpecPricingId(productSpecPricingId)
+                        .parentProductCatalogId(parentProductCatalogId)
+                        .build();
+                altaNewBoList.add(altaNewBo2);
+            }
+        }
+    }
+
     public CreateProductOrderGeneralRequest caplCommercialOperation(Sale saleRequest,
                                     CreateProductOrderGeneralRequest mainRequestProductOrder, String channelIdRequest,
-                                    String customerIdRequest, String productOfferingIdRequest, String cipCode) {
+                                    String customerIdRequest, String productOfferingIdRequest, String cipCode,
+                                    BusinessParametersResponseObjectExt bonificacionSimcardResponse) {
         Boolean flgOnlyCapl = true;
 
         // Recognizing Capl into same plan or Capl with new plan
-        if (!saleRequest.getCommercialOperation().get(0).getProduct().getProductOffering().getId().equals(saleRequest
+        if (saleRequest.getCommercialOperation().get(0).getProduct().getProductOffering() != null
+                || !saleRequest.getCommercialOperation().get(0).getProduct().getProductOffering().getId().equals(saleRequest
                 .getCommercialOperation().get(0).getProductOfferings().get(0).getId())
         ) {
             flgOnlyCapl = false;
         }
+
+        LOG.info("Flag is only CAPL: " + flgOnlyCapl);
 
         // Building request for CAPL CommercialTypeOperation
         ProductOrderCaplRequest caplRequestProductOrder = new ProductOrderCaplRequest();
@@ -2185,6 +2615,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
             caplRequestProductOrder.setActionType("CH");
         }
 
+        List<NewAssignedBillingOffers> caplNewBoList = new ArrayList<>();
         NewAssignedBillingOffers caplNewBo1 = NewAssignedBillingOffers
                 .builder()
                 .productSpecPricingId(saleRequest.getCommercialOperation().get(0)
@@ -2192,8 +2623,10 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                 .parentProductCatalogId(saleRequest.getCommercialOperation().get(0)
                         .getProductOfferings().get(0).getProductOfferingPrice().get(0).getProductSpecContainmentId())
                 .build();
-        List<NewAssignedBillingOffers> caplNewBoList = new ArrayList<>();
         caplNewBoList.add(caplNewBo1);
+
+        // Simcard bonus conditional
+        this.validationToAddSimcardBonus(saleRequest, bonificacionSimcardResponse, caplNewBoList);
 
         // Setting RemoveAssignedBillingOffers if commercial operation type is Capl into same plan
         ProductChangeCapl caplProductChanges = new ProductChangeCapl();
@@ -2216,7 +2649,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         caplNewProductsList.add(newProductCapl1);
 
         String deliveryMethod = this.getStringValueByKeyFromAdditionalDataList(saleRequest.getAdditionalData(),
-                "deliveryMethod");
+                Constants.KEY_DELIVERY_METHOD);
         CaplRequest caplRequest = CaplRequest
                 .builder()
                 .newProducts(caplNewProductsList)
@@ -2246,7 +2679,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         shipmentDetailsType.setShipmentAddressId(saleRequest.getCommercialOperation().get(0).getWorkOrDeliveryType().getPlace().get(0).getId());
         shipmentDetailsType.setShipmentSiteId("NA");
         saleRequest.getProspectContact().stream()
-                .filter(item -> item.getMediumType().equalsIgnoreCase("email address"))
+                .filter(item -> item.getMediumType().equalsIgnoreCase(Constants.MEDIUM_TYPE_EMAIL_ADDRESS))
                 .findFirst()
                 .ifPresent(contactMedium -> {
                     shipmentDetailsType.setRecipientEmail(contactMedium.getCharacteristic().getEmailAddress());
@@ -2286,8 +2719,13 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                                     CreateProductOrderGeneralRequest mainRequestProductOrder, Boolean flgCasi,
                                     String channelIdRequest, String customerIdRequest, String productOfferingIdRequest,
                                     String cipCode, String sapidSimcardBp,
-                                    BusinessParametersReasonCode getParameterReasonCode) {
+                                    BusinessParametersReasonCode getParameterReasonCode,
+                                    BusinessParametersResponseObjectExt bonificacionSimcardResponse) {
         // Building request for CAEQ CommercialTypeOperation
+
+        List<NewAssignedBillingOffers> caeqNewBoList = new ArrayList<>();
+        // Simcard bonus conditional
+        this.validationToAddSimcardBonus(saleRequest, bonificacionSimcardResponse, caeqNewBoList);
 
         // Refactored Code from CAEQ
         List<ChangedContainedProduct> changedContainedProductList = this.changedContainedCaeqList(saleRequest,
@@ -2296,6 +2734,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         ProductChangeCaeq productChangeCaeq = ProductChangeCaeq
                 .builder()
                 .changedContainedProducts(changedContainedProductList)
+                .newAssignedBillingOffers(caeqNewBoList.isEmpty() ? null : caeqNewBoList)
                 .build();
 
         NewProductCaeq newProductCaeq1 = NewProductCaeq
@@ -2314,7 +2753,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         this.addCaeqOderAttributes(caeqCaplOrderAttributes, saleRequest, flgCasi);
 
         String deliveryMethod = this.getStringValueByKeyFromAdditionalDataList(saleRequest.getAdditionalData(),
-                "deliveryMethod");
+                Constants.KEY_DELIVERY_METHOD);
         CaeqRequest caeqRequest = CaeqRequest
                 .builder()
                 .sourceApp("FE")
@@ -2353,17 +2792,20 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                                     CreateProductOrderGeneralRequest mainRequestProductOrder, Boolean flgCasi,
                                     String channelIdRequest, String customerIdRequest, String productOfferingIdRequest,
                                     String cipCode, String sapidSimcardBp,
-                                    BusinessParametersReasonCode getParameterReasonCode) {
+                                    BusinessParametersReasonCode getParameterReasonCode,
+                                    BusinessParametersResponseObjectExt bonificacionSimcardResponse) {
         // Building request for CAEQ+CAPL CommercialTypeOperation
 
         Boolean flgOnlyCapl = true;
 
         // Recognizing Capl into same plan or Capl with new plan
-        if (!saleRequest.getCommercialOperation().get(0).getProduct().getProductOffering().getId().equals(saleRequest
+        if (saleRequest.getCommercialOperation().get(0).getProduct().getProductOffering() == null
+                || !saleRequest.getCommercialOperation().get(0).getProduct().getProductOffering().getId().equals(saleRequest
                 .getCommercialOperation().get(0).getProductOfferings().get(0).getId())
         ) {
             flgOnlyCapl = false;
         }
+        LOG.info("Flag is only CAPL: " + flgOnlyCapl);
 
         // Code from CAPL
         ProductOrderCaeqCaplRequest caeqCaplRequestProductOrder = new ProductOrderCaeqCaplRequest();
@@ -2395,6 +2837,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         } else {
             caeqCaplRequestProductOrder.setActionType("CH");
         }
+        List<NewAssignedBillingOffers> caeqCaplNewBoList = new ArrayList<>();
 
         NewAssignedBillingOffers caplNewBo1 = NewAssignedBillingOffers
                 .builder()
@@ -2403,8 +2846,10 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                 .parentProductCatalogId(saleRequest.getCommercialOperation().get(0)
                         .getProductOfferings().get(0).getProductOfferingPrice().get(0).getProductSpecContainmentId())
                 .build();
-        List<NewAssignedBillingOffers> caeqCaplNewBoList = new ArrayList<>();
         caeqCaplNewBoList.add(caplNewBo1);
+
+        // Simcard bonus validation
+        this.validationToAddSimcardBonus(saleRequest, bonificacionSimcardResponse, caeqCaplNewBoList);
 
         // Setting RemoveAssignedBillingOffers if commercial operation type is Capl into same plan
         ProductChangeCaeqCapl caeqCaplProductChanges = new ProductChangeCaeqCapl();
@@ -2435,7 +2880,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         this.addCaeqOderAttributes(caeqCaplOrderAttributes, saleRequest, flgCasi);
 
         String deliveryMethod = this.getStringValueByKeyFromAdditionalDataList(saleRequest.getAdditionalData(),
-                "deliveryMethod");
+                Constants.KEY_DELIVERY_METHOD);
         CaeqCaplRequest caeqCaplRequest = CaeqCaplRequest
                 .builder()
                 .newProducts(caeqCaplNewProductList)
@@ -2462,7 +2907,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         // Delivery Method Attribute
         String deliveryCode = "";
         for (KeyValueType kv : saleRequest.getAdditionalData()) {
-            if (kv.getKey().equals("deliveryMethod")) {
+            if (kv.getKey().equals(Constants.KEY_DELIVERY_METHOD)) {
                 deliveryCode = kv.getValue();
             }
         }
@@ -2696,7 +3141,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                 .changedCharacteristics(changedCharacteristicList)
                 .build();
 
-        if (!saleRequest.getCommercialOperation().get(0).getReason().equalsIgnoreCase("PORTA")
+        if (!saleRequest.getCommercialOperation().get(0).getReason().equalsIgnoreCase(Constants.PORTABILIDAD)
                 && !saleRequest.getCommercialOperation().get(0).getReason().equalsIgnoreCase("ALTA")
                 && saleRequest.getProductType().equalsIgnoreCase(Constants.WIRELESS)
                 && saleRequest.getCommercialOperation().get(0).getProduct().getProductRelationShip() != null) {
@@ -2760,7 +3205,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                 .filter(item -> item.getProduct().getDescription().equalsIgnoreCase(Constants.SIM_DEVICE))
                 .findFirst()
                 .ifPresent(item -> item.getProduct().getProductRelationship().stream()
-                        .filter(pr -> pr.getProduct().getDescription().equalsIgnoreCase("Device"))
+                        .filter(pr -> pr.getProduct().getDescription().equalsIgnoreCase(Constants.PRODUCT_TYPE_DEVICE))
                         .findFirst()
                         .ifPresent(pr -> changedContainedProduct.setProductId(pr.getProduct().getId()))
                 );
@@ -2776,7 +3221,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
 
         // Getting Delivery Method (IS, SP)
         for (KeyValueType kv : saleRequest.getAdditionalData()) {
-            if (kv.getKey().equals("deliveryMethod")) {
+            if (kv.getKey().equals(Constants.KEY_DELIVERY_METHOD)) {
                 deliveryType = kv.getValue();
             }
         }
@@ -2820,7 +3265,9 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         request.setReason("PRAEL");
 
         List<String> requiredActionList =  new ArrayList<>();
-        requiredActionList.add("PR");
+        requiredActionList.add(sale.getCommercialOperation().get(0).getReason().equalsIgnoreCase("ALTA")
+                || sale.getCommercialOperation().get(0).getReason().equalsIgnoreCase(Constants.PORTABILIDAD) ? "PR"
+                : "CH");
         request.setRequiredActions(requiredActionList);
 
         List<String> usageList =  new ArrayList<>();
@@ -2843,22 +3290,29 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         List<StockItem> itemsList =  new ArrayList<>();
 
         // Equipment Item
-        Item item1 = Item
-                .builder()
-                .id(sale.getCommercialOperation().get(0).getDeviceOffering().stream()
-                        .filter(item -> !item.getDeviceType().equalsIgnoreCase("SIM"))
-                        .findFirst()
-                        .orElse(DeviceOffering.builder().sapid(null).build())
-                        .getSapid())
-                .type("IMEI")
-                .build();
-        StockItem stockItem1 = StockItem
-                .builder()
-                .item(item1)
-                .build();
-        itemsList.add(stockItem1);
+        DeviceOffering deviceOfferingSmartphone = sale.getCommercialOperation().get(0).getDeviceOffering().stream()
+                .filter(item -> item.getDeviceType().equalsIgnoreCase(Constants.DEVICE_TYPE_SMARTPHONE))
+                .findFirst()
+                .orElse(null);
+        if (deviceOfferingSmartphone != null) {
+            Item item1 = Item
+                    .builder()
+                    .id(deviceOfferingSmartphone.getSapid())
+                    .type("IMEI")
+                    .build();
+            StockItem stockItem1 = StockItem
+                    .builder()
+                    .item(item1)
+                    .build();
+            itemsList.add(stockItem1);
+        }
 
-        if (sale.getCommercialOperation().get(0).getDeviceOffering().size() > 1) {
+        DeviceOffering deviceOfferingSimcard = sale.getCommercialOperation().get(0).getDeviceOffering().stream()
+                .filter(item -> item.getDeviceType().equalsIgnoreCase(Constants.DEVICE_TYPE_SIM))
+                .findFirst()
+                .orElse(null);
+
+        if (deviceOfferingSimcard != null) {
             // SIM Item
             Item item2 = Item
                     .builder()
@@ -2873,11 +3327,13 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         }
         request.setItems(itemsList);
 
-        request.setOrderAction(createOrderResponse.getProductOrderReferenceNumber());
+        request.setOrderAction(createOrderResponse.getProductOrderId());
 
         Order order = Order
                 .builder()
-                .id(createOrderResponse.getProductOrderId())
+                // Quitar último caracter
+                .id(org.apache.commons.lang3.StringUtils.chop(createOrderResponse.getNewProductsInNewOfferings().get(0)
+                        .getProductOrderItemReferenceNumber()))
                 .build();
         request.setOrder(order);
 
@@ -2886,22 +3342,23 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
 
     private Boolean compareComponents(String productTypeName) {
         return productTypeName.equalsIgnoreCase(Constants.PRODUCT_TYPE_BROADBAND)
-                || productTypeName.equalsIgnoreCase("cableTv")
-                || productTypeName.equalsIgnoreCase("device")
-                || productTypeName.equalsIgnoreCase("landline")
-                || productTypeName.equalsIgnoreCase("accessories");
+                || productTypeName.equalsIgnoreCase(Constants.PRODUCT_TYPE_CABLE_TV)
+                || productTypeName.equalsIgnoreCase(Constants.PRODUCT_TYPE_DEVICE)
+                || productTypeName.equalsIgnoreCase(Constants.PRODUCT_TYPE_LANDLINE)
+                || productTypeName.equalsIgnoreCase(Constants.PRODUCT_TYPE_ACCESSORIES);
     }
 
     private Mono<Sale> wirelineMigrations(List<BusinessParameterFinanciamientoFijaExt> parametersFinanciamientoFija,
-                                          PostSalesRequest request, final Boolean[] flgFinanciamiento,
-                                          String actionType, Boolean isRetail) {
+                                          PostSalesRequest request, String actionType, Boolean isRetail) {
 
         // Building Create Quotation Request to use into Create Order Request
         CreateQuotationRequest createQuotationFijaRequest = new CreateQuotationRequest();
-        if (flgFinanciamiento[0]) {
-            this.buildCreateQuotationFijaRequest(createQuotationFijaRequest, request,
-                    parametersFinanciamientoFija);
-        }
+        this.buildCreateQuotationFijaRequest(createQuotationFijaRequest, request,
+                parametersFinanciamientoFija);
+
+        LOG.info("Migration Sales has financing: " + (createQuotationFijaRequest.getBody() != null));
+        LOG.info("Create Quotation Fija Request without order info: ".concat(new Gson()
+                                                                        .toJson(createQuotationFijaRequest.getBody())));
 
         List<CommercialOperationType> commercialOperationTypeList = request.getSale().getCommercialOperation();
 
@@ -2938,19 +3395,20 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         // Order Attributes para Fija
         List<FlexAttrType> migracionFijaOrderAttributesList = new ArrayList<>();
         this.buildOrderAttributesListAltaFija(migracionFijaOrderAttributesList, request.getSale(),
-                createQuotationFijaRequest, flgFinanciamiento[0]);
+                createQuotationFijaRequest);
 
         MigracionFijaRequest migracionFijaRequest = new MigracionFijaRequest();
         migracionFijaRequest.setNewProducts(newProducts);
         migracionFijaRequest.setAppointmentId(request.getSale().getCommercialOperation().get(0)
                 .getWorkOrDeliveryType() != null
                 ? request.getSale().getCommercialOperation().get(0).getWorkOrDeliveryType().getWorkOrder()
-                .getWorkForceTeams().get(0).getId() : null);
+                .getWorkforceTeams().get(0).getId() : null);
         migracionFijaRequest.setAppointmentNumber(request.getSale().getSalesId());
         migracionFijaRequest.setServiceabilityInfo(serviceabilityInfo);
         migracionFijaRequest.setSourceApp(request.getSale().getSalesId());
         migracionFijaRequest.setOrderAttributes(migracionFijaOrderAttributesList);
-        migracionFijaRequest.setCip(!StringUtils.isEmpty(request.getSale().getPaymenType().getCid()) ?
+        migracionFijaRequest.setCip(request.getSale().getPaymenType() != null
+                && !StringUtils.isEmpty(request.getSale().getPaymenType().getCid()) ?
                 request.getSale().getPaymenType().getCid() : null);
         migracionFijaRequest.setUpfrontIndicator(request.getSale().getCommercialOperation().get(0).getProductOfferings()
                 .get(0).getUpFront().getIndicator());
@@ -2970,7 +3428,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         CreateProductOrderGeneralRequest mainRequestProductOrder = new CreateProductOrderGeneralRequest();
         mainRequestProductOrder.setCreateProductOrderRequest(productOrderMigracionFijaRequest);
 
-        return createOrderFija(mainRequestProductOrder, request, request.getSale(), flgFinanciamiento,
+        return createOrderFija(mainRequestProductOrder, request, request.getSale(),
                 createQuotationFijaRequest, isRetail);
     }
 
@@ -3011,7 +3469,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                 .equalsIgnoreCase(Constants.PRODUCT_TYPE_BROADBAND))
                 .findFirst()
                 .ifPresent(item -> {
-                    characteristicValue[0] = item.getProductPrice().get(3).getAdditionalData().stream()
+                    characteristicValue[0] = item.getProductPrice().get(2).getAdditionalData().stream()
                             .filter(keyValueType -> keyValueType.getKey().equalsIgnoreCase("downloadSpeed"))
                             .findFirst()
                             .orElseThrow(() -> buildGenesisError(Constants.BAD_REQUEST_EXCEPTION_ID,
@@ -3049,9 +3507,9 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
 
         // Paso 6: Envío de SVA
         productOfferings.forEach(productOffering -> {
-            if (productOffering.getProductSpecification().get(0).getProductType().equalsIgnoreCase("sva")) {
+            if (productOffering.getProductSpecification().get(0).getProductType().equalsIgnoreCase(Constants.PRODUCT_TYPE_SVA)) {
                 String productType = getStringValueByKeyFromAdditionalDataList(productOffering.getAdditionalData(),
-                        "productType");
+                        Constants.PRODUCT_TYPE);
                 if (productType.equalsIgnoreCase(Constants.PRODUCT_TYPE_CABLE_TV)
                         || productType.equalsIgnoreCase(Constants.PRODUCT_TYPE_CHANNEL_TV)
                         || productType.equalsIgnoreCase(Constants.PRODUCT_TYPE_DEVICE)

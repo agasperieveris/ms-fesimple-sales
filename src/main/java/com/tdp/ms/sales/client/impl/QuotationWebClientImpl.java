@@ -1,6 +1,7 @@
 package com.tdp.ms.sales.client.impl;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.tdp.genesis.core.constants.HttpHeadersKey;
 import com.tdp.genesis.core.exception.GenesisException;
 import com.tdp.genesis.core.exception.GenesisExceptionBuilder;
@@ -10,11 +11,15 @@ import com.tdp.ms.sales.model.request.CreateQuotationRequest;
 import com.tdp.ms.sales.model.response.CreateQuotationResponse;
 import com.tdp.ms.sales.repository.SalesRepository;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Mono;
 
 /**
@@ -46,10 +51,11 @@ public class QuotationWebClientImpl implements QuotationWebClient {
     @Value("${application.endpoints.quotation.create_quotation}")
     private String createQuotationUrl;
 
+    private static final Logger LOG = LoggerFactory.getLogger(QuotationWebClientImpl.class);
+
     @Override
     public Mono<CreateQuotationResponse> createQuotation(CreateQuotationRequest request, Sale sale) {
-        System.out.println("-> create Quotation");
-        System.out.println(new Gson().toJson(request.getBody()));
+        LOG.info("->Quotation Request: ".concat(new Gson().toJson(request.getBody())));
         return webClientInsecure
                 .post()
                 .uri(createQuotationUrl)
@@ -61,26 +67,48 @@ public class QuotationWebClientImpl implements QuotationWebClient {
                 .accept(MediaType.APPLICATION_JSON)
                 .retrieve()
                 .bodyToMono(CreateQuotationResponse.class)
-                .onErrorResume(throwable -> throwExceptionCreateQuotation(sale));
+                .onErrorResume(throwable -> throwExceptionCreateQuotation(sale, throwable));
     }
 
     // TODO: Definir al método throwExceptionCreateQuotation como privado, por tema de los test con Mockito no funciona
     @Override
-    public Mono<CreateQuotationResponse> throwExceptionCreateQuotation(Sale sale) throws GenesisException {
+    public Mono<CreateQuotationResponse> throwExceptionCreateQuotation(Sale sale, Throwable error)
+                                                                                            throws GenesisException {
         sale.setStatus("NEGOCIACION");
         return salesRepository.save(sale)
-                .flatMap(saleSaved -> {
-                    GenesisExceptionBuilder builder = GenesisException.builder();
+                .flatMap(saleSaved -> this.throwException(saleSaved, error));
+    }
 
-                    Gson gson = new Gson();
-                    String saleJsonString = gson.toJson(saleSaved);
+    private Mono<CreateQuotationResponse> throwException(Sale saleSaved, Throwable error) {
+        GenesisExceptionBuilder builder = GenesisException.builder();
+        Gson gson = new GsonBuilder().disableHtmlEscaping().create();
+        String saleJsonString = gson.toJson(saleSaved);
 
-                    return Mono.error(builder
-                            .exceptionId("SVC0409")
-                            .userMessage("There was a problem from Create Quotation FE+Simple Service")
-                            .wildcards(new String[]{saleJsonString})
-                            .build());
-                });
+
+        if (error instanceof WebClientResponseException) {
+            WebClientResponseException responseException = (WebClientResponseException) error;
+            HttpStatus statusException = responseException.getStatusCode();
+
+            if (statusException.equals(HttpStatus.BAD_REQUEST)) {
+                // Throw 400 status code
+                return Mono.error(builder
+                        .exceptionId("SVC0001")
+                        .wildcards(new String[]{"Bad Request from Create Quotation FE+Simple Service"})
+                        .build());
+            } else {
+                // Throw 409 status code
+                return Mono.error(builder
+                        .exceptionId("SVC0409")
+                        .wildcards(new String[]{saleJsonString})
+                        .build());
+            }
+        } else {
+            // Throw 409 status code
+            return Mono.error(builder
+                    .exceptionId("SVC0409")
+                    .wildcards(new String[]{saleJsonString})
+                    .build());
+        }
     }
 
 }

@@ -1,6 +1,7 @@
 package com.tdp.ms.sales.client.impl;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.tdp.genesis.core.constants.HttpHeadersKey;
 import com.tdp.genesis.core.exception.GenesisException;
 import com.tdp.genesis.core.exception.GenesisExceptionBuilder;
@@ -11,11 +12,15 @@ import com.tdp.ms.sales.model.response.ReserveStockResponse;
 import com.tdp.ms.sales.repository.SalesRepository;
 import java.util.HashMap;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Mono;
 
 /**
@@ -47,11 +52,12 @@ public class StockWebClientImpl implements StockWebClient {
     @Value("${application.endpoints.stock.reserve_stock_url}")
     private String reserveStockUrl;
 
+    private static final Logger LOG = LoggerFactory.getLogger(StockWebClientImpl.class);
+
     @Override
     public Mono<ReserveStockResponse> reserveStock(ReserveStockRequest request, HashMap<String, String> headersMap,
                                                    Sale sale) {
-        System.out.println("->reserveStock");
-        System.out.println(new Gson().toJson(request));
+        LOG.info("->Reserve Stock Request: ".concat(new Gson().toJson(request)));
         return webClientInsecure
                 .post()
                 .uri(reserveStockUrl)
@@ -63,26 +69,51 @@ public class StockWebClientImpl implements StockWebClient {
                 .accept(MediaType.APPLICATION_JSON)
                 .retrieve()
                 .bodyToMono(ReserveStockResponse.class)
-                .onErrorResume(throwable -> throwExceptionReserveStock(sale));
+                .onErrorResume(throwable -> throwExceptionReserveStock(sale, throwable));
     }
 
     // TODO: Definir al método throwExceptionReserveStock como privado, por tema de los test con Mockito no funcionaba
     @Override
-    public Mono<ReserveStockResponse> throwExceptionReserveStock(Sale sale) throws GenesisException {
+    public Mono<ReserveStockResponse> throwExceptionReserveStock(Sale sale, Throwable error) throws GenesisException {
         sale.setStatus("NEGOCIACION");
         return salesRepository.save(sale)
-                .flatMap(saleSaved -> {
-                    GenesisExceptionBuilder builder = GenesisException.builder();
-
-                    Gson gson = new Gson();
-                    String saleJsonString = gson.toJson(saleSaved);
-
-                    return Mono.error(builder
-                            .exceptionId("SVC0409")
-                            .userMessage("There was a problem from Reserve Stock FE+Simple Service")
-                            .wildcards(new String[]{saleJsonString})
-                            .build());
-                });
+                .flatMap(saleSaved -> this.throwException(saleSaved, error));
     }
 
+    private Mono<ReserveStockResponse> throwException(Sale saleSaved, Throwable error) {
+        GenesisExceptionBuilder builder = GenesisException.builder();
+        Gson gson = new GsonBuilder().disableHtmlEscaping().create();
+        String saleJsonString = gson.toJson(saleSaved);
+
+        if (error instanceof WebClientResponseException) {
+            WebClientResponseException responseException = (WebClientResponseException) error;
+            HttpStatus statusException = responseException.getStatusCode();
+
+            if (statusException.equals(HttpStatus.BAD_REQUEST)) {
+                // Throw 400 status code
+                return Mono.error(builder
+                        .exceptionId("SVC0001")
+                        .wildcards(new String[]{"Bad Request from Reserve Stock FE+Simple Service"})
+                        .build());
+            } else if (statusException.equals(HttpStatus.NOT_FOUND)) {
+                // Throw 404 status code
+                return Mono.error(builder
+                        .exceptionId("SVC1006")
+                        .wildcards(new String[]{"Resource Not Found from Reserve Stock FE+Simple Service"})
+                        .build());
+            } else {
+                // Throw 409 status code
+                return Mono.error(builder
+                        .exceptionId("SVC0409")
+                        .wildcards(new String[]{saleJsonString})
+                        .build());
+            }
+        } else {
+            // Throw 409 status code
+            return Mono.error(builder
+                    .exceptionId("SVC0409")
+                    .wildcards(new String[]{saleJsonString})
+                    .build());
+        }
+    }
 }

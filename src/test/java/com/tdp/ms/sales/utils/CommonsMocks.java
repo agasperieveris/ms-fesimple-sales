@@ -146,6 +146,16 @@ public class CommonsMocks {
                         .build())
                 .build()));
 
+        TopLevelProductConfigurationType productConfiguration = new TopLevelProductConfigurationType();
+        productConfiguration.setLineOfBusinessType("cableTv");
+        productConfiguration.setServiceId("123456");
+
+        NewProductInNewOfferingInstanceConfigurationType newProducts1 = new NewProductInNewOfferingInstanceConfigurationType();
+        newProducts1.setProductConfiguration(productConfiguration);
+
+        List<NewProductInNewOfferingInstanceConfigurationType> newProductsInNewOfferingsList = new ArrayList<>();
+        newProductsInNewOfferingsList.add(newProducts1);
+
         CreateProductOrderResponseType order = CreateProductOrderResponseType
                 .builder()
                 .productOrderId("930686A")
@@ -155,6 +165,7 @@ public class CommonsMocks {
         OfferingType offeringType1= new OfferingType();
         offeringType1.setId("s");
         offeringType1.setProductOfferingProductSpecId("s");
+        offeringType1.setType("BROADBAND");
 
         MoneyType maxPrice = MoneyType
                 .builder()
@@ -172,6 +183,7 @@ public class CommonsMocks {
                 .builder()
                 .maxPrice(maxPrice)
                 .benefits(benefitsList)
+                .price(MoneyType.builder().amount(100.00).build())
                 .build();
         List<ComponentProdOfferPriceType> productOfferingPricesList = new ArrayList<>();
         productOfferingPricesList.add(componentProdOfferPriceType1);
@@ -187,6 +199,7 @@ public class CommonsMocks {
         ComposingProductType productSpecification1 = new ComposingProductType();
         productSpecification1.setProductType("landline");
         productSpecification1.setRefinedProduct(refinedProduct);
+        productSpecification1.setProductPrice(productOfferingPricesList);
 
         ComposingProductType productSpecification2 = new ComposingProductType();
         productSpecification2.setProductType("broadband");
@@ -200,7 +213,7 @@ public class CommonsMocks {
         productSpecification3.setRefinedProduct(refinedProduct);
 
         ComposingProductType productSpecification4 = new ComposingProductType();
-        productSpecification4.setProductType("ShEq");
+        productSpecification4.setProductType("Device");
         productSpecification4.setRefinedProduct(refinedProduct);
 
         ComposingProductType productSpecification5 = new ComposingProductType();
@@ -215,8 +228,23 @@ public class CommonsMocks {
         productSpecificationList.add(productSpecification5);
         offeringType1.setProductSpecification(productSpecificationList);
 
+        KeyValueType keyValueModemPremium = KeyValueType.builder().key("modemPremium").value("true").build();
+        KeyValueType keyValueUltraWifi = KeyValueType.builder().key("ultraWifi").value("true").build();
+        List<KeyValueType> additionalDataOfferingTypeList = new ArrayList<>();
+        additionalDataOfferingTypeList.add(keyValueModemPremium);
+        additionalDataOfferingTypeList.add(keyValueUltraWifi);
+        offeringType1.setAdditionalData(additionalDataOfferingTypeList);
+
         List<OfferingType> productOfferings = new ArrayList<>();
         productOfferings.add(offeringType1);
+        productOfferings.add(offeringType1);
+        productOfferings.add(offeringType1);
+        productOfferings.add(offeringType1);
+
+        productOfferings.get(0).getProductSpecification().get(0).setProductType("cableTv");
+        productOfferings.get(1).getProductSpecification().get(0).setProductType(Constants.PRODUCT_TYPE_BROADBAND);
+        productOfferings.get(3).getProductSpecification().get(0).setProductType("device");
+        productOfferings.get(2).getProductSpecification().get(0).setProductType("landline");
 
 
         List<KeyValueType> additionalDataCommercialOperation = new ArrayList<>();
@@ -264,11 +292,22 @@ public class CommonsMocks {
         serviceAvailability.setOffers(offersServicesList);
         serviceAvailability.setAdditionalData(additionalDatas);
 
+        serviceAvailability.getAdditionalData().add(KeyValueType.builder()
+                .key("networkAccessTechnologyLandline").value("FTTH").build());
+        serviceAvailability.getAdditionalData().add(KeyValueType.builder()
+                .key("serviceTechnologyLandline").value("HFC").build());
+        serviceAvailability.getAdditionalData().add(KeyValueType.builder()
+                .key("maxSpeed").value("1000Mbps").build());
+        serviceAvailability.getAdditionalData().add(KeyValueType.builder()
+                .key("networkAccessTechnologyBroadband").value("FTTH").build());
+        serviceAvailability.getAdditionalData().add(KeyValueType.builder()
+                .key("serviceTechnologyBroadband").value("HFC").build());
+
         PortabilityType portability =  new PortabilityType();
         portability.setReceipt("test");
         portability.setProductType("test");
         portability.setPlanType("test");
-        portability.setDonorActivationDate("test");
+        portability.setDonorActivationDate("2021-02-19-05:00");
         portability.setDonorEquipmentContractEndDate("test");
         portability.setIdProcess("test");
         portability.setIdProcessGroup("test");
@@ -353,10 +392,13 @@ public class CommonsMocks {
 
         relatedParties.add(relatedParty);
 
+        List<KeyValueType> paymentAdditionalData = new ArrayList<>();
+        paymentAdditionalData.add(KeyValueType.builder().key("paymentDocument").value("Boleta").build());
         PaymentType paymentType = PaymentType
                 .builder()
                 .paymentType("EX")
                 .cid("string")
+                .additionalData(paymentAdditionalData)
                 .build();
 
         IdentityValidationType identityValidationType = IdentityValidationType.builder()
@@ -433,6 +475,9 @@ public class CommonsMocks {
         additionalData4.setValue("PAGO EFECTIVO");
         additionalDatas.add(additionalData4);
 
+        additionalDatas.add(KeyValueType.builder().key("SIM_ICCID").value("123123123").build());
+        additionalDatas.add(KeyValueType.builder().key("MOVILE_IMEI").value("123123123").build());
+
         EntityRefType entityRefType = new EntityRefType();
         entityRefType.setHref("s");
         entityRefType.setId("s");
@@ -456,6 +501,7 @@ public class CommonsMocks {
         place.setAddress(addressType);
         places.add(place);
         DeviceOffering deviceOffering = new DeviceOffering();
+        DeviceOffering deviceOffering2 = new DeviceOffering();
 
         deviceOffering.setAdditionalData(additionalDatas);
         deviceOffering.setId("s");
@@ -472,11 +518,27 @@ public class CommonsMocks {
                         .build()))
                 .build())).build()));
 
+        deviceOffering2.setAdditionalData(additionalDatas);
+        deviceOffering2.setId("s");
+        deviceOffering2.setDeviceType("SIM");
+        deviceOffering2.setSapid("SAD123PID");
+        deviceOffering2.setOffers(Arrays.asList(Offer.builder().billingOfferings(Arrays.asList(BillingOffering.builder()
+                .commitmentPeriods(Arrays.asList(CommitmentPeriod.builder()
+                        .financingInstalments(Arrays.asList(FinancingInstalment.builder()
+                                .instalments(Instalments.builder()
+                                        .openingQuota(MoneyAmount.builder().value(1).build())
+                                        .totalAmount(MoneyAmount.builder().value(1).build())
+                                        .build())
+                                .build()))
+                        .build()))
+                .build())).build()));
+
         StockType stockType = StockType
                 .builder()
                 .reservationId("")
                 .build();
         deviceOffering.setStock(stockType);
+        deviceOffering2.setStock(stockType);
 
 
         MoneyAmount moneyAmount1 = MoneyAmount
@@ -525,9 +587,11 @@ public class CommonsMocks {
         List<SimSpecification> simSpecificationsList = new ArrayList<>();
         simSpecificationsList.add(simSpecification1);
         deviceOffering.setSimSpecifications(simSpecificationsList);
+        deviceOffering2.setSimSpecifications(simSpecificationsList);
 
         deviceOfferings.add(deviceOffering);
-        deviceOfferings.add(deviceOffering);
+        deviceOfferings.add(deviceOffering2);
+        deviceOfferings.get(0).setDeviceType("Smartphone");
         ProductInstanceType product= new ProductInstanceType();
         product.setId("s");
         product.setProductSpec(entityRefType);
@@ -589,7 +653,7 @@ public class CommonsMocks {
                 .scheduleDelivery("SLA")
                 .mediumDelivery("DELIVERY")
                 .workOrder(WorkforceTeamTimeSlotType.builder()
-                        .workForceTeams(Arrays.asList(WorkforceTeamAvailabilityType.builder()
+                        .workforceTeams(Arrays.asList(WorkforceTeamAvailabilityType.builder()
                                 .id("string").build()))
                         .build())
                 .contact(mediumCharacteristic).place(places).additionalData(additionalDatas).build();
@@ -769,6 +833,44 @@ public class CommonsMocks {
                 .build();
 
         return sale;
+    }
+
+    public static List<NewProductInNewOfferingInstanceConfigurationType> createOrderNewProductsInNewOfferingsList() {
+        TopLevelProductConfigurationType productConfiguration1 = new TopLevelProductConfigurationType();
+        productConfiguration1.setLineOfBusinessType("cableTv");
+        productConfiguration1.setServiceId("123123");
+        NewProductInNewOfferingInstanceConfigurationType newOfferingInstanceConfigurationType1 =
+                new NewProductInNewOfferingInstanceConfigurationType();
+        newOfferingInstanceConfigurationType1.setProductConfiguration(productConfiguration1);
+
+        TopLevelProductConfigurationType productConfiguration2 = new TopLevelProductConfigurationType();
+        productConfiguration2.setLineOfBusinessType(Constants.PRODUCT_TYPE_BROADBAND);
+        productConfiguration2.setServiceId("123123");
+        NewProductInNewOfferingInstanceConfigurationType newOfferingInstanceConfigurationType2 =
+                new NewProductInNewOfferingInstanceConfigurationType();
+        newOfferingInstanceConfigurationType2.setProductConfiguration(productConfiguration2);
+
+        TopLevelProductConfigurationType productConfiguration3 = new TopLevelProductConfigurationType();
+        productConfiguration3.setLineOfBusinessType("landline");
+        productConfiguration3.setServiceId("123123");
+        NewProductInNewOfferingInstanceConfigurationType newOfferingInstanceConfigurationType3 =
+                new NewProductInNewOfferingInstanceConfigurationType();
+        newOfferingInstanceConfigurationType3.setProductConfiguration(productConfiguration3);
+
+        TopLevelProductConfigurationType productConfiguration4 = new TopLevelProductConfigurationType();
+        productConfiguration4.setLineOfBusinessType("device");
+        productConfiguration4.setServiceId("123123");
+        NewProductInNewOfferingInstanceConfigurationType newOfferingInstanceConfigurationType4 =
+                new NewProductInNewOfferingInstanceConfigurationType();
+        newOfferingInstanceConfigurationType4.setProductConfiguration(productConfiguration4);
+
+        List<NewProductInNewOfferingInstanceConfigurationType> newProductsInNewOfferingsList = new ArrayList<>();
+        newProductsInNewOfferingsList.add(newOfferingInstanceConfigurationType1);
+        newProductsInNewOfferingsList.add(newOfferingInstanceConfigurationType2);
+        newProductsInNewOfferingsList.add(newOfferingInstanceConfigurationType3);
+        newProductsInNewOfferingsList.add(newOfferingInstanceConfigurationType4);
+
+        return newProductsInNewOfferingsList;
     }
 
     public static HashMap<String,String> createHeadersMock() {
