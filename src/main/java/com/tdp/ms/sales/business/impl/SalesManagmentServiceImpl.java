@@ -1906,6 +1906,10 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
     private Mono<Sale> callToReserveStockAndCreateQuotation(PostSalesRequest request, Sale saleRequest, Boolean flgCasi,
                                              Boolean flgFinanciamiento, String sapidSimcard) {
         ReserveStockRequest reserveStockRequest = new ReserveStockRequest();
+        if (saleRequest.getProductType().equalsIgnoreCase(Constants.WIRELINE)) {
+            return this.callToCreateQuotation(request, saleRequest, flgCasi, flgFinanciamiento);
+        }
+
         reserveStockRequest = this.buildReserveStockRequest(reserveStockRequest,
                 saleRequest, saleRequest.getCommercialOperation().get(0).getOrder(), sapidSimcard);
 
