@@ -401,10 +401,24 @@ public class CommonsMocks {
                 .additionalData(paymentAdditionalData)
                 .build();
 
+        List<KeyValueType> additionalDataListIV = new ArrayList<>();
+        additionalDataListIV.add(KeyValueType.builder().key(Constants.VALIDATION_TYPE_NO_BIOMETRIC_ID_TYPE)
+                .value("1").build());
+
         IdentityValidationType identityValidationType = IdentityValidationType.builder()
-                .date("2014-09-15T23:14:25.7251173Z").validationType("No Biometric").build();
+                .date("2014-09-15T23:14:25.7251173Z")
+                .validationType("No Biometric")
+                .additionalData(additionalDataListIV)
+                .build();
+
+        IdentityValidationType identityValidationType2 = IdentityValidationType.builder()
+                .date("2014-09-15T23:14:25.7251173Z")
+                .validationType(Constants.VALIDATION_TYPE_NO_BIOMETRIC)
+                .additionalData(additionalDataListIV)
+                .build();
 
         identityValidationTypeList.add(identityValidationType);
+        identityValidationTypeList.add(identityValidationType2);
 
         sale = Sale
                 .builder()
