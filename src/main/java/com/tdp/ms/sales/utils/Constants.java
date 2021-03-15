@@ -21,9 +21,9 @@ public class Constants {
     public static final String EMAIL = "email";
     public static final String STRING = "STRING";
     public static final String FLOWSALE = "flowSale";
-    public static final String RETAIL = "Retail";
-    public static final String REMOTO = "Remoto";
-    public static final String PRESENCIAL = "Presencial";
+    public static final String FLOWSALE_RETAIL = "Retail";
+    public static final String FLOWSALE_REMOTO = "Remoto";
+    public static final String FLOWSALE_PRESENCIAL = "Presencial";
     public static final String CAEQ = "CAEQ";
     public static final String CAPL = "CAPL";
     public static final String PORTABILIDAD = "PORTABILIDAD";
@@ -57,4 +57,6 @@ public class Constants {
     public static final String KEY_DELIVERY_METHOD = "deliveryMethod";
     public static final String SALES_STATUS_NUEVO = "NUEVO";
     public static final String PRODUCT_TYPE = "productType";
+    public static final String VALIDATION_TYPE_NO_BIOMETRIC = "noBiometric";
+    public static final String VALIDATION_TYPE_NO_BIOMETRIC_ID_TYPE = "noBiometricIdType";
 }
