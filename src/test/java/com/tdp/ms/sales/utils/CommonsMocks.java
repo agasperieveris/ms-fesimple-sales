@@ -598,10 +598,18 @@ public class CommonsMocks {
         product.setPublicId("234562433");
         product.setProductOffering(entityRefType);
 
+        NewProductInNewOfferingInstanceConfigurationType newOffering1 =
+                new NewProductInNewOfferingInstanceConfigurationType();
+        newOffering1.setProductOrderItemReferenceNumber("100482A");
+
+        List<NewProductInNewOfferingInstanceConfigurationType> newProductsInNewOfferingsList = new ArrayList<>();
+        newProductsInNewOfferingsList.add(newOffering1);
+
         CreateProductOrderResponseType order = CreateProductOrderResponseType
                 .builder()
                 .productOrderId("930686A")
                 .productOrderReferenceNumber("761787835447")
+                .newProductsInNewOfferings(newProductsInNewOfferingsList)
                 .build();
 
         OfferingType offeringType1= new OfferingType();
