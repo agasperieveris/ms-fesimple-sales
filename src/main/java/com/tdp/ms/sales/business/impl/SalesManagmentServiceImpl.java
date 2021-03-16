@@ -1200,11 +1200,12 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                     productOfferings.get(i).getAdditionalData(), Constants.PRODUCT_TYPE);
 
             if (productTypeSva.equalsIgnoreCase(Constants.PRODUCT_TYPE_SVA)) {
+                boolean isCableTvOrChannelTv = productTypeComponent.equalsIgnoreCase(Constants.PRODUCT_TYPE_CABLE_TV)
+                        || productTypeComponent.equalsIgnoreCase(Constants.PRODUCT_TYPE_CHANNEL_TV);
+                boolean isBroadbandOrLandline = productTypeComponent.equalsIgnoreCase(Constants.PRODUCT_TYPE_BROADBAND)
+                        || productTypeComponent.equalsIgnoreCase(Constants.PRODUCT_TYPE_LANDLINE);
 
-                if (productTypeComponent.equalsIgnoreCase(Constants.PRODUCT_TYPE_CABLE_TV)
-                        || productTypeComponent.equalsIgnoreCase(Constants.PRODUCT_TYPE_CHANNEL_TV)
-                        || productTypeComponent.equalsIgnoreCase(Constants.PRODUCT_TYPE_BROADBAND)
-                        || productTypeComponent.equalsIgnoreCase(Constants.PRODUCT_TYPE_LANDLINE)) {
+                if (isCableTvOrChannelTv || isBroadbandOrLandline) {
 
                     NewAssignedBillingOffers newAssignedBillingOffers = NewAssignedBillingOffers
                             .builder()
@@ -1213,8 +1214,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                                     .getProductPrice().get(0).getProductSpecContainmentId())
                             .build();
 
-                    if (productTypeComponent.equalsIgnoreCase(Constants.PRODUCT_TYPE_CABLE_TV)
-                            || productTypeComponent.equalsIgnoreCase(Constants.PRODUCT_TYPE_CHANNEL_TV)) {
+                    if (isCableTvOrChannelTv) {
                         newAssignedBillingOffersCableTvList.add(newAssignedBillingOffers);
                     } else if (productTypeComponent.equalsIgnoreCase(Constants.PRODUCT_TYPE_BROADBAND)) {
                         newAssignedBillingOffersBroadbandList.add(newAssignedBillingOffers);
