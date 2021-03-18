@@ -1137,11 +1137,12 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                     productOfferings.get(i).getAdditionalData(), Constants.PRODUCT_TYPE);
 
             if (productTypeSva.equalsIgnoreCase(Constants.PRODUCT_TYPE_SVA)) {
+                boolean isCableTvOrChannelTv = productTypeComponent.equalsIgnoreCase(Constants.PRODUCT_TYPE_CABLE_TV)
+                        || productTypeComponent.equalsIgnoreCase(Constants.PRODUCT_TYPE_CHANNEL_TV);
+                boolean isBroadbandOrLandline = productTypeComponent.equalsIgnoreCase(Constants.PRODUCT_TYPE_BROADBAND)
+                        || productTypeComponent.equalsIgnoreCase(Constants.PRODUCT_TYPE_LANDLINE);
 
-                if (productTypeComponent.equalsIgnoreCase(Constants.PRODUCT_TYPE_CABLE_TV)
-                        || productTypeComponent.equalsIgnoreCase(Constants.PRODUCT_TYPE_CHANNEL_TV)
-                        || productTypeComponent.equalsIgnoreCase(Constants.PRODUCT_TYPE_BROADBAND)
-                        || productTypeComponent.equalsIgnoreCase(Constants.PRODUCT_TYPE_LANDLINE)) {
+                if (isCableTvOrChannelTv || isBroadbandOrLandline) {
 
                     NewAssignedBillingOffers newAssignedBillingOffers = NewAssignedBillingOffers
                             .builder()
@@ -1150,8 +1151,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                                     .getProductPrice().get(0).getProductSpecContainmentId())
                             .build();
 
-                    if (productTypeComponent.equalsIgnoreCase(Constants.PRODUCT_TYPE_CABLE_TV)
-                            || productTypeComponent.equalsIgnoreCase(Constants.PRODUCT_TYPE_CHANNEL_TV)) {
+                    if (isCableTvOrChannelTv) {
                         newAssignedBillingOffersCableTvList.add(newAssignedBillingOffers);
                     } else if (productTypeComponent.equalsIgnoreCase(Constants.PRODUCT_TYPE_BROADBAND)) {
                         newAssignedBillingOffersBroadbandList.add(newAssignedBillingOffers);
@@ -1843,6 +1843,10 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
     private Mono<Sale> callToReserveStockAndCreateQuotation(PostSalesRequest request, Sale saleRequest, Boolean flgCasi,
                                              Boolean flgFinanciamiento, String sapidSimcard) {
         ReserveStockRequest reserveStockRequest = new ReserveStockRequest();
+        if (saleRequest.getProductType().equalsIgnoreCase(Constants.WIRELINE)) {
+            return this.callToCreateQuotation(request, saleRequest, flgCasi, flgFinanciamiento);
+        }
+
         reserveStockRequest = this.buildReserveStockRequest(reserveStockRequest,
                 saleRequest, saleRequest.getCommercialOperation().get(0).getOrder(), sapidSimcard);
 
