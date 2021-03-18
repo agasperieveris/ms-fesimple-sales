@@ -911,7 +911,11 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
 
         String paymentMediumLabelValue = this.getStringValueByKeyFromAdditionalDataList(paymentType.getAdditionalData(),
                 "paymentMediumLabel");
-        if (paymentMediumLabelValue.equalsIgnoreCase("Pago Efectivo")) {
+        if (StringUtils.isEmpty(paymentMediumLabelValue)) {
+            throw buildGenesisError(Constants.BAD_REQUEST_EXCEPTION_ID,
+                    "Falta key paymentMediumLabel en sale.paymentType.additionalData");
+        }
+        else if (paymentMediumLabelValue.equalsIgnoreCase("Pago Efectivo")) {
 
             if (StringUtils.isEmpty(paymentType.getCid())) {
                 throw buildGenesisError(Constants.BAD_REQUEST_EXCEPTION_ID,
@@ -919,10 +923,8 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
             } else {
                 return paymentType.getCid();
             }
-        } else {
-            throw buildGenesisError(Constants.BAD_REQUEST_EXCEPTION_ID,
-                    "Falta key paymentMediumLabel en sale.paymentType.additionalData");
         }
+        return null;
     }
 
     private Mono<Sale> validationsAndBuildings(BusinessParametersResponse getRiskDomain,
@@ -2761,6 +2763,18 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                 .productCatalogId("7411")
                 .changedCharacteristics(changedCharacteristicList)
                 .build();
+
+        String caeqValue = getStringValueByKeyFromAdditionalDataList(saleRequest.getCommercialOperation().get(0)
+                .getAdditionalData(), Constants.CAEQ);
+        if (caeqValue.equalsIgnoreCase(Constants.STRING_TRUE)) {
+            ChangedCharacteristic changedCharacteristicOnlyWhenCaeq = ChangedCharacteristic
+                    .builder()
+                    .characteristicId("10011")
+                    .characteristicValue(saleRequest.getCommercialOperation().get(0).getDeviceOffering().get(0)
+                            .getOffers().get(0).getBillingOfferings().get(0).getCommitmentPeriods().get(0).getName())
+                    .build();
+            changedCharacteristicList.add(changedCharacteristicOnlyWhenCaeq);
+        }
 
         if (!saleRequest.getCommercialOperation().get(0).getReason().equalsIgnoreCase("PORTA")
                 && !saleRequest.getCommercialOperation().get(0).getReason().equalsIgnoreCase("ALTA")
