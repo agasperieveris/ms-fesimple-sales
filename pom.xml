@@ -19,7 +19,7 @@
 
 	<groupId>com.tdp.ms</groupId>
 	<artifactId>sales</artifactId>
-	<version>1.4.50-SNAPSHOT</version>
+	<version>1.4.51-SNAPSHOT</version>
 	<name>${project.groupId}:${project.artifactId}</name>
 	<description>Template from Genesis Framework to build microservices</description>
 
