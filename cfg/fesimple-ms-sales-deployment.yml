@@ -18,6 +18,9 @@ spec:
       containers:
         - name: ms-fesimple-sales
           image: acrgenesis.azurecr.io/ms-fesimple-sales:latest
+          resources:
+            limits:
+              memory: "512Mi"
           imagePullPolicy: Always
           ports:
             - containerPort: 8080
