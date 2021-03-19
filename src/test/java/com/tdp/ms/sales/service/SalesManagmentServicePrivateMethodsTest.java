@@ -235,6 +235,34 @@ public class SalesManagmentServicePrivateMethodsTest {
     }
 
     @Test
+    void altaCommercialOperation_isMobilePortability_Test() throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
+        Method method = SalesManagmentServiceImpl.class.getDeclaredMethod("altaCommercialOperation", Sale.class,
+                CreateProductOrderGeneralRequest.class, String.class, String.class, String.class, String.class,
+                BusinessParametersResponseObjectExt.class, String.class, Boolean.class, Boolean.class);
+
+        method.setAccessible(true);
+
+        CreateProductOrderGeneralRequest altaRequest = new CreateProductOrderGeneralRequest();
+        List<BusinessParameterDataObjectExt> dataList = new ArrayList<>();
+        BusinessParameterDataObjectExt data1 = BusinessParameterDataObjectExt
+                .builder()
+                .value("34572615")
+                .ext("7431")
+                .build();
+        dataList.add(data1);
+        BusinessParametersResponseObjectExt businessParametersResponseObjectExt = BusinessParametersResponseObjectExt
+                .builder()
+                .data(dataList)
+                .build();
+        Sale sale = CommonsMocks.createSaleMock();
+        sale.getChannel().setId("CC");
+        sale.getCommercialOperation().get(0).setReason("ALTA");
+
+        method.invoke(salesManagmentServiceImpl,sale, altaRequest, "CC", "C0001", "OF0001", "CIP0001",
+                businessParametersResponseObjectExt, "SAPID0001", true, false);
+    }
+
+    @Test
     void altaCommercialOperation_whenChannelIdIsRetail_Test() throws NoSuchMethodException, InvocationTargetException,
             IllegalAccessException {
         Method method = SalesManagmentServiceImpl.class.getDeclaredMethod("altaCommercialOperation", Sale.class,
@@ -1081,6 +1109,6 @@ public class SalesManagmentServicePrivateMethodsTest {
                         .build()))
                 .build());
 
-        method.invoke(salesManagmentServiceImpl,deviceOfferingList);
+        method.invoke(salesManagmentServiceImpl, deviceOfferingList);
     }
 }
