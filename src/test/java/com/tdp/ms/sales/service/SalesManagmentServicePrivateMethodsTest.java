@@ -49,10 +49,7 @@ import reactor.test.StepVerifier;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 
 import static org.mockito.ArgumentMatchers.any;
 
@@ -864,6 +861,10 @@ public class SalesManagmentServicePrivateMethodsTest {
         List<NewAssignedBillingOffers> newAssignedBillingOffersBroadbandList = new ArrayList<>();
         List<NewAssignedBillingOffers> newAssignedBillingOffersCableTvList = new ArrayList<>();
 
+        newAssignedBillingOffersLandlineList.add(NewAssignedBillingOffers.builder().build());
+        newAssignedBillingOffersBroadbandList.add(NewAssignedBillingOffers.builder().build());
+        newAssignedBillingOffersCableTvList.add(NewAssignedBillingOffers.builder().build());
+
         List<NewProductAltaFija> newProductsAltaFijaList = (List) method.invoke(salesManagmentServiceImpl, sale,
                 newAssignedBillingOffersLandlineList, newAssignedBillingOffersBroadbandList,
                 newAssignedBillingOffersCableTvList);
@@ -1062,4 +1063,24 @@ public class SalesManagmentServicePrivateMethodsTest {
         Assert.assertEquals(true, result);
     }
 
+    @Test
+    void setFinancingFlag_Test() throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
+        Method method = SalesManagmentServiceImpl.class.getDeclaredMethod("setFinancingFlag", List.class);
+
+        method.setAccessible(true);
+
+        List<DeviceOffering> deviceOfferingList = Collections.singletonList(DeviceOffering.builder()
+                .offers(Collections.singletonList(Offer.builder()
+                        .billingOfferings(Collections.singletonList(BillingOffering.builder()
+                                .commitmentPeriods(Collections.singletonList(CommitmentPeriod.builder()
+                                        .financingInstalments(Collections.singletonList(FinancingInstalment.builder()
+                                                .codigo("TELEFCONT")
+                                                .build()))
+                                        .build()))
+                                .build()))
+                        .build()))
+                .build());
+
+        method.invoke(salesManagmentServiceImpl,deviceOfferingList);
+    }
 }
