@@ -32,6 +32,7 @@ import lombok.Setter;
 @NoArgsConstructor
 public class MigracionFijaRequest {
     private List<NewProductMigracionFija> newProducts;
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     private String cip;
     private String appointmentNumber;
     private String appointmentId;
@@ -40,5 +41,6 @@ public class MigracionFijaRequest {
     private ServiceabilityInfoType serviceabilityInfo;
     private List<FlexAttrType> orderAttributes;
     private String sourceApp;
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     private String upfrontIndicator;
 }
