@@ -1,9 +1,9 @@
-package com.tdp.ms.sales.business.impl;
+package com.tdp.ms.sales.business.v1.impl;
 
 import com.google.gson.Gson;
 import com.tdp.genesis.core.exception.GenesisException;
 import com.tdp.ms.commons.util.DateUtils;
-import com.tdp.ms.sales.business.SalesManagmentService;
+import com.tdp.ms.sales.business.v1.SalesManagmentService;
 import com.tdp.ms.sales.client.BusinessParameterWebClient;
 import com.tdp.ms.sales.client.GetSkuWebClient;
 import com.tdp.ms.sales.client.ProductOrderWebClient;
@@ -130,13 +130,6 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         @Autowired
         private WebClientReceptor webClientReceptor;
 
-        private static final String FLOW_SALE_POST = "01";
-        private static final String FLOW_SALE_INVITATION = "03";
-
-        private static final String SHIPPING_LOCALITY = "shippingLocality";
-        private static final String PROVINCE_OF_SHIPPING_ADDRESS = "provinceOfShippingAddress";
-        private static final String SHOP_ADDRESS = "shopAddress";
-
         private static final Logger LOG = LoggerFactory.getLogger(SalesManagmentServiceImpl.class);
 
         private List<BusinessParameterExt> retrieveCharacteristics(GetSalesCharacteristicsResponse response) {
@@ -180,11 +173,11 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         }
 
         private void callReceptors(PostSalesRequest request) {
-                callWebClientReceptor(request, FLOW_SALE_POST);
+                callWebClientReceptor(request, Constants.FLOW_SALE_POST);
 
                 String reason = request.getSale().getCommercialOperation().get(0).getReason();
                 if (reason.equalsIgnoreCase("CAPL") || reason.equalsIgnoreCase("CAEQ")) {
-                        callWebClientReceptor(request, FLOW_SALE_INVITATION);
+                        callWebClientReceptor(request, Constants.FLOW_SALE_INVITATION);
                 }
         }
 
@@ -997,8 +990,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                                 return paymentType.getCid();
                         }
                 } else {
-                        throw buildGenesisError(Constants.BAD_REQUEST_EXCEPTION_ID,
-                                        "Falta key paymentMediumLabel en sale.paymentType.additionalData");
+                        return null;
                 }
         }
 
@@ -1336,7 +1328,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                 }
                 saleRequest.setAudioStatus(Constants.PENDIENTE);
 
-                if (createQuotationFijaRequest.getBody() != null) {
+                if (createQuotationFijaRequest.getBody() != null) { // TODO: Agregar a quotation MT
                         this.addOrderInfoToCreateQuotationFijaRequest(createQuotationFijaRequest, saleRequest);
 
                         return quotationWebClient.createQuotation(createQuotationFijaRequest, saleRequest)
@@ -2107,10 +2099,10 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                                 && saleRequest.getCommercialOperation().get(0).getWorkOrDeliveryType().getPlace().get(0)
                                                 .getAddress().getRegion().equalsIgnoreCase("LIMA")) {
                         // case when is Lima
-                        shippingLocality = KeyValueType.builder().key(SHIPPING_LOCALITY).value("PUEBLO LIBRE").build();
-                        provinceOfShippingAddress = KeyValueType.builder().key(PROVINCE_OF_SHIPPING_ADDRESS).value("15")
+                        shippingLocality = KeyValueType.builder().key(Constants.SHIPPING_LOCALITY).value("PUEBLO LIBRE").build();
+                        provinceOfShippingAddress = KeyValueType.builder().key(Constants.PROVINCE_OF_SHIPPING_ADDRESS).value("15")
                                         .build();
-                        shopAddress = KeyValueType.builder().key(SHOP_ADDRESS)
+                        shopAddress = KeyValueType.builder().key(Constants.SHOP_ADDRESS)
                                         .value("AV. SUCRE NRO 1183 LIMA-LIMA-PUEBLO").build();
 
                 } else if (saleRequest.getCommercialOperation() != null
@@ -2122,18 +2114,22 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                                 && saleRequest.getCommercialOperation().get(0).getWorkOrDeliveryType().getPlace().get(0)
                                                 .getAddress().getRegion().equalsIgnoreCase("CALLAO")) {
                         // case when is Callao
-                        shippingLocality = KeyValueType.builder().key(SHIPPING_LOCALITY).value("PUEBLO LIBRE").build();
-                        provinceOfShippingAddress = KeyValueType.builder().key(PROVINCE_OF_SHIPPING_ADDRESS).value("07")
+                        shippingLocality = KeyValueType.builder().key(Constants.SHIPPING_LOCALITY).value("PUEBLO LIBRE")
+                                .build();
+                        provinceOfShippingAddress = KeyValueType.builder().key(Constants.PROVINCE_OF_SHIPPING_ADDRESS)
+                                .value("07")
                                         .build();
-                        shopAddress = KeyValueType.builder().key(SHOP_ADDRESS)
+                        shopAddress = KeyValueType.builder().key(Constants.SHOP_ADDRESS)
                                         .value("AV. SUCRE NRO 1183 LIMA-LIMA-PUEBLO").build();
 
                 } else {
                         // case when is not Lima and is not Callao
-                        shippingLocality = KeyValueType.builder().key(SHIPPING_LOCALITY).value("TRUJILLO").build();
-                        provinceOfShippingAddress = KeyValueType.builder().key(PROVINCE_OF_SHIPPING_ADDRESS).value("13")
+                        shippingLocality = KeyValueType.builder().key(Constants.SHIPPING_LOCALITY).value("TRUJILLO")
+                                .build();
+                        provinceOfShippingAddress = KeyValueType.builder().key(Constants.PROVINCE_OF_SHIPPING_ADDRESS)
+                                .value("13")
                                         .build();
-                        shopAddress = KeyValueType.builder().key(SHOP_ADDRESS)
+                        shopAddress = KeyValueType.builder().key(Constants.SHOP_ADDRESS)
                                         .value("AV. AMERICA NORTE 1245 URB. LOS JARDINES - TRUJILLO").build();
                 }
 
@@ -2630,7 +2626,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                 CollectionUtils.emptyIfNull(
                                 saleRequest.getCommercialOperation().get(0).getWorkOrDeliveryType().getAdditionalData())
                                 .forEach(item -> {
-                                        if (item.getKey().equalsIgnoreCase(SHOP_ADDRESS)) {
+                                        if (item.getKey().equalsIgnoreCase(Constants.SHOP_ADDRESS)) {
                                                 shipmentDetailsType.setShopAddress(item.getValue());
                                         } else if (item.getKey().equalsIgnoreCase("shopName")) {
                                                 shipmentDetailsType.setShopName(item.getValue());

@@ -23,10 +23,16 @@ public class Constants {
     public static final String FLOWSALE = "flowSale";
     public static final String RETAIL = "Retail";
     public static final String REMOTO = "Remoto";
+    public static final String TIENDAS = "Tiendas";
+    public static final String PROACTIVO = "proactivo";
     public static final String PRESENCIAL = "Presencial";
     public static final String CAEQ = "CAEQ";
     public static final String CAPL = "CAPL";
     public static final String CASI = "CASI";
+    public static final String ALTA = "ALTA";
+    public static final String PROVIDE = "PROVIDE";
+    public static final String REPLACEOFFER = "REPLACEOFFER";
+    public static final String MODIFY = "MODIFY";
     public static final String PORTABILIDAD = "PORTABILIDAD";
     public static final String NUMERO_CAJA = "NUMERO_CAJA";
     public static final String BAD_REQUEST_EXCEPTION_ID = "SVC1000";
@@ -49,7 +55,10 @@ public class Constants {
     public static final String SIM_SKU = "SIM_SKU";
     public static final String SIM_DEVICE = "SimDevice";
     public static final String DELIVERY_METHOD = "DELIVERY_METHOD";
+    public static final String MOVILE_IMEI = "MOVILE_IMEI";
+    public static final String SIM_ICCID = "SIM_ICCID";
     public static final String TEMP1 = "temp1";
+    public static final String TEMP2 = "temp2";
     public static final String EMAIL_ADDRESS = "email address";
     public static final String DELIVERY_METHOD_CAMEL_CASE = "deliveryMethod";
     public static final String UFX_AUTHORIZATION = "ufxauthorization";
@@ -60,5 +69,16 @@ public class Constants {
     public static final String KEY_DELIVERY_METHOD = "deliveryMethod";
     public static final String SALES_STATUS_NUEVO = "NUEVO";
     public static final String PRODUCT_TYPE = "productType";
+    public static final String MT = "MT";
     public static final String STRING_TRUE = "true";
+    public static final String FLOW_SALE_POST = "01";
+    public static final String FLOW_SALE_INVITATION = "03";
+    public static final String FLOW_SALE_PRESENCIAL = "04";
+    public static final String FLOW_SALE_NO_PRESENCIAL = "05";
+    public static final String MAXSPEED = "maxSpeed";
+    public static final String SAPID = "sapid";
+    public static final String DELIVERY_METHOD_SP = "SP";
+    public static final String SHOP_ADDRESS = "shopAddress";
+    public static final String SHIPPING_LOCALITY = "shippingLocality";
+    public static final String PROVINCE_OF_SHIPPING_ADDRESS = "provinceOfShippingAddress";
 }

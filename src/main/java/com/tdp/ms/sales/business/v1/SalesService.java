@@ -1,4 +1,4 @@
-package com.tdp.ms.sales.business;
+package com.tdp.ms.sales.business.v1;
 
 import com.tdp.ms.sales.model.entity.Sale;
 import com.tdp.ms.sales.model.request.GetSalesRequest;

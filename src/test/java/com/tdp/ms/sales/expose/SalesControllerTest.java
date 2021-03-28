@@ -1,7 +1,7 @@
 package com.tdp.ms.sales.expose;
 
 import com.tdp.genesis.core.constants.HttpHeadersKey;
-import com.tdp.ms.sales.business.SalesManagmentService;
+import com.tdp.ms.sales.business.v1.SalesManagmentService;
 import com.tdp.ms.sales.model.dto.ChannelRef;
 import com.tdp.ms.sales.model.dto.CommercialOperationType;
 import com.tdp.ms.sales.model.dto.ContactMedium;

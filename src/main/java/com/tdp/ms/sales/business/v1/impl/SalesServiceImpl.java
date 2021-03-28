@@ -1,4 +1,4 @@
-package com.tdp.ms.sales.business.impl;
+package com.tdp.ms.sales.business.v1.impl;
 
 import com.azure.cosmos.implementation.NotFoundException;
 import com.microsoft.azure.spring.data.cosmosdb.core.ReactiveCosmosTemplate;
@@ -7,7 +7,7 @@ import com.microsoft.azure.spring.data.cosmosdb.core.query.CriteriaType;
 import com.microsoft.azure.spring.data.cosmosdb.core.query.DocumentQuery;
 import com.tdp.genesis.core.exception.GenesisException;
 import com.tdp.ms.commons.util.DateUtils;
-import com.tdp.ms.sales.business.SalesService;
+import com.tdp.ms.sales.business.v1.SalesService;
 import com.tdp.ms.sales.client.WebClientBusinessParameters;
 import com.tdp.ms.sales.client.WebClientReceptor;
 import com.tdp.ms.sales.model.dto.KeyValueType;

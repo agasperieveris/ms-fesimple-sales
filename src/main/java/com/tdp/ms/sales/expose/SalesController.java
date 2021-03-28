@@ -2,7 +2,9 @@ package com.tdp.ms.sales.expose;
 
 import com.tdp.genesis.core.constants.HttpHeadersKey;
 import com.tdp.genesis.core.exception.GenesisException;
-import com.tdp.ms.sales.business.SalesManagmentService;
+import com.tdp.ms.sales.business.v1.SalesManagmentService;
+import com.tdp.ms.sales.business.v2.productType.factory.ProductTypeFactory;
+import com.tdp.ms.sales.business.v2.productType.factory.IProductType;
 import com.tdp.ms.sales.model.entity.Sale;
 import com.tdp.ms.sales.model.request.PostSalesRequest;
 import com.tdp.ms.sales.utils.Commons;
@@ -44,8 +46,8 @@ import reactor.core.publisher.Mono;
 @RequestMapping("/fesimple/v1/sales")
 @CrossOrigin
 public class SalesController {
-    @Autowired
-    private SalesManagmentService salesManagementService;
+	@Autowired
+	private ProductTypeFactory productTypeFactory;
 
     /**
      * Actualiza datos de la orden de Sales.
@@ -82,14 +84,18 @@ public class SalesController {
                                             @RequestHeader(HttpHeadersKey.UNICA_PID) String pid,
                                             @RequestHeader(HttpHeadersKey.UNICA_USER) String user) {
 
-        return salesManagementService.post(PostSalesRequest
-                .builder()
-                .sale(sale)
-                .headersMap(Commons.fillHeaders(serviceId,
-                        application,
-                        pid,
-                        user))
-                .build());
+		PostSalesRequest request = PostSalesRequest
+				.builder()
+				.sale(sale)
+				.headersMap(Commons.fillHeaders(serviceId,
+						application,
+						pid,
+						user))
+				.build();
+
+		IProductType IProductType = productTypeFactory.getProductType(request);
+
+        return IProductType.processProductType(request);
     }
 
 }

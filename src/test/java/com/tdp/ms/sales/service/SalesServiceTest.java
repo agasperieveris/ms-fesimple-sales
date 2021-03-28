@@ -2,8 +2,8 @@ package com.tdp.ms.sales.service;
 
 import com.microsoft.azure.spring.data.cosmosdb.core.ReactiveCosmosTemplate;
 import com.tdp.genesis.core.constants.HttpHeadersKey;
-import com.tdp.ms.sales.business.SalesService;
-import com.tdp.ms.sales.business.impl.SalesServiceImpl;
+import com.tdp.ms.sales.business.v1.SalesService;
+import com.tdp.ms.sales.business.v1.impl.SalesServiceImpl;
 import com.tdp.ms.sales.client.WebClientBusinessParameters;
 import com.tdp.ms.sales.eventflow.client.SalesWebClient;
 import com.tdp.ms.sales.eventflow.client.impl.SalesWebClientImpl;
