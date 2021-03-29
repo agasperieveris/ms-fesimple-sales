@@ -294,7 +294,9 @@ public class SalesManagmentServiceTest {
 
     @Test
     void retryRequest_Test() throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
+        BusinessParametersResponseObjectExt getParametersSimCard = MapperUtils.mapper(BusinessParametersResponseObjectExt.class, "{\"metadata\":{\"info\":\"Parámetros del simcard para sales\",\"type\":\"KeyValueActiveExt\",\"label\":{\"key\":\"codParam\",\"value\":\"desParam\",\"active\":\"active\",\"ext\":\"-\"}},\"data\":[{\"key\":\"sku\",\"value\":\"SKU0001\",\"active\":true,\"ext\":\" \"},{\"key\":\"sapid\",\"value\":\"TSPE4128234R510201\",\"active\":true,\"ext\":\"-\"}]}");
         ReserveStockResponse reserveStockResponse =  new ReserveStockResponse();
+        Mockito.when(businessParameterWebClient.getParametersSimcard(any())).thenReturn(Mono.just(getParametersSimCard));
         Mockito.when(stockWebClient.reserveStock(any(), any(), any())).thenReturn(Mono.just(reserveStockResponse));
 
         PostSalesRequest salesRequest = PostSalesRequest
@@ -304,15 +306,15 @@ public class SalesManagmentServiceTest {
                 .build();
 
         Method method = SalesManagmentServiceImpl.class.getDeclaredMethod("retryRequest", PostSalesRequest.class,
-                Sale.class, Boolean.class, Boolean.class, Boolean.class, Boolean.class, String.class);
+                Sale.class, Boolean.class, Boolean.class, Boolean.class, Boolean.class);
         method.setAccessible(true);
         Sale sale = CommonsMocks.createSaleMock2();
 
         Mockito.when(salesRepository.save(any())).thenReturn(Mono.just(sale));
 
-        method.invoke(salesManagmentServiceImpl, salesRequest, sale, true, true, false, false, "");
-        method.invoke(salesManagmentServiceImpl, salesRequest, sale, true, true, true, false, "");
-        method.invoke(salesManagmentServiceImpl, salesRequest, sale, false, false, false, false, "");
+        method.invoke(salesManagmentServiceImpl, salesRequest, sale, true, true, false, false);
+        method.invoke(salesManagmentServiceImpl, salesRequest, sale, true, true, true, false);
+        method.invoke(salesManagmentServiceImpl, salesRequest, sale, false, false, false, false);
     }
 
     @Test

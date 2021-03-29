@@ -705,7 +705,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
     }
 
     private Mono<Sale> retryRequest(PostSalesRequest request, Sale sale, Boolean flgCaeq, Boolean flgAlta,
-                                       Boolean flgCasi, Boolean flgFinanciamiento, String sapidSimcard) {
+                                       Boolean flgCasi, Boolean flgFinanciamiento) {
         sale.setStatus(Constants.SALES_STATUS_NUEVO);
         LOG.info("Sales Retry");
         if (sale.getCommercialOperation().get(0).getOrder() != null
@@ -713,13 +713,22 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                 || sale.getCommercialOperation().get(0).getDeviceOffering().get(0).getStock() == null
                 || StringUtils.isEmpty(sale.getCommercialOperation().get(0).getDeviceOffering().get(0).getStock()
                 .getReservationId()))) { // Retry from Reservation
+            // Get Parameters Simcard
+            Mono<BusinessParametersResponseObjectExt> getParametersSimCard = businessParameterWebClient
+                    .getParametersSimcard(request.getHeadersMap());
 
             // Call to Reserve Stock Service When Commercial Operation include CAEQ
             if (flgCaeq || flgAlta) {
 
-                return this.callToReserveStockAndCreateQuotation(PostSalesRequest.builder()
-                                .sale(sale).headersMap(request.getHeadersMap())
-                                .build(), sale, flgCasi, flgFinanciamiento, sapidSimcard);
+                return getParametersSimCard.flatMap(parametersSimcard -> {
+                    // Getting simcard sapid from bussiness parameter
+                    String sapidSimcard = getStringValueFromBusinessParameterDataListByKeyAndActiveTrue(
+                            parametersSimcard.getData(),"sapid");
+
+                    return this.callToReserveStockAndCreateQuotation(PostSalesRequest.builder()
+                            .sale(sale).headersMap(request.getHeadersMap())
+                            .build(), sale, flgCasi, flgFinanciamiento, sapidSimcard);
+                });
             } else {
                 if (Boolean.TRUE.equals(flgCasi)) {
 
@@ -892,7 +901,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                                 flgFinanciamiento, isRetail, sapidSimcard);
                     }
                     return retryRequest(request, saleItem, flgCaeq[0], flgAlta[0], flgCasi[0],
-                            flgFinanciamiento[0], sapidSimcard[0]);
+                            flgFinanciamiento[0]);
                 });
 
     }
