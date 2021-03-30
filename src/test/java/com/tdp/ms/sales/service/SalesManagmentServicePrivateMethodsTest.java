@@ -1073,7 +1073,7 @@ public class SalesManagmentServicePrivateMethodsTest {
 
         Boolean result = (Boolean) method.invoke(salesManagmentServiceImpl,sale);
 
-        Assert.assertEquals(true, result);
+        Assert.assertEquals(false, result);
     }
 
 }
