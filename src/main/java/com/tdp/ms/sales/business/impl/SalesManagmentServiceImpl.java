@@ -173,8 +173,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
     private Boolean isValidToCallSalesEventFLow(Sale sale) {
         Boolean isValidSalesRequest = true;
 
-        String flowSale = this.getStringValueByKeyFromAdditionalDataList(sale.getCommercialOperation().get(0)
-                .getAdditionalData(), Constants.FLOWSALE);
+        String flowSale = this.getStringValueByKeyFromAdditionalDataList(sale.getAdditionalData(), Constants.FLOWSALE);
 
         Boolean hasNoBiometricValidation = false;
         if (sale.getIdentityValidations() != null && !sale.getIdentityValidations().isEmpty()) {
