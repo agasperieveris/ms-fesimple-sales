@@ -7,6 +7,7 @@ import com.tdp.ms.sales.model.dto.KeyValueType;
 import com.tdp.ms.sales.model.dto.RelatedParty;
 import com.tdp.ms.sales.model.entity.Sale;
 import com.tdp.ms.sales.model.response.SalesResponse;
+import com.tdp.ms.sales.utils.Constants;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -35,6 +36,7 @@ public class SalesLeadControllerTest {
     private static Sale sale;
     private static Sale saleWithFileName;
     private static Sale salesResponse;
+    private static Sale saleFromEventFlow;
 
     @BeforeAll
     static void setup() {
@@ -50,6 +52,13 @@ public class SalesLeadControllerTest {
                 .name("Sergio")
                 .description("descripcion")
                 .additionalData(Collections.singletonList(KeyValueType.builder().key("filename").value("string").build()))
+                .build();
+
+        saleFromEventFlow = Sale.builder()
+                .id("FE-000000001")
+                .name("Cesar")
+                .additionalData(Collections.singletonList(KeyValueType.builder()
+                        .key(Constants.SALES_FROM_EVENT_FLOW).build()))
                 .build();
 
         ChannelRef channel = ChannelRef
@@ -107,6 +116,8 @@ public class SalesLeadControllerTest {
                 .thenReturn(Mono.just(salesResponse));
         Mockito.when(salesService.putEvent(any(), any(), any()))
                 .thenReturn(Mono.just(salesResponse));
+        Mockito.when(salesService.putEventFlow1(any(), any(), any()))
+                .thenReturn(Mono.just(salesResponse));
 
         webClient.put()
                 .uri("/fesimple/v1/saleslead/FE-000000001")
@@ -126,6 +137,16 @@ public class SalesLeadControllerTest {
                 .header(HttpHeadersKey.UNICA_PID, "550e8400-e29b-41d4-a716-446655440000")
                 .header(HttpHeadersKey.UNICA_USER, "genesis")
                 .bodyValue(saleWithFileName)
+                .exchange();
+
+        webClient.put()
+                .uri("/fesimple/v1/saleslead/FE-000000001")
+                .accept(MediaType.APPLICATION_JSON)
+                .header(HttpHeadersKey.UNICA_SERVICE_ID, "550e8400-e29b-41d4-a716-446655440000")
+                .header(HttpHeadersKey.UNICA_APPLICATION, "genesis")
+                .header(HttpHeadersKey.UNICA_PID, "550e8400-e29b-41d4-a716-446655440000")
+                .header(HttpHeadersKey.UNICA_USER, "genesis")
+                .bodyValue(saleFromEventFlow)
                 .exchange();
     }
 

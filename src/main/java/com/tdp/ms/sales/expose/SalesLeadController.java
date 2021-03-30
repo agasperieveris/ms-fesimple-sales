@@ -7,6 +7,7 @@ import com.tdp.ms.sales.model.dto.KeyValueType;
 import com.tdp.ms.sales.model.entity.Sale;
 import com.tdp.ms.sales.model.request.GetSalesRequest;
 import com.tdp.ms.sales.utils.Commons;
+import com.tdp.ms.sales.utils.Constants;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
@@ -163,11 +164,20 @@ public class SalesLeadController {
                 .findFirst()
                 .orElse(KeyValueType.builder().value(null).build())
                 .getValue();
-
-        if (audioFileName != null) {
+        // Validation to avoid put salesLead loop
+        Boolean isSalesFromEventFlow = false;
+        if (request.getAdditionalData() != null && !request.getAdditionalData().isEmpty()
+                && request.getAdditionalData().get(request.getAdditionalData().size() - 1)
+                .getKey().equalsIgnoreCase(Constants.SALES_FROM_EVENT_FLOW)) {
+            request.getAdditionalData().remove(request.getAdditionalData().size() - 1);
+            isSalesFromEventFlow = true;
+        }
+        if (isSalesFromEventFlow) {
+            return salesService.put(salesId, request, Commons.fillHeaders(serviceId, application, pid, user));
+        } else if (audioFileName != null) {
             return salesService.putEvent(salesId, request, Commons.fillHeaders(serviceId, application, pid, user));
         }
-        return salesService.put(salesId, request, Commons.fillHeaders(serviceId, application, pid, user));
+        return salesService.putEventFlow1(salesId, request, Commons.fillHeaders(serviceId, application, pid, user));
     }
 
     /**

@@ -117,7 +117,12 @@ public class SalesServiceImpl implements SalesService {
                 .flatMap(item -> {
                     request.setSalesId(item.getSalesId());
                     return salesRepository.save(request);
-                })
+                });
+    }
+
+    @Override
+    public Mono<Sale> putEventFlow1(String salesId, Sale request, HashMap<String, String> headersMap) {
+        return this.put(salesId, request, headersMap)
                 .map(saleUpdated -> {
                     if (this.getStringValueByKeyFromAdditionalDataList(saleUpdated.getAdditionalData(),
                             "salesApprove").equalsIgnoreCase("true")) {
@@ -128,7 +133,6 @@ public class SalesServiceImpl implements SalesService {
                     }
                     return saleUpdated;
                 });
-
     }
 
     @Override

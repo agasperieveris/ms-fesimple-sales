@@ -5,11 +5,14 @@ import com.tdp.ms.commons.util.MapperUtils;
 import com.tdp.ms.sales.eventflow.client.SalesWebClient;
 import com.tdp.ms.sales.eventflow.model.EstadosOrquestador;
 import com.tdp.ms.sales.eventflow.model.Orquestador;
+import com.tdp.ms.sales.model.dto.KeyValueType;
 import com.tdp.ms.sales.model.entity.Sale;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import com.tdp.ms.sales.utils.Constants;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
@@ -75,6 +78,12 @@ public class DomainEventListener {
             String eventLog = salesWebClient.validateBeforeUpdate(orquestador.getCodEventFlow(),
                     orquestador.getCodStepFlow(), sale.getAdditionalData());
             if (eventLog.isEmpty()) {
+                // Codeline to avoid put salesLead loop
+                if (sale.getAdditionalData() == null) {
+                    sale.setAdditionalData(new ArrayList<>());
+                }
+                sale.getAdditionalData().add(KeyValueType.builder()
+                        .key(Constants.SALES_FROM_EVENT_FLOW).build());
                 salesWebClient.putSale(sale.getSalesId(), sale, headersMap);
                 orquestador.setCodStatus(EstadosOrquestador.PROCESADO_EXITO.getCodEstado());
             } else {

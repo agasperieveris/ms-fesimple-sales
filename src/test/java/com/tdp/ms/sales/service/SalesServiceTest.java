@@ -354,6 +354,29 @@ public class SalesServiceTest {
     }
 
     @Test
+    void putEventFlow1Test() {
+        HashMap<String, String> headersMap = new HashMap<String, String>();
+        headersMap.put(HttpHeadersKey.UNICA_SERVICE_ID, "serviceId");
+        headersMap.put(HttpHeadersKey.UNICA_PID, "pid");
+        headersMap.put(HttpHeadersKey.UNICA_APPLICATION, "application");
+        headersMap.put(HttpHeadersKey.UNICA_USER, "user");
+
+        Sale salesApprove = new Sale();
+        salesApprove.setId("FE-000000001");
+        salesApprove.setSalesId("FE-000000001");
+        salesApprove.setAdditionalData(Collections.singletonList(KeyValueType.builder()
+                .key("salesApprove").value("true").build()));
+
+        Mockito.when(salesRepository.findBySalesId(any()))
+                .thenReturn(Mono.just(salesApprove));
+
+        Mockito.when(salesRepository.save(any()))
+                .thenReturn(Mono.just(salesApprove));
+
+        Mono<Sale> result = salesService.putEventFlow1("FE-000000001", salesApprove, headersMap);
+    }
+
+    @Test
     void getSaleListTest(){
         Mockito.when(reactiveCosmosTemplate.find(any(), any(), any())).thenReturn(Flux.just(sale));
 
