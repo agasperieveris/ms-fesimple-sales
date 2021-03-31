@@ -164,20 +164,30 @@ public class SalesLeadController {
                 .findFirst()
                 .orElse(KeyValueType.builder().value(null).build())
                 .getValue();
+
+        boolean salesApprove = Commons.getStringValueByKeyFromAdditionalDataList(request.getAdditionalData(),
+                "salesApprove").equalsIgnoreCase(Constants.STRING_TRUE);
+
         // Validation to avoid put salesLead loop
-        Boolean isSalesFromEventFlow = false;
+        boolean isSalesFromEventFlow = false;
+        int saleAdditionalDataLastPosition = request.getAdditionalData().size() - 1;
         if (request.getAdditionalData() != null && !request.getAdditionalData().isEmpty()
-                && request.getAdditionalData().get(request.getAdditionalData().size() - 1)
+                && request.getAdditionalData().get(saleAdditionalDataLastPosition)
                 .getKey().equalsIgnoreCase(Constants.SALES_FROM_EVENT_FLOW)) {
-            request.getAdditionalData().remove(request.getAdditionalData().size() - 1);
+            // Entra aquí cuando se ha invocado el PUT de saleslead desde el flujo asíncrono
+            request.getAdditionalData().remove(saleAdditionalDataLastPosition);
             isSalesFromEventFlow = true;
         }
-        if (isSalesFromEventFlow) {
+
+        if (isSalesFromEventFlow) { // put simple
             return salesService.put(salesId, request, Commons.fillHeaders(serviceId, application, pid, user));
-        } else if (audioFileName != null) {
+        } else if (audioFileName != null && !salesApprove) { // put para ejecutar flujo asíncrono 2
             return salesService.putEvent(salesId, request, Commons.fillHeaders(serviceId, application, pid, user));
+        } else if (salesApprove) {
+            // put para ejecutar flujo asíncrono 1
+            return salesService.putEventFlow1(salesId, request, Commons.fillHeaders(serviceId, application, pid, user));
         }
-        return salesService.putEventFlow1(salesId, request, Commons.fillHeaders(serviceId, application, pid, user));
+        return salesService.put(salesId, request, Commons.fillHeaders(serviceId, application, pid, user));
     }
 
     /**

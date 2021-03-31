@@ -124,13 +124,10 @@ public class SalesServiceImpl implements SalesService {
     public Mono<Sale> putEventFlow1(String salesId, Sale request, HashMap<String, String> headersMap) {
         return this.put(salesId, request, headersMap)
                 .map(saleUpdated -> {
-                    if (this.getStringValueByKeyFromAdditionalDataList(saleUpdated.getAdditionalData(),
-                            "salesApprove").equalsIgnoreCase("true")) {
-                        this.postSalesEventFlow(PostSalesRequest.builder()
-                                .sale(saleUpdated)
-                                .headersMap(headersMap)
-                                .build());
-                    }
+                    this.postSalesEventFlow(PostSalesRequest.builder()
+                            .sale(saleUpdated)
+                            .headersMap(headersMap)
+                            .build());
                     return saleUpdated;
                 });
     }
@@ -330,19 +327,5 @@ public class SalesServiceImpl implements SalesService {
                         request.getHeadersMap()
                 )
                 .subscribe();
-    }
-
-    private String getStringValueByKeyFromAdditionalDataList(List<KeyValueType> additionalData, String key) {
-        final String[] stringValue = {""};
-
-        if (additionalData != null && !additionalData.isEmpty()) {
-            additionalData.forEach(kv -> {
-                if (kv.getKey().equalsIgnoreCase(key)) {
-                    stringValue[0] = kv.getValue();
-                }
-            });
-        }
-
-        return stringValue[0];
     }
 }
