@@ -1,6 +1,8 @@
 package com.tdp.ms.sales.utils;
 
 import com.tdp.genesis.core.constants.HttpHeadersKey;
+import com.tdp.ms.sales.model.dto.KeyValueType;
+
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.ZoneId;
@@ -8,6 +10,7 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 
 /**
  * Class: Commons. <br/>
@@ -80,5 +83,19 @@ public class Commons {
         headersMap.put(HttpHeadersKey.UNICA_USER, user);
 
         return headersMap;
+    }
+
+    public static String getStringValueByKeyFromAdditionalDataList(List<KeyValueType> additionalData, String key) {
+        final String[] stringValue = { "" };
+
+        if (additionalData != null && !additionalData.isEmpty()) {
+            additionalData.forEach(kv -> {
+                if (kv.getKey().equalsIgnoreCase(key)) {
+                    stringValue[0] = kv.getValue();
+                }
+            });
+        }
+
+        return stringValue[0];
     }
 }
