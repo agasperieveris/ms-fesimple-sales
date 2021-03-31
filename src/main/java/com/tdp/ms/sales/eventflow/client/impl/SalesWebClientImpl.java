@@ -88,6 +88,44 @@ public class SalesWebClientImpl implements SalesWebClient {
             // Flujo 3: Creación de invitación
             return !existFieldInAdditionalData("DateCreateLMA", additionalData)
                     ? "No se ha añadido campo DateCreateLMA" : "";
+        } else if (eventFlow.equals("04")) {
+            switch (stepFlow) {
+            case "02":
+                return !existFieldInAdditionalData("createContractDate", additionalData)
+                        ? "No se ha añadido campo createContractDate"
+                        : "";
+            case "04":
+                return !existFieldInAdditionalData("submitOrderDateFixed", additionalData)
+                        ? "No se ha añadido campo submitOrderDateFixed"
+                        : "";
+            case "06":
+                return !existFieldInAdditionalData("submitOrderDateMobile", additionalData)
+                        ? "No se ha añadido campo submitOrderDateMobile"
+                        : "";
+            case "08":
+                return !existFieldInAdditionalData("tratamientoDatosDate", additionalData)
+                        ? "No se ha añadido campo tratamientoDatosDate"
+                        : "";
+            case "10":
+                return !existFieldInAdditionalData("afiliacionReciboDate", additionalData)
+                        ? "No se ha añadido campo afiliacionReciboDate"
+                        : "";
+            default:
+                return "Se ha obtenido un stepFlow que no corresponde. stepFlow: " + stepFlow;
+            }
+        } else if (eventFlow.equals("05")) {
+            switch (stepFlow) {
+            case "02":
+                return !existFieldInAdditionalData("submitOrderDateFixed", additionalData)
+                        ? "No se ha añadido campo submitOrderDateFixed"
+                        : "";
+            case "04":
+                return !existFieldInAdditionalData("submitOrderDateMobile", additionalData)
+                        ? "No se ha añadido campo submitOrderDateMobile"
+                        : "";
+            default:
+                return "Se ha obtenido un stepFlow que no corresponde. stepFlow: " + stepFlow;
+            }
         } else if (eventFlow.equals("99") && stepFlow.equals("01")) {
 
             String errorMsg = "";
