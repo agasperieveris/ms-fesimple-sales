@@ -59,16 +59,16 @@ metadata:
     nginx.ingress.kubernetes.io/proxy-read-timeout: "720"
     nginx.ingress.kubernetes.io/enable-cors: "false"
     nginx.ingress.kubernetes.io/cors-allow-methods: "PUT, GET, POST, DELETE, PATCH, OPTIONS"
-    cert-manager.io/cluster-issuer: letsencrypt-staging
+    cert-manager.io/cluster-issuer: letsencrypt-prod
     nginx.ingress.kubernetes.io/configuration-snippet: |
       more_set_headers "Ingress: $ingress_name";
 spec:
   tls:
     - hosts:
-        - aks-berserkers-ingress-cert.eastus2.cloudapp.azure.com
+        - aks-berserkers-ingress-cert2.eastus2.cloudapp.azure.com
       secretName: ms-fesimple-sales-ingress-secret
   rules:
-    - host: aks-berserkers-ingress-cert.eastus2.cloudapp.azure.com
+    - host: aks-berserkers-ingress-cert2.eastus2.cloudapp.azure.com
       http:
         paths:
           - backend:
