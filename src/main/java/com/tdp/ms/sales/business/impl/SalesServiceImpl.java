@@ -13,6 +13,7 @@ import com.tdp.ms.sales.client.WebClientReceptor;
 import com.tdp.ms.sales.model.dto.KeyValueType;
 import com.tdp.ms.sales.model.entity.Sale;
 import com.tdp.ms.sales.model.request.GetSalesRequest;
+import com.tdp.ms.sales.model.request.PostSalesRequest;
 import com.tdp.ms.sales.model.request.ReceptorRequest;
 import com.tdp.ms.sales.repository.SalesRepository;
 import com.tdp.ms.sales.utils.Commons;
@@ -68,6 +69,9 @@ public class SalesServiceImpl implements SalesService {
     Logger logger = LoggerFactory.getLogger(SalesServiceImpl.class);
 
     private static final String FLOW_SALE_PUT = "02";
+    private static final String FLOW_SALE_POST = "01";
+    private static final String FLOW_SALE_INVITATION = "03";
+
 
     @Value("${application.endpoints.url.business_parameters.seq_number}")
     private String seqNumber;
@@ -76,13 +80,8 @@ public class SalesServiceImpl implements SalesService {
     public Mono<Sale> getSale(GetSalesRequest request) {
         Mono<Sale> existingSale = salesRepository.findBySalesId(request.getId());
 
-        return existingSale
-                .switchIfEmpty(Mono.error(GenesisException.builder()
-                        .exceptionId("SVC0004")
-                        .addDetail(true)
-                        .withDescription("el id " + request.getId() + " no se encuentra registrado en BD.")
-                        .push()
-                        .build()));
+        return existingSale.switchIfEmpty(Mono.error(GenesisException.builder().exceptionId("SVC0004").addDetail(true)
+                .withDescription("el id " + request.getId() + " no se encuentra registrado en BD.").push().build()));
     }
 
     @Override
@@ -94,15 +93,14 @@ public class SalesServiceImpl implements SalesService {
         }
         request.setId(uuid);
 
-        return webClient.getNewSaleSequential(seqNumber, headersMap)
-                .flatMap(saleSequentialItem -> {
-                        ZoneId zone = ZoneId.of("America/Lima");
-                        ZonedDateTime date = ZonedDateTime.now(zone);
-                        DateTimeFormatter formatter = DateTimeFormatter.ofPattern(Constants.STRING_DATE_TIME_FORMATTER);
-                        request.setSaleCreationDate(date.format(formatter));
-                        request.setSalesId(saleSequentialItem.getData().get(0).getValue());
-                        return salesRepository.save(request);
-                });
+        return webClient.getNewSaleSequential(seqNumber, headersMap).flatMap(saleSequentialItem -> {
+            ZoneId zone = ZoneId.of("America/Lima");
+            ZonedDateTime date = ZonedDateTime.now(zone);
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern(Constants.STRING_DATE_TIME_FORMATTER);
+            request.setSaleCreationDate(date.format(formatter));
+            request.setSalesId(saleSequentialItem.getData().get(0).getValue());
+            return salesRepository.save(request);
+        });
     }
 
     @Override
@@ -118,45 +116,37 @@ public class SalesServiceImpl implements SalesService {
                     request.setStatusChangeReason("Sale Update");
                     return salesRepository.save(request);
                 });
+    }
 
+    @Override
+    public Mono<Sale> putEventFlow1(String salesId, Sale request, HashMap<String, String> headersMap) {
+        return this.put(salesId, request, headersMap).map(saleUpdated -> {
+            this.postSalesEventFlow(PostSalesRequest.builder().sale(saleUpdated).headersMap(headersMap).build());
+            return saleUpdated;
+        });
     }
 
     @Override
     public Mono<Sale> putEvent(String salesId, Sale request, HashMap<String, String> headersMap) {
 
-        return this.put(salesId, request, headersMap)
-                .map(r -> {
-                    r.getAdditionalData().add(
-                            KeyValueType
-                                    .builder()
-                                    .key("initialProcessDate")
-                                    .value(DateUtils.getDatetimeNowCosmosDbFormat())
-                                    .build()
+        return this.put(salesId, request, headersMap).map(r -> {
+            r.getAdditionalData().add(KeyValueType.builder().key("initialProcessDate")
+                    .value(DateUtils.getDatetimeNowCosmosDbFormat()).build()
 
-                    );
-                    r.setStatusChangeDate(Commons.getDatetimeNow());
-                    r.setStatusChangeReason("Event Update");
-                    // Llamada a receptor
-                    webClientReceptor
-                            .register(
-                                    ReceptorRequest
-                                            .builder()
-                                            .businessId(r.getSalesId())
-                                            .typeEventFlow(FLOW_SALE_PUT)
-                                            .message(r)
-                                            .build(),
-                                    headersMap
-                            )
-                            .subscribe();
-                    return r;
-                });
+            );
+            r.setStatusChangeDate(Commons.getDatetimeNow());
+            r.setStatusChangeReason("Event Update");
+            // Llamada a receptor
+            webClientReceptor.register(ReceptorRequest.builder().businessId(r.getSalesId()).typeEventFlow(FLOW_SALE_PUT)
+                    .message(r).build(), headersMap).subscribe();
+            return r;
+        });
     }
 
     @Override
-    public Flux<Sale> getSaleList(String saleId, String dealerId,
-                                  String idAgent, String customerId, String nationalId, String nationalIdType,
-                                  String status, String channelId, String storeId, String orderId, String startDateTime,
-                                  String endDateTime, String size, String pageCount, String page,
+    public Flux<Sale> getSaleList(String saleId, String dealerId, String idAgent, String customerId, String nationalId,
+                                  String nationalIdType, String status, String channelId, String storeId, String orderId,
+                                  String startDateTime, String endDateTime, String size, String pageCount, String page,
                                   String maxResultCount) {
 
         List<Criteria> criteriaList = new ArrayList<>();
@@ -165,11 +155,12 @@ public class SalesServiceImpl implements SalesService {
         criteriaIdAgent(criteriaList, idAgent);
         criteriaStatus(criteriaList, status);
         criteriaChannelId(criteriaList, channelId);
-        criteriaStoreId(criteriaList,storeId);
+        criteriaStoreId(criteriaList, storeId);
         criteriaDateTime(criteriaList, startDateTime, endDateTime);
 
         return reactiveCosmosTemplate
-                .find(new DocumentQuery(buildCriteria(criteriaList, CriteriaType.AND)), Sale.class, Sale.class.getSimpleName())
+                .find(new DocumentQuery(buildCriteria(criteriaList, CriteriaType.AND)), Sale.class,
+                        Sale.class.getSimpleName())
                 .filter(item -> filterSalesWithParams(item, customerId, nationalId, nationalIdType, orderId));
     }
 
@@ -193,13 +184,15 @@ public class SalesServiceImpl implements SalesService {
 
     public void criteriaDealerId(List<Criteria> criteriaList, String dealerId) {
         if (dealerId != null && !dealerId.isEmpty()) {
-            criteriaList.add(Criteria.getInstance(CriteriaType.IS_EQUAL, "channel.dealerId", Collections.singletonList(dealerId)));
+            criteriaList.add(Criteria.getInstance(CriteriaType.IS_EQUAL, "channel.dealerId",
+                    Collections.singletonList(dealerId)));
         }
     }
 
     public void criteriaIdAgent(List<Criteria> criteriaList, String idAgent) {
         if (idAgent != null && !idAgent.isEmpty()) {
-            criteriaList.add(Criteria.getInstance(CriteriaType.IS_EQUAL, "agent.id", Collections.singletonList(idAgent)));
+            criteriaList
+                    .add(Criteria.getInstance(CriteriaType.IS_EQUAL, "agent.id", Collections.singletonList(idAgent)));
         }
     }
 
@@ -212,23 +205,27 @@ public class SalesServiceImpl implements SalesService {
 
     public void criteriaChannelId(List<Criteria> criteriaList, String channelId) {
         if (channelId != null && !channelId.isEmpty()) {
-            criteriaList.add(Criteria.getInstance(CriteriaType.IS_EQUAL, "channel.id", Collections.singletonList(channelId)));
+            criteriaList.add(
+                    Criteria.getInstance(CriteriaType.IS_EQUAL, "channel.id", Collections.singletonList(channelId)));
         }
     }
 
     public void criteriaStoreId(List<Criteria> criteriaList, String storeId) {
         if (storeId != null && !storeId.isEmpty()) {
-            criteriaList.add(Criteria.getInstance(CriteriaType.IS_EQUAL, "channel.storeId", Collections.singletonList(storeId)));
+            criteriaList.add(
+                    Criteria.getInstance(CriteriaType.IS_EQUAL, "channel.storeId", Collections.singletonList(storeId)));
         }
     }
 
     public void criteriaDateTime(List<Criteria> criteriaList, String startDateTime, String endDateTime) {
         if (startDateTime != null && !startDateTime.isEmpty() && endDateTime != null && !endDateTime.isEmpty()) {
-            criteriaList.add(Criteria.getInstance(CriteriaType.BETWEEN, "saleCreationDate", Arrays.asList(startDateTime, endDateTime)));
+            criteriaList.add(Criteria.getInstance(CriteriaType.BETWEEN, "saleCreationDate",
+                    Arrays.asList(startDateTime, endDateTime)));
         }
     }
 
-    public Boolean filterSalesWithParams(Sale item, String customerId, String nationalId, String nationalIdType, String orderId) {
+    public Boolean filterSalesWithParams(Sale item, String customerId, String nationalId, String nationalIdType,
+                                         String orderId) {
         Boolean nationalIdBool = filterNationalId(item, nationalId);
         Boolean nationalIdTypeBool = filterNationalIdType(item, nationalIdType);
         Boolean customerIdBool = filterCustomerId(item, customerId);
@@ -237,8 +234,8 @@ public class SalesServiceImpl implements SalesService {
     }
 
     public Boolean filterNationalId(Sale item, String nationalId) {
-        if (nationalId != null && !nationalId.isEmpty() && (item.getRelatedParty() == null
-                || item.getRelatedParty().get(0).getNationalId() == null)) {
+        if (nationalId != null && !nationalId.isEmpty()
+                && (item.getRelatedParty() == null || item.getRelatedParty().get(0).getNationalId() == null)) {
             return false;
         } else if (nationalId != null && !nationalId.isEmpty() && item.getRelatedParty() != null
                 && item.getRelatedParty().get(0).getNationalId() != null) {
@@ -249,8 +246,8 @@ public class SalesServiceImpl implements SalesService {
     }
 
     public Boolean filterNationalIdType(Sale item, String nationalIdType) {
-        if (nationalIdType != null && !nationalIdType.isEmpty() && (item.getRelatedParty() == null
-                || item.getRelatedParty().get(0).getNationalIdType() == null)) {
+        if (nationalIdType != null && !nationalIdType.isEmpty()
+                && (item.getRelatedParty() == null || item.getRelatedParty().get(0).getNationalIdType() == null)) {
             return false;
         } else if (nationalIdType != null && !nationalIdType.isEmpty() && item.getRelatedParty() != null
                 && item.getRelatedParty().get(0).getNationalIdType() != null) {
@@ -269,7 +266,7 @@ public class SalesServiceImpl implements SalesService {
     }
 
     public Boolean filterExistingOrderId(Sale item, String orderId) {
-        final boolean[] existOrderId = {false};
+        final boolean[] existOrderId = { false };
         if (orderId != null && !orderId.isEmpty() && item.getCommercialOperation() == null) {
             // Se quita de la respuesta
             return false;
@@ -284,5 +281,27 @@ public class SalesServiceImpl implements SalesService {
         }
         // No se hace el filtro
         return true;
+    }
+
+    private void postSalesEventFlow(PostSalesRequest request) {
+        request.getSale().getAdditionalData().add(KeyValueType.builder().key("initialProcessDate")
+                .value(DateUtils.getDatetimeNowCosmosDbFormat()).build());
+
+        callReceptors(request);
+    }
+
+    private void callReceptors(PostSalesRequest request) {
+        callWebClientReceptor(request, FLOW_SALE_POST);
+
+        String reason = request.getSale().getCommercialOperation().get(0).getReason();
+        if (reason.equalsIgnoreCase("CAPL") || reason.equalsIgnoreCase("CAEQ")) {
+            callWebClientReceptor(request, FLOW_SALE_INVITATION);
+        }
+    }
+
+    private void callWebClientReceptor(PostSalesRequest request, String eventFlowCode) {
+        // Llamada a receptor
+        webClientReceptor.register(ReceptorRequest.builder().businessId(request.getSale().getSalesId())
+                .typeEventFlow(eventFlowCode).message(request.getSale()).build(), request.getHeadersMap()).subscribe();
     }
 }
