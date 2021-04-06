@@ -132,6 +132,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
 
         private static final String FLOW_SALE_POST = "01";
         private static final String FLOW_SALE_INVITATION = "03";
+        private static final String FLOW_SALE_POST_MT = "04";
 
         private static final String SHIPPING_LOCALITY = "shippingLocality";
         private static final String PROVINCE_OF_SHIPPING_ADDRESS = "provinceOfShippingAddress";
@@ -180,12 +181,14 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         }
 
         private void callReceptors(PostSalesRequest request) {
-                callWebClientReceptor(request, FLOW_SALE_POST);
+            callWebClientReceptor(request, FLOW_SALE_POST);
 
-                String reason = request.getSale().getCommercialOperation().get(0).getReason();
-                if (reason.equalsIgnoreCase("CAPL") || reason.equalsIgnoreCase("CAEQ")) {
-                        callWebClientReceptor(request, FLOW_SALE_INVITATION);
-                }
+            callWebClientReceptor(request, FLOW_SALE_POST_MT);
+
+            String reason = request.getSale().getCommercialOperation().get(0).getReason();
+            if (reason.equalsIgnoreCase("CAPL") || reason.equalsIgnoreCase("CAEQ")) {
+                callWebClientReceptor(request, FLOW_SALE_INVITATION);
+            }
         }
 
         private void callWebClientReceptor(PostSalesRequest request, String eventFlowCode) {
@@ -719,6 +722,23 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                 if (StringUtils.isEmpty(saleRequest.getSalesId())) {
                         return Mono.error(GenesisException.builder().exceptionId(Constants.BAD_REQUEST_EXCEPTION_ID)
                                         .wildcards(new String[] { "salesId is mandatory." }).build());
+                }
+
+                if (saleRequest.getRelatedParty() == null || saleRequest.getRelatedParty().isEmpty()) {
+                    return Mono.error(GenesisException.builder().exceptionId(Constants.BAD_REQUEST_EXCEPTION_ID)
+                            .wildcards(new String[] { "relatedParty is mandatory." }).build());
+                }
+
+                if (saleRequest.getRelatedParty().get(0).getNationalId() == null
+                        || StringUtils.isEmpty(saleRequest.getRelatedParty().get(0).getNationalId())) {
+                    return Mono.error(GenesisException.builder().exceptionId(Constants.BAD_REQUEST_EXCEPTION_ID)
+                            .wildcards(new String[] { "nationalId is mandatory." }).build());
+                }
+
+                if (saleRequest.getRelatedParty().get(0).getNationalIdType() == null
+                        || StringUtils.isEmpty(saleRequest.getRelatedParty().get(0).getNationalIdType())) {
+                    return Mono.error(GenesisException.builder().exceptionId(Constants.BAD_REQUEST_EXCEPTION_ID)
+                            .wildcards(new String[] { "nationalIdType is mandatory." }).build());
                 }
 
                 // Getting token Mcss, request header to create product order service
