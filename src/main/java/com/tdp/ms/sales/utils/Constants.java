@@ -61,4 +61,5 @@ public class Constants {
     public static final String SALES_STATUS_NUEVO = "NUEVO";
     public static final String PRODUCT_TYPE = "productType";
     public static final String STRING_TRUE = "true";
+    public static final String MT = "MT";
 }

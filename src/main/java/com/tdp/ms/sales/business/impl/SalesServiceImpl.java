@@ -68,6 +68,7 @@ public class SalesServiceImpl implements SalesService {
     Logger logger = LoggerFactory.getLogger(SalesServiceImpl.class);
 
     private static final String FLOW_SALE_PUT = "02";
+    private static final String FLOW_SALE_MT_PUT = "05";
 
     @Value("${application.endpoints.url.business_parameters.seq_number}")
     private String seqNumber;
@@ -137,17 +138,18 @@ public class SalesServiceImpl implements SalesService {
                     r.setStatusChangeDate(Commons.getDatetimeNow());
                     r.setStatusChangeReason("Event Update");
                     // Llamada a receptor
-                    webClientReceptor
-                            .register(
-                                    ReceptorRequest
-                                            .builder()
-                                            .businessId(r.getSalesId())
-                                            .typeEventFlow(FLOW_SALE_PUT)
-                                            .message(r)
-                                            .build(),
-                                    headersMap
-                            )
-                            .subscribe();
+                    KeyValueType adFlowSale = getAdditionalData(r.getAdditionalData(), Constants.FLOWSALE);
+                    
+                    if (Constants.MT.equals(r.getProductType()) && adFlowSale != null
+                            && Constants.REMOTO.equalsIgnoreCase(adFlowSale.getValue())
+                            && Constants.SALES_STATUS_NUEVO.equalsIgnoreCase(r.getStatus())) {
+                        webClientReceptor.register(ReceptorRequest.builder().businessId(r.getSalesId())
+                                .typeEventFlow(FLOW_SALE_MT_PUT).message(r).build(), headersMap).subscribe();
+                    } else {
+                        webClientReceptor.register(ReceptorRequest.builder().businessId(r.getSalesId())
+                                .typeEventFlow(FLOW_SALE_PUT).message(r).build(), headersMap).subscribe();
+                    }
+
                     return r;
                 });
     }
@@ -284,5 +286,14 @@ public class SalesServiceImpl implements SalesService {
         }
         // No se hace el filtro
         return true;
+    }
+    
+    private KeyValueType getAdditionalData(List<KeyValueType> additionalData, String key) {
+        for (KeyValueType keyValue : additionalData) {
+            if (key.equalsIgnoreCase(keyValue.getKey())) {
+                return keyValue;
+            }
+        }
+        return null;
     }
 }
