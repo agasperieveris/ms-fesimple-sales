@@ -13,6 +13,7 @@ import com.tdp.ms.sales.client.WebClientReceptor;
 import com.tdp.ms.sales.model.dto.KeyValueType;
 import com.tdp.ms.sales.model.entity.Sale;
 import com.tdp.ms.sales.model.request.GetSalesRequest;
+import com.tdp.ms.sales.model.request.PostSalesRequest;
 import com.tdp.ms.sales.model.request.ReceptorRequest;
 import com.tdp.ms.sales.repository.SalesRepository;
 import com.tdp.ms.sales.utils.Commons;
@@ -68,6 +69,9 @@ public class SalesServiceImpl implements SalesService {
     Logger logger = LoggerFactory.getLogger(SalesServiceImpl.class);
 
     private static final String FLOW_SALE_PUT = "02";
+    private static final String FLOW_SALE_POST = "01";
+    private static final String FLOW_SALE_INVITATION = "03";
+
 
     @Value("${application.endpoints.url.business_parameters.seq_number}")
     private String seqNumber;
@@ -112,6 +116,7 @@ public class SalesServiceImpl implements SalesService {
                     request.setStatusChangeReason("Sale Update");
                     return salesRepository.save(request);
                 });
+    }
 
     @Override
     public Mono<Sale> putEventFlow1(String salesId, Sale request, HashMap<String, String> headersMap) {
@@ -140,9 +145,9 @@ public class SalesServiceImpl implements SalesService {
 
     @Override
     public Flux<Sale> getSaleList(String saleId, String dealerId, String idAgent, String customerId, String nationalId,
-            String nationalIdType, String status, String channelId, String storeId, String orderId,
-            String startDateTime, String endDateTime, String size, String pageCount, String page,
-            String maxResultCount) {
+                                  String nationalIdType, String status, String channelId, String storeId, String orderId,
+                                  String startDateTime, String endDateTime, String size, String pageCount, String page,
+                                  String maxResultCount) {
 
         List<Criteria> criteriaList = new ArrayList<>();
         criteriaSaleId(criteriaList, saleId);
@@ -220,7 +225,7 @@ public class SalesServiceImpl implements SalesService {
     }
 
     public Boolean filterSalesWithParams(Sale item, String customerId, String nationalId, String nationalIdType,
-            String orderId) {
+                                         String orderId) {
         Boolean nationalIdBool = filterNationalId(item, nationalId);
         Boolean nationalIdTypeBool = filterNationalIdType(item, nationalIdType);
         Boolean customerIdBool = filterCustomerId(item, customerId);
