@@ -935,6 +935,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
             LOG.info("Migration Sales Case");
 
             String actionType = commercialOperationReason.equalsIgnoreCase("CAPL") ? "CW" : "CH";
+            LOG.info("Migration Action Type: " + actionType);
             return businessParameterWebClient
                     .getParametersFinanciamientoFija(request.getHeadersMap())
                     .map(BusinessParametersFinanciamientoFijaResponse::getData)
@@ -3444,6 +3445,86 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         this.buildOrderAttributesListAltaFija(migracionFijaOrderAttributesList, request.getSale(),
                 createQuotationFijaRequest);
 
+        // Migration Order Attributes
+        String isNetworkTechnologyChangedValue = this.getStringValueByKeyFromAdditionalDataList(request.getSale()
+                .getAdditionalData(), Constants.IS_NETWORK_TECHNOLOGY_CHANGED);
+        if (!StringUtils.isEmpty(isNetworkTechnologyChangedValue)) {
+            FlexAttrValueType networkTechnologyChangedAttrValue =  FlexAttrValueType
+                    .builder()
+                    .stringValue(isNetworkTechnologyChangedValue)
+                    .valueType(Constants.BOOLEAN)
+                    .build();
+            FlexAttrType networkTechnologyChangedAttr = FlexAttrType
+                    .builder()
+                    .attrName(Constants.IS_NETWORK_TECHNOLOGY_CHANGED)
+                    .flexAttrValue(networkTechnologyChangedAttrValue)
+                    .build();
+            migracionFijaOrderAttributesList.add(networkTechnologyChangedAttr);
+        }
+
+        // Removed Assigned Product Migration New Product
+        if (actionType.equalsIgnoreCase("CH")) {
+            String removedAssignedProductString = this.getStringValueByKeyFromAdditionalDataList(request.getSale()
+                    .getAdditionalData(), Constants.REMOVED_ASSIGNED_PRODUCT);
+
+            if (!StringUtils.isEmpty(removedAssignedProductString)) {
+                NewProductMigracionFija newProductMigracionFija = new NewProductMigracionFija();
+                newProductMigracionFija.setProductId(removedAssignedProductString);
+
+                List<RemovedContainedProducts> removedContainedProductsList = new ArrayList<>();
+                String[] removeAssignedProductsList = removedAssignedProductString.split(",");
+                Arrays.stream(removeAssignedProductsList).forEach(removedAssignedProduct -> {
+                    RemovedContainedProducts removedContainedProduct = new RemovedContainedProducts();
+                    removedContainedProduct.setProductID(removedAssignedProduct);
+                    removedContainedProduct.setTemporaryId("temp1");
+                    removedContainedProductsList.add(removedContainedProduct);
+                });
+
+                ProductChangeAltaFija productChanges = new ProductChangeAltaFija();
+                productChanges.setRemovedContainedProducts(removedContainedProductsList);
+
+                newProductMigracionFija.setProductChanges(productChanges);
+                newProducts.add(newProductMigracionFija);
+            }
+        }
+
+        // Change Modem Migration New Product
+        String changeModemStringValue = this.getStringValueByKeyFromAdditionalDataList(request.getSale()
+                .getAdditionalData(), Constants.CHANGE_MODEM);
+        if (Constants.STRING_TRUE.equalsIgnoreCase(changeModemStringValue)) {
+            NewProductMigracionFija newProductChangeModem = new NewProductMigracionFija();
+
+            final String[] changeModemProductCatalogId = {""};
+            ComposingProductType deviceProductSpecification = request.getSale().getCommercialOperation().get(0)
+                    .getProductOfferings().get(0).getProductSpecification().stream()
+                    .filter(item -> Constants.PRODUCT_TYPE_DEVICE.equalsIgnoreCase(item.getProductType()))
+                    .findFirst()
+                    .orElse(null);
+            if (deviceProductSpecification != null) {
+                deviceProductSpecification.getRefinedProduct().getProductCharacteristics().stream()
+                        .forEach(item -> {
+                            if (Constants.PRODUCT_OFFERING_PRODUCT_SPEC_ID.equalsIgnoreCase(item.getName())) {
+                                changeModemProductCatalogId[0] = item.getProductSpecCharacteristicValue().get(0).toString();
+                            }
+                        });
+            }
+            newProductChangeModem.setProductCatalogId(changeModemProductCatalogId[0]);
+
+            final String[] changeModemProductId = {""};
+            request.getSale().getCommercialOperation().get(0).getProduct().getProductRelationShip().stream()
+                    .forEach(item -> {
+                        if (item.getProduct() != null
+                                && !StringUtils.isEmpty(item.getProduct().getName())
+                                && Constants.SHARED_EQUIPMENT_MAIN.equalsIgnoreCase(item.getProduct().getName())
+                        ) {
+                            changeModemProductId[0] = item.getProduct().getId();
+                        }
+                    });
+            newProductChangeModem.setProductId(changeModemProductId[0]);
+
+            newProducts.add(newProductChangeModem);
+        }
+
         MigracionFijaRequest migracionFijaRequest = new MigracionFijaRequest();
         migracionFijaRequest.setNewProducts(newProducts);
         migracionFijaRequest.setAppointmentId(request.getSale().getCommercialOperation().get(0)
@@ -3520,7 +3601,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                             .filter(keyValueType -> keyValueType.getKey().equalsIgnoreCase("downloadSpeed"))
                             .findFirst()
                             .orElseThrow(() -> buildGenesisError(Constants.BAD_REQUEST_EXCEPTION_ID,
-                                    "Cannot get time in milliseconds."))
+                                    "Additional Data 'downloadSpeed' from broadband product is mandatory."))
                             .getValue();
                 });
 
@@ -3535,7 +3616,8 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                                 .builder()
                                 .changedContainedProducts(Collections.singletonList(ChangedContainedProduct
                                         .builder()
-                                        .productId(productId[0]).temporaryId("temp")
+                                        .productId(productId[0])
+                                        .temporaryId("temp1")
                                         .changedCharacteristics(Arrays.asList(ChangedCharacteristic.builder()
                                                         .characteristicId("3241482")
                                                         .characteristicValue(characteristicValue[0])
@@ -3620,7 +3702,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
 
                 ProductSpecCharacteristicType productCharacteristic = productSpecification.getRefinedProduct()
                         .getProductCharacteristics().stream()
-                        .filter(item -> item.getName().equalsIgnoreCase("productOfferingProductSpecID"))
+                        .filter(item -> item.getName().equalsIgnoreCase(Constants.PRODUCT_OFFERING_PRODUCT_SPEC_ID))
                         .findFirst()
                         .orElse(null);
 

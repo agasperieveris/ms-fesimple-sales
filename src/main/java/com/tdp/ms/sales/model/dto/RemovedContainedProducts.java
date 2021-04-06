@@ -1,5 +1,6 @@
 package com.tdp.ms.sales.model.dto;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -29,5 +30,6 @@ import lombok.NoArgsConstructor;
 public class RemovedContainedProducts {
     private String productID;
     private String temporaryId;
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     private String productCatalogId;
 }

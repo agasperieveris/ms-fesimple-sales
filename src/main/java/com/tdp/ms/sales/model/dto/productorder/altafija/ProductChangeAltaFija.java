@@ -1,6 +1,7 @@
 package com.tdp.ms.sales.model.dto.productorder.altafija;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.tdp.ms.sales.model.dto.RemovedContainedProducts;
 import com.tdp.ms.sales.model.dto.productorder.caeq.ChangedContainedProduct;
 import com.tdp.ms.sales.model.dto.productorder.capl.NewAssignedBillingOffers;
 import java.util.List;
@@ -37,4 +38,6 @@ public class ProductChangeAltaFija {
     private List<ChangedContainedProduct> changedContainedProducts;
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private List<NewAssignedBillingOffers> newAssignedBillingOffers;
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private List<RemovedContainedProducts> removedContainedProducts;
 }

@@ -20,6 +20,7 @@ package com.tdp.ms.sales.utils;
 public class Constants {
     public static final String EMAIL = "email";
     public static final String STRING = "STRING";
+    public static final String BOOLEAN = "BOOLEAN";
     public static final String FLOWSALE = "flowSale";
     public static final String FLOWSALE_RETAIL = "Retail";
     public static final String FLOWSALE_REMOTO = "Remoto";
@@ -64,4 +65,9 @@ public class Constants {
     public static final String VALIDATION_TYPE_NO_BIOMETRIC_ID_TYPE = "noBiometricIdType";
     public static final String SALES_FROM_EVENT_FLOW = "salesFromEventFlow";
     public static final String STATUS_CARGADO = "CARGADO";
+    public static final String IS_NETWORK_TECHNOLOGY_CHANGED = "IS_NETWORK_TECHNOLOGY_CHANGED";
+    public static final String REMOVED_ASSIGNED_PRODUCT = "remove_assignedProduct";
+    public static final String CHANGE_MODEM = "CHANGE_MODEM";
+    public static final String SHARED_EQUIPMENT_MAIN = "Shared_Equipment_Main";
+    public static final String PRODUCT_OFFERING_PRODUCT_SPEC_ID = "productOfferingProductSpecID";
 }

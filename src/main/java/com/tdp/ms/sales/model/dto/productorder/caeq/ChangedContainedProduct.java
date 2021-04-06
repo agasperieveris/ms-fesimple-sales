@@ -36,6 +36,7 @@ public class ChangedContainedProduct {
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private String productId;
     private String temporaryId;
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     private String productCatalogId;
     private List<ChangedCharacteristic> changedCharacteristics;
 }
