@@ -61,4 +61,8 @@ public class Constants {
     public static final String SALES_STATUS_NUEVO = "NUEVO";
     public static final String PRODUCT_TYPE = "productType";
     public static final String STRING_TRUE = "true";
+    public static final String VALIDATION_TYPE_NO_BIOMETRIC = "noBiometric";
+    public static final String VALIDATION_TYPE_NO_BIOMETRIC_ID_TYPE = "noBiometricIdType";
+    public static final String SALES_FROM_EVENT_FLOW = "salesFromEventFlow";
+    public static final String STATUS_CARGADO = "CARGADO";
 }

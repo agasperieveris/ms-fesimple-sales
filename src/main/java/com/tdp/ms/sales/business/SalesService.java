@@ -31,7 +31,8 @@ public interface SalesService {
      *
      * @author @srivasme
      * @param request Datos de la nueva venta
-     * @return SalesResponse, datos de la nueva venta registrada en la BBDD de la Web Convergente
+     * @return SalesResponse, datos de la nueva venta registrada en la BBDD de la
+     *         Web Convergente
      */
     Mono<Sale> getSale(GetSalesRequest request);
 
@@ -40,7 +41,8 @@ public interface SalesService {
      *
      * @author @srivasme
      * @param request Datos de la nueva venta
-     * @return SalesResponse, datos de la nueva venta registrada en la BBDD de la Web Convergente
+     * @return SalesResponse, datos de la nueva venta registrada en la BBDD de la
+     *         Web Convergente
      */
     Mono<Sale> post(Sale request, HashMap<String, String> headersMap);
 
@@ -68,9 +70,18 @@ public interface SalesService {
      * @author @srivasme
      * @return Sale
      */
-    Flux<Sale> getSaleList(String saleId, String dealerId,
-                           String idAgent, String customerId, String nationalID, String nationalIdType,
-                           String status, String channelId, String storeId, String orderId,
-                           String startDateTime, String endDateTime, String size, String pageCount,
-                           String page, String maxResultCount);
+    Flux<Sale> getSaleList(String saleId, String dealerId, String idAgent, String customerId, String nationalID,
+            String nationalIdType, String status, String channelId, String storeId, String orderId,
+            String startDateTime, String endDateTime, String size, String pageCount, String page,
+            String maxResultCount);
+
+    /**
+     * Actualiza los datos de la venta en la BBDD - Gatillador Flujo de Eventos 1.
+     *
+     * @author @srivasme
+     * @param request Datos de la venta actualizados
+     * @return SalesResponse, datos actualizados de la venta
+     */
+    Mono<Sale> putEventFlow1(String salesId, Sale request, HashMap<String, String> headersMap);
+
 }
