@@ -783,6 +783,32 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                     .wildcards(new String[]{"salesId is mandatory."})
                     .build());
         }
+        
+        if (saleRequest.getRelatedParty() == null || saleRequest.getRelatedParty().isEmpty()) {
+            return Mono.error(GenesisException
+                    .builder()
+                    .exceptionId(Constants.BAD_REQUEST_EXCEPTION_ID)
+                    .wildcards(new String[]{"relatedParty is mandatory."})
+                    .build());
+        }
+        
+        if (saleRequest.getRelatedParty().get(0).getNationalId() == null
+                || StringUtils.isEmpty(saleRequest.getRelatedParty().get(0).getNationalId())) {
+            return Mono.error(GenesisException
+                    .builder()
+                    .exceptionId(Constants.BAD_REQUEST_EXCEPTION_ID)
+                    .wildcards(new String[]{"nationalId is mandatory."})
+                    .build());
+        }
+        
+        if (saleRequest.getRelatedParty().get(0).getNationalIdType() == null
+                || StringUtils.isEmpty(saleRequest.getRelatedParty().get(0).getNationalIdType())) {
+            return Mono.error(GenesisException
+                    .builder()
+                    .exceptionId(Constants.BAD_REQUEST_EXCEPTION_ID)
+                    .wildcards(new String[]{"nationalIdType is mandatory."})
+                    .build());
+        }
 
         // Getting token Mcss, request header to create product order service
         String tokenMcss = "";
