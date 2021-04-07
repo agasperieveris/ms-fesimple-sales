@@ -1,11 +1,10 @@
 package com.tdp.ms.sales.model.dto;
 
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.util.List;
 
 /**
  * Class: ProductSpecCharacteristicType. <br/>
@@ -33,6 +32,6 @@ public class ProductSpecCharacteristicType {
     private String name;
     private String description;
     private TimePeriodType validFor;
-    private List<Object> productSpecCharacteristicValue;
-    private Object objectCharacteristicValue;
+    private List<ProductSpecCharacteristicValueType> productSpecCharacteristicValue;
+    private ObjectCharacteristicValueType objectCharacteristicValue;
 }
