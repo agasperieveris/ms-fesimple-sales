@@ -1,6 +1,8 @@
 package com.tdp.ms.sales.model.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.tdp.ms.commons.dto.sales.RelatedParty;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

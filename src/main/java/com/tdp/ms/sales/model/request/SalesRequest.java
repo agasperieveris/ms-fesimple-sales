@@ -1,5 +1,6 @@
 package com.tdp.ms.sales.model.request;
 
+import com.tdp.ms.commons.dto.sales.RelatedParty;
 import com.tdp.ms.sales.model.dto.ChannelRef;
 import com.tdp.ms.sales.model.dto.CommercialOperationType;
 import com.tdp.ms.sales.model.dto.ContactMedium;
@@ -7,7 +8,6 @@ import com.tdp.ms.sales.model.dto.IdentityValidationType;
 import com.tdp.ms.sales.model.dto.KeyValueType;
 import com.tdp.ms.sales.model.dto.Money;
 import com.tdp.ms.sales.model.dto.PaymentType;
-import com.tdp.ms.sales.model.dto.RelatedParty;
 import com.tdp.ms.sales.model.dto.TimePeriod;
 import java.util.List;
 import lombok.AllArgsConstructor;
