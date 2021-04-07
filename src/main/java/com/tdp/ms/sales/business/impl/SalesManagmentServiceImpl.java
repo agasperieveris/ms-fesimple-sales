@@ -132,6 +132,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
 
         private static final String FLOW_SALE_POST = "01";
         private static final String FLOW_SALE_INVITATION = "03";
+        private static final String FLOW_SALE_POST_MT = "04";
 
         private static final String SHIPPING_LOCALITY = "shippingLocality";
         private static final String PROVINCE_OF_SHIPPING_ADDRESS = "provinceOfShippingAddress";
@@ -180,12 +181,14 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         }
 
         private void callReceptors(PostSalesRequest request) {
-                callWebClientReceptor(request, FLOW_SALE_POST);
+            callWebClientReceptor(request, FLOW_SALE_POST);
 
-                String reason = request.getSale().getCommercialOperation().get(0).getReason();
-                if (reason.equalsIgnoreCase("CAPL") || reason.equalsIgnoreCase("CAEQ")) {
-                        callWebClientReceptor(request, FLOW_SALE_INVITATION);
-                }
+            callWebClientReceptor(request, FLOW_SALE_POST_MT);
+
+            String reason = request.getSale().getCommercialOperation().get(0).getReason();
+            if (reason.equalsIgnoreCase("CAPL") || reason.equalsIgnoreCase("CAEQ")) {
+                callWebClientReceptor(request, FLOW_SALE_INVITATION);
+            }
         }
 
         private void callWebClientReceptor(PostSalesRequest request, String eventFlowCode) {

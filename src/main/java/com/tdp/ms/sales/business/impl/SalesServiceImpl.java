@@ -72,6 +72,7 @@ public class SalesServiceImpl implements SalesService {
     private static final String FLOW_SALE_POST = "01";
     private static final String FLOW_SALE_INVITATION = "03";
 
+    private static final String FLOW_SALE_MT_PUT = "05";
 
     @Value("${application.endpoints.url.business_parameters.seq_number}")
     private String seqNumber;
@@ -129,18 +130,33 @@ public class SalesServiceImpl implements SalesService {
     @Override
     public Mono<Sale> putEvent(String salesId, Sale request, HashMap<String, String> headersMap) {
 
-        return this.put(salesId, request, headersMap).map(r -> {
-            r.getAdditionalData().add(KeyValueType.builder().key("initialProcessDate")
-                    .value(DateUtils.getDatetimeNowCosmosDbFormat()).build()
+        return this.put(salesId, request, headersMap)
+                .map(r -> {
+                    r.getAdditionalData().add(
+                            KeyValueType
+                                    .builder()
+                                    .key("initialProcessDate")
+                                    .value(DateUtils.getDatetimeNowCosmosDbFormat())
+                                    .build()
 
-            );
-            r.setStatusChangeDate(Commons.getDatetimeNow());
-            r.setStatusChangeReason("Event Update");
-            // Llamada a receptor
-            webClientReceptor.register(ReceptorRequest.builder().businessId(r.getSalesId()).typeEventFlow(FLOW_SALE_PUT)
-                    .message(r).build(), headersMap).subscribe();
-            return r;
-        });
+                    );
+                    r.setStatusChangeDate(Commons.getDatetimeNow());
+                    r.setStatusChangeReason("Event Update");
+                    // Llamada a receptor
+                    KeyValueType adFlowSale = getAdditionalData(r.getAdditionalData(), Constants.FLOWSALE);
+                    
+                    if (Constants.MT.equals(r.getProductType()) && adFlowSale != null
+                            && Constants.REMOTO.equalsIgnoreCase(adFlowSale.getValue())
+                            && Constants.SALES_STATUS_NUEVO.equalsIgnoreCase(r.getStatus())) {
+                        webClientReceptor.register(ReceptorRequest.builder().businessId(r.getSalesId())
+                                .typeEventFlow(FLOW_SALE_MT_PUT).message(r).build(), headersMap).subscribe();
+                    } else {
+                        webClientReceptor.register(ReceptorRequest.builder().businessId(r.getSalesId())
+                                .typeEventFlow(FLOW_SALE_PUT).message(r).build(), headersMap).subscribe();
+                    }
+
+                    return r;
+                });
     }
 
     @Override
@@ -303,5 +319,14 @@ public class SalesServiceImpl implements SalesService {
         // Llamada a receptor
         webClientReceptor.register(ReceptorRequest.builder().businessId(request.getSale().getSalesId())
                 .typeEventFlow(eventFlowCode).message(request.getSale()).build(), request.getHeadersMap()).subscribe();
+    }
+
+    private KeyValueType getAdditionalData(List<KeyValueType> additionalData, String key) {
+        for (KeyValueType keyValue : additionalData) {
+            if (key.equalsIgnoreCase(keyValue.getKey())) {
+                return keyValue;
+            }
+        }
+        return null;
     }
 }
