@@ -65,4 +65,5 @@ public class Constants {
     public static final String VALIDATION_TYPE_NO_BIOMETRIC_ID_TYPE = "noBiometricIdType";
     public static final String SALES_FROM_EVENT_FLOW = "salesFromEventFlow";
     public static final String STATUS_CARGADO = "CARGADO";
+    public static final String MT = "MT";
 }
