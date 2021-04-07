@@ -1,12 +1,58 @@
 package com.tdp.ms.sales.utils;
 
-import com.tdp.genesis.core.constants.HttpHeadersKey;
-import com.tdp.ms.sales.model.dto.*;
-import com.tdp.ms.sales.model.entity.Sale;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+
+import com.tdp.genesis.core.constants.HttpHeadersKey;
+import com.tdp.ms.commons.dto.sales.RelatedParty;
+import com.tdp.ms.commons.dto.sales.ScoreType;
+import com.tdp.ms.sales.model.dto.AddressType;
+import com.tdp.ms.sales.model.dto.AvailableOffersType;
+import com.tdp.ms.sales.model.dto.BenefitType;
+import com.tdp.ms.sales.model.dto.BillingOffering;
+import com.tdp.ms.sales.model.dto.ChannelRef;
+import com.tdp.ms.sales.model.dto.CommercialOperationType;
+import com.tdp.ms.sales.model.dto.CommitmentPeriod;
+import com.tdp.ms.sales.model.dto.ComponentProdOfferPriceType;
+import com.tdp.ms.sales.model.dto.ComposingProductType;
+import com.tdp.ms.sales.model.dto.ContactMedium;
+import com.tdp.ms.sales.model.dto.CreateProductOrderResponseType;
+import com.tdp.ms.sales.model.dto.DeviceOffering;
+import com.tdp.ms.sales.model.dto.EntityRefType;
+import com.tdp.ms.sales.model.dto.FinancingInstalment;
+import com.tdp.ms.sales.model.dto.IdentityValidationType;
+import com.tdp.ms.sales.model.dto.Instalments;
+import com.tdp.ms.sales.model.dto.KeyValueType;
+import com.tdp.ms.sales.model.dto.MediumCharacteristic;
+import com.tdp.ms.sales.model.dto.Money;
+import com.tdp.ms.sales.model.dto.MoneyAmount;
+import com.tdp.ms.sales.model.dto.MoneyType;
+import com.tdp.ms.sales.model.dto.NewProductInNewOfferingInstanceConfigurationType;
+import com.tdp.ms.sales.model.dto.Offer;
+import com.tdp.ms.sales.model.dto.OfferingType;
+import com.tdp.ms.sales.model.dto.PaymentType;
+import com.tdp.ms.sales.model.dto.Place;
+import com.tdp.ms.sales.model.dto.PortabilityType;
+import com.tdp.ms.sales.model.dto.ProductInstanceType;
+import com.tdp.ms.sales.model.dto.ProductProductRelationShip;
+import com.tdp.ms.sales.model.dto.ProductRefInfoType;
+import com.tdp.ms.sales.model.dto.ProductRelationShipProduct;
+import com.tdp.ms.sales.model.dto.ProductSpecCharacteristicType;
+import com.tdp.ms.sales.model.dto.RefinedProductType;
+import com.tdp.ms.sales.model.dto.RelatedProductType;
+import com.tdp.ms.sales.model.dto.ServiceAvailabilityReportType;
+import com.tdp.ms.sales.model.dto.ServiceType;
+import com.tdp.ms.sales.model.dto.SimSpecification;
+import com.tdp.ms.sales.model.dto.StockType;
+import com.tdp.ms.sales.model.dto.TimePeriod;
+import com.tdp.ms.sales.model.dto.TopLevelProductConfigurationType;
+import com.tdp.ms.sales.model.dto.UpFrontType;
+import com.tdp.ms.sales.model.dto.WorkOrDeliveryType;
+import com.tdp.ms.sales.model.dto.WorkforceTeamAvailabilityType;
+import com.tdp.ms.sales.model.dto.WorkforceTeamTimeSlotType;
+import com.tdp.ms.sales.model.entity.Sale;
 
 public class CommonsMocks {
 

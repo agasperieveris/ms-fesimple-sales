@@ -1,6 +1,7 @@
 package com.tdp.ms.sales.expose;
 
 import com.tdp.genesis.core.constants.HttpHeadersKey;
+import com.tdp.ms.commons.dto.sales.RelatedParty;
 import com.tdp.ms.sales.business.SalesManagmentService;
 import com.tdp.ms.sales.model.dto.ChannelRef;
 import com.tdp.ms.sales.model.dto.CommercialOperationType;
@@ -15,7 +16,6 @@ import com.tdp.ms.sales.model.dto.OfferingType;
 import com.tdp.ms.sales.model.dto.PaymentType;
 import com.tdp.ms.sales.model.dto.Place;
 import com.tdp.ms.sales.model.dto.ProductInstanceType;
-import com.tdp.ms.sales.model.dto.RelatedParty;
 import com.tdp.ms.sales.model.dto.TimePeriod;
 import com.tdp.ms.sales.model.entity.Sale;
 import com.tdp.ms.sales.model.request.PostSalesRequest;

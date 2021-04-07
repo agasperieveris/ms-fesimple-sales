@@ -1,9 +1,44 @@
 package com.tdp.ms.sales.client;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.web.reactive.function.client.WebClient;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.tdp.genesis.core.constants.HttpHeadersKey;
+import com.tdp.ms.commons.dto.sales.RelatedParty;
 import com.tdp.ms.sales.client.impl.StockWebClientImpl;
-import com.tdp.ms.sales.model.dto.*;
+import com.tdp.ms.sales.model.dto.SiteRefType;
+import com.tdp.ms.sales.model.dto.AddressType;
+import com.tdp.ms.sales.model.dto.BillingOffering;
+import com.tdp.ms.sales.model.dto.ChannelRef;
+import com.tdp.ms.sales.model.dto.CommercialOperationType;
+import com.tdp.ms.sales.model.dto.CommitmentPeriod;
+import com.tdp.ms.sales.model.dto.ContactMedium;
+import com.tdp.ms.sales.model.dto.CreateProductOrderResponseType;
+import com.tdp.ms.sales.model.dto.DeviceOffering;
+import com.tdp.ms.sales.model.dto.EntityRefType;
+import com.tdp.ms.sales.model.dto.FinancingInstalment;
+import com.tdp.ms.sales.model.dto.IdentityValidationType;
+import com.tdp.ms.sales.model.dto.Instalments;
+import com.tdp.ms.sales.model.dto.KeyValueType;
+import com.tdp.ms.sales.model.dto.MediumCharacteristic;
+import com.tdp.ms.sales.model.dto.Money;
+import com.tdp.ms.sales.model.dto.MoneyAmount;
+import com.tdp.ms.sales.model.dto.Offer;
+import com.tdp.ms.sales.model.dto.OfferingType;
+import com.tdp.ms.sales.model.dto.PaymentType;
+import com.tdp.ms.sales.model.dto.Place;
+import com.tdp.ms.sales.model.dto.ProductInstanceType;
+import com.tdp.ms.sales.model.dto.TimePeriod;
+import com.tdp.ms.sales.model.dto.WorkOrDeliveryType;
 import com.tdp.ms.sales.model.dto.reservestock.Destination;
 import com.tdp.ms.sales.model.dto.reservestock.Item;
 import com.tdp.ms.sales.model.dto.reservestock.Order;
@@ -12,18 +47,9 @@ import com.tdp.ms.sales.model.entity.Sale;
 import com.tdp.ms.sales.model.request.ReserveStockRequest;
 import com.tdp.ms.sales.model.response.ReserveStockResponse;
 import com.tdp.ms.sales.utils.ConstantsTest;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
+
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.springframework.web.reactive.function.client.WebClient;
-import static org.mockito.Mockito.mock;
 
 public class StockWebClientImplTest {
     private static final HashMap<String,String> headersMap = mappingHeaders();

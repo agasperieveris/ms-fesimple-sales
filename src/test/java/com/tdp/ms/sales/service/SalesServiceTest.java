@@ -2,6 +2,7 @@ package com.tdp.ms.sales.service;
 
 import com.microsoft.azure.spring.data.cosmosdb.core.ReactiveCosmosTemplate;
 import com.tdp.genesis.core.constants.HttpHeadersKey;
+import com.tdp.ms.commons.dto.sales.RelatedParty;
 import com.tdp.ms.sales.business.SalesService;
 import com.tdp.ms.sales.business.impl.SalesServiceImpl;
 import com.tdp.ms.sales.client.WebClientBusinessParameters;
@@ -18,7 +19,6 @@ import com.tdp.ms.sales.model.dto.MediumCharacteristic;
 import com.tdp.ms.sales.model.dto.Money;
 import com.tdp.ms.sales.model.dto.Place;
 import com.tdp.ms.sales.model.dto.ProductInstanceType;
-import com.tdp.ms.sales.model.dto.RelatedParty;
 import com.tdp.ms.sales.model.dto.TimePeriod;
 import com.tdp.ms.sales.model.dto.businessparameter.BusinessParameterDataSeq;
 import com.tdp.ms.sales.model.entity.Sale;
@@ -334,6 +334,21 @@ public class SalesServiceTest {
                     Assert.assertEquals(c.getId(), sale2.getId());
                 })
                 .verifyComplete();
+    }
+
+    @Test
+    void putEventFlow1SaveSale() {
+        HashMap<String, String> headersMap = new HashMap<String, String>();
+        headersMap.put(HttpHeadersKey.UNICA_SERVICE_ID, "serviceId");
+        headersMap.put(HttpHeadersKey.UNICA_PID, "pid");
+        headersMap.put(HttpHeadersKey.UNICA_APPLICATION, "application");
+        headersMap.put(HttpHeadersKey.UNICA_USER, "user");
+
+        Mockito.when(salesRepository.findBySalesId(any())).thenReturn(Mono.just(sale2));
+
+        Mockito.when(salesRepository.save(any())).thenReturn(Mono.just(sale2));
+
+        Mono<Sale> result = salesService.putEventFlow1("FE-000000001", sale, headersMap);
     }
 
     @Test
