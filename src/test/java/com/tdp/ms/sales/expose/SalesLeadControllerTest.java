@@ -1,10 +1,10 @@
 package com.tdp.ms.sales.expose;
 
 import com.tdp.genesis.core.constants.HttpHeadersKey;
+import com.tdp.ms.commons.dto.sales.RelatedParty;
 import com.tdp.ms.sales.business.SalesService;
 import com.tdp.ms.sales.model.dto.ChannelRef;
 import com.tdp.ms.sales.model.dto.KeyValueType;
-import com.tdp.ms.sales.model.dto.RelatedParty;
 import com.tdp.ms.sales.model.entity.Sale;
 import com.tdp.ms.sales.model.response.SalesResponse;
 import com.tdp.ms.sales.utils.Constants;
@@ -67,13 +67,11 @@ public class SalesLeadControllerTest {
                 .storeId("Punto de venta")
                 .build();
 
-        RelatedParty agent = RelatedParty
-                .builder()
-                .id("bc12")
-                .customerId("string")
-                .nationalId("string")
-                .nationalIdType("string")
-                .build();
+        RelatedParty agent = new RelatedParty();
+        agent.setId("bc12");
+        agent.setCustomerId("string");
+        agent.setNationalId("string");
+        agent.setNationalIdType("string");
 
         salesResponse = Sale
                 .builder()
