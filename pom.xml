@@ -13,8 +13,8 @@
 	<properties>
 		<maven-pmd-plugin.version>3.12.0</maven-pmd-plugin.version>
 		<maven-project-info-reports-plugin.version>3.0.0</maven-project-info-reports-plugin.version>
-		<sonar.exclusions>com/tdp/ms/sales/eventflow/**/*</sonar.exclusions>
-		<sonar.coverage.exclusions>com/tdp/ms/sales/eventflow/**/*</sonar.coverage.exclusions>
+		<sonar.exclusions>src/main/java/com/tdp/ms/sales/eventflow/**/*, src/main/java/com/tdp/ms/sales/utils/Constants.java, src/main/java/com/tdp/ms/sales/eventflow/model/EstadosOrquestador.java</sonar.exclusions>
+		<sonar.coverage.exclusions>src/main/java/com/tdp/ms/sales/eventflow/**/*, src/main/java/com/tdp/ms/sales/utils/Constants.java, src/main/java/com/tdp/ms/sales/eventflow/model/EstadosOrquestador.java</sonar.coverage.exclusions>
 	</properties>
 
 	<groupId>com.tdp.ms</groupId>
