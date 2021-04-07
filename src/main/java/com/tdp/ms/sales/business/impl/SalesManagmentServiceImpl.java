@@ -3504,7 +3504,8 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                 deviceProductSpecification.getRefinedProduct().getProductCharacteristics().stream()
                         .forEach(item -> {
                             if (Constants.PRODUCT_OFFERING_PRODUCT_SPEC_ID.equalsIgnoreCase(item.getName())) {
-                                changeModemProductCatalogId[0] = item.getProductSpecCharacteristicValue().get(0).toString();
+                                changeModemProductCatalogId[0] = item.getProductSpecCharacteristicValue().get(0)
+                                                                                                            .getValue();
                             }
                         });
             }
