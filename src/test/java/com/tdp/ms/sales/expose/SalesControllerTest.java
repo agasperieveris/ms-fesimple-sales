@@ -37,7 +37,7 @@ import static org.mockito.ArgumentMatchers.any;
 
 @SpringBootTest
 @AutoConfigureWebTestClient(timeout = "20000")
-public class SalesControllerTest {
+class SalesControllerTest {
     @Autowired
     private WebTestClient webClient;
 
@@ -46,12 +46,11 @@ public class SalesControllerTest {
 
     private static Sale sale;
     private static PostSalesRequest request;
-    private static final HashMap<String, String> headersMap = new HashMap();
+    private static final HashMap<String, String> headersMap = new HashMap<>();
     private static final String RH_UNICA_SERVICE_ID = "d4ce144c-6b26-4b5c-ad29-090a3a559d80";
     private static final String RH_UNICA_APPLICATION = "fesimple-sales";
     private static final String RH_UNICA_PID = "d4ce144c-6b26-4b5c-ad29-090a3a559d83";
     private static final String RH_UNICA_USER = "BackendUser";
-    private static final String RH_UNICA_TIMESTAMP = "2020-08-26T17:15:20.509-0400";
 
     @BeforeAll
     static void setup() {

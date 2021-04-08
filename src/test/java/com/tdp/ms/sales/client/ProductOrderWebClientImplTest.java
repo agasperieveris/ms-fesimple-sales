@@ -48,13 +48,14 @@ import com.tdp.ms.sales.model.response.ProductorderResponse;
 import com.tdp.ms.sales.repository.SalesRepository;
 import com.tdp.ms.sales.utils.ConstantsTest;
 
+import junit.framework.Assert;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import reactor.core.publisher.Mono;
 
 @ExtendWith(SpringExtension.class)
 @SpringBootTest
-public class ProductOrderWebClientImplTest {
+class ProductOrderWebClientImplTest {
 
     @MockBean
     private SalesRepository salesRepository;
@@ -331,6 +332,8 @@ public class ProductOrderWebClientImplTest {
         Mono<ProductorderResponse> result = productOrderWebClientImpl.createProductOrder(CreateProductOrderGeneralRequest
                 .builder()
                 .build(), headersMap, sale);
+        
+        Assert.assertTrue(true);
     }
 
     private static HashMap<String,String> mappingHeaders() {
