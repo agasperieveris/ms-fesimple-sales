@@ -290,6 +290,13 @@ public class SalesManagmentServiceTest {
         method2.invoke(salesManagmentServiceImpl, getRiskDomain, Arrays.asList(BusinessParameterExt.builder().build()),
                 getBonificacionSim, getParametersSimCard, businessParametersReasonCode, salesRequest.getSale(), salesRequest, sapidSimcard, commercialOperationReason,
                 flag, flag, flag, flag, flag, channelIdRequest, customerIdRequest, productOfferingIdRequest, false);
+        
+        
+        Sale sale2 = CommonsMocks.createSaleWirelessMock();
+        salesRequest.setSale(sale2);
+        method2.invoke(salesManagmentServiceImpl, getRiskDomain, Arrays.asList(BusinessParameterExt.builder().build()),
+                getBonificacionSim, getParametersSimCard, businessParametersReasonCode, salesRequest.getSale(), salesRequest, sapidSimcard, commercialOperationReason,
+                flag, flag, flag, flag, flag, channelIdRequest, customerIdRequest, productOfferingIdRequest, false);
     }
 
     @Test
@@ -470,6 +477,29 @@ public class SalesManagmentServiceTest {
         saleTest.setStatus("VALIDADO");
         saleTest.setAdditionalData(Arrays.asList(KeyValueType.builder().key("flowSale").value("Retail").build()));
 
+        PostSalesRequest salesRequest = PostSalesRequest
+                .builder()
+                .sale(saleTest)
+                .headersMap(headersMap)
+                .build();
+
+        Mono<Sale> result = salesManagmentService.post(salesRequest);
+
+        StepVerifier.create(result).verifyError();
+    }
+    
+    @Test
+    void postSalesRetailMovilSimNotFoundErrorTest() {
+        List<KeyValueType> additionalData = new ArrayList<>();
+        additionalData.add(KeyValueType.builder().key("flowSale").value("Retail").build());
+        additionalData.add(KeyValueType.builder().key("SIM_ICCID").value("").build());
+        
+        Sale saleTest = CommonsMocks.createSaleMock();
+        saleTest.setStatus("VALIDADO");
+        saleTest.setAdditionalData(additionalData);
+        
+        saleTest.getCommercialOperation().get(0).getDeviceOffering().add(DeviceOffering.builder().deviceType("SIM").build());
+        
         PostSalesRequest salesRequest = PostSalesRequest
                 .builder()
                 .sale(saleTest)
