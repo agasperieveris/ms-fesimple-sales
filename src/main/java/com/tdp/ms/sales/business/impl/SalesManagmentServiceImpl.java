@@ -49,7 +49,6 @@ import com.tdp.ms.sales.model.dto.productorder.migracionfija.MigracionFijaReques
 import com.tdp.ms.sales.model.dto.productorder.migracionfija.NewProductMigracionFija;
 import com.tdp.ms.sales.model.dto.productorder.migracionfija.ProductOrderMigracionFijaRequest;
 import com.tdp.ms.sales.model.dto.productorder.portability.PortabilityDetailsType;
-import com.tdp.ms.sales.model.dto.quotation.Address;
 import com.tdp.ms.sales.model.dto.quotation.Channel;
 import com.tdp.ms.sales.model.dto.quotation.CreateQuotationRequestBody;
 import com.tdp.ms.sales.model.dto.quotation.Customer;
@@ -195,15 +194,15 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                         .findFirst()
                         .orElse(KeyValueType.builder().value("0").build())
                         .getValue();
-                hasNoBiometricValidation = (noBiometricValidationType.equals("1") || noBiometricValidationType.equals("2")
-                        || noBiometricValidationType.equals("3") || noBiometricValidationType.equals("4"));
+                hasNoBiometricValidation = (noBiometricValidationType.equals("1")
+                        || noBiometricValidationType.equals("2") || noBiometricValidationType.equals("3")
+                        || noBiometricValidationType.equals("4"));
             }
         }
 
-
         if (flowSale.equalsIgnoreCase(Constants.FLOWSALE_REMOTO)
                 || (hasNoBiometricValidation && (flowSale.equalsIgnoreCase(Constants.FLOWSALE_RETAIL)
-                                                            || flowSale.equalsIgnoreCase(Constants.FLOWSALE_PRESENCIAL)))) {
+                        || flowSale.equalsIgnoreCase(Constants.FLOWSALE_PRESENCIAL)))) {
             isValidSalesRequest = false;
         }
 
@@ -211,7 +210,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
     }
 
     private void postSalesEventFlow(PostSalesRequest request) {
-        if (this.isValidToCallSalesEventFLow(request.getSale())) {
+        if (this.isValidToCallSalesEventFLow(request.getSale()).booleanValue()) {
             if (request.getSale().getAdditionalData() == null) {
                 request.getSale().setAdditionalData(new ArrayList<>());
             }
@@ -267,10 +266,11 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                 .build();
 
         String upFrontIndAttrStringValue = saleRequest.getCommercialOperation().get(0).getProductOfferings() != null
-                && !StringUtils.isEmpty(saleRequest.getCommercialOperation().get(0).getProductOfferings()
-                .get(0).getUpFront().getIndicator()) ?
-                saleRequest.getCommercialOperation().get(0).getProductOfferings().get(0).getUpFront().getIndicator() :
-                "N";
+                && !StringUtils.isEmpty(saleRequest.getCommercialOperation().get(0).getProductOfferings().get(0)
+                        .getUpFront().getIndicator())
+                                ? saleRequest.getCommercialOperation().get(0).getProductOfferings().get(0).getUpFront()
+                                        .getIndicator()
+                                : "N";
 
         FlexAttrValueType upFrontIndAttrValue =  FlexAttrValueType
                 .builder()
@@ -338,7 +338,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         }
 
         // Order Attributes if is Scheduling
-        if (flgFinanciamiento
+        if (flgFinanciamiento.booleanValue()
                 && saleRequest.getCommercialOperation() != null
                 && saleRequest.getCommercialOperation().get(0).getWorkOrDeliveryType() != null
                 && saleRequest.getCommercialOperation().get(0).getWorkOrDeliveryType().getScheduleDelivery() != null
@@ -383,9 +383,9 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                         }
                     });
         }
-        LOG.info("Sales has landline product: " + flgProductLandline[0]);
-        LOG.info("Sales has broadband product: " + flgProductBroadband[0]);
-        LOG.info("Sales has cableTv product: " + flgProductCabletv[0]);
+        LOG.info("Sales has landline product: {}", flgProductLandline[0]);
+        LOG.info("Sales has broadband product: {}", flgProductBroadband[0]);
+        LOG.info("Sales has cableTv product: {}", flgProductCabletv[0]);
 
         Number offerPriority = saleRequest.getCommercialOperation().get(0).getServiceAvailability()
                                                                         .getOffers().get(0).getPriority();
@@ -393,7 +393,8 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                 .forEach(serviceOffer -> {
                     String serviceAbilityType = serviceOffer.getType();
 
-                    if (serviceAbilityType.equalsIgnoreCase(Constants.PRODUCT_TYPE_LANDLINE) && flgProductLandline[0]) {
+                    if (serviceAbilityType.equalsIgnoreCase(Constants.PRODUCT_TYPE_LANDLINE)
+                            && flgProductLandline[0].booleanValue()) {
 
                         // Serviceability Landline
                         CharacteristicOfferType describeByLandline1 =  CharacteristicOfferType
@@ -420,14 +421,12 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                         List<ProductLineType> productOfferLandlineList = new ArrayList<>();
                         productOfferLandlineList.add(productOfferLandline1);
 
-                        ServiceabilityOfferType serviceabilityOfferLandline = ServiceabilityOfferType
-                                .builder()
-                                .idOfferPriority(offerPriority)
-                                .productOffer(productOfferLandlineList)
-                                .build();
+                        ServiceabilityOfferType serviceabilityOfferLandline = ServiceabilityOfferType.builder()
+                                .idOfferPriority(offerPriority).productOffer(productOfferLandlineList).build();
                         serviceabilityOffersList.add(serviceabilityOfferLandline);
 
-                    } else if (serviceAbilityType.equalsIgnoreCase("broadband") && flgProductBroadband[0]) {
+                    } else if (serviceAbilityType.equalsIgnoreCase("broadband")
+                            && flgProductBroadband[0].booleanValue()) {
 
                         // Serviceability Broadband
                         CharacteristicOfferType describeByBroadband1 =  CharacteristicOfferType
@@ -441,18 +440,15 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                         List<CharacteristicOfferType> describeByBroadbandList = new ArrayList<>();
                         describeByBroadbandList.add(describeByBroadband1);
 
-                        ProductLineType productOfferBroadband1 = ProductLineType
-                                .builder()
-                                .type("BB")
+                        ProductLineType productOfferBroadband1 = ProductLineType.builder().type("BB")
                                 .description("Servicio de banda ancha")
                                 .networkTechnology(this.getStringValueByKeyFromAdditionalDataList(saleRequest
-                                        .getCommercialOperation().get(0).getServiceAvailability()
-                                        .getAdditionalData(),"networkAccessTechnologyBroadband"))
+                                        .getCommercialOperation().get(0).getServiceAvailability().getAdditionalData(),
+                                        "networkAccessTechnologyBroadband"))
                                 .serviceTechnology(this.getStringValueByKeyFromAdditionalDataList(saleRequest
-                                        .getCommercialOperation().get(0).getServiceAvailability()
-                                        .getAdditionalData(),"serviceTechnologyBroadband"))
-                                .describeByList(describeByBroadbandList)
-                                .build();
+                                        .getCommercialOperation().get(0).getServiceAvailability().getAdditionalData(),
+                                        "serviceTechnologyBroadband"))
+                                .describeByList(describeByBroadbandList).build();
                         List<ProductLineType> productOfferBroadbandList = new ArrayList<>();
                         productOfferBroadbandList.add(productOfferBroadband1);
 
@@ -463,7 +459,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                                 .build();
                         serviceabilityOffersList.add(serviceabilityOfferBroadband);
 
-                    } else if (serviceAbilityType.equalsIgnoreCase("tv") && flgProductCabletv[0]) {
+                    } else if (serviceAbilityType.equalsIgnoreCase("tv") && flgProductCabletv[0].booleanValue()) {
 
                         // Serviceability CableTv
                         ProductLineType productOfferCableTv1 = ProductLineType
@@ -494,9 +490,13 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                                                   List<NewAssignedBillingOffers> newAssignedBillingOffersLandlineList,
                                                   List<NewAssignedBillingOffers> newAssignedBillingOffersBroadbandList,
                                                   List<NewAssignedBillingOffers> newAssignedBillingOffersCableTvList) {
-        LOG.info("SVAs Landline: ".concat(new Gson().toJson(newAssignedBillingOffersLandlineList)));
-        LOG.info("SVAs Broadband: ".concat(new Gson().toJson(newAssignedBillingOffersBroadbandList)));
-        LOG.info("SVAs CableTv: ".concat(new Gson().toJson(newAssignedBillingOffersCableTvList)));
+        String jsonNewAssignedBillingOffersLandlineList = new Gson().toJson(newAssignedBillingOffersLandlineList);
+        String jsonNewAssignedBillingOffersBroadbandList = new Gson().toJson(newAssignedBillingOffersBroadbandList);
+        String jsonNewAssignedBillingOffersCableTvList = new Gson().toJson(newAssignedBillingOffersCableTvList);
+        
+        LOG.info("SVAs Landline: {}", jsonNewAssignedBillingOffersLandlineList);
+        LOG.info("SVAs Broadband: {}", jsonNewAssignedBillingOffersBroadbandList);
+        LOG.info("SVAs CableTv: {}", jsonNewAssignedBillingOffersCableTvList);
         List<NewProductAltaFija> newProductsAltaFijaList = new ArrayList<>();
         final Integer[] cont = {1};
 
@@ -697,7 +697,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
     }
 
     private Boolean setFinancingFlag(List<DeviceOffering> deviceOfferings) {
-        if (deviceOfferings != null && deviceOfferings.get(0).getOffers() != null
+        return (deviceOfferings != null && deviceOfferings.get(0).getOffers() != null
                 && deviceOfferings.get(0).getOffers().get(0).getBillingOfferings() != null
                 && deviceOfferings.get(0).getOffers().get(0).getBillingOfferings().get(0).getCommitmentPeriods() != null
                 && deviceOfferings.get(0).getOffers().get(0).getBillingOfferings().get(0).getCommitmentPeriods().get(0)
@@ -705,10 +705,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                 && !StringUtils.isEmpty(deviceOfferings.get(0).getOffers().get(0).getBillingOfferings().get(0)
                 .getCommitmentPeriods().get(0).getFinancingInstalments().get(0).getCodigo())
                 && !deviceOfferings.get(0).getOffers().get(0).getBillingOfferings().get(0).getCommitmentPeriods().get(0)
-                .getFinancingInstalments().get(0).getCodigo().equals("TELEFCONT")) {
-            return true;
-        }
-        return false;
+                .getFinancingInstalments().get(0).getCodigo().equals("TELEFCONT"));
     }
 
     private Mono<Sale> retryRequest(PostSalesRequest request, Sale sale, Boolean flgCaeq, Boolean flgAlta,
@@ -812,55 +809,49 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                 .getValue();
         Boolean isRetail = flowSaleValue.equalsIgnoreCase(Constants.FLOWSALE_RETAIL);
         Boolean statusValidado = saleRequest.getStatus().equalsIgnoreCase(Constants.STATUS_VALIDADO);
-        if (Boolean.TRUE.equals(isRetail) && statusValidado) {
+        if (Boolean.TRUE.equals(isRetail) && statusValidado.booleanValue()) {
             if (saleRequest.getCommercialOperation().get(0).getDeviceOffering() != null
                     && !saleRequest.getCommercialOperation().get(0).getDeviceOffering().isEmpty()) {
                 DeviceOffering deviceOfferingSim = saleRequest.getCommercialOperation().get(0).getDeviceOffering().stream()
                         .filter(item -> item.getDeviceType().equalsIgnoreCase(Constants.DEVICE_TYPE_SIM))
                         .findFirst()
                         .orElse(null);
-                if (deviceOfferingSim != null
-                        && StringUtils.isEmpty(this.getStringValueByKeyFromAdditionalDataList(saleRequest
-                        .getAdditionalData(), "SIM_ICCID"))) {
-                    return Mono.error(GenesisException
-                            .builder()
-                            .exceptionId(Constants.BAD_REQUEST_EXCEPTION_ID)
-                            .wildcards(new String[]{"SIM_ICCID is mandatory. Must be sent into Additional Data Property "
-                                    + "with 'SIM_ICCID' key value."})
+                if (deviceOfferingSim != null && StringUtils.isEmpty(
+                        this.getStringValueByKeyFromAdditionalDataList(saleRequest.getAdditionalData(), "SIM_ICCID"))) {
+                    return Mono.error(GenesisException.builder().exceptionId(Constants.BAD_REQUEST_EXCEPTION_ID)
+                            .wildcards(
+                                    new String[] { "SIM_ICCID is mandatory. Must be sent into Additional Data Property "
+                                            + "with 'SIM_ICCID' key value." })
                             .build());
                 }
 
-                DeviceOffering deviceOfferingSmartphone = saleRequest.getCommercialOperation().get(0).getDeviceOffering().stream()
-                        .filter(item -> !item.getDeviceType().equalsIgnoreCase(Constants.DEVICE_TYPE_SIM))
-                        .findFirst()
+                DeviceOffering deviceOfferingSmartphone = saleRequest.getCommercialOperation().get(0)
+                        .getDeviceOffering().stream()
+                        .filter(item -> !item.getDeviceType().equalsIgnoreCase(Constants.DEVICE_TYPE_SIM)).findFirst()
                         .orElse(null);
-                if (deviceOfferingSmartphone != null
-                        && StringUtils.isEmpty(this.getStringValueByKeyFromAdditionalDataList(saleRequest.getAdditionalData(),
-                        "MOVILE_IMEI"))) {
-                    return Mono.error(GenesisException
-                            .builder()
-                            .exceptionId(Constants.BAD_REQUEST_EXCEPTION_ID)
-                            .wildcards(new String[]{"MOVILE_IMEI is mandatory. Must be sent into Additional Data Property "
-                                    + "with 'MOVILE_IMEI' key value."})
+                if (deviceOfferingSmartphone != null && StringUtils.isEmpty(this
+                        .getStringValueByKeyFromAdditionalDataList(saleRequest.getAdditionalData(), "MOVILE_IMEI"))) {
+                    return Mono.error(GenesisException.builder().exceptionId(Constants.BAD_REQUEST_EXCEPTION_ID)
+                            .wildcards(new String[] {
+                                    "MOVILE_IMEI is mandatory. Must be sent into Additional Data Property "
+                                            + "with 'MOVILE_IMEI' key value." })
                             .build());
                 }
             }
 
-            if (StringUtils.isEmpty(this.getStringValueByKeyFromAdditionalDataList(saleRequest
-                            .getAdditionalData(),Constants.NUMERO_CAJA))) {
-                return Mono.error(GenesisException
-                        .builder()
-                        .exceptionId(Constants.BAD_REQUEST_EXCEPTION_ID)
-                        .wildcards(new String[]{"NUMERO_CAJA is mandatory. Must be sent into Additional Data Property "
-                                + "with 'NUMERO_CAJA' key value."})
+            if (StringUtils.isEmpty(this.getStringValueByKeyFromAdditionalDataList(saleRequest.getAdditionalData(),
+                    Constants.NUMERO_CAJA))) {
+                return Mono.error(GenesisException.builder().exceptionId(Constants.BAD_REQUEST_EXCEPTION_ID)
+                        .wildcards(
+                                new String[] { "NUMERO_CAJA is mandatory. Must be sent into Additional Data Property "
+                                        + "with 'NUMERO_CAJA' key value." })
                         .build());
-            } else if (StringUtils.isEmpty(this.getStringValueByKeyFromAdditionalDataList(saleRequest
-                    .getAdditionalData(),"NUMERO_TICKET"))) {
-                return Mono.error(GenesisException
-                        .builder()
-                        .exceptionId(Constants.BAD_REQUEST_EXCEPTION_ID)
-                        .wildcards(new String[]{"NUMERO_TICKET is mandatory. Must be sent into Additional Data Property"
-                                + " with 'NUMERO_TICKET' key value."})
+            } else if (StringUtils.isEmpty(
+                    this.getStringValueByKeyFromAdditionalDataList(saleRequest.getAdditionalData(), "NUMERO_TICKET"))) {
+                return Mono.error(GenesisException.builder().exceptionId(Constants.BAD_REQUEST_EXCEPTION_ID)
+                        .wildcards(
+                                new String[] { "NUMERO_TICKET is mandatory. Must be sent into Additional Data Property"
+                                        + " with 'NUMERO_TICKET' key value." })
                         .build());
             }
         }
@@ -888,13 +879,13 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                 flgAlta[0] = booleanValue;
             }
         }
-        LOG.info("CAPL: " + flgCapl[0]);
-        LOG.info("CAEQ: " + flgCaeq[0]);
-        LOG.info("CASI: " + flgCasi[0]);
-        LOG.info("ALTA: " + flgAlta[0]);
+        LOG.info("CAPL: {}", flgCapl[0]);
+        LOG.info("CAEQ: {}", flgCaeq[0]);
+        LOG.info("CASI: {}", flgCasi[0]);
+        LOG.info("ALTA: {}", flgAlta[0]);
 
         flgFinanciamiento[0] = setFinancingFlag(saleRequest.getCommercialOperation().get(0).getDeviceOffering());
-        LOG.info("Sales product type mobile has financing: " + flgFinanciamiento[0]);
+        LOG.info("Sales product type mobile has financing: {}", flgFinanciamiento[0]);
 
         // Validate if it is a retry from Frontend
         return salesRepository.findBySalesId(saleRequest.getSalesId())
@@ -943,13 +934,12 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
             LOG.info("Migration Sales Case");
 
             String actionType = commercialOperationReason.equalsIgnoreCase("CAPL") ? "CW" : "CH";
-            return businessParameterWebClient
-                    .getParametersFinanciamientoFija(request.getHeadersMap())
+            return businessParameterWebClient.getParametersFinanciamientoFija(request.getHeadersMap())
                     .map(BusinessParametersFinanciamientoFijaResponse::getData)
                     .map(bpFinanciamientoFijaData -> bpFinanciamientoFijaData.get(0))
                     .map(BusinessParameterFinanciamientoFijaData::getExt)
-                    .flatMap(parametersFinanciamientoFija -> wirelineMigrations(parametersFinanciamientoFija, request
-                            , actionType, isRetail));
+                    .flatMap(parametersFinanciamientoFija -> wirelineMigrations(parametersFinanciamientoFija, request,
+                            actionType, isRetail));
 
         } else if (mainProductType.equalsIgnoreCase(Constants.WIRELESS)) {
             LOG.info("Wireless Sales Case");
@@ -958,7 +948,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
 
             if ((saleRequest.getCommercialOperation().get(0).getOrder() == null ||
                     StringUtils.isEmpty(saleRequest.getCommercialOperation().get(0).getOrder().getProductOrderId()))
-                    && deviceOfferingIsNullOrEmpty) {
+                    && deviceOfferingIsNullOrEmpty.booleanValue()) {
 
                 // Get mail Validation, dominio de riesgo - SERGIO
                 Mono<BusinessParametersResponse> getRiskDomain = businessParameterWebClient
@@ -992,24 +982,23 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                         .getParametersReasonCode(request.getHeadersMap());
 
                 // Añadir llamada a get businessParameters - ReasonCode
-                return Mono.zip(getRiskDomain, salesCharsByCot, getBonificacionSim, getParametersSimCard, getParametersReasonCode)
-                        .flatMap(tuple -> {
+                return Mono.zip(getRiskDomain, salesCharsByCot, getBonificacionSim, getParametersSimCard,
+                        getParametersReasonCode).flatMap(tuple -> {
                             try {
-                                return validationsAndBuildings(tuple.getT1(), tuple.getT2(), tuple.getT3(),
-                                        tuple.getT4(), tuple.getT5(), saleRequest, request, sapidSimcard,
-                                        commercialOperationReason, flgCapl, flgCaeq, flgCasi, flgAlta, flgFinanciamiento,
-                                        channelIdRequest, customerIdRequest, productOfferingIdRequest, isRetail);
+                                return validationsAndBuildings(tuple.getT1(), tuple.getT3(), tuple.getT4(),
+                                        tuple.getT5(), saleRequest, request, sapidSimcard, commercialOperationReason,
+                                        flgCapl, flgCaeq, flgCasi, flgAlta, flgFinanciamiento, channelIdRequest,
+                                        customerIdRequest, productOfferingIdRequest, isRetail);
                             } catch (ParseException e) {
                                 return Mono.error(e);
                             }
                         });
 
             } else {
-                return salesRepository.save(saleRequest)
-                        .map(r -> {
-                            this.postSalesEventFlow(request);
-                            return r;
-                        });
+                return salesRepository.save(saleRequest).map(r -> {
+                    this.postSalesEventFlow(request);
+                    return r;
+                });
             }
 
         }
@@ -1023,38 +1012,30 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
 
     private Boolean deviceOfferingIsNullOrEmpty(Sale saleRequest) {
         if (saleRequest.getCommercialOperation().get(0).getDeviceOffering() == null
-                || saleRequest.getCommercialOperation().get(0).getDeviceOffering().isEmpty()){
+                || saleRequest.getCommercialOperation().get(0).getDeviceOffering().isEmpty()) {
             return true;
-        } else if (saleRequest.getCommercialOperation().get(0).getDeviceOffering().get(0)
-                .getStock() == null) {
+        } else if (saleRequest.getCommercialOperation().get(0).getDeviceOffering().get(0).getStock() == null) {
             return true;
-        } else if (StringUtils.isEmpty(saleRequest.getCommercialOperation().get(0).getDeviceOffering().get(0)
-                .getStock().getReservationId())) {
+        } else if (StringUtils.isEmpty(
+                saleRequest.getCommercialOperation().get(0).getDeviceOffering().get(0).getStock().getReservationId())) {
             return true;
         }
         return false;
     }
 
     private Mono<Sale> validationsAndBuildings(BusinessParametersResponse getRiskDomain,
-                                               List<BusinessParameterExt> salesCharsByCot,
-                                               BusinessParametersResponseObjectExt getBonificacionSim,
-                                               BusinessParametersResponseObjectExt getParametersSimCard,
-                                               BusinessParametersReasonCode getParameterReasonCode,
-                                               Sale saleRequest,
-                                               PostSalesRequest request, final String[] sapidSimcard,
-                                               String commercialOperationReason, final Boolean[] flgCapl,
-                                               final Boolean[] flgCaeq, final Boolean[] flgCasi,
-                                               final Boolean[] flgAlta, final Boolean[] flgFinanciamiento,
-                                               String channelIdRequest, String customerIdRequest,
-                                               String productOfferingIdRequest, Boolean isRetail) throws ParseException {
+            BusinessParametersResponseObjectExt getBonificacionSim,
+            BusinessParametersResponseObjectExt getParametersSimCard,
+            BusinessParametersReasonCode getParameterReasonCode, Sale saleRequest, PostSalesRequest request,
+            final String[] sapidSimcard, String commercialOperationReason, final Boolean[] flgCapl,
+            final Boolean[] flgCaeq, final Boolean[] flgCasi, final Boolean[] flgAlta,
+            final Boolean[] flgFinanciamiento, String channelIdRequest, String customerIdRequest,
+            String productOfferingIdRequest, Boolean isRetail) throws ParseException {
 
-        if (!getRiskDomain.getData().isEmpty() && getRiskDomain.getData().get(0).getActive()) {
+        if (!getRiskDomain.getData().isEmpty() && getRiskDomain.getData().get(0).getActive().booleanValue()) {
             // if it is a risk domain, cancel operation
-            return Mono.error(GenesisException
-                    .builder()
-                    .exceptionId("SVR1000")
-                    .wildcards(new String[]{"Dominio de riesgo, se canceló la operación"})
-                    .build());
+            return Mono.error(GenesisException.builder().exceptionId("SVR1000")
+                    .wildcards(new String[] { "Dominio de riesgo, se canceló la operación" }).build());
         }
 
         // Getting simcard sapid from bussiness parameter
@@ -1064,13 +1045,13 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         // Getting CIP Code
         String cipCode = "";
         if (saleRequest.getCommercialOperation().get(0).getWorkOrDeliveryType() != null
-                && !StringUtils.isEmpty(saleRequest.getCommercialOperation().get(0).getWorkOrDeliveryType()
-                .getMediumDelivery())
+                && !StringUtils.isEmpty(
+                        saleRequest.getCommercialOperation().get(0).getWorkOrDeliveryType().getMediumDelivery())
                 && saleRequest.getCommercialOperation().get(0).getWorkOrDeliveryType().getMediumDelivery()
-                .equalsIgnoreCase("DELIVERY")
+                        .equalsIgnoreCase("DELIVERY")
                 && saleRequest.getPaymenType().getPaymentType().equalsIgnoreCase("EX")
-                && this.getStringValueByKeyFromAdditionalDataList(saleRequest.getAdditionalData(),
-                "paymentTypeLabel").equals("PAGO EFECTIVO")) {
+                && this.getStringValueByKeyFromAdditionalDataList(saleRequest.getAdditionalData(), "paymentTypeLabel")
+                        .equals("PAGO EFECTIVO")) {
 
             cipCode = saleRequest.getPaymenType().getCid(); // Validate if cipCode is empty
         }
@@ -1080,34 +1061,38 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
 
         // Recognizing Mobile Portability
         Boolean isMobilePortability = commercialOperationReason.equalsIgnoreCase(Constants.PORTABILIDAD);
-        LOG.info("Sales contain Mobile Portability: " + isMobilePortability);
+        LOG.info("Sales contain Mobile Portability: {}", isMobilePortability);
 
         // Recognizing CAPL Commercial Operation Type
-        if (flgCapl[0] && !flgCaeq[0] && !flgCasi[0] && !flgAlta[0]) {
+        if (flgCapl[0].booleanValue() && !flgCaeq[0].booleanValue() && !flgCasi[0].booleanValue()
+                && !flgAlta[0].booleanValue()) {
             LOG.info("CAPL Sales Case");
 
             mainRequestProductOrder = this.caplCommercialOperation(saleRequest, mainRequestProductOrder,
-                    channelIdRequest, customerIdRequest, productOfferingIdRequest, cipCode, getBonificacionSim);
+                    channelIdRequest, customerIdRequest, productOfferingIdRequest, getBonificacionSim);
 
-        } else if (!flgCapl[0] && flgCaeq[0] && !flgAlta[0]) { // Recognizing CAEQ Commercial Operation Type
+        } else if (!flgCapl[0].booleanValue() && flgCaeq[0].booleanValue() && !flgAlta[0].booleanValue()) {
+            // Recognizing CAEQ Commercial Operation Type
             LOG.info("CAEQ Sales Case");
 
             mainRequestProductOrder = this.caeqCommercialOperation(saleRequest, mainRequestProductOrder, flgCasi[0],
                     channelIdRequest, customerIdRequest, productOfferingIdRequest, cipCode, sapidSimcard[0],
                     getParameterReasonCode, getBonificacionSim);
 
-        } else if (flgCapl[0] && flgCaeq[0] && !flgAlta[0]) { // Recognizing CAEQ+CAPL Commercial Operation Type
+        } else if (flgCapl[0].booleanValue() && flgCaeq[0].booleanValue() && !flgAlta[0].booleanValue()) {
+            // Recognizing CAEQ+CAPL Commercial Operation Type
             LOG.info("CAEQ + CAPL Sales Case");
 
             mainRequestProductOrder = this.caeqCaplCommercialOperation(saleRequest, mainRequestProductOrder, flgCasi[0],
-                    channelIdRequest, customerIdRequest, productOfferingIdRequest, cipCode, sapidSimcard[0],
+                    channelIdRequest, customerIdRequest, productOfferingIdRequest, sapidSimcard[0],
                     getParameterReasonCode, getBonificacionSim);
-        } else if (!flgCapl[0] && !flgCaeq[0] && flgAlta[0] || isMobilePortability) {
+        } else if (!flgCapl[0].booleanValue() && !flgCaeq[0].booleanValue() && flgAlta[0].booleanValue()
+                || isMobilePortability.booleanValue()) {
             LOG.info("ALTA or Mobile Portability Sales Case");
 
             mainRequestProductOrder = this.altaCommercialOperation(saleRequest, mainRequestProductOrder,
-                    channelIdRequest, customerIdRequest, productOfferingIdRequest, cipCode, getBonificacionSim,
-                    sapidSimcard[0], isMobilePortability, flgCasi[0]);
+                    channelIdRequest, customerIdRequest, productOfferingIdRequest, getBonificacionSim, sapidSimcard[0],
+                    isMobilePortability, flgCasi[0]);
         }
 
         if (this.getStringValueByKeyFromAdditionalDataList(saleRequest.getAdditionalData(), DELIVERY_METHOD)
@@ -1115,9 +1100,9 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
             mainRequestProductOrder = this.deliveryOperation(saleRequest, mainRequestProductOrder);
         }
 
-        if ( saleRequest.getCommercialOperation().get(0).getDeviceOffering() != null
-                && !saleRequest.getCommercialOperation().get(0).getDeviceOffering().isEmpty()
-                && isRetail && saleRequest.getStatus().equalsIgnoreCase("NEGOCIACION")) {
+        if (saleRequest.getCommercialOperation().get(0).getDeviceOffering() != null
+                && !saleRequest.getCommercialOperation().get(0).getDeviceOffering().isEmpty() && isRetail.booleanValue()
+                && saleRequest.getStatus().equalsIgnoreCase("NEGOCIACION")) {
             LOG.info("Sales flowSale Retail and Status NEGOCIACION, executing Create Order Validation");
             // FEMS-1514 Validación de creación Orden -> solo cuando es flujo retail, status negociacion
             // y la venta involucra un equipo, se debe hacer validación
@@ -1133,7 +1118,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                                 .getCreateProductOrderResponse());
 
                         if (validateNegotiation(saleRequest.getAdditionalData(),
-                                saleRequest.getIdentityValidations())) {
+                                saleRequest.getIdentityValidations()).booleanValue()) {
                             saleRequest.setStatus(Constants.NEGOCIACION);
                         } else if (!StringUtils.isEmpty(createOrderResponse.getCreateProductOrderResponse()
                                 .getProductOrderId())) {
@@ -1154,7 +1139,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                         }
 
                         // Call to Reserve Stock Service When Commercial Operation include CAEQ
-                        if (flgCaeq[0] || flgAlta[0] || isMobilePortability) {
+                        if (flgCaeq[0] || flgAlta[0] || isMobilePortability.booleanValue()) {
 
                             return this.callToReserveStockAndCreateQuotation(PostSalesRequest.builder()
                                             .sale(saleRequest).headersMap(request.getHeadersMap()).build(), saleRequest,
@@ -1224,9 +1209,9 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         this.buildCreateQuotationFijaRequest(createQuotationFijaRequest, request,
                 parametersFinanciamientoFija);
 
-        LOG.info("Alta Fija Sales has financing: " + (createQuotationFijaRequest.getBody() != null));
-        LOG.info("Create Quotation Fija Request without order info: ".concat(new Gson()
-                                                                        .toJson(createQuotationFijaRequest.getBody())));
+        LOG.info("Alta Fija Sales has financing: {}", (createQuotationFijaRequest.getBody() != null));
+        LOG.info("Create Quotation Fija Request without order info: {}",
+                new Gson().toJson(createQuotationFijaRequest.getBody()));
 
         // Identifying New Assigned Billing Offers SVAs
         List<NewAssignedBillingOffers> newAssignedBillingOffersCableTvList = new ArrayList<>();
@@ -1247,7 +1232,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
 
         // Building ServiceAvailability
         ServiceabilityInfoType serviceabilityInfo = buildServiceabilityInfoType(request);
-        LOG.info("serviceabilityInfo: " + new Gson().toJson(serviceabilityInfo));
+        LOG.info("serviceabilityInfo: {}", new Gson().toJson(serviceabilityInfo));
 
         // Order Attributes Alta Fija
         List<FlexAttrType> altaFijaOrderAttributesList = new ArrayList<>();
@@ -1318,7 +1303,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
 
         if (saleRequest.getCommercialOperation().get(0).getDeviceOffering() != null
                 && !saleRequest.getCommercialOperation().get(0).getDeviceOffering().isEmpty()
-                && isRetail && saleRequest.getStatus().equalsIgnoreCase("NEGOCIACION")) {
+                && isRetail.booleanValue() && saleRequest.getStatus().equalsIgnoreCase("NEGOCIACION")) {
             // FEMS-1514 Validación de creación Orden -> solo cuando es flujo retail, status negociacion
             // y la venta involucra un equipo, se debe hacer validación
             return creationOrderValidation(saleRequest, mainRequestProductOrder,
@@ -1340,13 +1325,13 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
     private Mono<Sale> addOrderIntoSale(PostSalesRequest request, Sale saleRequest,
                                         CreateQuotationRequest createQuotationFijaRequest,
                                         ProductorderResponse createOrderResponse) {
-        LOG.info("Create Order Response: " + new Gson().toJson(createOrderResponse));
+        LOG.info("Create Order Response: {}", new Gson().toJson(createOrderResponse));
         // Adding Order info to sales
         saleRequest.getCommercialOperation().get(0)
                 .setOrder(createOrderResponse.getCreateProductOrderResponse()); // Pending evaluate this setter for MT
 
         if (validateNegotiation(saleRequest.getAdditionalData(),
-                saleRequest.getIdentityValidations())) {
+                saleRequest.getIdentityValidations()).booleanValue()) {
             saleRequest.setStatus(Constants.NEGOCIACION);
         } else if (!StringUtils.isEmpty(createOrderResponse.getCreateProductOrderResponse()
                 .getProductOrderId())) {
@@ -1439,12 +1424,6 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                     .findFirst()
                     .ifPresent(item -> email[0] = item.getCharacteristic().getEmailAddress());
 
-            /*TimePeriod validFor = TimePeriod
-                    .builder()
-                    .endDateTime(Commons.getDatetimeNow())
-                    .startDateTime(Commons.getDatetimeNow())
-                    .build();*/
-            
             com.tdp.ms.sales.model.dto.quotation.ContactMedium contactMedium1 = com.tdp.ms.sales.model.dto.quotation
                     .ContactMedium
                     .builder()
@@ -1465,27 +1444,6 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                     .nationalId(sale.getRelatedParty().get(0).getNationalId())
                     .nationalIdType(sale.getRelatedParty().get(0).getNationalIdType())
                     .build();
-
-        /* Se borra el campo a pedido de Lincoln
-        Address address = Address
-                .builder()
-                .streetNr(mainCommercialOperation.getWorkOrDeliveryType().getPlace().get(0).getAddress()
-                        .getStreetNr())
-                .streetName(mainCommercialOperation.getWorkOrDeliveryType().getPlace().get(0).getAddress()
-                        .getStreetName())
-                .streetType(mainCommercialOperation.getWorkOrDeliveryType().getPlace().get(0).getAddress()
-                        .getStreetType())
-                .locality(this.getStringValueByKeyFromAdditionalDataList(mainCommercialOperation
-                        .getWorkOrDeliveryType().getPlace().get(0).getAdditionalData(), "locality"))
-                .city(mainCommercialOperation.getWorkOrDeliveryType().getPlace().get(0).getAddress()
-                        .getCity())
-                .stateOrProvince(mainCommercialOperation.getWorkOrDeliveryType().getPlace().get(0)
-                        .getAddress().getStateOrProvince())
-                .region(mainCommercialOperation.getWorkOrDeliveryType().getPlace().get(0)
-                        .getAddress().getRegion())
-                .country(mainCommercialOperation.getWorkOrDeliveryType().getPlace().get(0)
-                        .getAddress().getCountry())
-                .build();*/
 
             Customer customerQuotation = Customer
                     .builder()
@@ -1593,8 +1551,10 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
 
                 MoneyAmount totalCostAmount = MoneyAmount
                         .builder()
-                        .amount(offeringType2.getProductSpecification().get(0).getProductPrice().get(0).getPrice()
-                                .getAmount().toString())
+                        .amount(offeringType2 != null
+                                ? offeringType2.getProductSpecification().get(0).getProductPrice().get(0).getPrice()
+                                        .getAmount().toString()
+                                : null)
                         .build();
 
                 com.tdp.ms.sales.model.dto.quotation.Item itemUltraWifi = com.tdp.ms.sales.model.dto.quotation.Item
@@ -1610,9 +1570,9 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
             }
 
             final Double[] amountTotalAmount = {0.0};
-            itemsList.forEach(item -> {
-                amountTotalAmount[0] = amountTotalAmount[0] + Double.parseDouble(item.getTotalCost().getAmount());
-            });
+            itemsList.forEach(item -> 
+                amountTotalAmount[0] = amountTotalAmount[0] + Double.parseDouble(item.getTotalCost().getAmount())
+            );
             MoneyAmount totalAmount = MoneyAmount
                     .builder()
                     .amount(amountTotalAmount[0].toString())
@@ -1699,10 +1659,10 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         createQuotationRequest.getBody().setServiceIdLobConcat(serviceIdLobConcat[0]);
 
         createQuotationRequest.getBody().getItems().stream()
-                .forEach(item -> {
+                .forEach(item -> 
                     item.setOrderActionId(org.apache.commons.lang3.StringUtils.chop(finalMainCommercialOperation
-                            .getOrder().getProductOrderReferenceNumber()));
-                });
+                            .getOrder().getProductOrderReferenceNumber()))
+                );
 
         createQuotationRequest.getBody()
                 .setOrderId("TEF" + String.format("%012d", new BigInteger(mainCommercialOperation.getOrder()
@@ -1734,7 +1694,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                         .productConfiguration(TopLevelProductConfigurationType.builder().serviceId("").build())
                         .build();
 
-        String serviceId = commercialOperation.getOrder()
+        return commercialOperation.getOrder()
                 .getNewProductsInNewOfferings()
                 .stream()
                 .filter(item -> item.getProductConfiguration()
@@ -1742,8 +1702,6 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                 .findFirst()
                 .orElse(emptyProduct)
                 .getProductConfiguration().getServiceId();
-
-        return serviceId;
     }
 
     private Mono<Sale> creationOrderValidation(Sale saleRequest, CreateProductOrderGeneralRequest productOrderRequest,
@@ -1788,7 +1746,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                         "DeviceOffering costoPromedioSinIGVSoles property value from " +
                                 "Device Type Sim is mandatory."));
                 }
-            } else if (saleDeviceOfferingSmartphone != null) {
+            } else {
                 if (StringUtils.isEmpty(saleDeviceOfferingSmartphone.getId())) {
                     return Mono.error(buildGenesisError(Constants.BAD_REQUEST_EXCEPTION_ID,
                             "DeviceOffering id property value from Device Type Smartphone is mandatory."));
@@ -1952,7 +1910,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
     private Mono<Sale> callToCreateQuotation(PostSalesRequest request, Sale sale, Boolean flgCasi,
                                                                                     Boolean flgFinanciamiento) {
 
-        if (flgFinanciamiento) {
+        if (flgFinanciamiento.booleanValue()) {
             CreateQuotationRequest createQuotationRequest = new CreateQuotationRequest();
             this.buildCreateQuotationRequest(createQuotationRequest, request, flgCasi);
             if (createQuotationRequest.getBody() != null) {
@@ -2027,29 +1985,6 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                 .nationalIdType(sale.getRelatedParty().get(0).getNationalIdType())
                 .nationalId(sale.getRelatedParty().get(0).getNationalId())
                 .build();
-
-        /* Se borra el campo address, a pedido de Lincoln
-        Address address = Address
-                .builder()
-                .streetName(sale.getCommercialOperation().get(0).getWorkOrDeliveryType().getPlace().get(0).getAddress()
-                                                                                                    .getStreetName())
-                .streetNr(sale.getCommercialOperation().get(0).getWorkOrDeliveryType().getPlace().get(0).getAddress()
-                                                                                                        .getStreetNr())
-
-
-                .locality(this.getStringValueByKeyFromAdditionalDataList(sale.getCommercialOperation().get(0)
-                                    .getWorkOrDeliveryType().getPlace().get(0).getAdditionalData(), "locality"))
-                .streetType(sale.getCommercialOperation().get(0).getWorkOrDeliveryType().getPlace().get(0).getAddress()
-                                                                                                    .getStreetType())
-                .city(sale.getCommercialOperation().get(0).getWorkOrDeliveryType().getPlace().get(0).getAddress()
-                                                                                                            .getCity())
-                .stateOrProvince(sale.getCommercialOperation().get(0).getWorkOrDeliveryType().getPlace().get(0)
-                                                                                    .getAddress().getStateOrProvince())
-                .country(sale.getCommercialOperation().get(0).getWorkOrDeliveryType().getPlace().get(0)
-                                                                                            .getAddress().getCountry())
-                .region(sale.getCommercialOperation().get(0).getWorkOrDeliveryType().getPlace().get(0)
-                                                                                            .getAddress().getRegion())
-                .build();*/
 
         Customer customerQuotation = Customer
                 .builder()
@@ -2133,7 +2068,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                 .build();
         itemsList.add(itemEquipment);
 
-        if (flgCasi) { // sale.getCommercialOperation().get(0).getDeviceOffering().size() == 2
+        if (flgCasi.booleanValue()) { // sale.getCommercialOperation().get(0).getDeviceOffering().size() == 2
             MoneyAmount totalCostSim = MoneyAmount
                     .builder()
                     .amount(sale.getCommercialOperation().get(0).getDeviceOffering().get(1).getSimSpecifications()
@@ -2283,7 +2218,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                         cont[0]++;
                     }
                 } catch (ParseException ex) {
-                    LOG.error("Post Sales Validate Negotiation Exception: " + ex);
+                    LOG.error("Post Sales Validate Negotiation Exception");
                 }
             });
         }
@@ -2317,7 +2252,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
 
         if (businessParameterDataList != null && !businessParameterDataList.isEmpty()) {
             businessParameterDataList.stream().forEach(kv -> {
-                if (kv.getKey().equalsIgnoreCase(key) && kv.getActive()) {
+                if (kv.getKey().equalsIgnoreCase(key) && kv.getActive().booleanValue()) {
                     stringValue[0] = kv.getValue();
                 }
             });
@@ -2369,10 +2304,9 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
     }
 
     private CreateProductOrderGeneralRequest altaCommercialOperation(Sale saleRequest,
-                                 CreateProductOrderGeneralRequest mainRequestProductOrder, String channelIdRequest,
-                                 String customerIdRequest, String productOfferingIdRequest, String cipCode,
-                                 BusinessParametersResponseObjectExt bonificacionSimcardResponse, String sapidSimcardBp,
-                                 Boolean isMobilePortability, Boolean flagCasi) throws ParseException {
+            CreateProductOrderGeneralRequest mainRequestProductOrder, String channelIdRequest, String customerIdRequest,
+            String productOfferingIdRequest, BusinessParametersResponseObjectExt bonificacionSimcardResponse,
+            String sapidSimcardBp, Boolean isMobilePortability, Boolean flagCasi) throws ParseException {
 
         // Building request for ALTA CommercialTypeOperation
         ProductOrderAltaMobileRequest altaRequestProductOrder = new ProductOrderAltaMobileRequest();
@@ -2414,7 +2348,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         // ALTA ChangeContainedProducts
         List<ChangedContainedProduct> altaChangedContainedProductList = new ArrayList<>();
 
-        if (altaCombo) {
+        if (altaCombo.booleanValue()) {
             // ChangeContainedProduct Equipment
             altaChangedContainedProductList = this.changedContainedCaeqList(saleRequest, "temp2",
                     sapidSimcardBp, flagCasi);
@@ -2460,7 +2394,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
 
         altaProductChanges.setChangedContainedProducts(altaChangedContainedProductList);
 
-        if (isMobilePortability) {
+        if (isMobilePortability.booleanValue()) {
             // Portability Characteristic
             List<ChangedCharacteristic> changedCharacteristicPortabilityList = new ArrayList<>();
             ChangedCharacteristic changedCharacteristicPortability1 = ChangedCharacteristic
@@ -2637,87 +2571,104 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
 
     public CreateProductOrderGeneralRequest deliveryOperation(Sale saleRequest,
             CreateProductOrderGeneralRequest mainRequestProductOrder) {
-        if(mainRequestProductOrder.getCreateProductOrderRequest() instanceof ProductOrderCaeqRequest) {
-            ProductOrderCaeqRequest productOrderCaeqRequest = (ProductOrderCaeqRequest) mainRequestProductOrder
-                    .getCreateProductOrderRequest();
-            List<FlexAttrType> caeqOrderAttributes = productOrderCaeqRequest.getRequest().getOrderAttributes();
-            boolean addDocumentTypeCaeq = addDocumentType(caeqOrderAttributes);
-
-            if (addDocumentTypeCaeq) {
-                String documentTypeValue = "";
-
-                documentTypeValue = this.getStringValueByKeyFromAdditionalDataList(
-                        saleRequest.getPaymenType().getAdditionalData(), PAYMENT_DOCUMENT);
-                if (!documentTypeValue.isEmpty()) {
-                    FlexAttrType documentTypeAttr = getDocumentTypeAttr(documentTypeValue);
-                    caeqOrderAttributes.add(documentTypeAttr);
-                }
-            }
-            productOrderCaeqRequest.getRequest().setOrderAttributes(caeqOrderAttributes);
-            mainRequestProductOrder.setCreateProductOrderRequest(productOrderCaeqRequest);
-            return mainRequestProductOrder;
-        }
-        else if(mainRequestProductOrder.getCreateProductOrderRequest() instanceof ProductOrderCaplRequest) {
-            ProductOrderCaplRequest productOrderCaplRequest = (ProductOrderCaplRequest) mainRequestProductOrder
-                    .getCreateProductOrderRequest();
-            List<FlexAttrType> caplOrderAttributes = productOrderCaplRequest.getRequest().getOrderAttributes();
-            boolean addDocumentTypeCapl = addDocumentType(caplOrderAttributes);
-
-            if (addDocumentTypeCapl) {
-                String documentTypeValue = "";
-
-                documentTypeValue = this.getStringValueByKeyFromAdditionalDataList(
-                        saleRequest.getPaymenType().getAdditionalData(), PAYMENT_DOCUMENT);
-                if (!documentTypeValue.isEmpty()) {
-                    FlexAttrType documentTypeAttr = getDocumentTypeAttr(documentTypeValue);
-                    caplOrderAttributes.add(documentTypeAttr);
-                }
-            }
-            productOrderCaplRequest.getRequest().setOrderAttributes(caplOrderAttributes);
-            mainRequestProductOrder.setCreateProductOrderRequest(productOrderCaplRequest);
-            return mainRequestProductOrder;
-        }
-        else if(mainRequestProductOrder.getCreateProductOrderRequest() instanceof ProductOrderCaeqCaplRequest) {
-            ProductOrderCaeqCaplRequest productOrderCaeqCaplRequest = (ProductOrderCaeqCaplRequest) mainRequestProductOrder
-                    .getCreateProductOrderRequest();
-            List<FlexAttrType> caeqCaplOrderAttributes = productOrderCaeqCaplRequest.getRequest().getOrderAttributes();
-            boolean addDocumentTypeCaeqCapl = addDocumentType(caeqCaplOrderAttributes);
-
-            if (addDocumentTypeCaeqCapl) {
-                String documentTypeValue = "";
-
-                documentTypeValue = this.getStringValueByKeyFromAdditionalDataList(
-                        saleRequest.getPaymenType().getAdditionalData(), PAYMENT_DOCUMENT);
-                if (!documentTypeValue.isEmpty()) {
-                    FlexAttrType documentTypeAttr = getDocumentTypeAttr(documentTypeValue);
-                    caeqCaplOrderAttributes.add(documentTypeAttr);
-                }
-            }
-            productOrderCaeqCaplRequest.getRequest().setOrderAttributes(caeqCaplOrderAttributes);
-            mainRequestProductOrder.setCreateProductOrderRequest(productOrderCaeqCaplRequest);
-            return mainRequestProductOrder;
-        }
-        else if(mainRequestProductOrder.getCreateProductOrderRequest() instanceof ProductOrderAltaMobileRequest) {
-            ProductOrderAltaMobileRequest productOrderAltaMobileRequest = (ProductOrderAltaMobileRequest) mainRequestProductOrder
-                    .getCreateProductOrderRequest();
-            List<FlexAttrType> altaMobileOrderAttributes = productOrderAltaMobileRequest.getRequest().getOrderAttributes();
-            boolean addDocumentTypeAltaMobile = addDocumentType(altaMobileOrderAttributes);
-
-            if (addDocumentTypeAltaMobile) {
-                String documentTypeValue = "";
-
-                documentTypeValue = this.getStringValueByKeyFromAdditionalDataList(
-                        saleRequest.getPaymenType().getAdditionalData(), PAYMENT_DOCUMENT);
-                if (!documentTypeValue.isEmpty()) {
-                    FlexAttrType documentTypeAttr = getDocumentTypeAttr(documentTypeValue);
-                    altaMobileOrderAttributes.add(documentTypeAttr);
-                }
-            }
-            productOrderAltaMobileRequest.getRequest().setOrderAttributes(altaMobileOrderAttributes);
-            mainRequestProductOrder.setCreateProductOrderRequest(productOrderAltaMobileRequest);
-            return mainRequestProductOrder;
+        if (mainRequestProductOrder.getCreateProductOrderRequest() instanceof ProductOrderCaeqRequest) {
+            return deliveryOperationCaeq(saleRequest, mainRequestProductOrder);
+        } else if (mainRequestProductOrder.getCreateProductOrderRequest() instanceof ProductOrderCaplRequest) {
+            return deliveryOperationCapl(saleRequest, mainRequestProductOrder);
+        } else if (mainRequestProductOrder.getCreateProductOrderRequest() instanceof ProductOrderCaeqCaplRequest) {
+            return deliveryOperationCaeqCapl(saleRequest, mainRequestProductOrder);
+        } else if (mainRequestProductOrder.getCreateProductOrderRequest() instanceof ProductOrderAltaMobileRequest) {
+            return deliveryOperationAltaMobile(saleRequest, mainRequestProductOrder);
         }
 
+        return mainRequestProductOrder;
+    }
+
+    private CreateProductOrderGeneralRequest deliveryOperationAltaMobile(Sale saleRequest,
+            CreateProductOrderGeneralRequest mainRequestProductOrder) {
+        ProductOrderAltaMobileRequest productOrderAltaMobileRequest = (ProductOrderAltaMobileRequest) mainRequestProductOrder
+                .getCreateProductOrderRequest();
+        List<FlexAttrType> altaMobileOrderAttributes = productOrderAltaMobileRequest.getRequest().getOrderAttributes();
+        boolean addDocumentTypeAltaMobile = addDocumentType(altaMobileOrderAttributes);
+
+        if (addDocumentTypeAltaMobile) {
+            String documentTypeValue = "";
+
+            documentTypeValue = this.getStringValueByKeyFromAdditionalDataList(
+                    saleRequest.getPaymenType().getAdditionalData(), PAYMENT_DOCUMENT);
+            if (!documentTypeValue.isEmpty()) {
+                FlexAttrType documentTypeAttr = getDocumentTypeAttr(documentTypeValue);
+                altaMobileOrderAttributes.add(documentTypeAttr);
+            }
+        }
+        productOrderAltaMobileRequest.getRequest().setOrderAttributes(altaMobileOrderAttributes);
+        mainRequestProductOrder.setCreateProductOrderRequest(productOrderAltaMobileRequest);
+        return mainRequestProductOrder;
+    }
+
+    private CreateProductOrderGeneralRequest deliveryOperationCaeqCapl(Sale saleRequest,
+            CreateProductOrderGeneralRequest mainRequestProductOrder) {
+        ProductOrderCaeqCaplRequest productOrderCaeqCaplRequest = (ProductOrderCaeqCaplRequest) mainRequestProductOrder
+                .getCreateProductOrderRequest();
+        List<FlexAttrType> caeqCaplOrderAttributes = productOrderCaeqCaplRequest.getRequest().getOrderAttributes();
+        boolean addDocumentTypeCaeqCapl = addDocumentType(caeqCaplOrderAttributes);
+
+        if (addDocumentTypeCaeqCapl) {
+            String documentTypeValue = "";
+
+            documentTypeValue = this.getStringValueByKeyFromAdditionalDataList(
+                    saleRequest.getPaymenType().getAdditionalData(), PAYMENT_DOCUMENT);
+            if (!documentTypeValue.isEmpty()) {
+                FlexAttrType documentTypeAttr = getDocumentTypeAttr(documentTypeValue);
+                caeqCaplOrderAttributes.add(documentTypeAttr);
+            }
+        }
+        productOrderCaeqCaplRequest.getRequest().setOrderAttributes(caeqCaplOrderAttributes);
+        mainRequestProductOrder.setCreateProductOrderRequest(productOrderCaeqCaplRequest);
+        return mainRequestProductOrder;
+    }
+
+    private CreateProductOrderGeneralRequest deliveryOperationCapl(Sale saleRequest,
+            CreateProductOrderGeneralRequest mainRequestProductOrder) {
+        ProductOrderCaplRequest productOrderCaplRequest = (ProductOrderCaplRequest) mainRequestProductOrder
+                .getCreateProductOrderRequest();
+        List<FlexAttrType> caplOrderAttributes = productOrderCaplRequest.getRequest().getOrderAttributes();
+        boolean addDocumentTypeCapl = addDocumentType(caplOrderAttributes);
+
+        if (addDocumentTypeCapl) {
+            String documentTypeValue = "";
+
+            documentTypeValue = this.getStringValueByKeyFromAdditionalDataList(
+                    saleRequest.getPaymenType().getAdditionalData(), PAYMENT_DOCUMENT);
+            if (!documentTypeValue.isEmpty()) {
+                FlexAttrType documentTypeAttr = getDocumentTypeAttr(documentTypeValue);
+                caplOrderAttributes.add(documentTypeAttr);
+            }
+        }
+        productOrderCaplRequest.getRequest().setOrderAttributes(caplOrderAttributes);
+        mainRequestProductOrder.setCreateProductOrderRequest(productOrderCaplRequest);
+        return mainRequestProductOrder;
+    }
+
+    private CreateProductOrderGeneralRequest deliveryOperationCaeq(Sale saleRequest,
+            CreateProductOrderGeneralRequest mainRequestProductOrder) {
+        ProductOrderCaeqRequest productOrderCaeqRequest = (ProductOrderCaeqRequest) mainRequestProductOrder
+                .getCreateProductOrderRequest();
+        List<FlexAttrType> caeqOrderAttributes = productOrderCaeqRequest.getRequest().getOrderAttributes();
+        boolean addDocumentTypeCaeq = addDocumentType(caeqOrderAttributes);
+
+        if (addDocumentTypeCaeq) {
+            String documentTypeValue = "";
+
+            documentTypeValue = this.getStringValueByKeyFromAdditionalDataList(
+                    saleRequest.getPaymenType().getAdditionalData(), PAYMENT_DOCUMENT);
+            if (!documentTypeValue.isEmpty()) {
+                FlexAttrType documentTypeAttr = getDocumentTypeAttr(documentTypeValue);
+                caeqOrderAttributes.add(documentTypeAttr);
+            }
+        }
+        productOrderCaeqRequest.getRequest().setOrderAttributes(caeqOrderAttributes);
+        mainRequestProductOrder.setCreateProductOrderRequest(productOrderCaeqRequest);
         return mainRequestProductOrder;
     }
 
@@ -2729,9 +2680,8 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         }
         FlexAttrValueType deliveryAttrValue = FlexAttrValueType.builder().stringValue(documentTypeValue)
                 .valueType(Constants.STRING).build();
-        FlexAttrType documentTypeAttr = FlexAttrType.builder().attrName(DOCUMENT_TYPE)
+        return FlexAttrType.builder().attrName(DOCUMENT_TYPE)
                 .flexAttrValue(deliveryAttrValue).build();
-        return documentTypeAttr;
     }
 
     private boolean addDocumentType(List<FlexAttrType> caeqOrderAttributes) {
@@ -2745,7 +2695,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
     
     public CreateProductOrderGeneralRequest caplCommercialOperation(Sale saleRequest,
                                     CreateProductOrderGeneralRequest mainRequestProductOrder, String channelIdRequest,
-                                    String customerIdRequest, String productOfferingIdRequest, String cipCode,
+                                    String customerIdRequest, String productOfferingIdRequest, 
                                     BusinessParametersResponseObjectExt bonificacionSimcardResponse) {
         Boolean flgOnlyCapl = true;
 
@@ -2757,7 +2707,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
             flgOnlyCapl = false;
         }
 
-        LOG.info("Flag is only CAPL: " + flgOnlyCapl);
+        LOG.info("Flag is only CAPL: {}", flgOnlyCapl);
 
         // Building request for CAPL CommercialTypeOperation
         ProductOrderCaplRequest caplRequestProductOrder = new ProductOrderCaplRequest();
@@ -2768,7 +2718,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
 
         RemovedAssignedBillingOffers caplBoRemoved1 = new RemovedAssignedBillingOffers();
         List<RemovedAssignedBillingOffers> caplBoRemovedList = new ArrayList<>();
-        if (flgOnlyCapl) {
+        if (flgOnlyCapl.booleanValue()) {
             // Recognizing Capl Mobile or Fija
             if (saleRequest.getProductType().equalsIgnoreCase(Constants.WIRELESS)) {
                 caplRequestProductOrder.setActionType("CW");
@@ -2802,7 +2752,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
 
         NewProductCapl newProductCapl1 = new NewProductCapl();
         newProductCapl1.setProductId(saleRequest.getCommercialOperation().get(0).getProduct().getId());
-        if (flgOnlyCapl) {
+        if (flgOnlyCapl.booleanValue()) {
             caplProductChanges.setRemovedAssignedBillingOffers(caplBoRemovedList);
         } else {
             newProductCapl1.setProductCatalogId(saleRequest.getCommercialOperation().get(0)
@@ -2827,8 +2777,6 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                         .getCommercialOperation().get(0).getWorkOrDeliveryType() != null ?
                         createShipmentDetail(saleRequest): null)
                 .build();
-        //if (!StringUtils.isEmpty(cipCode)) caplRequest.setCip(cipCode);
-
         // Building Main Capl Request
         caplRequestProductOrder.setRequest(caplRequest);
 
@@ -2849,9 +2797,9 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         saleRequest.getProspectContact().stream()
                 .filter(item -> item.getMediumType().equalsIgnoreCase(Constants.MEDIUM_TYPE_EMAIL_ADDRESS))
                 .findFirst()
-                .ifPresent(contactMedium -> {
-                    shipmentDetailsType.setRecipientEmail(contactMedium.getCharacteristic().getEmailAddress());
-                });
+                .ifPresent(contactMedium -> 
+                    shipmentDetailsType.setRecipientEmail(contactMedium.getCharacteristic().getEmailAddress())
+                );
         // additional Datas
         saleRequest.getCommercialOperation().get(0).getWorkOrDeliveryType().getAdditionalData().forEach(item -> {
             if (item.getKey().equalsIgnoreCase("shipmentInstructions")) {
@@ -2917,7 +2865,6 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         List<FlexAttrType> caeqCaplOrderAttributes = this.commonOrderAttributes(saleRequest);
 
         // Order Attributes
-        //List<FlexAttrType> caeqOrderAttributes = new ArrayList<>();
         this.addCaeqOderAttributes(caeqCaplOrderAttributes, saleRequest, flgCasi);
 
         String deliveryMethod = this.getStringValueByKeyFromAdditionalDataList(saleRequest.getAdditionalData(),
@@ -2946,9 +2893,9 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                 .filter(reasonCodeExt -> !reasonCodeExt.getCapl() && reasonCodeExt.getCaeq()
                         && reasonCodeExt.getCasi().booleanValue() == flgCasi)
                 .findFirst()
-                .ifPresent(reasonCodeExt -> {
-                    caeqProductOrderRequest.setReasonCode(reasonCodeExt.getReasonId());
-                });
+                .ifPresent(reasonCodeExt -> 
+                    caeqProductOrderRequest.setReasonCode(reasonCodeExt.getReasonId())
+                );
 
         // Setting capl request into main request to send to create product order service
         mainRequestProductOrder.setCreateProductOrderRequest(caeqProductOrderRequest);
@@ -2959,7 +2906,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
     public CreateProductOrderGeneralRequest caeqCaplCommercialOperation(Sale saleRequest,
                                     CreateProductOrderGeneralRequest mainRequestProductOrder, Boolean flgCasi,
                                     String channelIdRequest, String customerIdRequest, String productOfferingIdRequest,
-                                    String cipCode, String sapidSimcardBp,
+                                    String sapidSimcardBp,
                                     BusinessParametersReasonCode getParameterReasonCode,
                                     BusinessParametersResponseObjectExt bonificacionSimcardResponse) {
         // Building request for CAEQ+CAPL CommercialTypeOperation
@@ -2973,7 +2920,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         ) {
             flgOnlyCapl = false;
         }
-        LOG.info("Flag is only CAPL: " + flgOnlyCapl);
+        LOG.info("Flag is only CAPL: {}", flgOnlyCapl);
 
         // Code from CAPL
         ProductOrderCaeqCaplRequest caeqCaplRequestProductOrder = new ProductOrderCaeqCaplRequest();
@@ -2985,13 +2932,13 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                 .filter(reasonCodeExt -> reasonCodeExt.getCapl() && reasonCodeExt.getCaeq()
                         && reasonCodeExt.getCasi().booleanValue() == flgCasi)
                 .findFirst()
-                .ifPresent(reasonCodeExt -> {
-                    caeqCaplRequestProductOrder.setReasonCode(reasonCodeExt.getReasonId());
-                });
+                .ifPresent(reasonCodeExt -> 
+                    caeqCaplRequestProductOrder.setReasonCode(reasonCodeExt.getReasonId())
+                );
 
         RemovedAssignedBillingOffers caeqCaplBoRemoved1 = new RemovedAssignedBillingOffers();
         List<RemovedAssignedBillingOffers> caeqCaplBoRemovedList = new ArrayList<>();
-        if (flgOnlyCapl) {
+        if (flgOnlyCapl.booleanValue()) {
             // Recognizing Capl Fija
             if (saleRequest.getProductType().equalsIgnoreCase(Constants.WIRELESS)) {
                 caeqCaplRequestProductOrder.setActionType("CW");
@@ -3025,7 +2972,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
 
         NewProductCaeqCapl newProductCaeqCapl1 = new NewProductCaeqCapl();
         newProductCaeqCapl1.setProductId(saleRequest.getCommercialOperation().get(0).getProduct().getId());
-        if (flgOnlyCapl) {
+        if (flgOnlyCapl.booleanValue()) {
             caeqCaplProductChanges.setRemovedAssignedBillingOffers(caeqCaplBoRemovedList);
         } else {
             newProductCaeqCapl1.setProductCatalogId(saleRequest.getCommercialOperation().get(0)
@@ -3058,8 +3005,6 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                         .getCommercialOperation().get(0).getWorkOrDeliveryType() != null ?
                         createShipmentDetail(saleRequest): null)
                 .build();
-        //if (!StringUtils.isEmpty(cipCode)) caeqCaplRequest.setCip(cipCode);
-
         caeqCaplRequestProductOrder.setRequest(caeqCaplRequest);
 
         // Setting capl request into main request to send to create product order service
@@ -3085,7 +3030,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                 .orElse(KeyValueType.builder().value(null).build())
                 .getValue();
         Boolean isRetail = flowSaleValue.equalsIgnoreCase(Constants.FLOWSALE_RETAIL);
-        if (isRetail) {
+        if (isRetail.booleanValue()) {
             deliveryCode = "IS";
         }
         if (!StringUtils.isEmpty(deliveryCode)) {
@@ -3103,7 +3048,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         }
 
         // Payment Method Attribute - Conditional
-        if (!isRetail && saleRequest.getPaymenType() != null && !StringUtils.isEmpty(saleRequest.getPaymenType()
+        if (!isRetail.booleanValue() && saleRequest.getPaymenType() != null && !StringUtils.isEmpty(saleRequest.getPaymenType()
                 .getPaymentType())) {
             FlexAttrValueType paymentAttrValue =  FlexAttrValueType
                     .builder()
@@ -3267,7 +3212,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
 
         // EquipmentIMEI Characteristic
         Boolean isRetail = getRetailFlag(saleRequest);
-        if (isRetail && saleRequest.getStatus().equalsIgnoreCase(Constants.VALIDADO)) {
+        if (isRetail.booleanValue() && saleRequest.getStatus().equalsIgnoreCase(Constants.VALIDADO)) {
             String deviceImei = this.getStringValueByKeyFromAdditionalDataList(saleRequest.getAdditionalData(),
                                                                                                     "MOVILE_IMEI");
             ChangedCharacteristic changedCharacteristic3 = ChangedCharacteristic
@@ -3329,7 +3274,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                                                    List<ChangedContainedProduct> changedContainedProductList,
                                                     Boolean flgCasi) {
         // Cuando viene activo el flag de CASI
-        if (flgCasi) {
+        if (flgCasi.booleanValue()) {
             List<RelatedProductType> productRelationShipList = saleRequest.getCommercialOperation().get(0).getProduct().getProductRelationShip();
             // Buscar el productId para simcard
             String simcardProductId = productRelationShipList.stream()
@@ -3406,7 +3351,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                 });
 
         // Logic for Set Acquisition Type Value
-        if (flgAlta[0] && saleRequest.getCommercialOperation().get(0).getDeviceOffering().size() == 1) { // Identifying if is Alta only Sim
+        if (flgAlta[0].booleanValue() && saleRequest.getCommercialOperation().get(0).getDeviceOffering().size() == 1) { // Identifying if is Alta only Sim
             acquisitionType = "Private";
         } else if (saleChannelId.equalsIgnoreCase("CC") && deliveryType.equalsIgnoreCase(SP)
                 || saleChannelId.equalsIgnoreCase("CEC")
@@ -3524,9 +3469,9 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         this.buildCreateQuotationFijaRequest(createQuotationFijaRequest, request,
                 parametersFinanciamientoFija);
 
-        LOG.info("Migration Sales has financing: " + (createQuotationFijaRequest.getBody() != null));
-        LOG.info("Create Quotation Fija Request without order info: ".concat(new Gson()
-                                                                        .toJson(createQuotationFijaRequest.getBody())));
+        LOG.info("Migration Sales has financing: {}", (createQuotationFijaRequest.getBody() != null));
+        LOG.info("Create Quotation Fija Request without order info: {}",
+                new Gson().toJson(createQuotationFijaRequest.getBody()));
 
         List<CommercialOperationType> commercialOperationTypeList = request.getSale().getCommercialOperation();
 
@@ -3537,7 +3482,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         List<MigrationComponent> migrationComponentList = new ArrayList<>();
         // Paso 1: Obtener en Id de componente de parque
         productRelationShip.forEach(item -> {
-            if (compareComponents(item.getProduct().getProductType())) {
+            if (compareComponents(item.getProduct().getProductType()).booleanValue()) {
 
                 String productId = item.getProduct().getId();
                 migrationComponentList.add(MigrationComponent.builder()
@@ -3636,14 +3581,14 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         productOfferings.get(0).getProductSpecification().stream().filter(item -> item.getProductType()
                 .equalsIgnoreCase(Constants.PRODUCT_TYPE_BROADBAND))
                 .findFirst()
-                .ifPresent(item -> {
+                .ifPresent(item -> 
                     characteristicValue[0] = item.getProductPrice().get(2).getAdditionalData().stream()
                             .filter(keyValueType -> keyValueType.getKey().equalsIgnoreCase("downloadSpeed"))
                             .findFirst()
                             .orElseThrow(() -> buildGenesisError(Constants.BAD_REQUEST_EXCEPTION_ID,
                                     "Cannot get time in milliseconds."))
-                            .getValue();
-                });
+                            .getValue()
+                );
 
         // Asignar variables a migrationComponentList[].productChanges (broadband)
         migrationComponentList.stream()
@@ -3723,13 +3668,13 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
 
     private List<NewProductMigracionFija> matchingMigrationOffers(List<MigrationComponent> migrationComponentList) {
         List<NewProductMigracionFija> newProducts = new ArrayList<>();
-        migrationComponentList.forEach(migrationComponent -> {
+        migrationComponentList.forEach(migrationComponent -> 
             newProducts.add(NewProductMigracionFija.builder()
                     .productCatalogId(migrationComponent.getProductOfferingProductSpecId())
                     .productId(migrationComponent.getProductId())
                     .productChanges(migrationComponent.getProductChanges())
-                    .build());
-        });
+                    .build())
+        );
         return newProducts;
     }
 
