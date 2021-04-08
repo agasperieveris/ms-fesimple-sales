@@ -2,6 +2,7 @@ package com.tdp.ms.sales.model.dto.productorder.capl;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.gson.annotations.SerializedName;
 import com.tdp.ms.sales.model.dto.productorder.Customer;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -36,6 +37,7 @@ public class ProductOrderCaplRequest {
     private String customerId;
     private Customer customer = new Customer();
     @JsonProperty("productOfferingID")
+    @SerializedName("productOfferingID")
     private String productOfferingId;
     private String onlyValidationIndicator;
     private String actionType;
