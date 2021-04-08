@@ -5,13 +5,16 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
+import junit.framework.Assert;
+
 @ExtendWith(SpringExtension.class)
 @SpringBootTest
-public class SalesApplicationTests {
+class SalesApplicationTests {
 
 	@Test
 	void main() {
 		SalesApplication.main(new String[] {});
+		Assert.assertTrue(true);
 	}
 
 
