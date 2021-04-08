@@ -40,12 +40,14 @@ import com.tdp.ms.sales.model.dto.MoneyType;
 import com.tdp.ms.sales.model.dto.OfferingType;
 import com.tdp.ms.sales.model.dto.ProductSpecCharacteristicType;
 import com.tdp.ms.sales.model.dto.QuantityType;
+import com.tdp.ms.sales.model.dto.ReasonCodeExt;
 import com.tdp.ms.sales.model.dto.RefinedProductType;
 import com.tdp.ms.sales.model.dto.ServiceType;
 import com.tdp.ms.sales.model.dto.SimSpecification;
 import com.tdp.ms.sales.model.dto.SiteRefType;
 import com.tdp.ms.sales.model.dto.UpFrontType;
 import com.tdp.ms.sales.model.dto.businessparameter.BusinessParameterFinanciamientoFijaExt;
+import com.tdp.ms.sales.model.dto.businessparameter.BusinessParameterReasonCodeData;
 import com.tdp.ms.sales.model.dto.productorder.CreateProductOrderGeneralRequest;
 import com.tdp.ms.sales.model.dto.productorder.Customer;
 import com.tdp.ms.sales.model.dto.productorder.FlexAttrType;
@@ -69,6 +71,7 @@ import com.tdp.ms.sales.model.dto.reservestock.StockItem;
 import com.tdp.ms.sales.model.entity.Sale;
 import com.tdp.ms.sales.model.request.CreateQuotationRequest;
 import com.tdp.ms.sales.model.request.PostSalesRequest;
+import com.tdp.ms.sales.model.response.BusinessParametersReasonCode;
 import com.tdp.ms.sales.model.response.BusinessParametersResponseObjectExt;
 import com.tdp.ms.sales.model.response.CreateQuotationResponse;
 import com.tdp.ms.sales.model.response.GetSalesCharacteristicsResponse;
@@ -1100,6 +1103,45 @@ public class SalesManagmentServicePrivateMethodsTest {
         Boolean result = (Boolean) method.invoke(salesManagmentServiceImpl,sale);
 
         Assert.assertEquals(false, result);
+    }
+    
+    @Test
+    void isValidDeliveryTestCapl() throws NoSuchMethodException,
+            InvocationTargetException, IllegalAccessException {
+        CreateProductOrderGeneralRequest mainRequestProductOrder = new CreateProductOrderGeneralRequest();
+        
+        Sale sale = CommonsMocks.createSaleWirelessMock2();
+        
+        List<BusinessParameterDataObjectExt> data = new ArrayList<BusinessParameterDataObjectExt>();
+        data.add(BusinessParameterDataObjectExt.builder().value("34572615").ext("7431").build());
+        
+        mainRequestProductOrder = salesManagmentServiceImpl.caplCommercialOperation(sale, mainRequestProductOrder,
+                "CC", "1111", "111", "1", BusinessParametersResponseObjectExt.builder().data(data ).build());
+        
+        salesManagmentServiceImpl.deliveryOperation(sale, mainRequestProductOrder);
+    }
+    
+    @Test
+    void isValidDeliveryTestCaeq() throws NoSuchMethodException,
+            InvocationTargetException, IllegalAccessException {
+        CreateProductOrderGeneralRequest mainRequestProductOrder = new CreateProductOrderGeneralRequest();
+        
+        Sale sale = CommonsMocks.createSaleWirelessMock2();
+        
+        List<BusinessParameterDataObjectExt> data = new ArrayList<BusinessParameterDataObjectExt>();
+        data.add(BusinessParameterDataObjectExt.builder().value("34572615").ext("7431").build());
+
+        List<ReasonCodeExt> ext1= new ArrayList<>();
+        ext1.add(ReasonCodeExt.builder().capl(true).build());
+        
+        List<BusinessParameterReasonCodeData> data1= new ArrayList<>();
+        data1.add(BusinessParameterReasonCodeData.builder().ext(ext1).build());
+        
+        mainRequestProductOrder = salesManagmentServiceImpl.caeqCommercialOperation(sale, mainRequestProductOrder,
+                false, "CC", "1111", "111", "1", "1", BusinessParametersReasonCode.builder().data(data1).build(),
+                BusinessParametersResponseObjectExt.builder().data(data ).build());
+        
+        salesManagmentServiceImpl.deliveryOperation(sale, mainRequestProductOrder);
     }
 
 }

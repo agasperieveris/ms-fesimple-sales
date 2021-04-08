@@ -108,6 +108,14 @@ import reactor.core.publisher.Mono;
 @RequiredArgsConstructor
 public class SalesManagmentServiceImpl implements SalesManagmentService {
 
+    private static final String SP = "SP";
+
+    private static final String DELIVERY_METHOD = "deliveryMethod";
+
+    private static final String PAYMENT_DOCUMENT = "paymentDocument";
+
+    private static final String DOCUMENT_TYPE = "DOCUMENT_TYPE";
+
     @Autowired
     private SalesRepository salesRepository;
 
@@ -1102,6 +1110,11 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                     sapidSimcard[0], isMobilePortability, flgCasi[0]);
         }
 
+        if (this.getStringValueByKeyFromAdditionalDataList(saleRequest.getAdditionalData(), DELIVERY_METHOD)
+                .equals(SP)) {
+            mainRequestProductOrder = this.deliveryOperation(saleRequest, mainRequestProductOrder);
+        }
+
         if ( saleRequest.getCommercialOperation().get(0).getDeviceOffering() != null
                 && !saleRequest.getCommercialOperation().get(0).getDeviceOffering().isEmpty()
                 && isRetail && saleRequest.getStatus().equalsIgnoreCase("NEGOCIACION")) {
@@ -1251,7 +1264,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                 .get(0).getId() : null);
         altaFijaRequest.setAppointmentNumber(saleRequest.getSalesId());
         altaFijaRequest.setServiceabilityInfo(serviceabilityInfo);
-        altaFijaRequest.setSourceApp(saleRequest.getSalesId());
+        altaFijaRequest.setSourceApp("FE");
         altaFijaRequest.setOrderAttributes(altaFijaOrderAttributesList);
         if (saleRequest.getPaymenType() != null && !StringUtils.isEmpty(saleRequest.getPaymenType().getCid())) {
             altaFijaRequest.setCip(saleRequest.getPaymenType().getCid());
@@ -2605,7 +2618,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                     Constants.KEY_DELIVERY_METHOD);
 
             if (deviceOfferingSimcard != null
-                    && deliveryMethod.equalsIgnoreCase("SP")) { // FEMS-5081 new conditional only simcard and delivery
+                    && deliveryMethod.equalsIgnoreCase(SP)) { // FEMS-5081 new conditional only simcard and delivery
                 // NewAssignedBillingOffer SIM
                 String productSpecPricingId = bonificacionSimcardResponse.getData()
                         .get(0).getValue(); // Old "34572615", New "4442848" FEMS-5081
@@ -2622,6 +2635,114 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         }
     }
 
+    public CreateProductOrderGeneralRequest deliveryOperation(Sale saleRequest,
+            CreateProductOrderGeneralRequest mainRequestProductOrder) {
+        if(mainRequestProductOrder.getCreateProductOrderRequest() instanceof ProductOrderCaeqRequest) {
+            ProductOrderCaeqRequest productOrderCaeqRequest = (ProductOrderCaeqRequest) mainRequestProductOrder
+                    .getCreateProductOrderRequest();
+            List<FlexAttrType> caeqOrderAttributes = productOrderCaeqRequest.getRequest().getOrderAttributes();
+            boolean addDocumentTypeCaeq = addDocumentType(caeqOrderAttributes);
+
+            if (addDocumentTypeCaeq) {
+                String documentTypeValue = "";
+
+                documentTypeValue = this.getStringValueByKeyFromAdditionalDataList(
+                        saleRequest.getPaymenType().getAdditionalData(), PAYMENT_DOCUMENT);
+                if (!documentTypeValue.isEmpty()) {
+                    FlexAttrType documentTypeAttr = getDocumentTypeAttr(documentTypeValue);
+                    caeqOrderAttributes.add(documentTypeAttr);
+                }
+            }
+            productOrderCaeqRequest.getRequest().setOrderAttributes(caeqOrderAttributes);
+            mainRequestProductOrder.setCreateProductOrderRequest(productOrderCaeqRequest);
+            return mainRequestProductOrder;
+        }
+        else if(mainRequestProductOrder.getCreateProductOrderRequest() instanceof ProductOrderCaplRequest) {
+            ProductOrderCaplRequest productOrderCaplRequest = (ProductOrderCaplRequest) mainRequestProductOrder
+                    .getCreateProductOrderRequest();
+            List<FlexAttrType> caplOrderAttributes = productOrderCaplRequest.getRequest().getOrderAttributes();
+            boolean addDocumentTypeCapl = addDocumentType(caplOrderAttributes);
+
+            if (addDocumentTypeCapl) {
+                String documentTypeValue = "";
+
+                documentTypeValue = this.getStringValueByKeyFromAdditionalDataList(
+                        saleRequest.getPaymenType().getAdditionalData(), PAYMENT_DOCUMENT);
+                if (!documentTypeValue.isEmpty()) {
+                    FlexAttrType documentTypeAttr = getDocumentTypeAttr(documentTypeValue);
+                    caplOrderAttributes.add(documentTypeAttr);
+                }
+            }
+            productOrderCaplRequest.getRequest().setOrderAttributes(caplOrderAttributes);
+            mainRequestProductOrder.setCreateProductOrderRequest(productOrderCaplRequest);
+            return mainRequestProductOrder;
+        }
+        else if(mainRequestProductOrder.getCreateProductOrderRequest() instanceof ProductOrderCaeqCaplRequest) {
+            ProductOrderCaeqCaplRequest productOrderCaeqCaplRequest = (ProductOrderCaeqCaplRequest) mainRequestProductOrder
+                    .getCreateProductOrderRequest();
+            List<FlexAttrType> caeqCaplOrderAttributes = productOrderCaeqCaplRequest.getRequest().getOrderAttributes();
+            boolean addDocumentTypeCaeqCapl = addDocumentType(caeqCaplOrderAttributes);
+
+            if (addDocumentTypeCaeqCapl) {
+                String documentTypeValue = "";
+
+                documentTypeValue = this.getStringValueByKeyFromAdditionalDataList(
+                        saleRequest.getPaymenType().getAdditionalData(), PAYMENT_DOCUMENT);
+                if (!documentTypeValue.isEmpty()) {
+                    FlexAttrType documentTypeAttr = getDocumentTypeAttr(documentTypeValue);
+                    caeqCaplOrderAttributes.add(documentTypeAttr);
+                }
+            }
+            productOrderCaeqCaplRequest.getRequest().setOrderAttributes(caeqCaplOrderAttributes);
+            mainRequestProductOrder.setCreateProductOrderRequest(productOrderCaeqCaplRequest);
+            return mainRequestProductOrder;
+        }
+        else if(mainRequestProductOrder.getCreateProductOrderRequest() instanceof ProductOrderAltaMobileRequest) {
+            ProductOrderAltaMobileRequest productOrderAltaMobileRequest = (ProductOrderAltaMobileRequest) mainRequestProductOrder
+                    .getCreateProductOrderRequest();
+            List<FlexAttrType> altaMobileOrderAttributes = productOrderAltaMobileRequest.getRequest().getOrderAttributes();
+            boolean addDocumentTypeAltaMobile = addDocumentType(altaMobileOrderAttributes);
+
+            if (addDocumentTypeAltaMobile) {
+                String documentTypeValue = "";
+
+                documentTypeValue = this.getStringValueByKeyFromAdditionalDataList(
+                        saleRequest.getPaymenType().getAdditionalData(), PAYMENT_DOCUMENT);
+                if (!documentTypeValue.isEmpty()) {
+                    FlexAttrType documentTypeAttr = getDocumentTypeAttr(documentTypeValue);
+                    altaMobileOrderAttributes.add(documentTypeAttr);
+                }
+            }
+            productOrderAltaMobileRequest.getRequest().setOrderAttributes(altaMobileOrderAttributes);
+            mainRequestProductOrder.setCreateProductOrderRequest(productOrderAltaMobileRequest);
+            return mainRequestProductOrder;
+        }
+
+        return mainRequestProductOrder;
+    }
+
+    private FlexAttrType getDocumentTypeAttr(String documentTypeValue) {
+        if (documentTypeValue.equalsIgnoreCase("Boleta")) {
+            documentTypeValue = "BO";
+        } else if (documentTypeValue.equalsIgnoreCase("Factura")) {
+            documentTypeValue = "FA";
+        }
+        FlexAttrValueType deliveryAttrValue = FlexAttrValueType.builder().stringValue(documentTypeValue)
+                .valueType(Constants.STRING).build();
+        FlexAttrType documentTypeAttr = FlexAttrType.builder().attrName(DOCUMENT_TYPE)
+                .flexAttrValue(deliveryAttrValue).build();
+        return documentTypeAttr;
+    }
+
+    private boolean addDocumentType(List<FlexAttrType> caeqOrderAttributes) {
+        for (FlexAttrType atribute : caeqOrderAttributes) {
+            if (DOCUMENT_TYPE.equalsIgnoreCase(atribute.getAttrName())) {
+                return false;
+            }
+        }
+        return true;
+    }
+    
     public CreateProductOrderGeneralRequest caplCommercialOperation(Sale saleRequest,
                                     CreateProductOrderGeneralRequest mainRequestProductOrder, String channelIdRequest,
                                     String customerIdRequest, String productOfferingIdRequest, String cipCode,
@@ -3005,7 +3126,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         String documentTypeValue = "";
 
         documentTypeValue = this.getStringValueByKeyFromAdditionalDataList(saleRequest.getPaymenType()
-                                                                        .getAdditionalData(), "paymentDocument");
+                                                                        .getAdditionalData(), PAYMENT_DOCUMENT);
         if (!documentTypeValue.isEmpty()) {
             if (documentTypeValue.equalsIgnoreCase("Boleta")) {
                 documentTypeValue = "BO";
@@ -3019,7 +3140,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                     .build();
             FlexAttrType documentTypeAttr = FlexAttrType
                     .builder()
-                    .attrName("DOCUMENT_TYPE")
+                    .attrName(DOCUMENT_TYPE)
                     .flexAttrValue(deliveryAttrValue)
                     .build();
             caeqOrderAttributes.add(documentTypeAttr);
@@ -3287,9 +3408,9 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
         // Logic for Set Acquisition Type Value
         if (flgAlta[0] && saleRequest.getCommercialOperation().get(0).getDeviceOffering().size() == 1) { // Identifying if is Alta only Sim
             acquisitionType = "Private";
-        } else if (saleChannelId.equalsIgnoreCase("CC") && deliveryType.equalsIgnoreCase("SP")
+        } else if (saleChannelId.equalsIgnoreCase("CC") && deliveryType.equalsIgnoreCase(SP)
                 || saleChannelId.equalsIgnoreCase("CEC")
-                || saleChannelId.equalsIgnoreCase("ST") && deliveryType.equalsIgnoreCase("SP")
+                || saleChannelId.equalsIgnoreCase("ST") && deliveryType.equalsIgnoreCase(SP)
                 || saleChannelId.equalsIgnoreCase("DLS")
         ) {
             acquisitionType = "ConsessionPurchased";
@@ -3452,7 +3573,7 @@ public class SalesManagmentServiceImpl implements SalesManagmentService {
                 .getWorkforceTeams().get(0).getId() : null);
         migracionFijaRequest.setAppointmentNumber(request.getSale().getSalesId());
         migracionFijaRequest.setServiceabilityInfo(serviceabilityInfo);
-        migracionFijaRequest.setSourceApp(request.getSale().getSalesId());
+        migracionFijaRequest.setSourceApp("FE");
         migracionFijaRequest.setOrderAttributes(migracionFijaOrderAttributesList);
         migracionFijaRequest.setCip(request.getSale().getPaymenType() != null
                 && !StringUtils.isEmpty(request.getSale().getPaymenType().getCid()) ?
